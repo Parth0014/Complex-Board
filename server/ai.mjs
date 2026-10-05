@@ -20,11 +20,11 @@ export async function generateAI({ prompt, mode = 'image' }, env = process.env, 
                 ? 'Return only valid JSON: {"keywords":[string]}. Give 3 to 6 concise searchable vision-board asset tags for the user description. No URLs or code.'
                 : mode === 'quote'
                   ? 'Write one short, encouraging vision-board affirmation. Return only the affirmation, no quotation marks.'
-                  : `Return only valid JSON: {"title":string,"goals":[string]}. Create 4 to 6 concise life goals from the user description. The current year is ${new Date().getUTCFullYear()}; use it for "this year". Prefer a timeless title unless a dated title was requested. Do not include media URLs or code.`,
+                  : `You are a vision-board art director. Return only valid JSON: {"title":string,"goals":[string],"imagePrompts":[string],"palette":{"background":string,"text":string,"card":string}}. Create 4 to 6 short personal goal captions. For each goal give one detailed image prompt in the same order: concrete subject, setting, lighting and a coherent visual style matching the user's wishes. Each image must represent its goal uniquely, with no text or watermarks. Use consistent art direction across images. Palette values must be six-digit hex colors with readable text contrast. The current year is ${new Date().getUTCFullYear()}; use it for "this year". Prefer a timeless title unless requested. No media URLs or code.`,
           },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 500,
+        max_tokens: mode === 'board' ? 1800 : 500,
         ...(mode === 'board' || mode === 'search'
           ? {
               temperature: 0.2,
@@ -42,8 +42,24 @@ export async function generateAI({ prompt, mode = 'image' }, env = process.env, 
                             minItems: 4,
                             maxItems: 6,
                           },
+                          imagePrompts: {
+                            type: 'array',
+                            items: { type: 'string' },
+                            minItems: 4,
+                            maxItems: 6,
+                          },
+                          palette: {
+                            type: 'object',
+                            properties: {
+                              background: { type: 'string' },
+                              text: { type: 'string' },
+                              card: { type: 'string' },
+                            },
+                            required: ['background', 'text', 'card'],
+                            additionalProperties: false,
+                          },
                         },
-                        required: ['title', 'goals'],
+                        required: ['title', 'goals', 'imagePrompts', 'palette'],
                         additionalProperties: false,
                       }
                     : {
@@ -135,6 +151,20 @@ export async function generateAI({ prompt, mode = 'image' }, env = process.env, 
   return {
     title: board.title.trim().slice(0, 80),
     goals: board.goals.map((goal) => goal.trim()),
+    imagePrompts: board.goals.map((goal, index) => {
+      const detail = board.imagePrompts?.[index];
+      return typeof detail === 'string' && detail.trim()
+        ? detail.trim().slice(0, 1800)
+        : `Inspiring vision-board photography representing ${goal}. Natural lighting, harmonious composition, no text or watermarks.`;
+    }),
+    palette: Object.fromEntries(
+      ['background', 'text', 'card'].map((key) => [
+        key,
+        /^#[0-9a-f]{6}$/i.test(board.palette?.[key] || '')
+          ? board.palette[key]
+          : { background: '#f4effb', text: '#49375e', card: '#ffffff' }[key],
+      ]),
+    ),
     model,
   };
 }

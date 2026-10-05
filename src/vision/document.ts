@@ -41,6 +41,7 @@ export interface BoardItem {
   fontWeight?: number;
   noFill?: boolean;
   textBackground?: string;
+  textPadding?: number;
   strike?: boolean;
   curve?: number;
   textRuns?: TextRun[];
@@ -77,6 +78,8 @@ export interface BoardItem {
   hidden?: boolean;
   asset?: GratitudeAsset;
   slotId?: string;
+  templateId?: string;
+  templatePlaceholder?: boolean;
   goalId?: string;
   groupId?: string;
   locked?: boolean;
@@ -108,7 +111,7 @@ export const newBoard = (): BoardDocument => ({
   version: 2,
   title: 'My beautiful life',
   width: 1080,
-  height: 1350,
+  height: 1080,
   color: '#fffaf6',
   items: [],
 });

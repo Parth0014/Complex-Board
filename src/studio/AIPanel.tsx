@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { EditorAdapter } from '../vision/contracts';
+import type { EditorAdapter, GeneratedBoardVisuals } from '../vision/contracts';
 import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
 import { useAIStatus } from './useAIStatus';
@@ -18,10 +18,10 @@ const modeHelp = {
   },
   board: {
     description:
-      'Turn your goals into an editable composition. Review it before replacing the current board.',
+      'AI plans your goals, generates an original image for each, and builds an editable board with matching colors and captions. Review the images before applying.',
     example:
       'This year I want to travel to Japan, develop my career, and build healthy daily habits',
-    action: 'Plan my board',
+    action: 'Create my vision board',
   },
   search: {
     description: 'Find matching graphics in the curated library using a description of your goal.',
@@ -48,18 +48,20 @@ type Result = {
   goals?: string[];
   keywords?: string[];
   video?: string;
+  imagePrompts?: string[];
+  images?: GeneratedBoardVisuals['images'];
+  palette?: GeneratedBoardVisuals['palette'];
 };
 type EditSource = ReturnType<EditorAdapter['editingSource']>;
 export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
-  const [prompt, setPrompt] = useState(
-      'A peaceful Japanese garden at sunrise, warm natural light, inspiring photography',
-    ),
-    [mode, setMode] = useState<'image' | 'quote' | 'board' | 'search' | 'edit' | 'video'>('image');
+  const [prompt, setPrompt] = useState(modeHelp.board.example),
+    [mode, setMode] = useState<'image' | 'quote' | 'board' | 'search' | 'edit' | 'video'>('board');
   const [result, setResult] = useState<Result | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [confirm, setConfirm] = useState(false),
     [suggestions, setSuggestions] = useState<GratitudeAsset[]>([]);
+  const [progress, setProgress] = useState('');
   const ai = useAIStatus(adapter.ownerWindow);
   const configured = ai.status?.configured;
   const videoConfigured = ai.status?.videoConfigured;
@@ -82,6 +84,9 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
     setError('');
     setResult(null);
     setSuggestions([]);
+    setProgress(
+      mode === 'board' ? 'Planning your goals and visual direction…' : 'Creating your preview…',
+    );
     source.current = null;
     controller.current = new adapter.ownerWindow.AbortController();
     try {
@@ -117,6 +122,29 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           signal: controller.current.signal,
         },
       );
+      if (mode === 'board') {
+        if (!Array.isArray(value.goals) || value.goals.length < 1 || value.goals.length > 6)
+          throw new Error('The board plan needs 1 to 6 goals. Please regenerate.');
+        const images: GeneratedBoardVisuals['images'] = [];
+        for (let index = 0; index < value.goals.length; index++) {
+          setProgress(
+            `Creating image ${index + 1} of ${value.goals.length}: ${value.goals[index]}`,
+          );
+          const imagePrompt =
+            value.imagePrompts?.[index] ||
+            `Inspiring photography of ${value.goals[index]}, natural lighting, no text or watermarks`;
+          const generated = await requestAI(adapter.ownerWindow, '/api/ai/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'image', prompt: imagePrompt }),
+            signal: controller.current.signal,
+          });
+          if (!generated.image)
+            throw new Error(`Image ${index + 1} could not be generated. Please try again.`);
+          images.push({ image: generated.image, prompt: imagePrompt });
+        }
+        value.images = images;
+      }
       setResult(value);
       if (value.keywords) {
         const found = await Promise.all(
@@ -148,6 +176,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
   const insert = async (background = false) => {
     if (!result) return;
     setBusy(true);
+    setProgress('Adding your creation to the board…');
     setError('');
     try {
       if (result.image && source.current)
@@ -163,7 +192,16 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           fontSize: 34,
           color: '#49375e',
         });
-      else if (result.title && result.goals) await adapter.composeBoard(result.title, result.goals);
+      else if (result.title && result.goals) {
+        if (!result.images?.length || result.images.length !== result.goals.length)
+          throw new Error(
+            'The generated board images are missing. Regenerate the preview before applying.',
+          );
+        await adapter.composeBoard(result.title, result.goals, 'minimal', {
+          images: result.images,
+          palette: result.palette,
+        });
+      }
       setConfirm(false);
       setResult(null);
     } catch (error) {
@@ -176,8 +214,8 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
     <div className="ai-panel">
       <h4>AI studio</h4>
       <p>
-        Generate images, affirmations, or editable boards; edit a selected image or search the
-        curated library. Requests use your configured AI service.
+        Turn your ideas into original images and a complete vision board, or write words that
+        inspire you.
       </p>
       <div
         className={`ai-status${configured && !ai.error ? ' ai-status--ready' : ''}`}
@@ -226,7 +264,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         >
           <option value="image">Image</option>
           <option value="quote">Affirmation</option>
-          <option value="board">Editable board</option>
+          <option value="board">Complete vision board</option>
           <option value="search">Search curated assets</option>
           <option value="edit">Edit selected image</option>
           <option value="video" disabled={!videoConfigured}>
@@ -237,6 +275,12 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       <p className="ai-tool-help" id="ai-mode-help">
         {help.description}
       </p>
+      {mode === 'board' && (
+        <p className="ai-tool-help">
+          Describe your goals, preferred colors, and visual style. Each board creates several new
+          images and may take a few minutes.
+        </p>
+      )}
       {needsImage && (
         <p className="ai-status" role="status">
           {validSelection
@@ -313,6 +357,11 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         {busy ? 'Working…' : help.action}
       </button>
       {busy && <button onClick={() => controller.current?.abort()}>Cancel generation</button>}
+      {busy && (
+        <p className="ai-tool-help" role="status">
+          {progress}
+        </p>
+      )}
       {error && (
         <div className="panel-inline-error" role="alert">
           <p>{error}</p>
@@ -342,6 +391,19 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           {result.goals && (
             <>
               <h4>{result.title}</h4>
+              {result.images && (
+                <div
+                  className="ai-board-preview"
+                  style={{ background: result.palette?.background, color: result.palette?.text }}
+                >
+                  {result.images.map((visual, index) => (
+                    <figure key={index} style={{ background: result.palette?.card }}>
+                      <img src={visual.image} alt={result.goals![index]} />
+                      <figcaption>{result.goals![index]}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              )}
               <ul>
                 {result.goals.map((goal) => (
                   <li key={goal}>{goal}</li>
@@ -380,7 +442,11 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
                   else void insert();
                 }}
               >
-                {source.current ? 'Apply image edit' : 'Add to board'}
+                {source.current
+                  ? 'Apply image edit'
+                  : result.goals
+                    ? 'Use this board'
+                    : 'Add to board'}
               </button>
               {result.image && !source.current && (
                 <button

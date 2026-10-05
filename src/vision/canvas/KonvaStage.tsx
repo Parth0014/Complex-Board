@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Konva from 'konva';
 import { Stage, Layer, Rect, Image, Transformer, Group, Line } from 'react-konva';
 import type { KonvaCanvasAdapter } from './KonvaCanvasAdapter';
 import type { BoardItem } from '../document';
-import { boundsOf, unionBounds, snapMovement, snapResize } from './geometry';
+import { boundsOf, unionBounds, snapMovement, snapResize, type Bounds } from './geometry';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../../assets/contracts';
 import { curatedPackProvider } from '../../assets/curatedPack';
 
@@ -18,7 +18,6 @@ export function KonvaStage({
   onZoomChange,
   onScaleChange,
   drawMode = 'select',
-  handTool = false,
   snappingContainer,
 }: {
   adapter: KonvaCanvasAdapter;
@@ -26,14 +25,50 @@ export function KonvaStage({
   onZoomChange: (zoom: number | null) => void;
   onScaleChange: (percent: number) => void;
   drawMode?: string;
-  handTool?: boolean;
   snappingContainer?: HTMLDivElement | null;
 }) {
   const container = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = container.current;
+    if (!node) return;
+    if (drawMode === 'select') {
+      node.style.cursor = 'default';
+      return;
+    }
+    // Reuse the selected toolbar SVG so the pointer and tool always match.
+    const icon = node.ownerDocument.querySelector(
+      `.vs-drawing-menu button[aria-label="${drawMode}"] svg`,
+    );
+    if (!icon) {
+      node.style.cursor = 'crosshair';
+      return;
+    }
+    const svg = icon.cloneNode(true) as SVGElement;
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('width', '24');
+    svg.setAttribute('height', '24');
+    svg.setAttribute('stroke', '#1b1d23');
+    const encoded = encodeURIComponent(new XMLSerializer().serializeToString(svg));
+    const hotspot = drawMode === 'eraser' ? '8 18' : '3 20';
+    node.style.cursor = `url("data:image/svg+xml,${encoded}") ${hotspot}, crosshair`;
+    return () => {
+      node.style.cursor = 'default';
+    };
+  }, [drawMode]);
   const stageRef = useRef<Konva.Stage>(null);
+  const dragPointer = useRef<{ x: number; y: number } | null>(null);
   const transformer = useRef<Konva.Transformer>(null);
   const [size, setSize] = useState({ width: 800, height: 700 });
-  const drag = useRef<{ items: BoardItem[]; origin: BoardItem } | null>(null);
+  const drag = useRef<{
+    items: BoardItem[];
+    origin: BoardItem;
+    pointer: { x: number; y: number };
+    box: Bounds;
+    others: Bounds[];
+    nodes: Map<string, Konva.Node>;
+    selectedIds: Set<string>;
+    hasConnectors: boolean;
+  } | null>(null);
   const marquee = useRef<{ x: number; y: number; previous: string[] } | null>(null);
   const [selectionRect, setSelectionRect] = useState<{
     x: number;
@@ -46,19 +81,16 @@ export function KonvaStage({
   const altHeld = useRef(false);
   const [keepRatio, setKeepRatio] = useState(true);
   const zoomAnchor = useRef<{ x: number; y: number; viewX: number; viewY: number } | null>(null);
+  const wheelZoom = useRef({ delta: 0, clientX: 0, clientY: 0, frame: 0 });
+  useEffect(
+    () => () => {
+      if (wheelZoom.current.frame)
+        adapter.ownerWindow.cancelAnimationFrame(wheelZoom.current.frame);
+    },
+    [adapter],
+  );
   const pinch = useRef<{ distance: number; scale: number } | null>(null);
   const [dropError, setDropError] = useState('');
-  const [spacePan, setSpacePan] = useState(false);
-  const panMode = handTool || spacePan;
-  const pan = useRef<{
-    x: number;
-    y: number;
-    left: number;
-    top: number;
-    offsetX: number;
-    offsetY: number;
-  } | null>(null);
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const stroke = useRef<number[]>([]);
   const [strokePreview, setStrokePreview] = useState<number[]>([]);
   const cropDrag = useRef<{
@@ -68,32 +100,50 @@ export function KonvaStage({
     item: BoardItem;
   } | null>(null);
   const document = adapter.history.document;
+  const gradientStart = useMemo(() => ({ x: 0, y: 0 }), []);
+  const gradientEnd = useMemo(
+    () => ({ x: document.width, y: document.height }),
+    [document.width, document.height],
+  );
+  const gradientCenter = useMemo(
+    () => ({ x: document.width / 2, y: document.height / 2 }),
+    [document.width, document.height],
+  );
+  const gradientStops = useMemo(
+    () => [0, document.color, 1, document.gradient || document.color],
+    [document.color, document.gradient],
+  );
   const scale =
     zoom ??
     Math.max(
       0.05,
-      Math.min((size.width - 96) / document.width, (size.height - 80) / document.height, 1),
+      Math.min((size.width - 64) / document.width, (size.height - 200) / document.height, 1),
     );
-  const envelope = adapter.snapToEdges
-    ? { x: 0, y: 0, width: document.width, height: document.height }
-    : unionBounds([
-        { x: 0, y: 0, width: document.width, height: document.height },
-        ...document.items.map(boundsOf),
-      ]);
-  const stageWidth = Math.max(size.width, envelope.width * scale + 96);
-  const stageHeight = Math.max(size.height, envelope.height * scale + 80);
-  const left = (stageWidth - envelope.width * scale) / 2 - envelope.x * scale + panOffset.x;
-  const top = (stageHeight - envelope.height * scale) / 2 - envelope.y * scale + panOffset.y;
+  // Object movement must never resize the scroll surface or move the board origin.
+  const stageWidth = Math.max(size.width, document.width * scale + 96);
+  const stageHeight = Math.max(size.height, document.height * scale + 80);
+  const left = (stageWidth - document.width * scale) / 2;
+  const top = (stageHeight - document.height * scale) / 2;
+  const centeredView = useRef('');
   useEffect(() => {
     const anchor = zoomAnchor.current;
+    const viewKey = `${scale}:${document.width}:${document.height}:${size.width}:${size.height}`;
+    const viewChanged = centeredView.current !== viewKey;
+    centeredView.current = viewKey;
     if (anchor && container.current) {
       container.current.scrollTo(
         left + anchor.x * scale - anchor.viewX,
         top + anchor.y * scale - anchor.viewY,
       );
       zoomAnchor.current = null;
+    } else if (container.current && viewChanged) {
+      // Toolbar zoom and workspace resizing keep the board in the viewport center.
+      container.current.scrollTo(
+        left + (document.width * scale) / 2 - size.width / 2,
+        top + (document.height * scale) / 2 - size.height / 2,
+      );
     }
-  }, [left, top, scale]);
+  }, [left, top, scale, document.width, document.height, size.width, size.height]);
   const zoomAt = (clientX: number, clientY: number, nextScale: number) => {
     const node = container.current;
     if (!node) return;
@@ -124,17 +174,13 @@ export function KonvaStage({
         !/INPUT|TEXTAREA|SELECT|BUTTON|SUMMARY/.test(target.tagName)
       ) {
         event.preventDefault();
-        setSpacePan(true);
       }
     };
     const up = (event: KeyboardEvent) => {
       altHeld.current = event.altKey;
-      if (event.code === 'Space') setSpacePan(false);
     };
     const blur = () => {
       altHeld.current = false;
-      setSpacePan(false);
-      pan.current = null;
     };
     ownerDocument?.addEventListener('keydown', down);
     ownerDocument?.addEventListener('keyup', up);
@@ -160,7 +206,6 @@ export function KonvaStage({
     observer.observe(node);
     adapter.fit = () => {
       onZoomChange(null);
-      setPanOffset({ x: 0, y: 0 });
       node.scrollTo({ left: 0, top: 0 });
     };
     return () => {
@@ -169,7 +214,7 @@ export function KonvaStage({
     };
   }, [adapter, onZoomChange]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage || !transformer.current) return;
     const locked = document.items.some(
@@ -182,7 +227,7 @@ export function KonvaStage({
             .map((id) => stage.findOne(`#${id}`))
             .filter((node): node is Konva.Node => !!node),
     );
-    transformer.current.getLayer()?.batchDraw();
+    transformer.current.getLayer()?.draw();
   }, [adapter, document.items, adapter.selectedIds, scale, left, top]);
 
   useEffect(() => {
@@ -238,7 +283,6 @@ export function KonvaStage({
   }, [adapter]);
 
   const choose = (id: string, shift = false) => {
-    if (panMode) return;
     const item = document.items.find((item) => item.id === id);
     if (item && !adapter.inScope(item)) return;
     const unit = item
@@ -257,6 +301,24 @@ export function KonvaStage({
     else if (!adapter.selectedIds.includes(id)) adapter.select(unit);
   };
   const startMarquee = (event: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    const start = stageRef.current?.getPointerPosition();
+    if (!start || ('button' in event.evt && event.evt.button !== 0)) return;
+    const outside =
+      start.x < left ||
+      start.y < top ||
+      start.x > left + document.width * scale ||
+      start.y > top + document.height * scale;
+    if (outside && (drawMode !== 'select' || adapter.cropDraft)) {
+      if (
+        start &&
+        event.target === event.target.getStage() &&
+        !adapter.cropDraft &&
+        !('touches' in event.evt && event.evt.touches.length > 1) &&
+        !('button' in event.evt && event.evt.button !== 0)
+      )
+        adapter.select([]);
+      return;
+    }
     if ('touches' in event.evt && event.evt.touches.length === 2) {
       const [a, b] = event.evt.touches;
       pinch.current = { distance: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), scale };
@@ -279,25 +341,12 @@ export function KonvaStage({
       if (item?.kind === 'drawing') adapter.delete([item.id]);
       return;
     }
-    if (drawMode !== 'select' && !panMode) {
+    if (drawMode !== 'select') {
       const point = stageRef.current?.getPointerPosition();
       if (point) {
         stroke.current = [(point.x - left) / scale, (point.y - top) / scale];
         setStrokePreview([...stroke.current]);
       }
-      return;
-    }
-    if (panMode) {
-      const pointer = 'touches' in event.evt ? event.evt.touches[0] : event.evt;
-      if (pointer && container.current)
-        pan.current = {
-          x: pointer.clientX,
-          y: pointer.clientY,
-          left: container.current.scrollLeft,
-          top: container.current.scrollTop,
-          offsetX: panOffset.x,
-          offsetY: panOffset.y,
-        };
       return;
     }
     if (event.target !== event.target.getStage() && event.target.id() !== 'page-background') return;
@@ -333,22 +382,11 @@ export function KonvaStage({
     if (stroke.current.length) {
       const point = stageRef.current?.getPointerPosition();
       if (point) {
-        stroke.current.push((point.x - left) / scale, (point.y - top) / scale);
+        stroke.current.push(
+          Math.max(0, Math.min(document.width, (point.x - left) / scale)),
+          Math.max(0, Math.min(document.height, (point.y - top) / scale)),
+        );
         setStrokePreview([...stroke.current]);
-      }
-      return;
-    }
-    if (pan.current && container.current) {
-      const pointer = 'touches' in event.evt ? event.evt.touches[0] : event.evt;
-      if (pointer) {
-        const node = container.current,
-          wantedX = pan.current.left + pan.current.x - pointer.clientX,
-          wantedY = pan.current.top + pan.current.y - pointer.clientY;
-        node.scrollTo(wantedX, wantedY);
-        setPanOffset({
-          x: pan.current.offsetX + node.scrollLeft - wantedX,
-          y: pan.current.offsetY + node.scrollTop - wantedY,
-        });
       }
       return;
     }
@@ -383,10 +421,6 @@ export function KonvaStage({
       );
       return;
     }
-    if (pan.current) {
-      pan.current = null;
-      return;
-    }
     if (!marquee.current) return;
     const start = marquee.current,
       point = stageRef.current?.getPointerPosition();
@@ -411,10 +445,16 @@ export function KonvaStage({
   useEffect(() => {
     const ownerDocument = container.current?.ownerDocument;
     ownerDocument?.addEventListener('mouseup', finishMarquee);
+    const moveOutside = (event: MouseEvent) => {
+      const stage = stageRef.current;
+      if (!marquee.current || !stage || stage.container().contains(event.target as Node)) return;
+      stage.setPointersPositions(event);
+      moveMarquee({ evt: event } as Konva.KonvaEventObject<MouseEvent>);
+    };
+    ownerDocument?.addEventListener('mousemove', moveOutside);
     ownerDocument?.addEventListener('touchend', finishMarquee);
     const cancel = () => {
       marquee.current = null;
-      pan.current = null;
       pinch.current = null;
       cropDrag.current = null;
       stroke.current = [];
@@ -424,6 +464,7 @@ export function KonvaStage({
     ownerDocument?.addEventListener('touchcancel', cancel);
     return () => {
       ownerDocument?.removeEventListener('mouseup', finishMarquee);
+      ownerDocument?.removeEventListener('mousemove', moveOutside);
       ownerDocument?.removeEventListener('touchend', finishMarquee);
       ownerDocument?.removeEventListener('touchcancel', cancel);
     };
@@ -440,7 +481,6 @@ export function KonvaStage({
       !adapter.cropDraft &&
       drawMode === 'select' &&
       adapter.inScope(item) &&
-      !panMode &&
       !item.locked &&
       !document.items.some(
         (other) =>
@@ -453,6 +493,14 @@ export function KonvaStage({
     onTap: () => choose(item.id),
     onDblClick: () => adapter.enterGroup(item.id),
     onDblTap: () => adapter.enterGroup(item.id),
+    onMouseDown: () => {
+      const pointer = stageRef.current?.getPointerPosition();
+      dragPointer.current = pointer ? { ...pointer } : null;
+    },
+    onTouchStart: () => {
+      const pointer = stageRef.current?.getPointerPosition();
+      dragPointer.current = pointer ? { ...pointer } : null;
+    },
     onDragStart: () => {
       if (!adapter.selectedIds.includes(item.id)) choose(item.id);
       const items = adapter.history.document.items.filter((other) =>
@@ -462,22 +510,42 @@ export function KonvaStage({
         stageRef.current?.findOne(`#${item.id}`)?.stopDrag();
         return;
       }
-      drag.current = { items, origin: item };
+      const stage = stageRef.current;
+      const pointer = stage?.getPointerPosition();
+      if (!stage || !pointer) return;
+      const selectedIds = new Set(items.map((selected) => selected.id));
+      const nodes = new Map<string, Konva.Node>();
+      for (const selected of items) {
+        const node = stage.findOne(`#${selected.id}`);
+        if (node) nodes.set(selected.id, node);
+      }
+      drag.current = {
+        items,
+        origin: item,
+        pointer: { ...(dragPointer.current ?? pointer) },
+        nodes,
+        selectedIds,
+        box: unionBounds(items.map(boundsOf)),
+        others: adapter.history.document.items
+          .filter((other) => !selectedIds.has(other.id))
+          .map(boundsOf),
+        hasConnectors: adapter.history.document.items.some((other) => other.connector),
+      };
     },
     onDragMove: (event: Konva.KonvaEventObject<DragEvent>) => {
       const movement = drag.current;
       if (!movement) return;
-      let dx = event.target.x() - movement.origin.x,
-        dy = event.target.y() - movement.origin.y;
+      const pointer = stageRef.current?.getPointerPosition();
+      if (!pointer) return;
+      // Track the pointer independently of the snapped/clamped node position.
+      let dx = (pointer.x - movement.pointer.x) / scale,
+        dy = (pointer.y - movement.pointer.y) / scale;
       const keys = event.evt as unknown as MouseEvent;
       if (keys.shiftKey) {
         if (Math.abs(dx) > Math.abs(dy)) dy = 0;
         else dx = 0;
       }
-      const box = unionBounds(movement.items.map(boundsOf));
-      const others = document.items
-        .filter((other) => !movement.items.some((selected) => selected.id === other.id))
-        .map(boundsOf);
+      const { box, others } = movement;
       const snap =
         snapping && !keys.altKey
           ? snapMovement({ ...box, x: box.x + dx, y: box.y + dy }, others, document, 6 / scale)
@@ -499,16 +567,16 @@ export function KonvaStage({
         dy = Math.max(-box.y, Math.min(document.height - box.y - box.height, dy));
       }
       for (const selected of movement.items)
-        stageRef.current
-          ?.findOne(`#${selected.id}`)
-          ?.position({ x: selected.x + dx, y: selected.y + dy });
-      const preview = updateConnectors(
-        document.items.map((item) =>
-          movement.items.some((selected) => selected.id === item.id)
-            ? { ...item, x: item.x + dx, y: item.y + dy }
-            : item,
-        ),
-      );
+        movement.nodes.get(selected.id)?.position({ x: selected.x + dx, y: selected.y + dy });
+      const preview = movement.hasConnectors
+        ? updateConnectors(
+            document.items.map((item) =>
+              movement.selectedIds.has(item.id)
+                ? { ...item, x: item.x + dx, y: item.y + dy }
+                : item,
+            ),
+          )
+        : [];
       for (const item of preview.filter((item) => item.connector)) {
         const node = stageRef.current?.findOne(`#${item.id}`) as Konva.Group | undefined;
         if (node) {
@@ -519,7 +587,11 @@ export function KonvaStage({
         }
       }
       transformer.current?.forceUpdate();
-      setGuides(snap);
+      setGuides((current) =>
+        current.vertical === snap.vertical && current.horizontal === snap.horizontal
+          ? current
+          : { vertical: snap.vertical, horizontal: snap.horizontal },
+      );
     },
     onDragEnd: () => {
       const movement = drag.current;
@@ -545,6 +617,7 @@ export function KonvaStage({
       ref={container}
       className="v1-artboard"
       aria-label="Editable vision board"
+      tabIndex={0}
       data-page-left={left}
       data-page-top={top}
       data-scale={scale}
@@ -569,6 +642,8 @@ export function KonvaStage({
           x: (event.clientX - rect.left - left) / scale,
           y: (event.clientY - rect.top - top) / scale,
         };
+        if (point.x < 0 || point.y < 0 || point.x > document.width || point.y > document.height)
+          return;
         try {
           if (files.length) {
             await adapter.uploadPhotos(files, point);
@@ -594,13 +669,13 @@ export function KonvaStage({
       {snappingContainer &&
         createPortal(
           <div className="canvas-tools" aria-label="Canvas snapping options">
-            <span className="canvas-tools__label">Snap</span>
             <label className="snap-toggle">
               <input
                 type="checkbox"
                 checked={snapping}
                 onChange={(event) => setSnapping(event.target.checked)}
               />
+              <span className="vs-switch__track" aria-hidden="true" />
               Alignment guides
             </label>
             <label className="snap-toggle">
@@ -609,6 +684,7 @@ export function KonvaStage({
                 checked={adapter.snapToEdges}
                 onChange={(event) => adapter.setSnapToEdges(event.target.checked)}
               />
+              <span className="vs-switch__track" aria-hidden="true" />
               Snap to edges
             </label>
             <label className="snap-toggle">
@@ -617,6 +693,7 @@ export function KonvaStage({
                 checked={keepRatio}
                 onChange={(event) => setKeepRatio(event.target.checked)}
               />
+              <span className="vs-switch__track" aria-hidden="true" />
               Keep ratio
             </label>
           </div>,
@@ -627,8 +704,24 @@ export function KonvaStage({
         width={stageWidth}
         height={stageHeight}
         onWheel={(event) => {
-          event.evt.preventDefault();
-          zoomAt(event.evt.clientX, event.evt.clientY, scale * (event.evt.deltaY > 0 ? 0.9 : 1.1));
+          const wheel = event.evt;
+          // Trackpad pinch is a Ctrl-wheel gesture; plain wheel/two-finger motion scrolls.
+          if (!wheel.ctrlKey) return;
+          wheel.preventDefault();
+          const pending = wheelZoom.current;
+          // Normalize mouse notches and trackpad pixels, then batch canvas updates.
+          const pixels =
+            wheel.deltaY * (wheel.deltaMode === 1 ? 16 : wheel.deltaMode === 2 ? size.height : 1);
+          pending.delta += Math.max(-80, Math.min(80, pixels));
+          pending.clientX = wheel.clientX;
+          pending.clientY = wheel.clientY;
+          if (pending.frame || !pixels) return;
+          pending.frame = adapter.ownerWindow.requestAnimationFrame(() => {
+            const delta = Math.max(-80, Math.min(80, pending.delta));
+            pending.delta = 0;
+            pending.frame = 0;
+            if (delta) zoomAt(pending.clientX, pending.clientY, scale * Math.exp(-delta * 0.014));
+          });
         }}
         onMouseDown={startMarquee}
         onTouchStart={startMarquee}
@@ -671,24 +764,14 @@ export function KonvaStage({
                     : 'linear-gradient'
                   : 'color'
               }
-              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-              fillLinearGradientEndPoint={{ x: document.width, y: document.height }}
-              fillLinearGradientColorStops={[
-                0,
-                document.color,
-                1,
-                document.gradient || document.color,
-              ]}
-              fillRadialGradientStartPoint={{ x: document.width / 2, y: document.height / 2 }}
-              fillRadialGradientEndPoint={{ x: document.width / 2, y: document.height / 2 }}
+              fillLinearGradientStartPoint={gradientStart}
+              fillLinearGradientEndPoint={gradientEnd}
+              fillLinearGradientColorStops={gradientStops}
+              fillRadialGradientStartPoint={gradientCenter}
+              fillRadialGradientEndPoint={gradientCenter}
               fillRadialGradientStartRadius={0}
               fillRadialGradientEndRadius={Math.max(document.width, document.height) / 2}
-              fillRadialGradientColorStops={[
-                0,
-                document.color,
-                1,
-                document.gradient || document.color,
-              ]}
+              fillRadialGradientColorStops={gradientStops}
             />
             {document.background && (
               <Image
@@ -703,7 +786,19 @@ export function KonvaStage({
               .filter((item) => !item.hidden)
               .map((item) => (
                 <Group key={item.id} {...props(item)}>
-                  <ItemContent item={item} adapter={adapter} />
+                  <ItemContent
+                    item={item}
+                    adapter={adapter}
+                    imageToken={adapter.images.get(
+                      (!adapter.originalPreview && item.rendition) ||
+                        (item.contentAsset || item.asset)?.assetUrl ||
+                        '',
+                    )}
+                    previewToken={
+                      adapter.originalPreview ||
+                      (adapter.cropDraft?.id === item.id ? adapter.cropDraft.crop : false)
+                    }
+                  />
                 </Group>
               ))}
             {strokePreview.length > 1 && (
@@ -718,6 +813,8 @@ export function KonvaStage({
               />
             )}
           </Group>
+        </Layer>
+        <Layer>
           {guides.vertical !== undefined && (
             <Line
               points={[
@@ -767,6 +864,20 @@ export function KonvaStage({
             rotateAnchorOffset={25}
             flipEnabled={false}
             keepRatio={keepRatio}
+            enabledAnchors={
+              keepRatio
+                ? ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+                : [
+                    'top-left',
+                    'top-center',
+                    'top-right',
+                    'middle-left',
+                    'middle-right',
+                    'bottom-left',
+                    'bottom-center',
+                    'bottom-right',
+                  ]
+            }
             boundBoxFunc={(previous, next) => {
               if (snapping && !altHeld.current && Math.abs(next.rotation) < 0.001) {
                 const local = {

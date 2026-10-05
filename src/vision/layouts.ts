@@ -18,6 +18,42 @@ export interface VisionLayout {
 const TEMPLATE_CONTENT_TOP = 0.1;
 const TEMPLATE_CONTENT_HEIGHT = 0.88;
 
+/** Fit the preview's 100×80 composition as a unit, without stretching holders. */
+export function fitTemplateLayout(layout: VisionLayout, page: { width: number; height: number }) {
+  const corners = layout.slots.flatMap((slot) => {
+    const angle = ((slot.rotation || 0) * Math.PI) / 180;
+    return [
+      [0, 0],
+      [slot.width * 100, 0],
+      [0, slot.height * 80],
+      [slot.width * 100, slot.height * 80],
+    ].map(([x, y]) => ({
+      x: slot.x * 100 + x * Math.cos(angle) - y * Math.sin(angle),
+      y: slot.y * 80 + x * Math.sin(angle) + y * Math.cos(angle),
+    }));
+  });
+  const minX = Math.min(...corners.map((p) => p.x)),
+    minY = Math.min(...corners.map((p) => p.y));
+  const width = Math.max(...corners.map((p) => p.x)) - minX;
+  const height = Math.max(...corners.map((p) => p.y)) - minY;
+  const availableWidth = page.width * 0.94,
+    availableHeight = page.height * 0.84;
+  const scale = Math.min(availableWidth / width, availableHeight / height);
+  const left = (page.width - width * scale) / 2;
+  const top = page.height * 0.12 + (availableHeight - height * scale) / 2;
+  return new Map(
+    layout.slots.map((slot) => [
+      slot.id,
+      {
+        x: left + (slot.x * 100 - minX) * scale,
+        y: top + (slot.y * 80 - minY) * scale,
+        width: slot.width * 100 * scale,
+        height: slot.height * 80 * scale,
+      },
+    ]),
+  );
+}
+
 export const getLayoutSlotBounds = (
   layoutSlot: VisionLayoutSlot,
   reserveTemplateHeading = false,

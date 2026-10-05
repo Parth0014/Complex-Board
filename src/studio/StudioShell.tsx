@@ -1,5 +1,8 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { TemplatesPanel } from './TemplatesPanel';
+import { BOARD_SIZES } from './BoardSizeControl';
+import { BackgroundPanel } from './BackgroundPanel';
+import { TooltipLayer } from './TooltipLayer';
 import { TextPanel } from './TextPanel';
 import {
   ArrowRightIcon,
@@ -27,7 +30,14 @@ import { UploadsPanel } from './UploadsPanel';
 import { CreatePanel } from './CreatePanel';
 
 const AIPanel = lazy(() => import('./AIPanel').then(({ AIPanel }) => ({ default: AIPanel })));
-const ADD_TABS: readonly StudioTab[] = ['templates', 'elements', 'uploads', 'text', 'create', 'background'];
+const ADD_TABS: readonly StudioTab[] = [
+  'templates',
+  'elements',
+  'uploads',
+  'text',
+  'create',
+  'background',
+];
 
 const PANEL_SUBTITLES: Record<StudioTab, string> = {
   templates: 'Start with structure, then make it yours.',
@@ -39,28 +49,23 @@ const PANEL_SUBTITLES: Record<StudioTab, string> = {
   ai: 'Generate ideas or visual directions without leaving your board.',
 };
 
-const PAGE_SIZES = [
-  { value: '1080x1350', label: 'Portrait · 4:5' },
-  { value: '1080x1920', label: 'Wallpaper · 9:16' },
-  { value: '1920x1080', label: 'Landscape · 16:9' },
-  { value: '1080x1080', label: 'Square · 1:1' },
-  { value: '2480x3508', label: 'A4 print' },
-];
-
 export function StudioShell({
   adapter,
   children,
   tab,
   setTab,
+  drawingTools,
 }: {
   adapter: EditorAdapter;
   children: ReactNode;
   tab: StudioTab | null;
   setTab: (tab: StudioTab | null) => void;
+  drawingTools?: ReactNode;
 }) {
   const [share, setShare] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [error, setError] = useState('');
+  const [elementCategory, setElementCategory] = useState('all');
   const document = adapter.history.document;
   useDialogFocus(adapter.ownerWindow, share || confirmClear, () => {
     setShare(false);
@@ -68,11 +73,12 @@ export function StudioShell({
   });
   const hasContent = Boolean(
     document.items.length ||
-      document.background ||
-      document.pages?.some((page) => page.items.length || page.background),
+    document.background ||
+    document.pages?.some((page) => page.items.length || page.background),
   );
   return (
     <div className="vs">
+      <TooltipLayer ownerWindow={adapter.ownerWindow} />
       <header className="vs-header vs-dark">
         <div className="vs-brand">
           <VisionMark />
@@ -157,7 +163,7 @@ export function StudioShell({
             <p className="vs-menu__kicker">Board file</p>
             <button
               className="vs-menu__item"
-             
+
               onClick={() => {
                 void adapter.backup().catch((error) => setError(String(error)));
               }}
@@ -199,11 +205,19 @@ export function StudioShell({
                 onChange={(event) => {
                   const [width, height] = event.target.value.split('x').map(Number);
                   adapter.commit({ ...document, width, height });
+                  adapter.fitBoard();
                 }}
               >
-                {PAGE_SIZES.map((size) => (
-                  <option key={size.value} value={size.value}>
-                    {size.label}
+                {!BOARD_SIZES.some(
+                  ([value]) => value === `${document.width}x${document.height}`,
+                ) && (
+                  <option value={`${document.width}x${document.height}`} disabled hidden>
+                    Current board
+                  </option>
+                )}
+                {BOARD_SIZES.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
                   </option>
                 ))}
               </select>
@@ -234,13 +248,17 @@ export function StudioShell({
                 data-tip-pos="right"
                 aria-label={STUDIO_TAB_LABELS[id]}
                 aria-pressed={tab === id}
-                onClick={() => setTab(tab === id ? null : id)}
+                onClick={() => {
+                  if (id === 'elements') setElementCategory('all');
+                  setTab(tab === id ? null : id);
+                }}
               >
                 <TabIcon tab={id} />
                 <span>{STUDIO_TAB_LABELS[id]}</span>
               </button>
             ))}
             <span className="vs-rail__divider" aria-hidden="true" />
+            {drawingTools}
             <button
               className={`vs-rail__tab vs-rail__tab--ai${tab === 'ai' ? ' is-active' : ''}`}
               data-tip="AI — generate images and ideas"
@@ -259,7 +277,9 @@ export function StudioShell({
             <section className="vs-lib__panel" aria-label={`${STUDIO_TAB_LABELS[tab]} panel`}>
               <div className="vs-lib__head">
                 <div className="vs-sec-head" style={{ marginBottom: 0 }}>
-                  <span className="vs-eyebrow">{tab === 'ai' ? 'Smart tools' : 'Add to board'}</span>
+                  <span className="vs-eyebrow">
+                    {tab === 'ai' ? 'Smart tools' : 'Add to board'}
+                  </span>
                   <h3>{STUDIO_TAB_LABELS[tab]}</h3>
                   <p>{PANEL_SUBTITLES[tab]}</p>
                 </div>
@@ -283,113 +303,27 @@ export function StudioShell({
                 ) : tab === 'create' ? (
                   <CreatePanel adapter={adapter} />
                 ) : tab === 'ai' ? (
-                  <Suspense fallback={<div className="panel-loading" role="status">Opening AI tools…</div>}>
+                  <Suspense
+                    fallback={
+                      <div className="panel-loading" role="status">
+                        Opening AI tools…
+                      </div>
+                    }
+                  >
                     <AIPanel adapter={adapter} />
                   </Suspense>
                 ) : tab === 'background' ? (
-                  <div className="background-panel">
-                    <div className="panel-section-heading">
-                      <h3>Set the mood</h3>
-                      <p>A quiet backdrop that lets the important pieces breathe.</p>
-                    </div>
-                    <label className="background-color-label">
-                      <span>Page color</span>
-                      <span className="background-color-value">
-                        <input
-                          className="vs-color"
-                          aria-label="Board color"
-                          type="color"
-                          value={document.color}
-                          onChange={(event) =>
-                            adapter.commit({
-                              ...document,
-                              color: event.target.value,
-                              background: undefined,
-                            })
-                          }
-                        />
-                        <span>{document.color.toUpperCase()}</span>
-                      </span>
-                    </label>
-                    <div className="background-swatches" aria-label="Suggested background colors">
-                      {[
-                        '#ffffff',
-                        '#fffaf6',
-                        '#fce4ec',
-                        '#efe8ff',
-                        '#e6f4ec',
-                        '#e7efff',
-                        '#fff3cd',
-                        '#25263a',
-                      ].map((color) => (
-                        <button
-                          key={color}
-                          data-tip={`Use ${color}`}
-                          aria-label={`Set background ${color}`}
-                          aria-pressed={document.color.toLowerCase() === color.toLowerCase()}
-                          style={{ background: color }}
-                          onClick={() =>
-                            adapter.commit({ ...document, color, background: undefined })
-                          }
-                        />
-                      ))}
-                    </div>
-                    <div className="background-gradient-card">
-                      <div>
-                        <strong>Soft gradient</strong>
-                        <span>Add depth without competing with your content.</span>
-                      </div>
-                      <label>
-                        <span>End color</span>
-                        <input
-                          className="vs-color"
-                          aria-label="Gradient end color"
-                          type="color"
-                          value={document.gradient || '#f2d7c4'}
-                          onChange={(event) =>
-                            adapter.commit({ ...document, gradient: event.target.value })
-                          }
-                        />
-                      </label>
-                      <label>
-                        <span>Blend</span>
-                        <select
-                          className="vs-select"
-                          aria-label="Background gradient type"
-                          value={document.gradientType || 'linear'}
-                          onChange={(event) =>
-                            adapter.commit({
-                              ...document,
-                              gradientType: event.target.value as 'linear' | 'radial',
-                            })
-                          }
-                        >
-                          <option value="linear">Linear</option>
-                          <option value="radial">Radial</option>
-                        </select>
-                      </label>
-                      <button
-                        className="panel-secondary-action"
-                        onClick={() =>
-                          adapter.commit({
-                            ...document,
-                            gradient: document.gradient ? undefined : '#f2d7c4',
-                          })
-                        }
-                      >
-                        {document.gradient ? 'Use solid color' : 'Add subtle gradient'}
-                      </button>
-                    </div>
-                    <div className="panel-section-heading panel-section-heading--divided">
-                      <h3>Textures &amp; surfaces</h3>
-                      <p>Paper, grain and tactile surfaces live in the Elements library.</p>
-                    </div>
-                    <button className="panel-action" onClick={() => setTab('elements')}>
-                      Browse surfaces <ArrowRightIcon />
-                    </button>
-                  </div>
+                  <BackgroundPanel
+                    adapter={adapter}
+                    onBrowseSurfaces={() => {
+                      setElementCategory('textures');
+                      setTab('elements');
+                    }}
+                  />
                 ) : (
                   <CuratedPanel
+                    key={elementCategory}
+                    initialCategory={elementCategory}
                     ownerWindow={adapter.ownerWindow}
                     onInsert={(asset) => adapter.insertAsset(asset)}
                   />
@@ -573,7 +507,9 @@ export function StudioShell({
 
             <p className="vs-export__privacy">
               <InfoIcon />
-              <span>Boards stay in this browser. AI requests only use your configured service.</span>
+              <span>
+                Boards stay in this browser. AI requests only use your configured service.
+              </span>
             </p>
           </div>
         </div>

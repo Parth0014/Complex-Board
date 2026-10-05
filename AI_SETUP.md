@@ -7,7 +7,9 @@ The editor has Cloudflare Workers AI integration for image generation (FLUX.1 Sc
 1. Create a Cloudflare account and a Workers AI API token with access to your account. Use the Free plan if you want its enforced free quota. The provider requires credentials; there is no embedded public key.
 2. Copy `.env.example` to `.env` in the project root. Fill `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` locally. Do not share or commit the file, and never put tokens in a `VITE_` variable.
 3. Run `npm run ai:server` in one terminal and `npm run dev` in another.
-4. Open the **AI** panel, choose Image/Affirmation/Editable board, enter a prompt, generate, review the preview, then add it. Replacing a nonempty composition requires confirmation and can be undone.
+4. Open the **AI** panel, choose Complete vision board, Image, or Affirmation, enter a prompt, generate, review the preview, then apply it. Replacing a nonempty composition requires confirmation and can be undone.
+
+Complete vision board first asks AI for goal captions, individual image prompts, and a matching palette. It then generates an original image for each goal, showing progress before presenting the full preview. Applying creates editable photos, cards, and text in one composition sized for the current board. It does not use the curated library as a fallback; an image failure leaves the current board untouched. This workflow makes several image requests, so it takes longer and consumes more provider quota than generating one image. Search curated assets remains a separate library-search tool. Restart `npm run ai:server` after updating server code.
 
 The server listens on localhost port 8787; Vite proxies `/api/ai`. A provider failure or quota exhaustion is shown in the UI. Cancel generation aborts the browser request; an upstream request already running may still finish and consume provider quota. Generated raster data and its source metadata persist in IndexedDB/backups, so reopening a board does not regenerate images.
 

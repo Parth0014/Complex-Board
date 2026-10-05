@@ -8,11 +8,13 @@ import { SearchIcon } from './icons';
 export function CuratedPanel({
   ownerWindow,
   onInsert,
+  initialCategory = 'all',
 }: {
   ownerWindow: Window & typeof globalThis;
   onInsert: (asset: GratitudeAsset) => Promise<unknown>;
+  initialCategory?: string;
 }) {
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState(initialCategory);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query.trim());
   const [assets, setAssets] = useState<GratitudeAsset[]>([]);

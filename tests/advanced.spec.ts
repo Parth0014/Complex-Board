@@ -78,6 +78,7 @@ test('native clipboard transfers editable groups across tabs', async ({ page, co
   await page.goto('/');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'Add goal card', exact: true }).click();
+  await page.getByText('Clipboard tools', { exact: true }).click();
   await page.getByRole('button', { name: 'Copy to clipboard', exact: true }).click();
   await expect(page.getByText('Copied to clipboard', { exact: true })).toBeVisible();
   await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
@@ -85,6 +86,7 @@ test('native clipboard transfers editable groups across tabs', async ({ page, co
   await second.goto('/');
   await expect(second.getByText('Board items (2)', { exact: true })).toBeVisible();
   await second.getByRole('button', { name: 'Create', exact: true }).click();
+  await second.getByText('Clipboard tools', { exact: true }).click();
   await second.getByRole('button', { name: 'Paste from clipboard', exact: true }).click();
   await expect(second.getByText('Board items (4)', { exact: true })).toBeVisible();
   const saved = await backup(second);

@@ -17,6 +17,8 @@ export function RichText({
   const context = ownerWindow.document.createElement('canvas').getContext('2d');
   if (!context) return null;
   const font = item.fontSize || 34,
+    padding = item.textPadding || 0,
+    contentWidth = Math.max(1, item.width - padding * 2),
     lineHeight = font * (item.lineHeight || 1),
     nodes: Array<{
       text: string;
@@ -63,14 +65,14 @@ export function RichText({
       index++;
     const token = text.slice(start, index),
       width = measure(token, style, size);
-    if (x + width > item.width && x > 0 && !space) {
+    if (x + width > contentWidth && x > 0 && !space) {
       line++;
       x = 0;
     }
-    if (width > item.width) {
+    if (width > contentWidth) {
       for (const character of token) {
         const width = measure(character, style, size);
-        if (x + width > item.width && x > 0) {
+        if (x + width > contentWidth && x > 0) {
           line++;
           x = 0;
         }
@@ -89,7 +91,7 @@ export function RichText({
   return (
     <>
       {nodes.map((node, index) => {
-        const spare = Math.max(0, item.width - (widths.get(node.line) || 0)),
+        const spare = Math.max(0, contentWidth - (widths.get(node.line) || 0)),
           spaces = nodes.filter((other) => other.line === node.line && /^\s+$/.test(other.text)),
           before = spaces.filter((other) => other.x < node.x).length;
         const offset =
@@ -104,8 +106,10 @@ export function RichText({
           <Text
             {...common}
             key={index}
-            x={node.x + offset}
+            x={padding + node.x + offset}
             y={
+              padding +
+              Math.max(0, (item.height - padding * 2 - (line + 1) * lineHeight) / 2) +
               node.y +
               (node.style.script === 'super'
                 ? -font * 0.15

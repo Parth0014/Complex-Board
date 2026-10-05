@@ -1,8 +1,10 @@
 import { curatedPackProvider } from '../../assets/curatedPack';
+import Konva from 'konva';
 import { requestAI } from '../aiClient';
 import type { GratitudeAsset } from '../../assets/contracts';
 import type {
   CanvasAdapter,
+  GeneratedBoardVisuals,
   VisionSelection,
   VisionSelectionPatch,
   VisionTextPreset,
@@ -10,14 +12,15 @@ import type {
   VisionImageEdits,
 } from '../contracts';
 import { DocumentHistory, type BoardItem } from '../document';
-import { getLayoutSlotBounds, type VisionLayout } from '../layouts';
+import { getLayoutSlotBounds, fitTemplateLayout, type VisionLayout } from '../layouts';
 import type { VisionTemplate } from '../templates';
+import { VISION_TEMPLATES } from '../templates';
 import { boundsOf, unionBounds, constrainItems } from './geometry';
 import { loadBoard, saveBoard, validateBoard } from '../storage';
 import { imagePdf, imagesPdf } from '../pdf';
 import { renderPage } from './renderPage';
 import { updateConnectors } from '../connectors';
-import { loadEditorFonts } from '../fonts';
+import { loadEditorFonts, fontFamily } from '../fonts';
 import {
   loadMedia,
   saveMedia,
@@ -32,6 +35,13 @@ import {
 const deferred = () => {
   throw new Error('This operation belongs to a later v1 milestone.');
 };
+const isTemplatePlaceholder = (item: BoardItem) =>
+  item.kind === 'shape' &&
+  (item.templatePlaceholder ||
+    (item.shape === 'rectangle' &&
+      !!item.slotId &&
+      /^#[0-9a-f]{6}20$/i.test(item.color || '') &&
+      item.borderWidth === 1));
 
 export class KonvaCanvasAdapter implements CanvasAdapter {
   readonly history = new DocumentHistory();
@@ -486,7 +496,84 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.changed();
   }
   commit(document: typeof this.history.document) {
-    const normalized = this.snapToEdges ? constrainItems(document.items, document) : document.items;
+    const previous = this.history.document;
+    if (
+      document.activePageId === previous.activePageId &&
+      (document.width !== previous.width || document.height !== previous.height)
+    ) {
+      const heading = document.items.find((item) => item.slotId === 'template-heading');
+      const template = VISION_TEMPLATES.find((template) =>
+        heading?.templateId
+          ? template.id === heading.templateId
+          : heading?.text === template.heading,
+      );
+      if (template) {
+        const validSlots = new Set(template.layout.slots.map((slot) => slot.id));
+        const used = new Set<string>();
+        const cleaned = document.items.filter((item) => {
+          if (!item.slotId || item.slotId === 'template-heading') return true;
+          if (!validSlots.has(item.slotId)) return !isTemplatePlaceholder(item);
+          if (
+            isTemplatePlaceholder(item) &&
+            document.items.some(
+              (other) =>
+                other.id !== item.id &&
+                other.slotId === item.slotId &&
+                !isTemplatePlaceholder(other),
+            )
+          )
+            return false;
+          if (used.has(item.slotId)) return !isTemplatePlaceholder(item);
+          used.add(item.slotId);
+          return true;
+        });
+        document = {
+          ...document,
+          items: cleaned.map((item) => {
+            if (item.slotId === 'template-heading')
+              return {
+                ...item,
+                x: document.width * 0.028,
+                y: document.height * 0.022,
+                width: document.width * 0.944,
+                height: document.height * 0.07,
+                fontSize: Math.max(
+                  16,
+                  48 * Math.min(document.width / 1080, document.height / 1350),
+                ),
+              };
+            const slot = template.layout.slots.find((slot) => slot.id === item.slotId);
+            if (!slot) return item;
+            const bounds = fitTemplateLayout(template.layout, document).get(slot.id)!;
+            return {
+              ...item,
+              x: bounds.x,
+              y: bounds.y,
+              width: bounds.width,
+              height: bounds.height,
+              rotation: slot.rotation || 0,
+            };
+          }),
+        };
+      }
+    }
+    const measured = document.items.map((item) => {
+      if (item.kind !== 'text' || item.curve) return item;
+      const text = new Konva.Text({
+        text: item.text || '',
+        width: Math.max(10, item.width),
+        fontSize: item.fontSize || 34,
+        fontFamily: fontFamily(item.fontFamily),
+        fontStyle: `${item.bold ? 'bold' : item.fontWeight || 'normal'}${item.italic ? ' italic' : ''}`,
+        lineHeight: item.lineHeight || 1,
+        padding: item.textPadding || 0,
+        letterSpacing: item.letterSpacing || 0,
+      });
+      const height = Math.max(item.height, Math.ceil(text.height()));
+      text.destroy();
+      return height === item.height ? item : { ...item, height };
+    });
+    const normalized = this.snapToEdges ? constrainItems(measured, document) : measured;
     const connected = updateConnectors(normalized);
     const next = {
       ...document,
@@ -1165,18 +1252,51 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     if (revision !== this.history.revision) throw new Error('Board changed while recoloring.');
     this.patchItems([{ id: item.id, patch: { rendition, colorOverrides: overrides } }]);
   }
-  async composeBoard(title: string, goals: string[], theme = 'minimal') {
-    const revision = this.history.revision,
-      search = await curatedPackProvider.search({ limit: 250 }, this.ownerWindow),
+  async composeBoard(
+    title: string,
+    goals: string[],
+    theme = 'minimal',
+    visuals?: GeneratedBoardVisuals,
+  ) {
+    const revision = this.history.revision;
+    if (visuals && (visuals.images.length !== goals.length || !goals.length))
+      throw new Error('Generate all board images before applying the composition.');
+    const search = visuals
+        ? { items: [] }
+        : await curatedPackProvider.search({ limit: 250 }, this.ownerWindow),
       candidates = search.items.filter((asset) => asset.category === 'goal-objects');
-    const assets = goals
-      .slice(0, 8)
-      .map(
-        (goal) =>
-          candidates.find((asset) =>
-            asset.tags.some((tag) => goal.toLowerCase().includes(tag.toLowerCase())),
-          ) || candidates[goals.indexOf(goal) % candidates.length],
-      );
+    const assets: GratitudeAsset[] = visuals
+      ? visuals.images.map(({ image, prompt }) => {
+          if (
+            !/^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(image) ||
+            image.length > 16000000
+          )
+            throw new Error('Invalid generated board image.');
+          return {
+            id: `generated:${this.id()}`,
+            provider: 'generated',
+            type: 'photo',
+            title: prompt.slice(0, 80),
+            tags: ['generated'],
+            previewUrl: image,
+            assetUrl: image,
+            editable: { crop: true, filters: true },
+            license: {
+              tier: 'E',
+              id: 'ai-generated',
+              label: 'AI-generated; provider terms apply',
+              attributionRequired: false,
+            },
+          };
+        })
+      : goals
+          .slice(0, 8)
+          .map(
+            (goal) =>
+              candidates.find((asset) =>
+                asset.tags.some((tag) => goal.toLowerCase().includes(tag.toLowerCase())),
+              ) || candidates[goals.indexOf(goal) % candidates.length],
+          );
     for (const asset of assets) await this.decode(asset);
     if (revision !== this.history.revision)
       throw new Error('Board changed while building the composition.');
@@ -1189,7 +1309,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           fontFamily: 'assistant',
           fontSize: 58,
           bold: true,
-          color: '#49375e',
+          color: visuals?.palette?.text || '#49375e',
           align: 'center',
           x: 40,
           y: 30,
@@ -1216,7 +1336,9 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           y,
           width: w - 20,
           height: h - 20,
-          fill: theme === 'dark' ? '#ece1f9' : theme === 'scrapbook' ? '#fff2ca' : '#fff',
+          fill:
+            visuals?.palette?.card ||
+            (theme === 'dark' ? '#ece1f9' : theme === 'scrapbook' ? '#fff2ca' : '#fff'),
           radius: theme === 'scrapbook' ? 0 : 18,
           rotation: 0,
           opacity: 1,
@@ -1228,6 +1350,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           id: this.id(),
           kind: 'asset',
           asset,
+          imageFit: visuals ? 'fill' : 'fit',
           x: x + 25,
           y: y + 20,
           width: w - 70,
@@ -1243,7 +1366,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           text: goals[index],
           fontFamily: 'assistant',
           fontSize: 28,
-          color: '#49375e',
+          color: visuals?.palette?.text || '#49375e',
           align: 'center',
           x: x + 15,
           y: y + h - 110,
@@ -1260,12 +1383,21 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.commit({
       ...doc,
       title,
-      color: theme === 'dark' ? '#25263a' : theme === 'scrapbook' ? '#f7e9d3' : '#f4effb',
+      color:
+        visuals?.palette?.background ||
+        (theme === 'dark' ? '#25263a' : theme === 'scrapbook' ? '#f7e9d3' : '#f4effb'),
       background: undefined,
       gradient: undefined,
       items,
     });
     this.select([]);
+  }
+  async composeGeneratedBoard(title: string, goals: string[], visuals: GeneratedBoardVisuals) {
+    if (!visuals?.images?.length || visuals.images.length !== goals.length)
+      throw new Error(
+        'The generated board images are missing. Regenerate the preview before applying.',
+      );
+    await this.composeBoard(title, goals, 'minimal', visuals);
   }
   async createImage(
     _blob: Blob,
@@ -1412,16 +1544,36 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   }
   createShape(shape: NonNullable<BoardItem['shape']>) {
     const id = this.id();
+    const document = this.history.document;
+    const baseWidth =
+      shape === 'rectangle' || shape === 'cloud' || shape === 'line' || shape === 'arrow'
+        ? 240
+        : 200;
+    const baseHeight =
+      shape === 'line' || shape === 'arrow'
+        ? 30
+        : shape === 'cloud'
+          ? 156
+          : shape === 'rectangle'
+            ? 160
+            : 200;
+    const factor = Math.min(
+      1,
+      (document.width * 0.5) / baseWidth,
+      (document.height * 0.5) / baseHeight,
+    );
+    const width = baseWidth * factor,
+      height = baseHeight * factor;
     this.items((items) => [
       ...items,
       {
         id,
         kind: 'shape',
         shape,
-        x: 100,
-        y: 180,
-        width: 240,
-        height: shape === 'line' || shape === 'arrow' ? 30 : 200,
+        x: (document.width - width) / 2,
+        y: (document.height - height) / 2,
+        width,
+        height,
         color: '#b48ce3',
         fill: '#b48ce3',
         rotation: 0,
@@ -1792,6 +1944,18 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   }
   createTextPreset(preset: VisionTextPreset) {
     const id = this.id();
+    const document = this.history.document;
+    const text = new Konva.Text({
+      text: preset.sample,
+      fontSize: preset.fontSize,
+      fontFamily: fontFamily(preset.fontFamily),
+      padding: 8,
+      lineHeight: 1.2,
+    });
+    const width = Math.min(document.width * 0.8, Math.max(40, Math.ceil(text.width())));
+    text.width(width);
+    const height = Math.ceil(text.height());
+    text.destroy();
     this.items((items) => [
       ...items,
       {
@@ -1801,11 +1965,13 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         fontFamily: preset.fontFamily,
         fontSize: preset.fontSize,
         color: preset.color,
-        align: preset.align || 'left',
-        x: 80,
-        y: 90,
-        width: 700,
-        height: preset.fontSize * 2,
+        align: preset.align || 'center',
+        textPadding: 8,
+        lineHeight: 1.2,
+        x: (document.width - width) / 2,
+        y: (document.height - height) / 2,
+        width,
+        height,
         opacity: 1,
         rotation: 0,
         groupPath: [...this.groupScope],
@@ -1841,25 +2007,47 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     const document = this.history.document;
     let index = 0;
     const items = document.items
-      .filter((item) => item.slotId !== 'template-heading')
+      .filter((item) => item.slotId !== 'template-heading' && !isTemplatePlaceholder(item))
       .map((item) => {
+        if (item.kind === 'text' || item.kind === 'drawing' || item.connector) return item;
         const slot = template.layout.slots[index++];
-        if (!slot) return item;
-        const bounds = getLayoutSlotBounds(slot, true);
+        if (!slot) return { ...item, slotId: undefined };
+        const bounds = fitTemplateLayout(template.layout, document).get(slot.id)!;
         return {
           ...item,
           slotId: slot.id,
-          x: bounds.x * document.width,
-          y: bounds.y * document.height,
-          width: bounds.width * document.width,
-          height: bounds.height * document.height,
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
           rotation: slot.rotation || 0,
         };
       });
+    for (const slot of template.layout.slots.slice(index)) {
+      const bounds = fitTemplateLayout(template.layout, document).get(slot.id)!;
+      items.push({
+        id: this.id(),
+        kind: 'shape',
+        shape: 'rectangle',
+        slotId: slot.id,
+        templatePlaceholder: true,
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        rotation: slot.rotation || 0,
+        opacity: 1,
+        fill: `${template.accent}20`,
+        color: `${template.accent}20`,
+        borderColor: template.accent,
+        borderWidth: 1,
+      });
+    }
     items.push({
       id: this.id(),
       kind: 'text',
       slotId: 'template-heading',
+      templateId: template.id,
       text: template.heading,
       fontFamily: 'helvetica',
       fontSize: 48,

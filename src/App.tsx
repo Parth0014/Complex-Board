@@ -2,10 +2,15 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { KonvaCanvasAdapter } from './vision/canvas/KonvaCanvasAdapter';
 import { KonvaStage } from './vision/canvas/KonvaStage';
 import { StudioShell } from './studio/StudioShell';
+import { BoardSizeControl } from './studio/BoardSizeControl';
+import { useMenuPlacement } from './studio/useMenuPlacement';
 import './studio/v5/v5-tokens.css';
 import './studio/v5/v5-chrome.css';
 import './studio/v5/v5-panels.css';
 import './studio/v5/v5-layout.css';
+import './studio/v5/v5-hierarchy.css';
+import './studio/v5/v5-controls.css';
+import './studio/v5/v5-corners.css';
 import { EditorFeatures, type EditorPanel } from './studio/EditorFeatures';
 import type { StudioTab } from './studio/studioTypes';
 import {
@@ -19,7 +24,6 @@ import {
   EraserIcon,
   FitIcon,
   GroupIcon,
-  HandIcon,
   HighlighterIcon,
   ItalicIcon,
   LockIcon,
@@ -48,14 +52,64 @@ const DRAW_MODES = [
 ] as const;
 
 function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
+  useMenuPlacement(adapter.ownerWindow);
   useSyncExternalStore(adapter.subscribe, adapter.getSnapshot);
   const [drawMode, setDrawMode] = useState('select');
-  const [handTool, setHandTool] = useState(false);
+  const [drawingMenuOpen, setDrawingMenuOpen] = useState(false);
+  const [drawButton, setDrawButton] = useState<HTMLElement | null>(null);
+  const [drawPalettePosition, setDrawPalettePosition] = useState({ top: 100, left: 80 });
+  useEffect(() => {
+    if (!drawButton || (!drawingMenuOpen && drawMode === 'select')) return;
+    const update = () => {
+      const rect = drawButton.getBoundingClientRect();
+      const palette = drawButton.parentElement?.querySelector('.vs-draw-pop');
+      const height = palette?.getBoundingClientRect().height || 200;
+      const next = {
+        top: Math.max(8, Math.min(rect.top, adapter.ownerWindow.innerHeight - height - 8)),
+        left: Math.max(8, Math.min(rect.right + 8, adapter.ownerWindow.innerWidth - 140)),
+      };
+      setDrawPalettePosition((current) =>
+        current.top === next.top && current.left === next.left ? current : next,
+      );
+    };
+    const observer = new adapter.ownerWindow.ResizeObserver(update);
+    observer.observe(drawButton);
+    adapter.ownerWindow.addEventListener('resize', update);
+    adapter.ownerWindow.document.addEventListener('scroll', update, true);
+    update();
+    return () => {
+      observer.disconnect();
+      adapter.ownerWindow.removeEventListener('resize', update);
+      adapter.ownerWindow.document.removeEventListener('scroll', update, true);
+    };
+  }, [drawButton, drawingMenuOpen, drawMode, adapter]);
   const [editorPanel, setEditorPanel] = useState<EditorPanel>(null);
   const [studioTab, setStudioTab] = useState<StudioTab | null>(null);
   const [zoom, setZoom] = useState<number | null>(null);
   const [displayZoom, setDisplayZoom] = useState(40);
   const [snappingContainer, setSnappingContainer] = useState<HTMLDivElement | null>(null);
+  const [workspaceNode, setWorkspaceNode] = useState<HTMLDivElement | null>(null);
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0, width: 0 });
+  useEffect(() => {
+    if (!workspaceNode) return;
+    const update = () => {
+      const rect = workspaceNode.getBoundingClientRect();
+      const next = { top: rect.top + 12, left: rect.left + rect.width / 2, width: rect.width - 24 };
+      setToolbarPosition((current) =>
+        current.top === next.top && current.left === next.left && current.width === next.width
+          ? current
+          : next,
+      );
+    };
+    const observer = new adapter.ownerWindow.ResizeObserver(update);
+    observer.observe(workspaceNode);
+    adapter.ownerWindow.addEventListener('resize', update);
+    update();
+    return () => {
+      observer.disconnect();
+      adapter.ownerWindow.removeEventListener('resize', update);
+    };
+  }, [workspaceNode, adapter]);
   const document = adapter.history.document;
   useEffect(() => {
     void adapter.initialize();
@@ -64,12 +118,6 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
   const item = document.items.find((item) => item.id === selection.ids[0]);
   const selectedItems = document.items.filter((item) => selection.ids.includes(item.id));
   const locked = selectedItems.some((item) => item.locked);
-  const selectionKey = selection.ids.join('|');
-  useEffect(() => {
-    if (selection.count > 0 && editorPanel === null && studioTab === null) setEditorPanel('style');
-    // Open properties when a new selection is made, but never interrupt Create/Layers.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectionKey, studioTab]);
   const unitCount = new Set(selectedItems.map((item) => item.groupId || item.id)).size;
   useEffect(() => {
     const isEditorInput = (target: EventTarget | null) => {
@@ -120,9 +168,11 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
         event.preventDefault();
         if (adapter.selectedIds.length) adapter.delete(adapter.selectedIds);
       } else if (event.key === 'Escape') {
+        setDrawMode('select');
         if (adapter.groupScope.length) adapter.exitGroup();
         else adapter.select([]);
-      } else if (event.key === '[') adapter.arrangeSelection(command ? 'back' : 'backward');
+      } else if (!command && event.key.toLowerCase() === 'v') setDrawMode('select');
+      else if (event.key === '[') adapter.arrangeSelection(command ? 'back' : 'backward');
       else if (event.key === ']') adapter.arrangeSelection(command ? 'front' : 'forward');
       else if (event.key.startsWith('Arrow') && adapter.selectedIds.length) {
         event.preventDefault();
@@ -175,53 +225,74 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
       : `${selection.count} items`;
 
   return (
-    <StudioShell adapter={adapter} tab={studioTab} setTab={setStudioTab}>
-      <div className="vs-stage-fill">
-        <nav className="vs-tools vs-dark" role="toolbar" aria-label="Canvas tools">
-          <button
-            className={`vs-icon-btn${drawMode === 'select' && !handTool ? ' is-active' : ''}`}
-            data-tip="Select — move and resize objects (V)"
-            aria-label="Select"
-            aria-pressed={drawMode === 'select' && !handTool}
-            onClick={() => {
-              setHandTool(false);
-              setDrawMode('select');
+    <StudioShell
+      adapter={adapter}
+      tab={studioTab}
+      setTab={setStudioTab}
+      drawingTools={
+        <details
+          className="vs-menu vs-drawing-menu"
+          open={drawingMenuOpen || drawMode !== 'select'}
+        >
+          <summary
+            ref={setDrawButton}
+            className="vs-rail__tab"
+            aria-label="Drawing tools"
+            onClick={(event) => {
+              event.preventDefault();
+              setDrawingMenuOpen((current) => !current);
             }}
           >
-            <SelectIcon />
-          </button>
-          <button
-            className={`vs-icon-btn${handTool ? ' is-active' : ''}`}
-            data-tip="Pan — drag the canvas (hold Space anytime)"
-            aria-label="Hand tool"
-            aria-pressed={handTool}
-            onClick={() => {
-              setHandTool(!handTool);
-              setDrawMode('select');
-            }}
-          >
-            <HandIcon />
-          </button>
-          <span className="vs-tools__divider" aria-hidden="true" />
-          {DRAW_MODES.map(({ id, label, tip, Icon }) => (
+            <PenIcon />
+            <span>Draw</span>
+          </summary>
+          <div className="vs-menu__pop vs-draw-pop" style={drawPalettePosition}>
+            <p className="vs-menu__kicker">Drawing tools</p>
             <button
-              key={id}
-              className={`vs-icon-btn${drawMode === id ? ' is-active' : ''}`}
-              data-tip={tip}
-              aria-label={label}
-              aria-pressed={drawMode === id}
-              onClick={() => {
-                setHandTool(false);
-                setDrawMode(id);
+              className="vs-menu__item"
+              aria-label="Select"
+              aria-pressed={drawMode === 'select'}
+              onClick={(event) => {
+                setDrawMode('select');
+                setDrawingMenuOpen(false);
               }}
             >
-              <Icon />
+              <SelectIcon /> Arrange
             </button>
-          ))}
-        </nav>
-
-        {selection.count > 0 && (
-          <div className="vs-sel vs-dark" role="toolbar" aria-label="Selection controls">
+            {DRAW_MODES.map(({ id, label, tip, Icon }) => (
+              <button
+                key={id}
+                className={`vs-menu__item${drawMode === id ? ' is-active' : ''}`}
+                aria-label={label}
+                aria-pressed={drawMode === id}
+                data-tip={tip}
+                onClick={() => {
+                  setDrawMode(id);
+                  setDrawingMenuOpen(false);
+                  adapter.select([]);
+                }}
+              >
+                <Icon />
+                {label}
+              </button>
+            ))}
+          </div>
+        </details>
+      }
+    >
+      <div className="vs-stage-fill" ref={setWorkspaceNode}>
+        {selection.count > 0 && !editorPanel && (
+          <div
+            className="vs-sel vs-dark"
+            role="toolbar"
+            aria-label="Selection controls"
+            style={{
+              position: 'fixed',
+              top: toolbarPosition.top,
+              left: toolbarPosition.left,
+              maxWidth: toolbarPosition.width,
+            }}
+          >
             <span className="vs-sel__chip">
               {selectionType}
               <small>{selection.count === 1 ? 'selected' : 'selected together'}</small>
@@ -589,9 +660,9 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
         )}
 
         <KonvaStage
+          key="vision-canvas"
           snappingContainer={snappingContainer}
           drawMode={drawMode}
-          handTool={handTool}
           adapter={adapter}
           zoom={zoom}
           onZoomChange={setZoom}
@@ -673,13 +744,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
             >
               <TrashIcon />
             </button>
-            <span
-              className="vs-zoom__pct vs-page-dims"
-              data-tip="Board dimensions"
-              style={{ minWidth: 'auto', padding: '0 8px' }}
-            >
-              {document.width}×{document.height}
-            </span>
+            <BoardSizeControl adapter={adapter} />
           </div>
 
           <div className="vs-zoom">

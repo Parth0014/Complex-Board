@@ -1,4 +1,5 @@
 import React from 'react';
+import { shapeGeometry } from '../vision/shapeGeometry';
 import {
   AlignCenter,
   AlignEndHorizontal,
@@ -236,6 +237,28 @@ export const ApertureIcon = ic(Aperture, 15);
 
 /* Shapes (Create panel previews) */
 export const ShapeIcon = ({ shape, size = 22 }: { shape: string; size?: number }) => {
+  const geometry = shapeGeometry[shape];
+  const previewHeight = shape === 'rectangle' ? 100 * 160 / 240 : shape === 'cloud' ? 65 : 100;
+  if (geometry)
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="-8 -8 116 116"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="7"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path
+          d={geometry.path}
+          transform={`translate(0 ${(100 - previewHeight) / 2}) scale(${100 / geometry.width} ${previewHeight / geometry.height}) translate(${-geometry.x} ${-geometry.y})`}
+          vectorEffect="non-scaling-stroke"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
   const map: Record<string, LucideIcon> = {
     rectangle: Square,
     circle: Circle,

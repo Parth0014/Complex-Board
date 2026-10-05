@@ -49,7 +49,12 @@ test('board generation requests a schema and accepts structured provider objects
     async (_url, options) => {
       const body = JSON.parse(options.body);
       assert.equal(body.response_format.type, 'json_schema');
-      assert.deepEqual(body.response_format.json_schema.required, ['title', 'goals']);
+      assert.deepEqual(body.response_format.json_schema.required, [
+        'title',
+        'goals',
+        'imagePrompts',
+        'palette',
+      ]);
       return Response.json({
         success: true,
         result: {
@@ -60,6 +65,24 @@ test('board generation requests a schema and accepts structured provider objects
   );
   assert.equal(result.title, 'My year');
   assert.deepEqual(result.goals, ['Explore Japan', 'Develop my career']);
+});
+
+test('board art direction preserves prompts and validates palette colors', async () => {
+  const result = await generateAI({ prompt: 'Japan', mode: 'board' }, env, async () =>
+    Response.json({
+      success: true,
+      result: {
+        response: {
+          title: 'Explore',
+          goals: ['Visit Kyoto'],
+          imagePrompts: ['Kyoto at sunrise, cinematic photography'],
+          palette: { background: '#faf0e0', text: 'invalid', card: '#ffffff' },
+        },
+      },
+    }),
+  );
+  assert.deepEqual(result.imagePrompts, ['Kyoto at sunrise, cinematic photography']);
+  assert.deepEqual(result.palette, { background: '#faf0e0', text: '#49375e', card: '#ffffff' });
 });
 
 test('board parsing accepts fenced and explained JSON but rejects malformed or empty plans', async () => {

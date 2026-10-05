@@ -26,6 +26,28 @@ async function createPair(page: Page) {
   await page.getByRole('spinbutton', { name: 'Item Y', exact: true }).fill('400');
   await page.getByRole('spinbutton', { name: 'Item Y', exact: true }).blur();
 }
+
+test('Keep ratio preserves proportions and turning it off enables side stretching', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.getByRole('button', { name: 'heart', exact: true }).click();
+  await page.getByRole('button', { name: 'Close panel', exact: true }).click();
+  for (const [name, value] of [['Item X', '300'], ['Item Y', '300'], ['Width', '200'], ['Height', '100']]) {
+    await page.getByRole('spinbutton', { name, exact: true }).fill(value);
+    await page.getByRole('spinbutton', { name, exact: true }).blur();
+  }
+  await page.getByRole('checkbox', { name: 'Alignment guides', exact: true }).uncheck();
+  await drag(page, await point(page, 500, 400), await point(page, 560, 420));
+  const width = Number(await page.getByRole('spinbutton', { name: 'Width', exact: true }).inputValue());
+  const height = Number(await page.getByRole('spinbutton', { name: 'Height', exact: true }).inputValue());
+  expect(width).toBeGreaterThan(200);
+  expect(Math.abs(width / height - 2)).toBeLessThan(0.03);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Keep ratio', exact: true }).uncheck();
+  await drag(page, await point(page, 500, 350), await point(page, 560, 350));
+  expect(Number(await page.getByRole('spinbutton', { name: 'Width', exact: true }).inputValue())).toBeGreaterThan(250);
+  expect(Number(await page.getByRole('spinbutton', { name: 'Height', exact: true }).inputValue())).toBeCloseTo(100, 5);
+});
 test('box selection, group dragging, one-step undo, and ungrouping', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -100,7 +122,7 @@ test('drops a library asset at the pointer and supports object snapping, rotatio
   await page.getByRole('button', { name: 'Rotate 15°', exact: true }).click();
   await page.screenshot({ path: 'test-results/canvas-interactions.png' });
 });
-test('Alt bypasses snapping, Shift constrains dragging, and the hand tool pans without editing', async ({
+test('Alt bypasses snapping, Shift constrains dragging, and workspace dragging leaves the board anchored', async ({
   page,
 }) => {
   await createPair(page);
@@ -123,18 +145,20 @@ test('Alt bypasses snapping, Shift constrains dragging, and the hand tool pans w
   await drag(page, await point(page, 404, 480), await point(page, 504, 510));
   await page.keyboard.up('Shift');
   await expect(page.getByRole('spinbutton', { name: 'Item Y', exact: true })).toHaveValue('400');
-  const xBefore = await page.getByRole('spinbutton', { name: 'Item X', exact: true }).inputValue();
   await page.getByRole('slider', { name: 'Zoom', exact: true }).focus();
   await page.getByRole('slider', { name: 'Zoom', exact: true }).press('End');
   await expect(page.getByRole('slider', { name: 'Zoom', exact: true })).toHaveValue('150');
-  await page.getByRole('button', { name: 'Hand tool', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Hand tool', exact: true })).toHaveCount(0);
   const viewport = page.getByLabel('Editable vision board', { exact: true });
   const box = (await viewport.boundingBox())!;
-  await drag(page, { x: box.x + 200, y: box.y + 160 }, { x: box.x + 100, y: box.y + 60 });
-  expect(await viewport.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
-  expect(await viewport.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
-  await expect(page.getByRole('spinbutton', { name: 'Item X', exact: true })).toHaveValue(xBefore);
-  await expect(page.getByRole('spinbutton', { name: 'Item Y', exact: true })).toHaveValue('400');
+  await viewport.focus();
+  const before = await viewport.evaluate((node) => [node.scrollLeft, node.scrollTop, node.getAttribute('data-page-left'), node.getAttribute('data-page-top')]);
+  await page.keyboard.down('Shift');
+  await page.keyboard.down('Space');
+  await drag(page, { x: box.x + 8, y: box.y + 8 }, { x: box.x + 40, y: box.y + 40 });
+  await page.keyboard.up('Space');
+  await page.keyboard.up('Shift');
+  expect(await viewport.evaluate((node) => [node.scrollLeft, node.scrollTop, node.getAttribute('data-page-left'), node.getAttribute('data-page-top')])).toEqual(before);
 });
 test('artboard bounds remain mandatory with alignment guides disabled and Alt held', async ({
   page,
@@ -151,8 +175,10 @@ test('artboard bounds remain mandatory with alignment guides disabled and Alt he
   await page.getByRole('spinbutton', { name: 'Item Y', exact: true }).fill('-100');
   await expect(page.getByRole('spinbutton', { name: 'Item Y', exact: true })).toHaveValue('0');
   await page.getByRole('spinbutton', { name: 'Item Y', exact: true }).fill('2000');
-  await expect(page.getByRole('spinbutton', { name: 'Item Y', exact: true })).toHaveValue('1190');
+  await expect(page.getByRole('spinbutton', { name: 'Item Y', exact: true })).toHaveValue('920');
   await page.getByRole('checkbox', { name: 'Snap to edges', exact: true }).uncheck();
+  await drag(page, await point(page, 980, 1000), await point(page, -100, 1000));
+  expect(Number(await page.getByRole('spinbutton', { name: 'Item X', exact: true }).inputValue())).toBeLessThan(0);
   await page.getByRole('spinbutton', { name: 'Item X', exact: true }).fill('-100');
   await expect(page.getByRole('spinbutton', { name: 'Item X', exact: true })).toHaveValue('-100');
   await page.getByRole('checkbox', { name: 'Snap to edges', exact: true }).check();

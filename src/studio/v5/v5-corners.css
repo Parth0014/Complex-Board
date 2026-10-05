@@ -1,0 +1,47 @@
+/* Continuous corners for app chrome; canvas artwork keeps its own styling. */
+.vs *, .vs *::before, .vs *::after { corner-shape: squircle; }
+.vs {
+  --vs-r-sm: 10px;
+  --vs-r-md: 14px;
+  --vs-r-lg: 20px;
+  --vs-r-pill: 12px;
+}
+.vs :is(button, input:not([type='range']), select, textarea, summary) {
+  border-radius: var(--vs-r-sm);
+  corner-shape: squircle;
+}
+.vs :is(.vs-lib, .vs-inspector, .vs-modal, .vs-export, .vs-bottom-dock) {
+  border-radius: var(--vs-r-lg);
+  corner-shape: squircle;
+}
+.vs :is(.vs-menu__pop, .vs-sec, .vs-tools, .vs-sel, .vs-segmented,
+  .panel-intro-card, .panel-empty-state, .templates-panel__card, .asset-thumb,
+  .background-live-preview, .background-gradient-card, .create-replace-warning,
+  .vs-alert, .panel-inline-error, .panel-inline-status, .canvas-message,
+  .vs-history, .vs-page-select, .vs-sel__chip) {
+  border-radius: var(--vs-r-md);
+  corner-shape: squircle;
+}
+.vs :is(.vs-icon-btn, .vs-compose-action, .vs-sel__design, .vs-rail__tab,
+  .vs-segmented button, .panel-action, .panel-secondary-action,
+  .templates-panel__apply, .vs-menu__item, .snap-toggle,
+  .vs-bottom-dock .vs-icon-btn, .vs-bottom-dock .snap-toggle,
+  .vs-bottom-dock .vs-page-select, .vs-bottom-dock select) {
+  border-radius: var(--vs-r-sm);
+  corner-shape: squircle;
+}
+.vs .background-color-grid > button > span:first-child,
+.vs :is(.vs-swatch, .vs-color, .text-panel__add, .panel-intro-card__icon, .vs-empty__icon) {
+  border-radius: 10px;
+  corner-shape: squircle;
+}
+.vs .vs-switch__track,
+.vs .vs-switch__track::after,
+.vs .snap-toggle .vs-switch__track,
+.vs .snap-toggle .vs-switch__track::after {
+  border-radius: 7px;
+  corner-shape: squircle;
+}
+.vs-tooltip { border-radius: 10px; corner-shape: squircle; }
+/* The unified toolbar has one outer contour, without nested card outlines. */
+.vs .vs-bottom-dock :is(.vs-pages, .vs-zoom, .canvas-tools) { border-radius: 0; }

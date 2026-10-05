@@ -58,12 +58,16 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
 
   return (
     <div className="create-panel">
-      {error && <p className="panel-inline-error" role="alert">{error}</p>}
+      {error && (
+        <p className="panel-inline-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <section className="create-panel__section create-panel__section--primary">
         <div className="panel-section-heading">
           <h3>Quick shapes</h3>
-          <p>Add a primitive, then refine it from Properties.</p>
+          <p>Choose a shape to add to your board.</p>
         </div>
         <div className="create-shape-grid" aria-label="Quick shapes">
           {SHAPES.map((shape) => (
@@ -74,30 +78,33 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
               onClick={() => adapter.createShape(shape)}
             >
               <ShapeIcon shape={shape} />
+              <span>{shape[0].toUpperCase() + shape.slice(1)}</span>
             </button>
           ))}
         </div>
-        <button
-          className="panel-secondary-action create-connect-action"
-          disabled={adapter.selectedIds.length !== 2}
-          onClick={() => {
-            try {
-              adapter.connectSelection();
-              setError('');
-            } catch (error) {
-              setError(String(error));
-            }
-          }}
-        >
-          Connect selected objects
-          <ArrowRightIcon />
-        </button>
+        {adapter.selectedIds.length === 2 && (
+          <button
+            className="panel-secondary-action create-connect-action"
+            disabled={adapter.selectedIds.length !== 2}
+            onClick={() => {
+              try {
+                adapter.connectSelection();
+                setError('');
+              } catch (error) {
+                setError(String(error));
+              }
+            }}
+          >
+            Connect selected objects
+            <ArrowRightIcon />
+          </button>
+        )}
       </section>
 
       <section className="create-panel__section">
         <div className="panel-section-heading">
           <h3>Goal cards</h3>
-          <p>Useful building blocks for intentions and affirmations.</p>
+          <p>Write a goal or choose a ready-made affirmation.</p>
         </div>
         <textarea
           className="create-card-copy vs-textarea"
@@ -106,7 +113,11 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
           onChange={(event) => setCard(event.target.value)}
         />
         <div className="create-card-actions">
-          <button className="panel-action" onClick={() => adapter.createCard(card)}>
+          <button
+            className="panel-action"
+            disabled={!card.trim()}
+            onClick={() => adapter.createCard(card.trim())}
+          >
             Add goal card
           </button>
           <button
@@ -118,10 +129,13 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
         </div>
       </section>
 
-      <section className="create-panel__section">
+      <details className="create-panel__section create-extra">
+        <summary>Build a complete board</summary>
         <div className="panel-section-heading">
-          <h3>Compositions</h3>
-          <p>Populate the canvas with a complete starting direction.</p>
+          <h3>Choose a theme</h3>
+          <p>
+            Creates a whole board. If you already have content, you?ll be asked before replacing it.
+          </p>
         </div>
         <label className="create-composition-select">
           <span>Theme</span>
@@ -131,12 +145,14 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
             value={template}
             onChange={(event) => setTemplate(event.target.value)}
           >
-            {COMPOSITIONS.map((theme) => <option key={theme}>{theme}</option>)}
+            {COMPOSITIONS.map((theme) => (
+              <option key={theme}>{theme}</option>
+            ))}
           </select>
         </label>
         <button
           className="panel-action"
-          disabled={busy}
+          disabled={busy || replaceTemplate}
           onClick={() => {
             if (adapter.history.document.items.length) setReplaceTemplate(true);
             else void applyComposition();
@@ -145,11 +161,19 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
           {busy ? 'Building composition…' : 'Apply composition'}
         </button>
         {replaceTemplate && (
-          <div className="create-replace-warning" role="group" aria-label="Replace current composition">
+          <div
+            className="create-replace-warning"
+            role="group"
+            aria-label="Replace current composition"
+          >
             <strong>Replace current board?</strong>
             <p>Your current composition will be replaced. You can undo this action.</p>
             <div>
-              <button className="panel-action" onClick={() => void applyComposition()}>
+              <button
+                className="panel-action"
+                disabled={busy}
+                onClick={() => void applyComposition()}
+              >
                 Replace composition
               </button>
               <button className="panel-secondary-action" onClick={() => setReplaceTemplate(false)}>
@@ -158,9 +182,10 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
             </div>
           </div>
         )}
-      </section>
+      </details>
 
-      <section className="create-panel__section create-panel__section--utility">
+      <details className="create-panel__section create-panel__section--utility create-extra">
+        <summary>Clipboard tools</summary>
         <div className="panel-section-heading">
           <h3>Clipboard</h3>
           <p>Move editable objects between boards or browser tabs.</p>
@@ -173,10 +198,15 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
             Paste from clipboard
           </button>
         </div>
-        {adapter.clipboardStatus && <p className="create-clipboard-status" role="status">{adapter.clipboardStatus}</p>}
-      </section>
+        {adapter.clipboardStatus && (
+          <p className="create-clipboard-status" role="status">
+            {adapter.clipboardStatus}
+          </p>
+        )}
+      </details>
 
-      <section className="create-panel__section create-panel__section--assist">
+      <details className="create-panel__section create-panel__section--assist create-extra">
+        <summary>Drawing options</summary>
         <label className="create-assist-toggle vs-switch">
           <span>
             <strong>Shape assist</strong>
@@ -192,8 +222,10 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
           />
           <span className="vs-switch__track" aria-hidden="true" />
         </label>
-        <p className="create-drawing-note">Pen, marker, highlighter and eraser live beside the canvas so drawing modes stay one click away.</p>
-      </section>
+        <p className="create-drawing-note">
+          Choose Draw in the left sidebar to use a pen, marker, highlighter or eraser.
+        </p>
+      </details>
     </div>
   );
 }

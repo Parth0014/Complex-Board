@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import Konva from 'konva';
 import { Group, Rect, Image, Ellipse, Line, Arrow, Star, Path, Text, TextPath } from 'react-konva';
 import type { BoardItem } from '../document';
 import type { KonvaCanvasAdapter } from './KonvaCanvasAdapter';
 import { fontFamily } from '../fonts';
 import { framePaths } from '../frames';
+import { shapeGeometry } from '../shapeGeometry';
 import { RichText } from './RichText';
 const glitchFilter = (data: ImageData) => {
   const original = new Uint8ClampedArray(data.data);
@@ -25,12 +26,14 @@ function colorBalance(this: Konva.Node, data: ImageData) {
   }
 }
 
-export function ItemContent({
+function Content({
   item: input,
   adapter,
 }: {
   item: BoardItem;
   adapter: KonvaCanvasAdapter;
+  imageToken?: HTMLImageElement;
+  previewToken?: object | boolean;
 }) {
   const item = adapter.originalPreview
     ? {
@@ -140,15 +143,23 @@ export function ItemContent({
   if (item.kind === 'text') {
     if (item.textRuns?.length || item.kerning === false || item.ligatures === false)
       return (
-        <>
+        <Group clipWidth={item.width} clipHeight={item.height}>
+          <Rect width={item.width} height={item.height} fill="transparent" listening={false} />
           {item.textBackground && (
-            <Rect width={item.width} height={item.height} fill={item.textBackground} />
+            <Rect
+              width={item.width}
+              height={item.height}
+              fill={item.textBackground}
+              cornerRadius={item.radius || 0}
+            />
           )}
           <RichText item={item} ownerWindow={adapter.ownerWindow} common={common} />
-        </>
+        </Group>
       );
     const textProps = {
       text: item.text,
+      padding: item.textPadding || 0,
+      verticalAlign: 'middle',
       fontSize: item.fontSize,
       fontFamily: fontFamily(item.fontFamily),
       fontStyle:
@@ -167,7 +178,11 @@ export function ItemContent({
       stroke: item.borderColor || '#33272b',
     };
     return (
-      <>
+      <Group
+        clipWidth={item.curve ? undefined : item.width}
+        clipHeight={item.curve ? undefined : item.height}
+      >
+        <Rect width={item.width} height={item.height} fill="transparent" listening={false} />
         {item.textBackground && (
           <Rect
             width={item.width}
@@ -215,7 +230,7 @@ export function ItemContent({
             lineHeight={item.lineHeight || 1}
           />
         )}
-      </>
+      </Group>
     );
   }
   if (item.kind === 'drawing') {
@@ -237,6 +252,19 @@ export function ItemContent({
     );
   }
   if (item.kind === 'shape') {
+    const geometry = shapeGeometry[item.shape || ''];
+    if (geometry && item.shape !== 'rectangle')
+      return (
+        <Path
+          {...common}
+          data={geometry.path}
+          x={(-geometry.x * item.width) / geometry.width}
+          y={(-geometry.y * item.height) / geometry.height}
+          scaleX={item.width / geometry.width}
+          scaleY={item.height / geometry.height}
+          strokeScaleEnabled={false}
+        />
+      );
     if (item.shape === 'circle')
       return (
         <Ellipse
@@ -272,9 +300,17 @@ export function ItemContent({
         stroke: item.color || '#33272b',
         fill: item.color || '#33272b',
         strokeWidth: item.borderWidth || item.strokeWidth || 4,
+        hitStrokeWidth: Math.max(24, item.borderWidth || item.strokeWidth || 4),
+        lineCap: 'round' as const,
+        lineJoin: 'round' as const,
         dash,
       };
-      return item.shape === 'arrow' ? <Arrow {...props} /> : <Line {...props} />;
+      return (
+        <Group>
+          <Rect width={item.width} height={item.height} fill="transparent" />
+          {item.shape === 'arrow' ? <Arrow {...props} /> : <Line {...props} />}
+        </Group>
+      );
     }
     if (item.shape === 'heart' || item.shape === 'cloud' || item.shape === 'blob')
       return (
@@ -437,3 +473,7 @@ export function ItemContent({
     </>
   );
 }
+
+// Selection changes do not change artwork. Explicit tokens still refresh image
+// loading and non-destructive previews held outside the document.
+export const ItemContent = memo(Content);

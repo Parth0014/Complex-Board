@@ -11,6 +11,7 @@ test('shapes, styling, drawing and autosave survive reload', async ({ page }) =>
   await page.getByLabel('Stroke width', { exact: true }).fill('4');
   await page.getByLabel('Effect', { exact: true }).selectOption('glow');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.locator('.vs-drawing-menu summary').click();
   await page.getByRole('button', { name: 'pen', exact: true }).click();
   await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
   const viewport = page.getByLabel('Editable vision board', { exact: true }),

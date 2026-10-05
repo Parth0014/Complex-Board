@@ -1,0 +1,598 @@
+/* Shared dropdowns and compact workspace preferences. */
+.vs .vs-bottom-dock {
+  justify-self: center;
+  width: fit-content;
+  max-width: 100%;
+  gap: 0;
+  padding: 6px;
+  border: 1px solid var(--vs-line);
+  border-radius: 6px;
+  background: var(--vs-panel);
+  box-shadow: var(--vs-shadow-utility);
+}
+.vs .vs-bottom-dock .vs-pages,
+.vs .vs-bottom-dock .vs-zoom,
+.vs .vs-bottom-dock .canvas-tools {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 2px 8px;
+}
+.vs .vs-bottom-dock .vs-zoom,
+.vs .vs-bottom-dock .vs-snap-slot {
+  border-left: 1px solid var(--vs-line-soft);
+}
+.vs .vs-bottom-dock .vs-icon-btn,
+.vs .vs-bottom-dock .vs-page-select,
+.vs .vs-bottom-dock .vs-page-select select,
+.vs .vs-bottom-dock .vs-board-size select,
+.vs .vs-bottom-dock .snap-toggle {
+  border-radius: 4px;
+}
+.library-help {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--vs-ink-2);
+}
+.templates-panel__visual {
+  padding: 10px;
+}
+.templates-panel__preview {
+  max-height: 110px;
+}
+.templates-panel__meta {
+  padding: 12px;
+}
+.templates-panel__apply {
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+}
+.create-shape-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.create-shape-grid button {
+  aspect-ratio: auto;
+  min-height: 64px;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 3px;
+  font-size: 11px;
+}
+.create-card-actions,
+.create-clipboard-actions,
+.create-replace-warning > div {
+  flex-direction: column;
+}
+.create-card-actions > button,
+.create-clipboard-actions > button {
+  width: 100%;
+}
+.create-extra {
+  padding: 14px 0;
+  border-top: 1px solid var(--vs-line-soft);
+}
+.create-extra > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--vs-ink);
+}
+.create-extra[open] > summary {
+  margin-bottom: 16px;
+}
+.create-extra .panel-section-heading h3 {
+  font-size: 13px;
+}
+.background-live-preview {
+  height: 105px;
+  border: 1px solid var(--vs-line);
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+}
+.background-live-preview > span {
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #ffffffdd;
+  color: #4d525d;
+}
+.background-modes {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.background-modes > button {
+  flex: 1;
+  justify-content: center;
+  padding-inline: 8px;
+}
+.background-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 6px;
+  margin-bottom: 20px;
+}
+.background-color-grid > button {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  color: var(--vs-ink-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.background-color-grid > button > span:first-child {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #10121820;
+  border-radius: 50%;
+}
+.background-color-grid > button[aria-pressed='true'] {
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent-deep);
+  border-color: #2f54eb40;
+}
+.background-color-grid > button:hover {
+  background: var(--vs-panel-2);
+}
+.background-gradient-card label {
+  min-width: 0;
+}
+.background-textures {
+  margin-top: 20px;
+}
+.background-textures p {
+  font-size: 12px;
+  color: var(--vs-ink-2);
+  line-height: 1.5;
+}
+.vs select {
+  appearance: none;
+  min-height: 36px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 34px 8px 11px;
+  border: 1px solid var(--vs-line);
+  border-radius: 8px;
+  background-color: var(--vs-panel);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23677080' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  color: var(--vs-ink);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background-color 0.15s;
+}
+.vs select:hover:not(:disabled) {
+  border-color: #bbc2cf;
+  background-color: #fafbfe;
+}
+.vs select:focus-visible {
+  outline: none;
+  border-color: var(--vs-accent);
+  box-shadow: 0 0 0 3px #2f54eb1a;
+}
+.vs select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.vs select option {
+  background: var(--vs-panel);
+  color: var(--vs-ink);
+}
+.vs .vs-board-size select,
+.vs .vs-page-select select {
+  min-height: 30px;
+  padding: 5px 29px 5px 9px;
+  font-size: 12px;
+  background-position: right 7px center;
+}
+.vs .vs-page-select {
+  padding: 3px;
+  background: transparent;
+}
+.vs .vs-menu__row .vs-select {
+  padding-right: 32px;
+  min-height: 34px;
+  max-width: 155px;
+}
+.vs .vs-sel .vs-menu__pop label select {
+  padding: 7px 30px 7px 9px;
+  background-color: var(--vs-graphite-800);
+  color: var(--vs-chrome-ink);
+  border-color: var(--vs-graphite-600);
+}
+.vs .vs-menu__pop {
+  padding: 7px;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px #1012180a,
+    0 16px 36px #1012181f;
+}
+.vs .vs-menu__item {
+  min-height: 36px;
+  padding: 9px 11px;
+  gap: 10px;
+  line-height: 1.4;
+}
+.vs .vs-menu__item:hover:not(:disabled) {
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent-deep);
+}
+.vs .vs-menu__item:hover:not(:disabled) svg {
+  color: inherit;
+}
+.vs .vs-menu__kicker {
+  padding: 8px 11px 6px;
+}
+
+.vs .canvas-tools {
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 14px;
+  font-weight: 500;
+}
+.vs .canvas-tools__label {
+  padding: 0 8px 0 4px;
+  margin: 0;
+  font-size: 10px;
+  color: var(--vs-mute);
+}
+.vs .snap-toggle {
+  position: relative;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--vs-ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.vs .snap-toggle:has(input:checked) {
+  background: transparent;
+  color: var(--vs-ink);
+}
+.vs .snap-toggle:hover {
+  background: var(--vs-panel-2);
+}
+.vs .snap-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+.vs .snap-toggle .vs-switch__track {
+  width: 28px;
+  height: 17px;
+  order: 2;
+  background: #d6dbe4;
+}
+.vs .snap-toggle .vs-switch__track::after {
+  width: 13px;
+  height: 13px;
+  top: 2px;
+  left: 2px;
+  box-shadow: 0 1px 2px #10121826;
+}
+.vs .snap-toggle input:checked + .vs-switch__track {
+  background: var(--vs-accent);
+}
+.vs .snap-toggle input:checked + .vs-switch__track::after {
+  transform: translateX(11px);
+}
+.vs .snap-toggle input:focus-visible + .vs-switch__track {
+  outline: 2px solid var(--vs-accent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vs select,
+  .vs .snap-toggle .vs-switch__track,
+  .vs .snap-toggle .vs-switch__track::after {
+    transition: none;
+  }
+}
+.ai-board-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--vs-radius-md);
+}
+.ai-board-preview figure {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--vs-radius-sm);
+}
+.ai-board-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+.ai-board-preview figcaption {
+  padding: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+.vs .vs-tools {
+  padding: 4px;
+  gap: 3px;
+}
+.vs .vs-compose-action {
+  min-height: 30px;
+  padding: 6px 9px;
+  font-size: 12px;
+}
+.vs .vs-sel {
+  padding: 5px 7px;
+  gap: 3px;
+}
+.vs .vs-sel .vs-icon-btn {
+  width: 28px;
+  height: 28px;
+}
+.vs .vs-sel__num {
+  height: 28px;
+  padding: 4px 6px;
+}
+.vs .vs-sel__chip {
+  padding: 6px 8px;
+}
+.vs .vs-sel__design {
+  padding: 6px 10px;
+  min-height: 28px;
+}
+.vs .vs-bottom-dock {
+  padding: 5px 8px;
+  gap: 4px;
+}
+.vs .vs-bottom-dock .vs-pages,
+.vs .vs-bottom-dock .vs-zoom,
+.vs .vs-bottom-dock .canvas-tools {
+  padding-block: 3px;
+  gap: 5px;
+}
+.vs .vs-bottom-dock .vs-icon-btn {
+  width: 28px;
+  height: 28px;
+}
+.vs {
+  --vs-header-h: 46px;
+}
+.vs .vs-header .vs-btn {
+  padding: 7px 12px;
+}
+@media (min-width: 720px) {
+  .vs .vs-rail {
+    width: 64px;
+    padding-block: 8px;
+    gap: 2px;
+  }
+  .vs .vs-rail__tab {
+    width: 54px;
+    padding-block: 6px;
+  }
+}
+
+/* Keep the board as the focal point; utilities sit at the workspace edge. */
+.vs .vs-canvas {
+  background: #f3f4f7;
+}
+.vs .vs-bottom-dock {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  justify-content: space-between;
+  padding: 5px 12px;
+  border: 0;
+  border-top: 1px solid #e4e6eb;
+  border-radius: 0;
+  box-shadow: none;
+  background: #f3f4f7;
+}
+.vs .vs-bottom-dock .vs-pages {
+  margin-right: auto;
+}
+.vs .vs-bottom-dock .vs-zoom {
+  order: 3;
+  border-left: 0;
+}
+.vs .vs-bottom-dock .vs-snap-slot {
+  border-left: 0;
+}
+.vs .vs-bottom-dock .snap-toggle {
+  padding: 5px 6px;
+  font-size: 11px;
+}
+.vs .vs-rail {
+  background: #f3f4f7;
+  box-shadow: none;
+}
+@media (max-width: 1100px) {
+  .vs .vs-bottom-dock {
+    justify-content: center;
+    padding-inline: 6px;
+  }
+  .vs .vs-bottom-dock .vs-pages {
+    margin-right: 0;
+  }
+}
+.vs .vs-draw-pop {
+  position: fixed;
+  left: 80px;
+  top: 100px;
+  min-width: 180px;
+  z-index: var(--vs-z-popover);
+}
+.vs .vs-drawing-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.vs .vs-drawing-menu > summary::-webkit-details-marker {
+  display: none;
+}
+@media (min-width: 720px) {
+  .vs .vs-lib.is-collapsed {
+    width: 57px;
+  }
+  .vs .vs-rail {
+    width: 56px;
+  }
+  .vs .vs-rail__tab {
+    width: 48px;
+    gap: 2px;
+    padding: 5px 1px;
+    font-size: 9px;
+  }
+  .vs .vs-rail__tab svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+.vs .vs-bottom-dock {
+  padding: 2px 8px;
+  gap: 0;
+  border-radius: 0;
+}
+.vs .vs-bottom-dock :is(.vs-pages, .vs-zoom, .canvas-tools) {
+  padding: 1px 5px;
+}
+.vs .vs-bottom-dock :is(select, .vs-page-select) {
+  min-height: 26px;
+  padding-block: 3px;
+  font-size: 11px;
+}
+.vs .vs-bottom-dock .snap-toggle {
+  padding-block: 3px;
+}
+.vs .vs-draw-pop {
+  width: 132px;
+  min-width: 132px;
+  padding: 5px;
+}
+.vs .vs-draw-pop .vs-menu__kicker {
+  padding: 5px 7px;
+  font-size: 10px;
+}
+.vs .vs-draw-pop .vs-menu__item {
+  min-height: 30px;
+  padding: 6px 7px;
+  gap: 7px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.vs .vs-draw-pop .vs-menu__item svg {
+  width: 16px;
+  height: 16px;
+}
+.vs .vs-sel {
+  background: var(--vs-panel);
+  border-color: var(--vs-line);
+  color: var(--vs-ink);
+  --vs-chrome-ink: var(--vs-ink);
+  --vs-chrome-mute: var(--vs-mute);
+}
+.vs .vs-sel :is(.vs-icon-btn, .vs-sel__menubtn, .vs-sel__fmt) {
+  color: var(--vs-ink-2);
+}
+.vs .vs-sel :is(.vs-sel__chip, .vs-sel__num, .vs-sel__fmt, .vs-sel__color) {
+  background: var(--vs-panel-2);
+  color: var(--vs-ink);
+  border-color: var(--vs-line);
+}
+.vs .vs-sel :is(.vs-icon-btn, .vs-sel__fmt):hover {
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent);
+}
+.vs .vs-sel .vs-sel__divider {
+  background: var(--vs-line);
+}
+.vs .vs-menu__pop {
+  max-width: calc(100vw - 16px);
+  overflow: auto;
+  background: var(--vs-panel);
+  color: var(--vs-ink);
+  border: 1px solid var(--vs-line);
+}
+.vs .vs-sel .vs-menu__pop :is(label, .vs-menu__item, .vs-menu__kicker) {
+  color: var(--vs-ink-2);
+}
+.vs .vs-sel .vs-menu__pop :is(select, input) {
+  background-color: var(--vs-panel-2);
+  color: var(--vs-ink);
+  border-color: var(--vs-line);
+}
+@supports (appearance: base-select) {
+  .vs select,
+  .vs select::picker(select) {
+    appearance: base-select;
+  }
+  .vs select {
+    background-image: none;
+    padding-right: 10px;
+  }
+  .vs select::picker-icon {
+    color: var(--vs-mute);
+    transition: rotate 0.15s;
+  }
+  .vs select:open::picker-icon {
+    rotate: 180deg;
+  }
+  .vs select::picker(select) {
+    padding: 5px;
+    border: 1px solid var(--vs-line);
+    border-radius: 12px;
+    background: var(--vs-panel);
+    box-shadow: var(--vs-shadow-2);
+    max-height: min(320px, 70vh);
+    overflow: auto;
+  }
+  .vs select option {
+    padding: 7px 10px;
+    border-radius: 7px;
+  }
+  .vs select option:hover,
+  .vs select option:checked {
+    background: var(--vs-accent-soft);
+    color: var(--vs-accent);
+  }
+}
+.vs .vs-sel .vs-sel__menubtn {
+  background: var(--vs-panel-2);
+  color: var(--vs-ink-2);
+  border-color: var(--vs-line);
+}
+.vs .vs-sel .vs-sel__menubtn:hover,
+.vs .vs-sel details[open] > .vs-sel__menubtn {
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent);
+}
+.vs .vs-sel .vs-menu__pop label input,
+.vs .vs-sel .vs-menu__pop label select {
+  background: var(--vs-panel-2);
+  color: var(--vs-ink);
+  border: 1px solid var(--vs-line);
+  color-scheme: light;
+}
+.vs .vs-sel .vs-menu__pop .vs-menu__divider { background: var(--vs-line); }
+.vs .vs-sel .vs-menu__pop .vs-sel__opacity output { color: var(--vs-ink); }

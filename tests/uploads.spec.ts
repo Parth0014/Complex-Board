@@ -86,7 +86,7 @@ test('photos retain originals, edits, undo and portable backups in a fresh brows
     const exported = await pending;
     const png = readFileSync((await exported.path())!);
     expect(png.readUInt32BE(16)).toBe(1080);
-    expect(png.readUInt32BE(20)).toBe(1350);
+    expect(png.readUInt32BE(20)).toBe(1080);
     const pixel = await restored.evaluate(
       async (url) => {
         const image = new Image();

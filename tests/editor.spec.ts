@@ -83,13 +83,13 @@ test('curated insertion, text, history and export', async ({ page }) => {
   expect(path).toBeTruthy();
   const png = readFileSync(path!);
   expect(png.readUInt32BE(16)).toBe(1080);
-  expect(png.readUInt32BE(20)).toBe(1350);
+  expect(png.readUInt32BE(20)).toBe(1080);
   const highDownloadEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download 2× PNG', exact: true }).click();
   const highDownload = await highDownloadEvent;
   const highPng = readFileSync((await highDownload.path())!);
   expect(highPng.readUInt32BE(16)).toBe(2160);
-  expect(highPng.readUInt32BE(20)).toBe(2700);
+  expect(highPng.readUInt32BE(20)).toBe(2160);
   expect(errors).toEqual([]);
 });
 

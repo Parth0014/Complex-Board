@@ -7,7 +7,7 @@ import { generateVideo } from './video.mjs';
 const port = Number(process.env.AI_PORT || 8787),
   allowedOrigin = process.env.APP_ORIGIN || 'http://127.0.0.1:5173';
 let active = 0;
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   const respond = (status, data) => {
     res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(data));
@@ -92,4 +92,19 @@ createServer(async (req, res) => {
   } finally {
     active--;
   }
-}).listen(port, '127.0.0.1', () => console.log(`AI server listening on http://127.0.0.1:${port}`));
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(
+      `Port ${port} is already in use. If the AI server is already running, keep using it and start the frontend with npm run dev. To restart it, stop the existing server with Ctrl+C in its terminal, then run npm run ai:server again.`,
+    );
+  } else {
+    console.error('AI server failed to start:', error.message);
+  }
+  process.exitCode = 1;
+});
+
+server.listen(port, '127.0.0.1', () =>
+  console.log(`AI server listening on http://127.0.0.1:${port}`),
+);

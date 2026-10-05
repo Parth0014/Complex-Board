@@ -334,7 +334,7 @@ export function EditorFeatures({
   };
 
   return (
-    <aside className={`vs-inspector${panel ? '' : ' is-collapsed'}`} aria-label="Object inspector">
+    <aside className={`vs-inspector${panel ? '' : ' is-collapsed'}`} aria-label="Object inspector" hidden={!panel}>
       <div className="vs-inspector__tabs">
         <div className="vs-segmented" role="toolbar" aria-label="Editor panels">
           {(['style', 'layers'] as const).map((id) => (
