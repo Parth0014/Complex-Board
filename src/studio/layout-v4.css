@@ -1,0 +1,520 @@
+/* ==========================================================================\n   Gratitude Studio — layout v4\n   Structural UI pass: insertion library left, uninterrupted canvas center,\n   contextual properties right, navigation at the bottom. Loads last.\n   ========================================================================== */
+
+.studio {
+  --shell-header-h: 64px;
+  --shell-rail-w: 78px;
+  --shell-library-w: 318px;
+  --shell-inspector-w: 302px;
+  --shell-inspector-closed-w: 58px;
+  --shell-floating-radius: 14px;
+}
+
+/* The product frame is intentionally quiet. The board gets the visual weight. */
+.studio-body {
+  align-items: stretch;
+  background: #ebe7e4;
+}
+
+.editor-rail {
+  width: var(--shell-rail-w);
+  flex-basis: var(--shell-rail-w);
+  padding: 12px 8px 10px;
+  background: #fbf8f6;
+}
+
+.editor-rail__tab {
+  min-height: 58px;
+  border: 1px solid transparent;
+}
+
+.editor-rail__tab--create {
+  margin-top: 3px;
+  color: #65496a;
+  background: #f8f1f7;
+  border-color: #eee1ed;
+}
+
+.editor-rail__tab--create:hover,
+.editor-rail__tab--create.is-active {
+  color: #55365a;
+  background: #eee2ed;
+  border-color: #dfcddd;
+}
+
+.editor-rail__tab--ai {
+  margin-top: 2px;
+}
+
+.editor-panel {
+  width: var(--shell-library-w);
+  min-width: var(--shell-library-w);
+  flex-basis: var(--shell-library-w);
+  background: #fffdfa;
+}
+
+.editor-panel__header {
+  min-height: 102px;
+  padding: 19px 18px 14px;
+}
+
+.editor-panel__header h2 {
+  margin: 5px 0 3px;
+  font-size: 23px;
+}
+
+.editor-panel__body {
+  padding: 15px 16px 24px;
+}
+
+/* The canvas surface owns all remaining space. */
+.studio-canvas {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editor-layout {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--shell-inspector-closed-w);
+  transition: grid-template-columns 170ms ease;
+}
+
+.editor-layout.inspector-open {
+  grid-template-columns: minmax(0, 1fr) var(--shell-inspector-w);
+}
+
+.editor-canvas-area {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 16%, rgb(255 255 255 / 44%), transparent 42%),
+    linear-gradient(180deg, #efebe8 0%, #e9e4e1 100%);
+}
+
+/* Direct-manipulation controls float over the work instead of becoming chrome. */
+.v1-contextbar {
+  top: 13px;
+  max-width: calc(100% - 116px);
+}
+
+.v1-selection {
+  min-height: 46px;
+  max-width: min(860px, calc(100vw - 740px));
+  padding: 5px;
+  border-radius: var(--shell-floating-radius);
+  box-shadow: 0 12px 34px rgb(64 47 54 / 13%);
+}
+
+.v1-selection .text-edit input {
+  width: clamp(132px, 17vw, 240px);
+}
+
+.canvas-action-dock {
+  left: 14px;
+  gap: 4px;
+  padding: 5px;
+  border-radius: var(--shell-floating-radius);
+  box-shadow: 0 10px 28px rgb(64 47 54 / 12%);
+}
+
+.canvas-action-dock button {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+
+.canvas-action-dock__divider {
+  margin: 3px auto;
+}
+
+/* Stage toggles are deliberately subordinate to tools and page navigation. */
+.canvas-tools {
+  bottom: 66px;
+  left: 14px;
+  border-radius: 12px;
+}
+
+/* Right desk: only properties + layers. Creation was moved to the left library. */
+.editor-inspector {
+  min-width: 0;
+  background: #fffdfa;
+  box-shadow: -8px 0 22px rgb(52 41 46 / 3%);
+}
+
+.feature-tabs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 55px;
+  padding: 9px 10px;
+}
+
+.feature-tabs button {
+  min-height: 36px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.editor-inspector:not(.is-open) .feature-tabs {
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 7px;
+  padding: 9px 7px;
+}
+
+.editor-inspector:not(.is-open) .feature-tabs button {
+  min-height: 38px;
+  writing-mode: horizontal-tb;
+  font-size: 8.5px;
+}
+
+.feature-panel {
+  padding: 0 16px 28px;
+}
+
+.feature-panel__header {
+  margin: 0 -16px 14px;
+  padding: 15px 16px 13px;
+}
+
+.feature-panel__header h3 {
+  margin-top: 3px;
+  font-size: 14px;
+}
+
+.inspector-section {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+}
+
+.inspector-action-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.inspector-action-grid button {
+  min-width: 0;
+  padding-inline: 4px;
+}
+
+/* Bottom bar is split into three independent floating clusters. */
+.v1-statusbar {
+  right: 14px;
+  bottom: 12px;
+  left: 14px;
+  height: 44px;
+}
+
+.v1-items summary,
+.page-controls,
+.v1-zoom {
+  min-height: 38px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(63 48 53 / 10%);
+}
+
+.v1-items summary {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.page-controls {
+  padding: 4px;
+}
+
+.v1-zoom {
+  padding: 4px 5px;
+}
+
+/* ── Dedicated left-side creation library ── */
+.create-panel {
+  display: grid;
+  gap: 0;
+}
+
+.create-panel__section {
+  padding: 3px 0 18px;
+  margin-bottom: 17px;
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.create-panel__section:last-child {
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.create-panel__section--primary {
+  padding-top: 0;
+}
+
+.create-shape-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0 11px;
+}
+
+.create-shape-grid button {
+  min-width: 0;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  padding: 5px 2px;
+  color: var(--ui-ink-soft);
+  background: #fff;
+  border: 1px solid var(--ui-line);
+  border-radius: 11px;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.create-shape-grid button:hover {
+  color: var(--ui-accent-strong);
+  background: var(--ui-accent-faint);
+  border-color: #dccbdd;
+  transform: translateY(-1px);
+}
+
+.create-shape-grid button > span {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.create-shape-grid small {
+  max-width: 44px;
+  overflow: hidden;
+  color: var(--ui-ink-muted);
+  font-size: 7px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.create-connect-action {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.create-card-copy {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 11px;
+  resize: vertical;
+  color: var(--ui-ink);
+  background: #fff;
+  border: 1px solid var(--ui-line);
+  border-radius: 11px;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.create-card-actions,
+.create-clipboard-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.create-composition-select {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  margin: 9px 0 8px;
+  padding: 6px 8px 6px 10px;
+  color: var(--ui-ink-soft);
+  background: var(--ui-surface-muted);
+  border: 1px solid var(--ui-line);
+  border-radius: 11px;
+  font-size: 9.5px;
+}
+
+.create-composition-select select {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+}
+
+.create-replace-warning {
+  margin-top: 9px;
+  padding: 11px;
+  background: #fbf4ef;
+  border: 1px solid #ead8cf;
+  border-radius: 11px;
+}
+
+.create-replace-warning strong {
+  color: var(--ui-ink);
+  font-size: 10px;
+}
+
+.create-replace-warning p,
+.create-drawing-note,
+.create-clipboard-status {
+  margin: 4px 0 0;
+  color: var(--ui-ink-muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.create-replace-warning > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.create-assist-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.create-assist-toggle > span {
+  display: grid;
+  gap: 2px;
+}
+
+.create-assist-toggle strong {
+  color: var(--ui-ink);
+  font-size: 10px;
+}
+
+.create-assist-toggle small {
+  color: var(--ui-ink-muted);
+  font-size: 8.5px;
+  line-height: 1.35;
+}
+
+.create-assist-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.panel-inline-error {
+  margin: 0 0 12px;
+  padding: 9px 10px;
+  color: #8b4149;
+  background: #fff1f2;
+  border: 1px solid #efd8da;
+  border-radius: 10px;
+  font-size: 9px;
+}
+
+/* Responsive hierarchy: keep canvas primary; tools become sheets/trays. */
+@media (max-width: 1320px) {
+  .studio {
+    --shell-library-w: 292px;
+    --shell-inspector-w: 280px;
+  }
+
+  .v1-selection {
+    max-width: min(760px, calc(100vw - 660px));
+  }
+
+  .inspector-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1060px) {
+  .studio {
+    --shell-library-w: 276px;
+    --shell-inspector-w: 270px;
+  }
+
+  .editor-header .resize-control {
+    display: none;
+  }
+
+  .v1-selection {
+    max-width: calc(100vw - 390px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .v1-selection::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .editor-layout,
+  .editor-layout.inspector-open {
+    display: block;
+  }
+
+  .editor-rail {
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 3px;
+    scrollbar-width: none;
+  }
+
+  .editor-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .editor-rail__tab {
+    flex: 0 0 72px;
+  }
+
+  .editor-panel {
+    width: auto;
+    min-width: 0;
+  }
+
+  .editor-inspector.is-open {
+    display: flex;
+  }
+
+  .feature-tabs {
+    flex: 0 0 auto;
+  }
+
+  .canvas-action-dock {
+    top: 66px;
+  }
+
+  .create-shape-grid {
+    grid-template-columns: repeat(5, minmax(46px, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .editor-rail {
+    padding-inline: 5px;
+  }
+
+  .editor-rail__tab {
+    flex-basis: 64px;
+  }
+
+  .editor-panel__header {
+    min-height: 88px;
+    padding: 15px 15px 11px;
+  }
+
+  .editor-panel__body {
+    padding: 12px 14px 20px;
+  }
+
+  .v1-statusbar {
+    gap: 5px;
+  }
+
+  .page-controls {
+    max-width: 150px;
+  }
+
+  .create-card-actions,
+  .create-clipboard-actions,
+  .create-replace-warning > div {
+    grid-template-columns: 1fr;
+  }
+}

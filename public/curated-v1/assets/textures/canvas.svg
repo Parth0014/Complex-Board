@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img" aria-labelledby="title desc" fill="none">
+  <title id="title">Canvas</title><desc id="desc">Original subtle surface texture for layering behind board elements.</desc>
+  <rect width="200" height="160" fill="#F1EEE6"/><path d="M0 20Q30 10 60 20T120 20T180 20T240 20M0 58Q30 48 60 58T120 58T180 58T240 58M0 96Q30 86 60 96T120 96T180 96T240 96M0 134Q30 124 60 134T120 134T180 134T240 134" stroke="currentColor" stroke-width="2" opacity=".06"/>
+</svg>

@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img" aria-labelledby="title desc" fill="none">
+  <title id="title">Map</title><desc id="desc">Original goal-object illustration for vision boards.</desc>
+  <polygon points="34,42 78,30 122,42 166,30 166,118 122,130 78,118 34,130" fill="currentColor" fill-opacity="1"/><path d="M78 30L78 118" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M122 42L122 130" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="100" cy="82" r="15" stroke="currentColor" stroke-width="7" opacity="1"/><circle cx="100" cy="82" r="5" fill="currentColor" opacity="1"/>
+</svg>

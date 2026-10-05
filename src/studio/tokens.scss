@@ -1,0 +1,206 @@
+/* ─────────────────────────────────────────────────────────────
+   Atelier Design System · tokens
+   The single source of truth for the Gratitude Studio interface.
+   Warm editorial: clay accents on paper, Fraunces display serif
+   paired with a friendly grotesque for UI.
+   Light-first; `.studio[data-theme="dark"]` redefines the semantic layer.
+   Spacing is on a 4px grid.
+   ───────────────────────────────────────────────────────────── */
+
+.studio {
+  /* Brand · fired clay, warm and earthy */
+  --clay-50: #fbf3ec;
+  --clay-100: #f6e2d2;
+  --clay-200: #eec39f;
+  --clay-300: #e29e6b;
+  --clay-400: #d3763f;
+  --clay-500: #c05a28;
+  --clay-600: #a34720;
+  --clay-700: #83381b;
+  --clay-800: #5f2a16;
+  --clay-900: #422012;
+
+  /* Ink · warm charcoal neutrals */
+  --ink-950: #1d1512;
+  --ink-900: #2a211b;
+  --ink-700: #4d4238;
+  --ink-500: #7c6d5f;
+  --ink-400: #9c8d7e;
+  --ink-300: #bdaea0;
+  --ink-200: #d8cbbd;
+  --ink-100: #e9e0d3;
+
+  /* ── Semantic layer (light) ─────────────────────────────── */
+  --surface: #fffdf8;
+  --surface-2: #f7f1e6;
+  --surface-3: #efe5d3;
+  --surface-sunken: #e9dcc6;
+  --canvas-backdrop: #d9cdb4;
+  --overlay: rgb(29 21 18 / 48%);
+
+  --ink: var(--ink-900);
+  --ink-soft: var(--ink-700);
+  --ink-muted: var(--ink-500);
+  --ink-faint: var(--ink-400);
+
+  --line: #e2d3ba;
+  --line-soft: #ecdfc9;
+
+  --accent: var(--clay-600);
+  --accent-strong: var(--clay-700);
+  --accent-soft: var(--clay-100);
+  --accent-faint: var(--clay-50);
+  --on-accent: #fffdf8;
+
+  --success: #3d7a4e;
+  --success-soft: #e3efe4;
+  --warning: #b07a1e;
+  --warning-soft: #f7ecd4;
+  --danger: #b3402e;
+  --danger-soft: #f6e0d8;
+
+  /* ── Floating chrome (dock / pill / panels) ────────────────── */
+  --pill-bg: rgb(255 253 248 / 92%);
+  --pill-border: rgb(255 255 255 / 70%);
+  --pill-hover: rgb(29 21 18 / 6%);
+
+  /* ── Type ───────────────────────────────────────────────── */
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-ui: 'Nunito', 'Assistant', system-ui, -apple-system, sans-serif;
+
+  --text-xs: 11px;
+  --text-sm: 12.5px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 26px;
+  --text-3xl: 32px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 700;
+  --weight-bold: 800;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+
+  /* ── Space (4px grid) ───────────────────────────────────── */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s8: 32px;
+  --s10: 40px;
+  --s12: 48px;
+
+  /* ── Shape ──────────────────────────────────────────────── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-pill: 999px;
+
+  /* ── Elevation ──────────────────────────────────────────── */
+  --shadow-1: 0 1px 2px rgb(29 21 18 / 7%), 0 2px 10px rgb(29 21 18 / 7%);
+  --shadow-2: 0 2px 8px rgb(29 21 18 / 10%), 0 16px 40px rgb(29 21 18 / 14%);
+  --shadow-3: 0 6px 16px rgb(29 21 18 / 12%), 0 32px 80px rgb(29 21 18 / 20%);
+  --shadow-board: 0 2px 10px rgb(29 21 18 / 12%), 0 32px 88px rgb(29 21 18 / 18%);
+
+  /* ── Motion ─────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 220ms;
+  --duration-slow: 360ms;
+
+  /* ── Layout ─────────────────────────────────────────────── */
+  --topbar-height: 60px;
+  --dock-height: 68px;
+  --panel-width: 360px;
+
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--ink);
+  background: var(--surface-2);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Dark theme · same semantics, new values ─────────────────── */
+.studio[data-theme='dark'] {
+  --surface: #241b15;
+  --surface-2: #1c1512;
+  --surface-3: #2b211a;
+  --surface-sunken: #171110;
+  --canvas-backdrop: #100c0a;
+  --overlay: rgb(0 0 0 / 62%);
+
+  --ink: #f3e9db;
+  --ink-soft: #d8c7b2;
+  --ink-muted: #a68f78;
+  --ink-faint: #7d6a58;
+
+  --line: #3a2e24;
+  --line-soft: #2f251e;
+
+  --accent: var(--clay-300);
+  --accent-strong: var(--clay-200);
+  --accent-soft: rgb(194 90 40 / 20%);
+  --accent-faint: rgb(194 90 40 / 12%);
+
+  --success-soft: rgb(61 122 78 / 18%);
+  --warning-soft: rgb(176 122 30 / 18%);
+  --danger-soft: rgb(179 64 46 / 18%);
+
+  --pill-bg: rgb(28 21 18 / 94%);
+  --pill-border: rgb(255 253 248 / 14%);
+  --pill-hover: rgb(255 253 248 / 10%);
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 32%), 0 2px 10px rgb(0 0 0 / 32%);
+  --shadow-2: 0 2px 8px rgb(0 0 0 / 40%), 0 16px 40px rgb(0 0 0 / 44%);
+  --shadow-3: 0 6px 16px rgb(0 0 0 / 44%), 0 32px 80px rgb(0 0 0 / 52%);
+  --shadow-board: 0 2px 10px rgb(0 0 0 / 44%), 0 32px 88px rgb(0 0 0 / 56%);
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .studio,
+  .studio *,
+  .studio *::before,
+  .studio *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Base resets scoped to the studio ───────────────────────── */
+:where(.studio) button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:where(.studio) input,
+:where(.studio) select,
+:where(.studio) textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.studio :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.studio ::selection {
+  background: var(--accent-soft);
+}

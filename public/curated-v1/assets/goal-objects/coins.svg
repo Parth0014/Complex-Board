@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img" aria-labelledby="title desc" fill="none">
+  <title id="title">Coins</title><desc id="desc">Original goal-object illustration for vision boards.</desc>
+  <circle cx="80" cy="60" r="28" stroke="currentColor" stroke-width="7" opacity="1"/><circle cx="114" cy="84" r="28" stroke="currentColor" stroke-width="7" opacity="1"/><circle cx="88" cy="108" r="28" stroke="currentColor" stroke-width="7" opacity="1"/><text x="80" y="67" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="24px" font-weight="800" text-anchor="middle" fill="currentColor">$</text>
+</svg>

@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img" aria-labelledby="title desc" fill="none">
+  <title id="title">Mood card</title><desc id="desc">Original editorial collage element for vision boards.</desc>
+  <rect x="34" y="34" width="132" height="92" rx="10" stroke="currentColor" stroke-width="7" stroke-linejoin="round" opacity="1"/><circle cx="68" cy="80" r="16" stroke="currentColor" stroke-width="7" opacity="1"/><path d="M62 84Q68 92 74 84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1"/><text x="118" y="84" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="16px" font-weight="800" text-anchor="middle" fill="currentColor">CALM</text>
+</svg>
