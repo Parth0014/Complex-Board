@@ -1,0 +1,254 @@
+/* Reserve space for the board and its controls instead of covering the page. */
+.ai-tool-help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vs-ink-2);
+}
+.ai-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ai-status--ready {
+  background: var(--vs-ok-soft);
+  color: #20663f;
+}
+.ai-panel .vs-textarea {
+  min-height: 112px;
+}
+.ai-setup {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ai-setup summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.ai-setup ol {
+  padding-left: 18px;
+}
+.vs-row-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.vs-row-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.vs-sec__body .vs-check {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.vs-sec__body .vs-check input {
+  flex-shrink: 0;
+}
+.vs .vs-rail__tab {
+  width: 72px;
+  padding-inline: 4px;
+  font-size: 11px;
+}
+.vs-rail {
+  width: 80px;
+}
+.vs-lib.is-collapsed {
+  width: 81px;
+}
+.vs-file-btn {
+  border-color: var(--vs-graphite-700);
+  background: var(--vs-graphite-800);
+}
+.vs-tools,
+.vs-sel,
+.vs-bottom-dock {
+  z-index: var(--vs-z-float);
+}
+.vs-stage-fill:has(.vs-menu[open]) {
+  z-index: var(--vs-z-popover);
+}
+.vs-tools:has(.vs-menu[open]),
+.vs-sel:has(.vs-menu[open]),
+.vs-bottom-dock:has(.vs-menu[open]) {
+  z-index: var(--vs-z-popover);
+}
+.vs-inspector__body > *,
+.vs-lib__head,
+.vs-lib__foot,
+.vs-inspector__tabs {
+  flex-shrink: 0;
+}
+
+.panel-inline-error,
+.panel-inline-status,
+.vs-alert,
+.canvas-message {
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-height: 120px;
+  overflow: auto;
+}
+.vs-alert > span {
+  min-width: 0;
+}
+.panel-intro-card {
+  flex-direction: column;
+}
+
+.text-panel__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+}
+.text-panel__label {
+  width: auto;
+}
+.text-panel__sample {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.text-panel__add {
+  grid-column: 2;
+  grid-row: 1;
+}
+.vs .vs-sel__num {
+  color: #fff;
+  background: #303744;
+  border-color: #606b7c;
+  flex-shrink: 0;
+}
+
+.vs-stage-fill {
+  position: relative;
+  inset: auto;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 14px;
+}
+.vs-tools,
+.vs-sel {
+  position: relative;
+  inset: auto;
+  transform: none;
+  justify-self: center;
+  max-width: 100%;
+  min-width: 0;
+}
+.vs-sel {
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow: visible;
+}
+.vs-tools {
+  grid-row: 1;
+}
+.vs-sel {
+  grid-row: 2;
+}
+.vs-stage-fill > .v1-artboard {
+  grid-row: 3;
+  min-height: 0;
+  min-width: 0;
+}
+.vs-bottom-dock {
+  grid-row: 4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+.vs-bottom-dock .vs-pages,
+.vs-bottom-dock .vs-zoom,
+.vs-bottom-dock .canvas-tools {
+  position: relative;
+  inset: auto;
+  transform: none;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.vs-snap-slot {
+  min-width: 0;
+  max-width: 100%;
+}
+.vs-sel .vs-menu__pop {
+  top: calc(100% + 10px);
+  bottom: auto;
+}
+
+@media (min-width: 720px) {
+  .vs-body {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px;
+  }
+  .vs-lib {
+    position: relative;
+    inset: auto;
+    width: 380px;
+    min-height: 0;
+  }
+  .vs-canvas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 14px;
+  }
+  .vs-inspector {
+    position: relative;
+    inset: auto;
+    width: auto;
+    min-height: 0;
+  }
+  .vs-stage-fill {
+    padding: 0;
+  }
+  .vs-header {
+    padding-right: 16px;
+  }
+}
+@media (min-width: 720px) and (max-width: 1400px) {
+  .vs-lib {
+    width: 340px;
+  }
+  .vs-canvas {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .vs-bottom-dock .vs-page-dims {
+    display: none;
+  }
+  .vs-bottom-dock .vs-zoom .vs-range {
+    width: 60px;
+  }
+}
+@media (max-width: 719px) {
+  .vs-rail {
+    width: 100%;
+  }
+  .vs .vs-rail__tab {
+    width: auto;
+    padding-inline: 12px;
+  }
+  .vs-lib.is-collapsed {
+    width: auto;
+  }
+  .vs-stage-fill {
+    padding-bottom: 80px;
+    gap: 8px;
+  }
+  .vs-bottom-dock .canvas-tools {
+    display: none;
+  }
+  .vs-lib__panel {
+    min-height: 0;
+  }
+}

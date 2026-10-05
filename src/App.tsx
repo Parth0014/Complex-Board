@@ -5,11 +5,11 @@ import { StudioShell } from './studio/StudioShell';
 import './studio/v5/v5-tokens.css';
 import './studio/v5/v5-chrome.css';
 import './studio/v5/v5-panels.css';
+import './studio/v5/v5-layout.css';
 import { EditorFeatures, type EditorPanel } from './studio/EditorFeatures';
 import type { StudioTab } from './studio/studioTypes';
 import {
   AlignIcon,
-  BackwardIcon,
   BoldIcon,
   ChevronDownIcon,
   DistributeHIcon,
@@ -18,7 +18,6 @@ import {
   DuplicateIcon,
   EraserIcon,
   FitIcon,
-  ForwardIcon,
   GroupIcon,
   HandIcon,
   HighlighterIcon,
@@ -39,7 +38,12 @@ import {
 const DRAW_MODES = [
   { id: 'pen', label: 'pen', tip: 'Pen — freehand strokes', Icon: PenIcon },
   { id: 'marker', label: 'marker', tip: 'Marker — bold strokes', Icon: MarkerIcon },
-  { id: 'highlighter', label: 'highlighter', tip: 'Highlighter — translucent marks', Icon: HighlighterIcon },
+  {
+    id: 'highlighter',
+    label: 'highlighter',
+    tip: 'Highlighter — translucent marks',
+    Icon: HighlighterIcon,
+  },
   { id: 'eraser', label: 'eraser', tip: 'Eraser — remove drawings', Icon: EraserIcon },
 ] as const;
 
@@ -51,6 +55,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
   const [studioTab, setStudioTab] = useState<StudioTab | null>(null);
   const [zoom, setZoom] = useState<number | null>(null);
   const [displayZoom, setDisplayZoom] = useState(40);
+  const [snappingContainer, setSnappingContainer] = useState<HTMLDivElement | null>(null);
   const document = adapter.history.document;
   useEffect(() => {
     void adapter.initialize();
@@ -308,7 +313,8 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                             {
                               id: item.id,
                               patch: {
-                                align: event.target.value as 'left' | 'center' | 'right' | 'justify',
+                                align: event.target.value as
+                                  'left' | 'center' | 'right' | 'justify',
                               },
                             },
                           ])
@@ -331,7 +337,10 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                             {
                               id: item.id,
                               patch: {
-                                letterSpacing: Math.max(-5, Math.min(30, Number(event.target.value))),
+                                letterSpacing: Math.max(
+                                  -5,
+                                  Math.min(30, Number(event.target.value)),
+                                ),
                               },
                             },
                           ])
@@ -529,23 +538,23 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
             </details>
 
             <button
-                className="vs-icon-btn"
-                data-tip="Group selection (Ctrl+G)"
-                aria-label="Group"
-                disabled={locked || selection.count < 2}
-                onClick={() => adapter.groupSelection()}
-              >
-                <GroupIcon />
-              </button>
-              <button
-                className="vs-icon-btn"
-                data-tip="Ungroup selection (Ctrl+Shift+G)"
-                aria-label="Ungroup"
-                disabled={locked || !selectedItems.some((selected) => selected.groupId)}
-                onClick={() => adapter.ungroupSelection()}
-              >
-                <UngroupIcon />
-              </button>
+              className="vs-icon-btn"
+              data-tip="Group selection (Ctrl+G)"
+              aria-label="Group"
+              disabled={locked || selection.count < 2}
+              onClick={() => adapter.groupSelection()}
+            >
+              <GroupIcon />
+            </button>
+            <button
+              className="vs-icon-btn"
+              data-tip="Ungroup selection (Ctrl+Shift+G)"
+              aria-label="Ungroup"
+              disabled={locked || !selectedItems.some((selected) => selected.groupId)}
+              onClick={() => adapter.ungroupSelection()}
+            >
+              <UngroupIcon />
+            </button>
 
             <button
               className="vs-icon-btn"
@@ -580,6 +589,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
         )}
 
         <KonvaStage
+          snappingContainer={snappingContainer}
           drawMode={drawMode}
           handTool={handTool}
           adapter={adapter}
@@ -588,118 +598,127 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
           onScaleChange={setDisplayZoom}
         />
 
-        <div className="vs-pages">
-          <details className="vs-menu vs-items-pop">
-            <summary
-              className="vs-page-select"
-              data-tip="All board items"
-              aria-label="Board items outline"
+        <div className="vs-bottom-dock" aria-label="Board controls">
+          <div className="vs-pages">
+            <details className="vs-menu vs-items-pop">
+              <summary
+                className="vs-page-select"
+                data-tip="All board items"
+                aria-label="Board items outline"
+              >
+                Board items ({document.items.length}) <ChevronDownIcon />
+              </summary>
+              <div className="vs-menu__pop">
+                <ul className="v1-items">
+                  {[...document.items].reverse().map((boardItem) => (
+                    <li key={boardItem.id}>
+                      <button
+                        className={`vs-menu__item${
+                          selection.ids.includes(boardItem.id) ? ' is-active' : ''
+                        }`}
+                        aria-pressed={selection.ids.includes(boardItem.id)}
+                        onClick={() => adapter.select([boardItem.id])}
+                      >
+                        {boardItem.locked && <LockIcon />}
+                        <span>
+                          {boardItem.groupId ? 'Group · ' : ''}
+                          {boardItem.text || boardItem.asset?.title || boardItem.shape || 'Drawing'}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {!document.items.length && (
+                  <p className="vs-menu__note">Nothing on the board yet.</p>
+                )}
+              </div>
+            </details>
+            <span
+              className="vs-sel__divider"
+              style={{ background: 'var(--vs-line-soft)' }}
+              aria-hidden="true"
+            />
+            <label className="vs-page-select" data-tip="Active page">
+              <span className="sr-only">Page</span>
+              <select
+                aria-label="Active page"
+                value={document.activePageId || ''}
+                onChange={(event) => adapter.switchPage(event.target.value)}
+              >
+                {document.pages ? (
+                  document.pages.map((page, index) => (
+                    <option key={page.id} value={page.id} label={`${index + 1}`}>
+                      Page {index + 1}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">Page 1</option>
+                )}
+              </select>
+            </label>
+            <button
+              className="vs-icon-btn"
+              data-tip="Add page"
+              aria-label="Add page"
+              onClick={() => adapter.addPage()}
             >
-              Board items ({document.items.length}) <ChevronDownIcon />
-            </summary>
-            <div className="vs-menu__pop">
-              <ul className="v1-items">
-                {[...document.items].reverse().map((boardItem) => (
-                  <li key={boardItem.id}>
-                    <button
-                      className={`vs-menu__item${
-                        selection.ids.includes(boardItem.id) ? ' is-active' : ''
-                      }`}
-                      aria-pressed={selection.ids.includes(boardItem.id)}
-                      onClick={() => adapter.select([boardItem.id])}
-                    >
-                      {boardItem.locked && <LockIcon />}
-                      <span>
-                        {boardItem.groupId ? 'Group · ' : ''}
-                        {boardItem.text || boardItem.asset?.title || boardItem.shape || 'Drawing'}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              {!document.items.length && <p className="vs-menu__note">Nothing on the board yet.</p>}
-            </div>
-          </details>
-          <span className="vs-sel__divider" style={{ background: 'var(--vs-line-soft)' }} aria-hidden="true" />
-          <label className="vs-page-select" data-tip="Active page">
-            <span className="sr-only">Page</span>
-            <select
-              aria-label="Active page"
-              value={document.activePageId || ''}
-              onChange={(event) => adapter.switchPage(event.target.value)}
+              <PlusIcon />
+            </button>
+            <button
+              className="vs-icon-btn is-danger"
+              data-tip="Delete current page"
+              aria-label="Delete page"
+              disabled={!document.pages || document.pages.length < 2}
+              onClick={() => adapter.deletePage()}
             >
-              {document.pages ? (
-                document.pages.map((page, index) => (
-                  <option key={page.id} value={page.id} label={`${index + 1}`}>
-                    Page {index + 1}
-                  </option>
-                ))
-              ) : (
-                <option value="">Page 1</option>
-              )}
-            </select>
-          </label>
-          <button
-            className="vs-icon-btn"
-            data-tip="Add page"
-            aria-label="Add page"
-            onClick={() => adapter.addPage()}
-          >
-            <PlusIcon />
-          </button>
-          <button
-            className="vs-icon-btn is-danger"
-            data-tip="Delete current page"
-            aria-label="Delete page"
-            disabled={!document.pages || document.pages.length < 2}
-            onClick={() => adapter.deletePage()}
-          >
-            <TrashIcon />
-          </button>
-          <span
-            className="vs-zoom__pct vs-page-dims"
-            data-tip="Board dimensions"
-            style={{ minWidth: 'auto', padding: '0 8px' }}
-          >
-            {document.width}×{document.height}
-          </span>
-        </div>
+              <TrashIcon />
+            </button>
+            <span
+              className="vs-zoom__pct vs-page-dims"
+              data-tip="Board dimensions"
+              style={{ minWidth: 'auto', padding: '0 8px' }}
+            >
+              {document.width}×{document.height}
+            </span>
+          </div>
 
-        <div className="vs-zoom">
-          <button
-            className="vs-icon-btn"
-            data-tip="Zoom out"
-            aria-label="Zoom out"
-            onClick={() => setZoom(Math.max(0.1, displayZoom / 100 - 0.1))}
-          >
-            <MinusIcon />
-          </button>
-          <input
-            className="vs-range"
-            aria-label="Zoom"
-            type="range"
-            min="10"
-            max="150"
-            value={displayZoom}
-            onChange={(event) => setZoom(Number(event.target.value) / 100)}
-          />
-          <span className="vs-zoom__pct">{displayZoom}%</span>
-          <button
-            className="vs-icon-btn"
-            data-tip="Zoom in"
-            aria-label="Zoom in"
-            onClick={() => setZoom(Math.min(1.5, displayZoom / 100 + 0.1))}
-          >
-            <PlusIcon />
-          </button>
-          <button
-            className="vs-icon-btn"
-            data-tip="Fit board to view"
-            aria-label="Fit board to view"
-            onClick={() => adapter.fitBoard()}
-          >
-            <FitIcon />
-          </button>
+          <div className="vs-zoom">
+            <button
+              className="vs-icon-btn"
+              data-tip="Zoom out"
+              aria-label="Zoom out"
+              onClick={() => setZoom(Math.max(0.1, displayZoom / 100 - 0.1))}
+            >
+              <MinusIcon />
+            </button>
+            <input
+              className="vs-range"
+              aria-label="Zoom"
+              type="range"
+              min="10"
+              max="150"
+              value={displayZoom}
+              onChange={(event) => setZoom(Number(event.target.value) / 100)}
+            />
+            <span className="vs-zoom__pct">{displayZoom}%</span>
+            <button
+              className="vs-icon-btn"
+              data-tip="Zoom in"
+              aria-label="Zoom in"
+              onClick={() => setZoom(Math.min(1.5, displayZoom / 100 + 0.1))}
+            >
+              <PlusIcon />
+            </button>
+            <button
+              className="vs-icon-btn"
+              data-tip="Fit board to view"
+              aria-label="Fit board to view"
+              onClick={() => adapter.fitBoard()}
+            >
+              <FitIcon />
+            </button>
+          </div>
+          <div className="vs-snap-slot" ref={setSnappingContainer} />
         </div>
       </div>
 

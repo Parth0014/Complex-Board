@@ -24,10 +24,10 @@ test('shapes, styling, drawing and autosave survive reload', async ({ page }) =>
   await page.mouse.move(box.x + left + 700 * scale, box.y + top + 600 * scale, { steps: 15 });
   await page.mouse.up();
   await expect(page.getByText('Board items (2)', { exact: true })).toBeVisible();
-  await expect(page.getByRole('status')).toHaveText('Saved');
+  await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   await page.reload();
   await expect(page.getByText('Board items (2)', { exact: true })).toBeVisible();
-  await expect(page.getByRole('status')).toHaveText('Saved');
+  await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   expect(errors).toEqual([]);
 });
 test('curated frame clipping, crop and PDF/JPG export retain content after reload', async ({
@@ -58,7 +58,7 @@ test('curated frame clipping, crop and PDF/JPG export retain content after reloa
     else expect(bytes.subarray(1, 4).toString()).toBe('PNG');
   }
   await page.getByRole('button', { name: 'Close export', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Saved');
+  await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   await page.reload();
   await page.getByText('Board items (1)', { exact: true }).click();
   await page.locator('.v1-items li button').first().click();
@@ -190,7 +190,7 @@ test('generated image insertion persists and monochrome edits appear in exported
   expect(Math.abs(pixel[0] - pixel[1])).toBeLessThan(3);
   expect(Math.abs(pixel[1] - pixel[2])).toBeLessThan(3);
   await page.getByRole('button', { name: 'Close export', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Saved');
+  await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   await page.reload();
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
 });

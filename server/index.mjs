@@ -13,9 +13,24 @@ createServer(async (req, res) => {
     res.end(JSON.stringify(data));
   };
   if (req.url === '/api/ai/status' && req.method === 'GET') {
+    let backgroundAvailable = false;
+    if (process.env.REMBG_URL) {
+      try {
+        const health = await fetch(process.env.REMBG_URL, {
+          method: 'HEAD',
+          signal: AbortSignal.timeout(1500),
+        });
+        backgroundAvailable = health.ok || health.status === 405;
+      } catch {
+        /* A configured endpoint may be offline. */
+      }
+    }
     respond(200, {
       configured: !!(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN),
       videoConfigured: process.env.ENABLE_AI_VIDEO === 'true',
+      backgroundConfigured: !!process.env.REMBG_URL,
+      backgroundAvailable,
+      upscaleConfigured: !!(process.env.UPSCALE_URL && process.env.UPSCALE_TOKEN),
       provider: 'Cloudflare Workers AI',
     });
     return;
@@ -71,7 +86,9 @@ createServer(async (req, res) => {
               : await generateAI(input),
     );
   } catch (error) {
-    respond(400, { error: error instanceof Error ? error.message : 'Generation failed.' });
+    respond(error.status || 400, {
+      error: error instanceof Error ? error.message : 'Generation failed.',
+    });
   } finally {
     active--;
   }

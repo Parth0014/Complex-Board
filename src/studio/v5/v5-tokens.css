@@ -4,6 +4,12 @@
    ============================================================ */
 
 :root {
+  --vs-z-canvas: 0;
+  --vs-z-panel: 10;
+  --vs-z-float: 20;
+  --vs-z-popover: 30;
+  --vs-z-tooltip: 40;
+  --vs-z-modal: 50;
   --vs-ink: #1b1d23;
   --vs-ink-2: #4d525d;
   --vs-mute: #868c97;
@@ -119,7 +125,7 @@ html, body, #root, .vs-root {
      into the accessible name (Chromium exposes ::after content to AT) */
   content: '';
   position: absolute;
-  z-index: 2000;
+  z-index: var(--vs-z-tooltip);
   bottom: calc(100% + 9px);
   left: 50%;
   transform: translateX(-50%) translateY(3px);
@@ -358,7 +364,7 @@ input[type='color'].vs-color::-moz-color-swatch { border: none; border-radius: 5
 .vs-menu > summary::-webkit-details-marker { display: none; }
 .vs-menu__pop {
   position: absolute;
-  z-index: 1500;
+  z-index: var(--vs-z-popover);
   min-width: 210px;
   background: var(--vs-panel);
   border: 1px solid var(--vs-line);

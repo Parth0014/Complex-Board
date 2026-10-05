@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Konva from 'konva';
 import { Stage, Layer, Rect, Image, Transformer, Group, Line } from 'react-konva';
 import type { KonvaCanvasAdapter } from './KonvaCanvasAdapter';
@@ -18,6 +19,7 @@ export function KonvaStage({
   onScaleChange,
   drawMode = 'select',
   handTool = false,
+  snappingContainer,
 }: {
   adapter: KonvaCanvasAdapter;
   zoom: number | null;
@@ -25,6 +27,7 @@ export function KonvaStage({
   onScaleChange: (percent: number) => void;
   drawMode?: string;
   handTool?: boolean;
+  snappingContainer?: HTMLDivElement | null;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
@@ -147,9 +150,13 @@ export function KonvaStage({
     const node = container.current;
     const ownerWindow = node?.ownerDocument.defaultView;
     if (!node || !ownerWindow) return;
-    const observer = new ownerWindow.ResizeObserver(() =>
-      setSize({ width: node.clientWidth, height: node.clientHeight }),
-    );
+    const observer = new ownerWindow.ResizeObserver(() => {
+      const width = node.clientWidth,
+        height = node.clientHeight;
+      setSize((current) =>
+        current.width === width && current.height === height ? current : { width, height },
+      );
+    });
     observer.observe(node);
     adapter.fit = () => {
       onZoomChange(null);
@@ -176,7 +183,7 @@ export function KonvaStage({
             .filter((node): node is Konva.Node => !!node),
     );
     transformer.current.getLayer()?.batchDraw();
-  });
+  }, [adapter, document.items, adapter.selectedIds, scale, left, top]);
 
   useEffect(() => {
     adapter.exporter = (ratio, selectedOnly, transparent) => {
@@ -584,33 +591,37 @@ export function KonvaStage({
           {dropError}
         </p>
       )}
-      <div className="canvas-tools" aria-label="Canvas snapping options">
-        <span className="canvas-tools__label">Snap</span>
-        <label className="snap-toggle">
-          <input
-            type="checkbox"
-            checked={snapping}
-            onChange={(event) => setSnapping(event.target.checked)}
-          />
-          Alignment guides
-        </label>
-        <label className="snap-toggle">
-          <input
-            type="checkbox"
-            checked={adapter.snapToEdges}
-            onChange={(event) => adapter.setSnapToEdges(event.target.checked)}
-          />
-          Snap to edges
-        </label>
-        <label className="snap-toggle">
-          <input
-            type="checkbox"
-            checked={keepRatio}
-            onChange={(event) => setKeepRatio(event.target.checked)}
-          />
-          Keep ratio
-        </label>
-      </div>
+      {snappingContainer &&
+        createPortal(
+          <div className="canvas-tools" aria-label="Canvas snapping options">
+            <span className="canvas-tools__label">Snap</span>
+            <label className="snap-toggle">
+              <input
+                type="checkbox"
+                checked={snapping}
+                onChange={(event) => setSnapping(event.target.checked)}
+              />
+              Alignment guides
+            </label>
+            <label className="snap-toggle">
+              <input
+                type="checkbox"
+                checked={adapter.snapToEdges}
+                onChange={(event) => adapter.setSnapToEdges(event.target.checked)}
+              />
+              Snap to edges
+            </label>
+            <label className="snap-toggle">
+              <input
+                type="checkbox"
+                checked={keepRatio}
+                onChange={(event) => setKeepRatio(event.target.checked)}
+              />
+              Keep ratio
+            </label>
+          </div>,
+          snappingContainer,
+        )}
       <Stage
         ref={stageRef}
         width={stageWidth}

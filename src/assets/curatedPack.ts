@@ -1,5 +1,6 @@
 import manifest from '../../public/curated-v1/manifest.json';
 import type { AssetProvider, GratitudeAsset } from './contracts';
+import { files } from './curatedSources';
 
 let loaded: Promise<GratitudeAsset[]> | undefined;
 function getAssets(): Promise<GratitudeAsset[]> {
@@ -11,7 +12,6 @@ function getAssets(): Promise<GratitudeAsset[]> {
   return loaded;
 }
 async function loadAssets(): Promise<GratitudeAsset[]> {
-  const { files } = await import('./curatedSources');
   return manifest.assets.map((entry) => {
     const source = files[`../../public/curated-v1/${entry.file}`];
     if (!source) throw new Error(`Missing curated asset: ${entry.file}`);
@@ -29,7 +29,13 @@ async function loadAssets(): Promise<GratitudeAsset[]> {
     ) {
       throw new Error(`Invalid curated SVG dimensions: ${entry.file}`);
     }
-    const url = `data:image/svg+xml,${encodeURIComponent(source)}`;
+    // Canvas needs intrinsic SVG dimensions; a viewBox alone can render blank
+    // when drawImage crops the artwork under the board's zoom transform.
+    const sizedSource = source.replace(/<svg\b([^>]*)>/i, (_, attributes: string) => {
+      const withoutSize = attributes.replace(/\s(?:width|height)\s*=\s*["'][^"']*["']/gi, '');
+      return `<svg${withoutSize} width="${viewBox[2]}" height="${viewBox[3]}">`;
+    });
+    const url = `data:image/svg+xml,${encodeURIComponent(sizedSource)}`;
     return {
       ...entry,
       width: viewBox[2],

@@ -41,3 +41,48 @@ test('limits semantic search to validated keywords', async () => {
     /Invalid search/,
   );
 });
+
+test('board generation requests a schema and accepts structured provider objects', async () => {
+  const result = await generateAI(
+    { prompt: 'Travel to Japan and grow my career', mode: 'board' },
+    env,
+    async (_url, options) => {
+      const body = JSON.parse(options.body);
+      assert.equal(body.response_format.type, 'json_schema');
+      assert.deepEqual(body.response_format.json_schema.required, ['title', 'goals']);
+      return Response.json({
+        success: true,
+        result: {
+          response: { title: ' My year ', goals: [' Explore Japan ', 'Develop my career'] },
+        },
+      });
+    },
+  );
+  assert.equal(result.title, 'My year');
+  assert.deepEqual(result.goals, ['Explore Japan', 'Develop my career']);
+});
+
+test('board parsing accepts fenced and explained JSON but rejects malformed or empty plans', async () => {
+  for (const response of [
+    '```json\n{"title":"Dream","goals":["Grow"]}\n```',
+    'Here is your board:\n{"title":"Dream","goals":["Grow"]}\nEnjoy!',
+  ]) {
+    const result = await generateAI({ prompt: 'Dream', mode: 'board' }, env, async () =>
+      Response.json({ success: true, result: { response } }),
+    );
+    assert.deepEqual(result.goals, ['Grow']);
+  }
+  for (const response of [
+    null,
+    'null',
+    '[]',
+    '{"title":"","goals":[" "]}',
+    '{"title":"Dream","goals":[{"text":"Grow"}]}',
+  ])
+    await assert.rejects(
+      generateAI({ prompt: 'Dream', mode: 'board' }, env, async () =>
+        Response.json({ success: true, result: { response } }),
+      ),
+      /invalid board/,
+    );
+});

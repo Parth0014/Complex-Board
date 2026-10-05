@@ -44,7 +44,7 @@ test('rich text, custom shadows and multi-page PDF survive reload without changi
   await page.getByRole('button', { name: 'Close export', exact: true }).click();
   await expect(page.getByText('Board items (0)', { exact: true })).toBeVisible();
   await page.getByLabel('Active page', { exact: true }).selectOption({ index: 0 });
-  await expect(page.getByRole('status')).toHaveText('Saved');
+  await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   await page.reload();
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
@@ -80,7 +80,7 @@ test('native clipboard transfers editable groups across tabs', async ({ page, co
   await page.getByRole('button', { name: 'Add goal card', exact: true }).click();
   await page.getByRole('button', { name: 'Copy to clipboard', exact: true }).click();
   await expect(page.getByText('Copied to clipboard', { exact: true })).toBeVisible();
-  await expect(page.getByRole('status').first()).toHaveText('Saved');
+  await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   const second = await context.newPage();
   await second.goto('/');
   await expect(second.getByText('Board items (2)', { exact: true })).toBeVisible();
@@ -93,7 +93,11 @@ test('native clipboard transfers editable groups across tabs', async ({ page, co
 test('AI image edits preserve originals and stale previews cannot overwrite later changes', async ({
   page,
 }) => {
-  await page.route('**/api/ai/status', (route) => route.fulfill({ json: { configured: true } }));
+  await page.route('**/api/ai/status', (route) =>
+    route.fulfill({
+      json: { configured: true, backgroundConfigured: true, upscaleConfigured: true },
+    }),
+  );
   await page.goto('/');
   const images = await page.evaluate(() => {
     const image = (color: string) => {
@@ -134,7 +138,11 @@ test('shape-frame export clips pixels and layer extraction remains editable and 
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.route('**/api/ai/status', (route) => route.fulfill({ json: { configured: true } }));
+  await page.route('**/api/ai/status', (route) =>
+    route.fulfill({
+      json: { configured: true, backgroundConfigured: true, upscaleConfigured: true },
+    }),
+  );
   await page.goto('/');
   const images = await page.evaluate(() => {
     const canvas = document.createElement('canvas');

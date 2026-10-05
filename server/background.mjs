@@ -1,7 +1,10 @@
 export async function removeBackground(image, env = process.env, fetcher = fetch) {
   if (!env.REMBG_URL)
-    throw new Error(
-      'Background removal is not configured. Set REMBG_URL to your local rembg server.',
+    throw Object.assign(
+      new Error(
+        'Background removal needs a separate cutout service. Start rembg s, set REMBG_URL in .env, and restart npm run ai:server.',
+      ),
+      { status: 503 },
     );
   if (
     typeof image !== 'string' ||
@@ -15,13 +18,28 @@ export async function removeBackground(image, env = process.env, fetcher = fetch
     new Blob([Buffer.from(image.split(',')[1], 'base64')], { type: 'image/png' }),
     'image.png',
   );
-  const response = await fetcher(env.REMBG_URL, {
-    method: 'POST',
-    body: form,
-    signal: AbortSignal.timeout(90000),
-  });
+  let response;
+  try {
+    response = await fetcher(env.REMBG_URL, {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(90000),
+    });
+  } catch {
+    throw Object.assign(
+      new Error(
+        'The background removal service is unavailable. Start rembg s and check that REMBG_URL points to its /api/remove endpoint. Then retry; your original image is unchanged.',
+      ),
+      { status: 503 },
+    );
+  }
   if (!response.ok || !String(response.headers.get('content-type')).startsWith('image/png'))
-    throw new Error('Background removal service failed.');
+    throw Object.assign(
+      new Error(
+        'The cutout service could not process this image. Check REMBG_URL and the rembg server logs, or try a smaller photo.',
+      ),
+      { status: 502 },
+    );
   const buffer = Buffer.from(await response.arrayBuffer());
   if (buffer.length > 12000000) throw new Error('Cutout image is too large.');
   return { image: `data:image/png;base64,${buffer.toString('base64')}` };

@@ -1,4 +1,5 @@
 import { curatedPackProvider } from '../../assets/curatedPack';
+import { requestAI } from '../aiClient';
 import type { GratitudeAsset } from '../../assets/contracts';
 import type {
   CanvasAdapter,
@@ -900,13 +901,11 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Image editing is unavailable.');
     ctx.drawImage(image, 0, 0);
-    const response = await this.ownerWindow.fetch('/api/ai/remove-background', {
+    const result = await requestAI(this.ownerWindow, '/api/ai/remove-background', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: canvas.toDataURL('image/png') }),
     });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Background removal failed.');
     if (
       typeof result.image !== 'string' ||
       !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(result.image)
@@ -961,13 +960,11 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     if (item.asset?.frameSlot || item.frameShape)
       throw new Error('Detach frame content before splitting layers.');
     const asset = item.contentAsset || item.asset!;
-    const cutResponse = await this.ownerWindow.fetch('/api/ai/remove-background', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: source.image }),
-      }),
-      cut = await cutResponse.json();
-    if (!cutResponse.ok) throw new Error(cut.error || 'Foreground extraction failed.');
+    const cut = await requestAI(this.ownerWindow, '/api/ai/remove-background', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: source.image }),
+    });
     if (
       typeof cut.image !== 'string' ||
       !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(cut.image)
@@ -987,18 +984,16 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       pixels.data[index + 3] = 255;
     }
     context.putImageData(pixels, 0, 0);
-    const response = await this.ownerWindow.fetch('/api/ai/edit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: source.image,
-          mask: canvas.toDataURL('image/png'),
-          prompt:
-            'Remove the foreground subject. Reconstruct the continuous natural background with matching lighting and texture. No foreground objects.',
-        }),
+    const background = await requestAI(this.ownerWindow, '/api/ai/edit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: source.image,
+        mask: canvas.toDataURL('image/png'),
+        prompt:
+          'Remove the foreground subject. Reconstruct the continuous natural background with matching lighting and texture. No foreground objects.',
       }),
-      background = await response.json();
-    if (!response.ok) throw new Error(background.error || 'Background reconstruction failed.');
+    });
     if (
       typeof background.image !== 'string' ||
       !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(background.image)
@@ -1126,13 +1121,11 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Image editing unavailable.');
     context.drawImage(image, 0, 0);
-    const response = await this.ownerWindow.fetch('/api/ai/upscale', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: canvas.toDataURL('image/png') }),
-      }),
-      result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'AI upscaling failed.');
+    const result = await requestAI(this.ownerWindow, '/api/ai/upscale', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: canvas.toDataURL('image/png') }),
+    });
     await this.applyEditedImage(item.id, revision, result.image);
   }
   async recolorAsset(from: string, to: string) {

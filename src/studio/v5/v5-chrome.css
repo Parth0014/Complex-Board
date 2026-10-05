@@ -23,7 +23,7 @@
   background: var(--vs-graphite-900);
   color: var(--vs-chrome-ink);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  z-index: 900;
+  z-index: var(--vs-z-popover);
   position: relative;
 }
 
@@ -106,7 +106,7 @@
 
 .vs-lib {
   position: absolute;
-  z-index: 600;
+  z-index: var(--vs-z-panel);
   left: 14px;
   top: 14px;
   bottom: 14px;
@@ -213,7 +213,7 @@
 }
 .canvas-message {
   position: absolute;
-  z-index: 50;
+  z-index: var(--vs-z-float);
   left: 50%;
   top: 76px;
   transform: translateX(-50%);
@@ -233,7 +233,7 @@
 /* snap toggles (rendered by KonvaStage) */
 .canvas-tools {
   position: absolute;
-  z-index: 500;
+  z-index: var(--vs-z-float);
   left: 50%;
   bottom: 14px;
   transform: translateX(-50%);
@@ -279,7 +279,7 @@
 
 .vs-tools {
   position: absolute;
-  z-index: 550;
+  z-index: var(--vs-z-float);
   top: 14px;
   left: 50%;
   transform: translateX(-50%);
@@ -299,7 +299,7 @@
 
 .vs-sel {
   position: absolute;
-  z-index: 550;
+  z-index: var(--vs-z-float);
   bottom: 70px;
   left: 50%;
   transform: translateX(-50%);
@@ -460,7 +460,7 @@
 
 .vs-inspector {
   position: absolute;
-  z-index: 600;
+  z-index: var(--vs-z-panel);
   right: 14px;
   top: 14px;
   bottom: 76px;
@@ -648,7 +648,7 @@
 
 .vs-pages, .vs-zoom {
   position: absolute;
-  z-index: 550;
+  z-index: var(--vs-z-float);
   bottom: 14px;
   display: flex;
   align-items: center;
@@ -664,11 +664,6 @@
 .vs-zoom { right: 14px; }
 /* hide the trigger tooltip while its menu is open */
 .vs-menu[open] > summary[data-tip]::after { display: none; }
-/* keep the pages pill clear of the library dock (desktop) */
-@media (min-width: 720px) {
-  .vs-pages { left: 97px; }
-  .vs-body:has(.vs-lib:not(.is-collapsed)) .vs-pages { left: 340px; }
-}
 /* the snap chip yields to the bottom pills on narrower screens */
 @media (max-width: 1149px) {
   .canvas-tools { display: none; }
@@ -727,7 +722,7 @@
 .vs-veil {
   position: fixed;
   inset: 0;
-  z-index: 3000;
+  z-index: var(--vs-z-modal);
   background: rgba(14, 16, 22, 0.5);
   backdrop-filter: blur(3px);
   display: flex;
@@ -859,7 +854,7 @@
 /* global error banner */
 .vs-error {
   position: absolute;
-  z-index: 1200;
+  z-index: var(--vs-z-tooltip);
   top: calc(var(--vs-header-h) + 12px);
   left: 50%;
   transform: translateX(-50%);

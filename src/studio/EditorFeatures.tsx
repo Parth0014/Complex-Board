@@ -5,6 +5,7 @@ import { canonicalFontId, editorFonts } from '../vision/fonts';
 import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
 import { formatRange, type TextStyle } from '../vision/text';
+import { useAIStatus } from './useAIStatus';
 import {
   BackwardIcon,
   BringFrontIcon,
@@ -12,14 +13,11 @@ import {
   CheckIcon,
   ChevronDownIcon,
   CloseIcon,
-  ContrastIcon,
   CropIcon,
   DropletIcon,
   DuplicateIcon,
   EyeIcon,
   EyeOffIcon,
-  FlipHIcon,
-  FlipVIcon,
   ForwardIcon,
   ImageIcon,
   ItalicIcon,
@@ -31,8 +29,6 @@ import {
   ScissorsIcon,
   SendBackIcon,
   SlidersIcon,
-  SunIcon,
-  TrashIcon,
   TypeIcon,
   UnderlineIcon,
   UndoIcon,
@@ -83,6 +79,7 @@ export function EditorFeatures({
   const [assets, setAssets] = useState<GratitudeAsset[]>([]),
     [error, setError] = useState('');
   const [mediaBusy, setMediaBusy] = useState(false);
+  const ai = useAIStatus(adapter.ownerWindow);
   const runMedia = async (action: () => Promise<void>) => {
     setMediaBusy(true);
     setError('');
@@ -358,7 +355,9 @@ export function EditorFeatures({
       <div className="vs-inspector__body">
         <div className="vs-insp-head">
           <div>
-            <span className="vs-eyebrow">{(panel ?? 'style') === 'style' ? 'Properties' : 'Board'}</span>
+            <span className="vs-eyebrow">
+              {(panel ?? 'style') === 'style' ? 'Properties' : 'Board'}
+            </span>
             <h3>{(panel ?? 'style') === 'style' ? selectionTitle : 'Layers'}</h3>
             <p>
               {(panel ?? 'style') === 'style'
@@ -383,868 +382,903 @@ export function EditorFeatures({
         )}
 
         {(panel ?? 'style') === 'layers' && (
-            <>
-              <Sec title="Layer stack" icon={<LayersIcon />}>
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-ink-2)' }}>
-                  Top layers appear first. Expand a group to edit its members. Drag a member or
-                  group to reorder among its siblings.
-                </p>
-                <div className="vs-layers">{groups([])}</div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: 'var(--vs-mute)',
-                    padding: '8px 10px',
-                    background: 'var(--vs-panel-2)',
-                    borderRadius: 10,
-                  }}
-                >
-                  Background
-                </div>
-              </Sec>
-              <Sec title="Arrange" icon={<BringFrontIcon />}>
-                <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                  {(['forward', 'backward', 'front', 'back'] as const).map((position) => (
-                    <button
-                      key={position}
-                      disabled={!adapter.selectedIds.length}
-                      onClick={() => adapter.arrangeSelection(position)}
-                    >
-                      {position[0].toUpperCase() + position.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </Sec>
-              {adapter.groupScope.length > 0 && (
-                <button
-                  className="vs-btn vs-btn--light"
-                  style={{ justifyContent: 'center' }}
-                  onClick={() => adapter.exitGroup()}
-                >
-                  <UndoIcon /> Exit group ({adapter.groupScope.length})
-                </button>
-              )}
-            </>
-          )}
-
-          {(panel ?? 'style') === 'style' &&
-            (!item ? (
-              <div className="vs-inspector__empty">
-                <span className="vs-empty__icon" aria-hidden="true">
-                  <SlidersIcon />
-                </span>
-                <strong>Select something to refine it</strong>
-                <p>
-                  Style appears here when an object is selected. Layers stay one click away; AI
-                  lives with creation tools on the left.
-                </p>
+          <>
+            <Sec title="Layer stack" icon={<LayersIcon />}>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-ink-2)' }}>
+                Top layers appear first. Expand a group to edit its members. Drag a member or group
+                to reorder among its siblings.
+              </p>
+              <div className="vs-layers">{groups([])}</div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--vs-mute)',
+                  padding: '8px 10px',
+                  background: 'var(--vs-panel-2)',
+                  borderRadius: 10,
+                }}
+              >
+                Background
               </div>
-            ) : (
-              <>
-                <Sec title="Quick actions" icon={<ZapIcon />}>
-                  <div className="vs-action-grid">
-                    <button
-                      className="vs-icon-btn"
-                      data-tip="Copy (Ctrl+C)"
-                      aria-label="Copy"
-                      onClick={() => void adapter.copyToSystem()}
-                    >
-                      <DuplicateIcon />
-                    </button>
-                    <button
-                      className="vs-icon-btn"
-                      data-tip="Paste (Ctrl+V)"
-                      aria-label="Paste"
-                      onClick={() => void adapter.pasteFromSystem()}
-                    >
-                      <PasteIcon />
-                    </button>
-                    <button
-                      className="vs-icon-btn"
-                      data-tip="Bring forward (])"
-                      aria-label="Forward"
-                      onClick={() => adapter.arrangeSelection('forward')}
-                    >
-                      <ForwardIcon />
-                    </button>
-                    <button
-                      className="vs-icon-btn"
-                      data-tip="Send backward ([)"
-                      aria-label="Backward"
-                      onClick={() => adapter.arrangeSelection('backward')}
-                    >
-                      <BackwardIcon />
-                    </button>
-                    <button
-                      className="vs-icon-btn"
-                      data-tip="Bring to front (Ctrl+])"
-                      aria-label="Front"
-                      onClick={() => adapter.arrangeSelection('front')}
-                    >
-                      <BringFrontIcon />
-                    </button>
-                    <button
-                      className="vs-icon-btn"
-                      data-tip="Send to back (Ctrl+[)"
-                      aria-label="Back"
-                      onClick={() => adapter.arrangeSelection('back')}
-                    >
-                      <SendBackIcon />
-                    </button>
-                    <button
-                      className="vs-icon-btn"
-                      data-tip="Rotate 15° clockwise"
-                      aria-label="Rotate 15°"
-                      onClick={() => adapter.rotateSelection(15)}
-                    >
-                      <RotateIcon />
-                    </button>
-                  </div>
+            </Sec>
+            <Sec title="Arrange" icon={<BringFrontIcon />}>
+              <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                {(['forward', 'backward', 'front', 'back'] as const).map((position) => (
+                  <button
+                    key={position}
+                    disabled={!adapter.selectedIds.length}
+                    onClick={() => adapter.arrangeSelection(position)}
+                  >
+                    {position[0].toUpperCase() + position.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </Sec>
+            {adapter.groupScope.length > 0 && (
+              <button
+                className="vs-btn vs-btn--light"
+                style={{ justifyContent: 'center' }}
+                onClick={() => adapter.exitGroup()}
+              >
+                <UndoIcon /> Exit group ({adapter.groupScope.length})
+              </button>
+            )}
+          </>
+        )}
+
+        {(panel ?? 'style') === 'style' &&
+          (!item ? (
+            <div className="vs-inspector__empty">
+              <span className="vs-empty__icon" aria-hidden="true">
+                <SlidersIcon />
+              </span>
+              <strong>Select something to refine it</strong>
+              <p>
+                Style appears here when an object is selected. Layers stay one click away; AI lives
+                with creation tools on the left.
+              </p>
+            </div>
+          ) : (
+            <>
+              <Sec title="Quick actions" icon={<ZapIcon />}>
+                <div className="vs-action-grid">
+                  <button
+                    className="vs-icon-btn"
+                    data-tip="Copy (Ctrl+C)"
+                    aria-label="Copy"
+                    onClick={() => void adapter.copyToSystem()}
+                  >
+                    <DuplicateIcon />
+                  </button>
+                  <button
+                    className="vs-icon-btn"
+                    data-tip="Paste (Ctrl+V)"
+                    aria-label="Paste"
+                    onClick={() => void adapter.pasteFromSystem()}
+                  >
+                    <PasteIcon />
+                  </button>
+                  <button
+                    className="vs-icon-btn"
+                    data-tip="Bring forward (])"
+                    aria-label="Forward"
+                    onClick={() => adapter.arrangeSelection('forward')}
+                  >
+                    <ForwardIcon />
+                  </button>
+                  <button
+                    className="vs-icon-btn"
+                    data-tip="Send backward ([)"
+                    aria-label="Backward"
+                    onClick={() => adapter.arrangeSelection('backward')}
+                  >
+                    <BackwardIcon />
+                  </button>
+                  <button
+                    className="vs-icon-btn"
+                    data-tip="Bring to front (Ctrl+])"
+                    aria-label="Front"
+                    onClick={() => adapter.arrangeSelection('front')}
+                  >
+                    <BringFrontIcon />
+                  </button>
+                  <button
+                    className="vs-icon-btn"
+                    data-tip="Send to back (Ctrl+[)"
+                    aria-label="Back"
+                    onClick={() => adapter.arrangeSelection('back')}
+                  >
+                    <SendBackIcon />
+                  </button>
+                  <button
+                    className="vs-icon-btn"
+                    data-tip="Rotate 15° clockwise"
+                    aria-label="Rotate 15°"
+                    onClick={() => adapter.rotateSelection(15)}
+                  >
+                    <RotateIcon />
+                  </button>
+                </div>
+                <div className="vs-row-2">
+                  <button
+                    className="vs-btn vs-btn--light"
+                    style={{ justifyContent: 'center' }}
+                    onClick={() => adapter.copyStyle()}
+                  >
+                    Copy style
+                  </button>
+                  <button
+                    className="vs-btn vs-btn--light"
+                    style={{ justifyContent: 'center' }}
+                    disabled={!adapter.canPasteStyle}
+                    onClick={() => adapter.pasteStyle()}
+                  >
+                    Apply style
+                  </button>
+                </div>
+              </Sec>
+
+              <Sec title="Position & size" icon={<BringFrontIcon />}>
+                {adapter.selectedIds.length === 1 && (
                   <div className="vs-row-2">
-                    <button className="vs-btn vs-btn--light" style={{ justifyContent: 'center' }} onClick={() => adapter.copyStyle()}>
-                      Copy style
-                    </button>
-                    <button
-                      className="vs-btn vs-btn--light"
-                      style={{ justifyContent: 'center' }}
-                      disabled={!adapter.canPasteStyle}
-                      onClick={() => adapter.pasteStyle()}
-                    >
-                      Apply style
-                    </button>
-                  </div>
-                </Sec>
-
-                <Sec title="Position & size" icon={<BringFrontIcon />}>
-                  {adapter.selectedIds.length === 1 && (
-                    <div className="vs-row-2">
-                      <label className="vs-field">
-                        <span>X</span>
-                        <input
-                          className="vs-input"
-                          aria-label="Item X"
-                          type="number"
-                          disabled={item.locked}
-                          value={Math.round(item.x)}
-                          onChange={(event) =>
-                            adapter.patchItems([
-                              { id: item.id, patch: { x: Number(event.target.value) } },
-                            ])
-                          }
-                        />
-                      </label>
-                      <label className="vs-field">
-                        <span>Y</span>
-                        <input
-                          className="vs-input"
-                          aria-label="Item Y"
-                          type="number"
-                          disabled={item.locked}
-                          value={Math.round(item.y)}
-                          onChange={(event) =>
-                            adapter.patchItems([
-                              { id: item.id, patch: { y: Number(event.target.value) } },
-                            ])
-                          }
-                        />
-                      </label>
-                    </div>
-                  )}
-                  <div className="vs-row-3">
-                    {number('Rotation°', 'rotation', -360, 360)}
-                    {number('Width', 'width', 10, 5000)}
-                    {number('Height', 'height', 10, 5000)}
-                  </div>
-                </Sec>
-
-                {item.connector && (
-                  <Sec title="Connector" icon={<SlidersIcon />}>
-                    <p style={{ margin: 0, fontSize: 12.5, color: 'var(--vs-ink-2)' }}>
-                      This arrow follows its connected objects.
-                    </p>
-                    <button
-                      className="vs-btn vs-btn--light"
-                      style={{ justifyContent: 'center' }}
-                      onClick={() => patch({ connector: undefined })}
-                    >
-                      Detach connector
-                    </button>
-                  </Sec>
-                )}
-
-                {item.kind === 'text' && (
-                  <Sec title="Text" icon={<TypeIcon />}>
                     <label className="vs-field">
-                      <span>Content</span>
-                      <textarea
-                        className="vs-textarea"
-                        ref={textEditor}
-                        aria-label="Styled text"
-                        value={item.text || ''}
+                      <span>X</span>
+                      <input
+                        className="vs-input"
+                        aria-label="Item X"
+                        type="number"
+                        disabled={item.locked}
+                        value={Math.round(item.x)}
                         onChange={(event) =>
-                          patch({ text: event.target.value, textRuns: undefined })
-                        }
-                        onSelect={(event) =>
-                          setTextRange({
-                            start: event.currentTarget.selectionStart,
-                            end: event.currentTarget.selectionEnd,
-                          })
+                          adapter.patchItems([
+                            { id: item.id, patch: { x: Number(event.target.value) } },
+                          ])
                         }
                       />
                     </label>
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-mute)' }}>
-                      Select a range above, then apply formatting.
-                    </p>
-                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                      <button
-                        data-tip="Bold range"
-                        aria-label="Bold text range"
-                        onClick={() => formatText({ bold: true })}
-                      >
-                        <BoldIcon /> Bold
-                      </button>
-                      <button
-                        data-tip="Italic range"
-                        aria-label="Italic text range"
-                        onClick={() => formatText({ italic: true })}
-                      >
-                        <ItalicIcon /> Italic
-                      </button>
-                      <button
-                        data-tip="Underline range"
-                        aria-label="Underline text range"
-                        onClick={() => formatText({ underline: true })}
-                      >
-                        <UnderlineIcon /> Under
-                      </button>
-                      <button
-                        data-tip="Superscript"
-                        aria-label="Superscript"
-                        onClick={() => formatText({ script: 'super' })}
-                      >
-                        Super
-                      </button>
-                      <button
-                        data-tip="Subscript"
-                        aria-label="Subscript"
-                        onClick={() => formatText({ script: 'sub' })}
-                      >
-                        Sub
-                      </button>
-                      <button
-                        data-tip="Clear range formatting"
-                        onClick={() =>
-                          formatText({
-                            bold: false,
-                            italic: false,
-                            underline: false,
-                            strike: false,
-                            script: 'normal',
-                          })
-                        }
-                      >
-                        Normal
-                      </button>
-                    </div>
-                    <button
-                      className="vs-btn vs-btn--light"
-                      style={{ justifyContent: 'center' }}
-                      onClick={() => patch({ textRuns: undefined })}
-                    >
-                      Clear range formatting
-                    </button>
-                    <div className="vs-row-2">
-                      <label className="vs-check">
-                        <input
-                          type="checkbox"
-                          checked={item.kerning !== false}
-                          onChange={(event) => patch({ kerning: event.target.checked })}
-                        />
-                        Kerning
-                      </label>
-                      <label className="vs-check">
-                        <input
-                          type="checkbox"
-                          checked={item.ligatures !== false}
-                          onChange={(event) => patch({ ligatures: event.target.checked })}
-                        />
-                        Ligatures
-                      </label>
-                    </div>
                     <label className="vs-field">
-                      <span>Font</span>
-                      <select
-                        className="vs-select"
-                        aria-label="Font"
-                        value={canonicalFontId(item.fontFamily)}
+                      <span>Y</span>
+                      <input
+                        className="vs-input"
+                        aria-label="Item Y"
+                        type="number"
+                        disabled={item.locked}
+                        value={Math.round(item.y)}
                         onChange={(event) =>
-                          patch({ fontFamily: event.target.value as BoardItem['fontFamily'] })
+                          adapter.patchItems([
+                            { id: item.id, patch: { y: Number(event.target.value) } },
+                          ])
                         }
-                      >
-                        {Object.entries(editorFonts).map(([id, name]) => (
-                          <option value={id} key={id}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </label>
-                    {color('Text background', 'textBackground', '#fff3bd')}
-                    <div className="vs-row-2">
-                      <button
-                        className="vs-btn vs-btn--light"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => patch({ textBackground: undefined })}
-                      >
-                        Clear background
-                      </button>
-                      <button
-                        className="vs-btn vs-btn--light"
-                        style={{ justifyContent: 'center' }}
-                        aria-pressed={!!item.strike}
-                        onClick={() => patch({ strike: !item.strike })}
-                      >
-                        Strikethrough
-                      </button>
-                      <button
-                        className="vs-btn vs-btn--light"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => patch({ text: item.text?.toUpperCase() })}
-                      >
-                        UPPERCASE
-                      </button>
-                      <button
-                        className="vs-btn vs-btn--light"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => patch({ text: item.text?.toLowerCase() })}
-                      >
-                        lowercase
-                      </button>
-                    </div>
-                    <div className="vs-row-2">
-                      {number('Font weight', 'fontWeight', 100, 900, 100)}
-                      {number('Text curve', 'curve', -400, 400)}
-                    </div>
-                  </Sec>
-                )}
-
-                {(item.kind === 'shape' || item.kind === 'text') && (
-                  <Sec title="Fill & gradient" icon={<DropletIcon />}>
-                    {color('Fill', 'color', '#b48ce3')}
-                    <div className="vs-row-2">
-                      <label className="vs-field">
-                        <span>Gradient</span>
-                        <input
-                          className="vs-color"
-                          aria-label="Item gradient"
-                          type="color"
-                          value={item.gradient || '#fff3bd'}
-                          onChange={(event) =>
-                            patch({ gradient: event.target.value, fill: item.color || '#b48ce3' })
-                          }
-                        />
-                      </label>
-                      <label className="vs-field">
-                        <span>Gradient type</span>
-                        <select
-                          className="vs-select"
-                          aria-label="Item gradient type"
-                          value={item.gradientType || 'linear'}
-                          onChange={(event) =>
-                            patch({ gradientType: event.target.value as 'linear' | 'radial' })
-                          }
-                        >
-                          <option>linear</option>
-                          <option>radial</option>
-                        </select>
-                      </label>
-                    </div>
-                    <button
-                      className="vs-btn vs-btn--light"
-                      style={{ justifyContent: 'center' }}
-                      onClick={() => patch({ gradient: undefined })}
-                    >
-                      Remove gradient
-                    </button>
-                    {item.kind === 'shape' && (
-                      <>
-                        <label className="vs-check">
-                          <input
-                            type="checkbox"
-                            checked={!!item.noFill}
-                            onChange={(event) => patch({ noFill: event.target.checked })}
-                          />
-                          No fill (outline only)
-                        </label>
-                        {['rectangle', 'circle', 'triangle', 'heart', 'cloud', 'star'].includes(
-                          item.shape || '',
-                        ) && (
-                          <label className="vs-field">
-                            <span>Convert shape to frame</span>
-                            <select
-                              className="vs-select"
-                              aria-label="Convert shape to frame"
-                              value={''}
-                              onChange={(event) => {
-                                if (event.target.value)
-                                  void runMedia(async () => {
-                                    await adapter.attachFrameContent(event.target.value);
-                                  });
-                              }}
-                            >
-                              <option value={''}>Choose image or graphic</option>
-                              {boardMedia
-                                .filter((asset) => !asset.frameSlot)
-                                .map((asset) => (
-                                  <option key={asset.id} value={asset.id}>
-                                    {asset.title}
-                                  </option>
-                                ))}
-                            </select>
-                          </label>
-                        )}
-                      </>
-                    )}
-                  </Sec>
-                )}
-
-                {item.kind === 'drawing' && (
-                  <Sec title="Pen" icon={<PenIcon />}>
-                    {number('Pen width', 'strokeWidth', 1, 50)}
-                  </Sec>
-                )}
-
-                <Sec title="Quick styles" icon={<ZapIcon />}>
-                  <div className="vs-quickstyles">
-                    <button
-                      data-tip="Apply Soft violet style"
-                      onClick={() =>
-                        patch({
-                          color: '#573575',
-                          borderColor: '#573575',
-                          borderWidth: 2,
-                          shadow: 'soft',
-                          effect: 'none',
-                          gradient: undefined,
-                        })
-                      }
-                    >
-                      <span className="vs-qdot" style={{ background: '#573575' }} />
-                      Soft violet
-                    </button>
-                    <button
-                      data-tip="Apply Golden glow style"
-                      onClick={() =>
-                        patch({
-                          color: '#c89640',
-                          borderColor: '#c89640',
-                          borderWidth: 3,
-                          shadow: 'none',
-                          effect: 'glow',
-                          gradient: undefined,
-                        })
-                      }
-                    >
-                      <span className="vs-qdot" style={{ background: '#c89640' }} />
-                      Golden glow
-                    </button>
-                    <button
-                      data-tip="Apply Ink style"
-                      onClick={() =>
-                        patch({
-                          color: '#222222',
-                          borderColor: '#222222',
-                          borderWidth: 2,
-                          shadow: 'hard',
-                          effect: 'none',
-                          gradient: undefined,
-                        })
-                      }
-                    >
-                      <span className="vs-qdot" style={{ background: '#222222' }} />
-                      Ink
-                    </button>
                   </div>
+                )}
+                <div className="vs-row-3">
+                  {number('Rotation°', 'rotation', -360, 360)}
+                  {number('Width', 'width', 10, 5000)}
+                  {number('Height', 'height', 10, 5000)}
+                </div>
+              </Sec>
+
+              {item.connector && (
+                <Sec title="Connector" icon={<SlidersIcon />}>
+                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--vs-ink-2)' }}>
+                    This arrow follows its connected objects.
+                  </p>
+                  <button
+                    className="vs-btn vs-btn--light"
+                    style={{ justifyContent: 'center' }}
+                    onClick={() => patch({ connector: undefined })}
+                  >
+                    Detach connector
+                  </button>
                 </Sec>
+              )}
 
-                <Sec title="Appearance" icon={<SlidersIcon />}>
-                  {color('Item color', 'color', '#573575')}
-                  <div className="vs-row-2">
-                    <label className="vs-field">
-                      <span>Shadow preset</span>
-                      <select
-                        className="vs-select"
-                        aria-label="Shadow preset"
-                        value={item.shadow || 'none'}
-                        onChange={(event) =>
-                          patch({ shadow: event.target.value as BoardItem['shadow'] })
-                        }
-                      >
-                        {['none', 'soft', 'medium', 'hard'].map((id) => (
-                          <option key={id}>{id}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="vs-field">
-                      <span>Stroke style</span>
-                      <select
-                        className="vs-select"
-                        aria-label="Stroke style"
-                        value={item.borderStyle || 'solid'}
-                        onChange={(event) =>
-                          patch({ borderStyle: event.target.value as BoardItem['borderStyle'] })
-                        }
-                      >
-                        {['solid', 'dashed', 'dotted'].map((id) => (
-                          <option key={id}>{id}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                  <div className="vs-row-2">
-                    {color('Shadow color', 'shadowColor', '#000000')}
-                    {number('Shadow opacity', 'shadowOpacity', 0, 1, 0.05)}
-                  </div>
-                  <div className="vs-row-3">
-                    {number('Shadow blur', 'shadowBlur', 0, 100)}
-                    {number('Shadow X', 'shadowOffsetX', -100, 100)}
-                    {number('Shadow Y', 'shadowOffsetY', -100, 100)}
-                  </div>
-                  <div className="vs-row-2">
-                    {number('Corner radius', 'radius', 0, 150)}
-                    {number('Stroke width', 'borderWidth', 0, 30)}
-                  </div>
-                  {color('Stroke color', 'borderColor', '#33272b')}
+              {item.kind === 'text' && (
+                <Sec title="Text" icon={<TypeIcon />}>
                   <label className="vs-field">
-                    <span>Effect</span>
+                    <span>Content</span>
+                    <textarea
+                      className="vs-textarea"
+                      ref={textEditor}
+                      aria-label="Styled text"
+                      value={item.text || ''}
+                      onChange={(event) => patch({ text: event.target.value, textRuns: undefined })}
+                      onSelect={(event) =>
+                        setTextRange({
+                          start: event.currentTarget.selectionStart,
+                          end: event.currentTarget.selectionEnd,
+                        })
+                      }
+                    />
+                  </label>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-mute)' }}>
+                    Select a range above, then apply formatting.
+                  </p>
+                  <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                    <button
+                      data-tip="Bold range"
+                      aria-label="Bold text range"
+                      onClick={() => formatText({ bold: true })}
+                    >
+                      <BoldIcon /> Bold
+                    </button>
+                    <button
+                      data-tip="Italic range"
+                      aria-label="Italic text range"
+                      onClick={() => formatText({ italic: true })}
+                    >
+                      <ItalicIcon /> Italic
+                    </button>
+                    <button
+                      data-tip="Underline range"
+                      aria-label="Underline text range"
+                      onClick={() => formatText({ underline: true })}
+                    >
+                      <UnderlineIcon /> Under
+                    </button>
+                    <button
+                      data-tip="Superscript"
+                      aria-label="Superscript"
+                      onClick={() => formatText({ script: 'super' })}
+                    >
+                      Super
+                    </button>
+                    <button
+                      data-tip="Subscript"
+                      aria-label="Subscript"
+                      onClick={() => formatText({ script: 'sub' })}
+                    >
+                      Sub
+                    </button>
+                    <button
+                      data-tip="Clear range formatting"
+                      onClick={() =>
+                        formatText({
+                          bold: false,
+                          italic: false,
+                          underline: false,
+                          strike: false,
+                          script: 'normal',
+                        })
+                      }
+                    >
+                      Normal
+                    </button>
+                  </div>
+                  <button
+                    className="vs-btn vs-btn--light"
+                    style={{ justifyContent: 'center' }}
+                    onClick={() => patch({ textRuns: undefined })}
+                  >
+                    Clear range formatting
+                  </button>
+                  <div className="vs-row-2">
+                    <label className="vs-check">
+                      <input
+                        type="checkbox"
+                        checked={item.kerning !== false}
+                        onChange={(event) => patch({ kerning: event.target.checked })}
+                      />
+                      Kerning
+                    </label>
+                    <label className="vs-check">
+                      <input
+                        type="checkbox"
+                        checked={item.ligatures !== false}
+                        onChange={(event) => patch({ ligatures: event.target.checked })}
+                      />
+                      Ligatures
+                    </label>
+                  </div>
+                  <label className="vs-field">
+                    <span>Font</span>
                     <select
                       className="vs-select"
-                      aria-label="Effect"
-                      value={item.effect || 'none'}
+                      aria-label="Font"
+                      value={canonicalFontId(item.fontFamily)}
                       onChange={(event) =>
-                        patch({ effect: event.target.value as BoardItem['effect'] })
+                        patch({ fontFamily: event.target.value as BoardItem['fontFamily'] })
                       }
                     >
-                      {(item.kind === 'text'
-                        ? ['none', 'glow', 'echo', 'outline', 'glitch']
-                        : item.kind === 'asset'
-                          ? ['none', 'glow', 'glitch']
-                          : ['none', 'glow', 'outline']
-                      ).map((id) => (
-                        <option key={id}>{id}</option>
+                      {Object.entries(editorFonts).map(([id, name]) => (
+                        <option value={id} key={id}>
+                          {name}
+                        </option>
                       ))}
                     </select>
                   </label>
+                  {color('Text background', 'textBackground', '#fff3bd')}
+                  <div className="vs-row-2">
+                    <button
+                      className="vs-btn vs-btn--light"
+                      style={{ justifyContent: 'center' }}
+                      onClick={() => patch({ textBackground: undefined })}
+                    >
+                      Clear background
+                    </button>
+                    <button
+                      className="vs-btn vs-btn--light"
+                      style={{ justifyContent: 'center' }}
+                      aria-pressed={!!item.strike}
+                      onClick={() => patch({ strike: !item.strike })}
+                    >
+                      Strikethrough
+                    </button>
+                    <button
+                      className="vs-btn vs-btn--light"
+                      style={{ justifyContent: 'center' }}
+                      onClick={() => patch({ text: item.text?.toUpperCase() })}
+                    >
+                      UPPERCASE
+                    </button>
+                    <button
+                      className="vs-btn vs-btn--light"
+                      style={{ justifyContent: 'center' }}
+                      onClick={() => patch({ text: item.text?.toLowerCase() })}
+                    >
+                      lowercase
+                    </button>
+                  </div>
+                  <div className="vs-row-2">
+                    {number('Font weight', 'fontWeight', 100, 900, 100)}
+                    {number('Text curve', 'curve', -400, 400)}
+                  </div>
                 </Sec>
+              )}
 
-                {item.kind === 'asset' && (
-                  <Sec title="Image" icon={<ImageIcon />}>
+              {(item.kind === 'shape' || item.kind === 'text') && (
+                <Sec title="Fill & gradient" icon={<DropletIcon />}>
+                  {color('Fill', 'color', '#b48ce3')}
+                  <div className="vs-row-2">
                     <label className="vs-field">
-                      <span>Replace media</span>
-                      <select
-                        className="vs-select"
-                        aria-label="Replace media"
-                        value={item.asset?.id || ''}
+                      <span>Gradient</span>
+                      <input
+                        className="vs-color"
+                        aria-label="Item gradient"
+                        type="color"
+                        value={item.gradient || '#fff3bd'}
                         onChange={(event) =>
-                          void runMedia(async () => {
-                            await adapter.replaceAsset(event.target.value);
-                          })
+                          patch({ gradient: event.target.value, fill: item.color || '#b48ce3' })
                         }
-                      >
-                        {boardMedia.map((asset) => (
-                          <option key={asset.id} value={asset.id}>
-                            {asset.title}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </label>
                     <label className="vs-field">
-                      <span>Shape frame</span>
+                      <span>Gradient type</span>
                       <select
                         className="vs-select"
-                        aria-label="Shape frame"
-                        value={item.frameShape || ''}
-                        disabled={!!item.asset?.frameSlot}
+                        aria-label="Item gradient type"
+                        value={item.gradientType || 'linear'}
                         onChange={(event) =>
-                          patch({
-                            frameShape: (event.target.value || undefined) as BoardItem['frameShape'],
-                          })
+                          patch({ gradientType: event.target.value as 'linear' | 'radial' })
                         }
                       >
-                        <option value="">Rectangle</option>
-                        {['circle', 'heart', 'triangle', 'hexagon', 'star', 'cloud'].map(
-                          (shape) => (
-                            <option key={shape}>{shape}</option>
-                          ),
-                        )}
+                        <option>linear</option>
+                        <option>radial</option>
                       </select>
                     </label>
-
-                    <Sec title="AI tools & adjustments" icon={<WandIcon />}>
-                      <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                        <button
-                          data-tip="Remove the image background"
-                          disabled={mediaBusy}
-                          onClick={() => void runMedia(() => adapter.removeBackground())}
-                        >
-                          <ScissorsIcon /> Remove bg
-                        </button>
-                        <button
-                          data-tip="Resample image at 2×"
-                          disabled={mediaBusy}
-                          onClick={() => void runMedia(() => adapter.upscaleImage())}
-                        >
-                          Resample 2×
-                        </button>
-                        <button
-                          data-tip="AI upscale image at 2×"
-                          disabled={mediaBusy}
-                          onClick={() => void runMedia(() => adapter.upscaleAI())}
-                        >
-                          <WandIcon /> AI upscale 2×
-                        </button>
-                        <button
-                          data-tip="Split into foreground and background layers"
-                          disabled={mediaBusy}
-                          onClick={() => void runMedia(() => adapter.splitImageLayers())}
-                        >
-                          Split foreground/background
-                        </button>
-                        <button
-                          data-tip="Match colors from a second selected image"
-                          disabled={mediaBusy || adapter.selectedIds.length !== 2}
-                          onClick={() => void runMedia(() => adapter.matchImageStyle())}
-                        >
-                          Match reference colors
-                        </button>
-                        <button
-                          data-tip="Reset all source edits"
-                          onClick={() => patch({ rendition: undefined, colorOverrides: undefined })}
-                        >
-                          <UndoIcon /> Reset source edits
-                        </button>
-                      </div>
-                      {mediaBusy && (
-                        <p role="status" style={{ margin: 0, fontSize: 12.5 }}>
-                          Processing image…
-                        </p>
-                      )}
-                      <div className="vs-row-2">
-                        {number('Brightness', 'brightness', -1, 1, 0.05)}
-                        {number('Contrast', 'contrast', -100, 100)}
-                        {number('Saturation', 'saturation', -2, 2, 0.1)}
-                        {number('Blur', 'blur', 0, 30)}
-                        {number('Temperature', 'warmth', -100, 100)}
-                        {number('Tint', 'tint', -100, 100)}
-                      </div>
-                      <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                        <button
-                          data-tip="Apply Mono filter"
-                          onClick={() => patch({ filter: 'mono', saturation: 0, contrast: 10 })}
-                        >
-                          Mono
-                        </button>
-                        <button
-                          data-tip="Apply Dreamy filter"
-                          onClick={() =>
-                            patch({
-                              filter: 'dreamy',
-                              brightness: 0.1,
-                              contrast: -15,
-                              saturation: -0.3,
-                            })
-                          }
-                        >
-                          Dreamy
-                        </button>
-                        <button
-                          data-tip="Apply Film filter"
-                          onClick={() =>
-                            patch({
-                              filter: 'film',
-                              brightness: -0.05,
-                              contrast: 25,
-                              saturation: -0.5,
-                            })
-                          }
-                        >
-                          Film
-                        </button>
-                        <button
-                          data-tip="Reset to original"
-                          onClick={() =>
-                            patch({
-                              filter: 'original',
-                              brightness: 0,
-                              contrast: 0,
-                              saturation: 0,
-                              blur: 0,
-                              warmth: 0,
-                              tint: 0,
-                            })
-                          }
-                        >
-                          Original
-                        </button>
-                      </div>
-                    </Sec>
-
-                    {item.asset?.editable.colors &&
-                      item.asset.assetUrl.startsWith('data:image/svg+xml,') && (
-                        <Sec title="Graphic colors" icon={<DropletIcon />}>
-                          {[
-                            ...new Set(
-                              [
-                                ...decodeURIComponent(
-                                  item.asset.assetUrl.slice('data:image/svg+xml,'.length),
-                                ).matchAll(/(?:fill|stroke)="(#[0-9a-f]{6}|currentColor)"/gi),
-                              ].map((match) => match[1].toLowerCase()),
-                            ),
-                          ].map((from) => (
-                            <label className="vs-field" key={from}>
-                              <span>
-                                Replace <code>{from}</code>
-                              </span>
-                              <input
-                                className="vs-color"
-                                aria-label={`Replace color ${from}`}
-                                type="color"
-                                value={
-                                  item.colorOverrides?.[from] ||
-                                  (from === 'currentcolor' ? '#000000' : from)
-                                }
-                                disabled={mediaBusy}
-                                onChange={(event) =>
-                                  void runMedia(() =>
-                                    adapter.recolorAsset(from, event.target.value),
-                                  )
-                                }
-                              />
-                            </label>
-                          ))}
-                        </Sec>
-                      )}
-
-                    <Sec title="Fit & crop" icon={<CropIcon />}>
-                      <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                        <button data-tip="Fit image inside frame" onClick={() => adapter.setImageFit('fit')}>
-                          Fit image
-                        </button>
-                        <button data-tip="Fill frame with image" onClick={() => adapter.setImageFit('fill')}>
-                          Fill image
-                        </button>
-                        <button
-                          data-tip="Hold to preview the original"
-                          onMouseDown={() => adapter.previewOriginalImage(true)}
-                          onMouseUp={() => adapter.previewOriginalImage(false)}
-                          onMouseLeave={() => adapter.previewOriginalImage(false)}
-                        >
-                          Hold for original
-                        </button>
-                      </div>
-                      {!crop ? (
-                        <button
-                          className="vs-btn vs-btn--light"
-                          style={{ justifyContent: 'center' }}
-                          onClick={() => adapter.startImageCrop()}
-                        >
-                          <CropIcon /> Edit crop
-                        </button>
-                      ) : (
-                        <>
-                          <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-mute)' }}>
-                            Drag the selected content to reposition it. Source coordinates are
-                            percentages. Apply commits one edit.
-                          </p>
-                          <div className="vs-row-2">
-                            {(['x', 'y', 'width', 'height'] as const).map((key) => (
-                              <label className="vs-field" key={key}>
-                                <span style={{ textTransform: 'capitalize' }}>Crop {key}</span>
-                                <input
-                                  className="vs-input"
-                                  aria-label={`Crop ${key}`}
-                                  type="number"
-                                  min={key === 'width' || key === 'height' ? 1 : 0}
-                                  max="100"
-                                  value={Math.round(crop[key] * 100)}
-                                  onChange={(event) => {
-                                    const value = Math.max(
-                                      key === 'width' || key === 'height' ? 0.01 : 0,
-                                      Math.min(1, Number(event.target.value) / 100),
-                                    );
-                                    adapter.updateCropDraft({ ...crop, [key]: value });
-                                  }}
-                                />
-                              </label>
-                            ))}
-                          </div>
-                          <div className="vs-row-2">
-                            <button
-                              className="vs-btn vs-btn--primary"
-                              style={{ justifyContent: 'center' }}
-                              onClick={() => adapter.applyCrop()}
-                            >
-                              <CheckIcon /> Apply crop
-                            </button>
-                            <button
-                              className="vs-btn vs-btn--light"
-                              style={{ justifyContent: 'center' }}
-                              onClick={() => adapter.cancelCrop()}
-                            >
-                              Cancel crop
-                            </button>
-                          </div>
-                        </>
-                      )}
-                      <button
-                        className="vs-btn vs-btn--light"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => patch({ crop: undefined })}
-                      >
-                        Reset crop
-                      </button>
-                    </Sec>
-
-                    {item.asset?.frameSlot && (
-                      <Sec title="Frame content" icon={<ImageIcon />}>
+                  </div>
+                  <button
+                    className="vs-btn vs-btn--light"
+                    style={{ justifyContent: 'center' }}
+                    onClick={() => patch({ gradient: undefined })}
+                  >
+                    Remove gradient
+                  </button>
+                  {item.kind === 'shape' && (
+                    <>
+                      <label className="vs-check">
+                        <input
+                          type="checkbox"
+                          checked={!!item.noFill}
+                          onChange={(event) => patch({ noFill: event.target.checked })}
+                        />
+                        No fill (outline only)
+                      </label>
+                      {['rectangle', 'circle', 'triangle', 'heart', 'cloud', 'star'].includes(
+                        item.shape || '',
+                      ) && (
                         <label className="vs-field">
-                          <span>Content</span>
+                          <span>Convert shape to frame</span>
                           <select
                             className="vs-select"
-                            aria-label="Frame content"
-                            value={item.contentAsset?.id || ''}
+                            aria-label="Convert shape to frame"
+                            value={''}
                             onChange={(event) => {
                               if (event.target.value)
-                                void adapter
-                                  .attachFrameContent(event.target.value)
-                                  .catch((error) => setError(String(error)));
+                                void runMedia(async () => {
+                                  await adapter.attachFrameContent(event.target.value);
+                                });
                             }}
                           >
-                            <option value="">Choose image or graphic</option>
+                            <option value={''}>Choose image or graphic</option>
                             {boardMedia
                               .filter((asset) => !asset.frameSlot)
                               .map((asset) => (
-                                <option value={asset.id} key={asset.id}>
+                                <option key={asset.id} value={asset.id}>
                                   {asset.title}
                                 </option>
                               ))}
                           </select>
                         </label>
+                      )}
+                    </>
+                  )}
+                </Sec>
+              )}
+
+              {item.kind === 'drawing' && (
+                <Sec title="Pen" icon={<PenIcon />}>
+                  {number('Pen width', 'strokeWidth', 1, 50)}
+                </Sec>
+              )}
+
+              <Sec title="Quick styles" icon={<ZapIcon />}>
+                <div className="vs-quickstyles">
+                  <button
+                    data-tip="Apply Soft violet style"
+                    onClick={() =>
+                      patch({
+                        color: '#573575',
+                        borderColor: '#573575',
+                        borderWidth: 2,
+                        shadow: 'soft',
+                        effect: 'none',
+                        gradient: undefined,
+                      })
+                    }
+                  >
+                    <span className="vs-qdot" style={{ background: '#573575' }} />
+                    Soft violet
+                  </button>
+                  <button
+                    data-tip="Apply Golden glow style"
+                    onClick={() =>
+                      patch({
+                        color: '#c89640',
+                        borderColor: '#c89640',
+                        borderWidth: 3,
+                        shadow: 'none',
+                        effect: 'glow',
+                        gradient: undefined,
+                      })
+                    }
+                  >
+                    <span className="vs-qdot" style={{ background: '#c89640' }} />
+                    Golden glow
+                  </button>
+                  <button
+                    data-tip="Apply Ink style"
+                    onClick={() =>
+                      patch({
+                        color: '#222222',
+                        borderColor: '#222222',
+                        borderWidth: 2,
+                        shadow: 'hard',
+                        effect: 'none',
+                        gradient: undefined,
+                      })
+                    }
+                  >
+                    <span className="vs-qdot" style={{ background: '#222222' }} />
+                    Ink
+                  </button>
+                </div>
+              </Sec>
+
+              <Sec title="Appearance" icon={<SlidersIcon />}>
+                {color('Item color', 'color', '#573575')}
+                <div className="vs-row-2">
+                  <label className="vs-field">
+                    <span>Shadow preset</span>
+                    <select
+                      className="vs-select"
+                      aria-label="Shadow preset"
+                      value={item.shadow || 'none'}
+                      onChange={(event) =>
+                        patch({ shadow: event.target.value as BoardItem['shadow'] })
+                      }
+                    >
+                      {['none', 'soft', 'medium', 'hard'].map((id) => (
+                        <option key={id}>{id}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="vs-field">
+                    <span>Stroke style</span>
+                    <select
+                      className="vs-select"
+                      aria-label="Stroke style"
+                      value={item.borderStyle || 'solid'}
+                      onChange={(event) =>
+                        patch({ borderStyle: event.target.value as BoardItem['borderStyle'] })
+                      }
+                    >
+                      {['solid', 'dashed', 'dotted'].map((id) => (
+                        <option key={id}>{id}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="vs-row-2">
+                  {color('Shadow color', 'shadowColor', '#000000')}
+                  {number('Shadow opacity', 'shadowOpacity', 0, 1, 0.05)}
+                </div>
+                <div className="vs-row-3">
+                  {number('Shadow blur', 'shadowBlur', 0, 100)}
+                  {number('Shadow X', 'shadowOffsetX', -100, 100)}
+                  {number('Shadow Y', 'shadowOffsetY', -100, 100)}
+                </div>
+                <div className="vs-row-2">
+                  {number('Corner radius', 'radius', 0, 150)}
+                  {number('Stroke width', 'borderWidth', 0, 30)}
+                </div>
+                {color('Stroke color', 'borderColor', '#33272b')}
+                <label className="vs-field">
+                  <span>Effect</span>
+                  <select
+                    className="vs-select"
+                    aria-label="Effect"
+                    value={item.effect || 'none'}
+                    onChange={(event) =>
+                      patch({ effect: event.target.value as BoardItem['effect'] })
+                    }
+                  >
+                    {(item.kind === 'text'
+                      ? ['none', 'glow', 'echo', 'outline', 'glitch']
+                      : item.kind === 'asset'
+                        ? ['none', 'glow', 'glitch']
+                        : ['none', 'glow', 'outline']
+                    ).map((id) => (
+                      <option key={id}>{id}</option>
+                    ))}
+                  </select>
+                </label>
+              </Sec>
+
+              {item.kind === 'asset' && (
+                <Sec title="Image" icon={<ImageIcon />}>
+                  <label className="vs-field">
+                    <span>Replace media</span>
+                    <select
+                      className="vs-select"
+                      aria-label="Replace media"
+                      value={item.asset?.id || ''}
+                      onChange={(event) =>
+                        void runMedia(async () => {
+                          await adapter.replaceAsset(event.target.value);
+                        })
+                      }
+                    >
+                      {boardMedia.map((asset) => (
+                        <option key={asset.id} value={asset.id}>
+                          {asset.title}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="vs-field">
+                    <span>Shape frame</span>
+                    <select
+                      className="vs-select"
+                      aria-label="Shape frame"
+                      value={item.frameShape || ''}
+                      disabled={!!item.asset?.frameSlot}
+                      onChange={(event) =>
+                        patch({
+                          frameShape: (event.target.value || undefined) as BoardItem['frameShape'],
+                        })
+                      }
+                    >
+                      <option value="">Rectangle</option>
+                      {['circle', 'heart', 'triangle', 'hexagon', 'star', 'cloud'].map((shape) => (
+                        <option key={shape}>{shape}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <Sec title="AI tools & adjustments" icon={<WandIcon />}>
+                    <p className="ai-tool-help">
+                      Remove the background to make a cutout. Resample enlarges locally; AI upscale
+                      adds detail using your configured service. Each change can be undone.
+                    </p>
+                    {(ai.error || !ai.status?.backgroundConfigured) && (
+                      <div className="ai-status" role="status">
+                        {ai.checking
+                          ? 'Checking image tools…'
+                          : ai.error ||
+                            'Background removal needs rembg. Start rembg s, set REMBG_URL in .env, and restart the AI server.'}
                         <button
-                          className="vs-btn vs-btn--light"
-                          style={{ justifyContent: 'center' }}
-                          disabled={!item.contentAsset}
-                          onClick={() => adapter.detachFrameContent()}
+                          className="panel-secondary-action"
+                          disabled={ai.checking}
+                          onClick={() => void ai.refresh()}
                         >
-                          Detach content
+                          Check connection
                         </button>
+                      </div>
+                    )}
+                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                      <button
+                        data-tip={
+                          ai.status?.backgroundConfigured
+                            ? 'Create a transparent cutout; keep the original for Undo'
+                            : 'Set up the background removal service first'
+                        }
+                        title="Remove the background using the rembg cutout service"
+                        disabled={mediaBusy || ai.checking || !ai.status?.backgroundConfigured}
+                        onClick={() => void runMedia(() => adapter.removeBackground())}
+                      >
+                        <ScissorsIcon /> Remove bg
+                      </button>
+                      <button
+                        data-tip="Resample image at 2×"
+                        disabled={mediaBusy}
+                        onClick={() => void runMedia(() => adapter.upscaleImage())}
+                      >
+                        Resample 2×
+                      </button>
+                      <button
+                        data-tip="Add image detail using the configured AI upscaler"
+                        title={
+                          ai.status?.upscaleConfigured
+                            ? 'Improve detail at twice the size'
+                            : 'Configure UPSCALE_URL and UPSCALE_TOKEN first; Resample works locally'
+                        }
+                        disabled={mediaBusy || !ai.status?.upscaleConfigured}
+                        onClick={() => void runMedia(() => adapter.upscaleAI())}
+                      >
+                        <WandIcon /> AI upscale 2×
+                      </button>
+                      <button
+                        data-tip="Split into foreground and background layers"
+                        disabled={
+                          mediaBusy || !ai.status?.backgroundConfigured || !ai.status?.configured
+                        }
+                        onClick={() => void runMedia(() => adapter.splitImageLayers())}
+                      >
+                        Split foreground/background
+                      </button>
+                      <button
+                        data-tip="Match colors from a second selected image"
+                        disabled={mediaBusy || adapter.selectedIds.length !== 2}
+                        onClick={() => void runMedia(() => adapter.matchImageStyle())}
+                      >
+                        Match reference colors
+                      </button>
+                      <button
+                        data-tip="Reset all source edits"
+                        onClick={() => patch({ rendition: undefined, colorOverrides: undefined })}
+                      >
+                        <UndoIcon /> Reset source edits
+                      </button>
+                    </div>
+                    {mediaBusy && (
+                      <p role="status" style={{ margin: 0, fontSize: 12.5 }}>
+                        Processing image…
+                      </p>
+                    )}
+                    <div className="vs-row-2">
+                      {number('Brightness', 'brightness', -1, 1, 0.05)}
+                      {number('Contrast', 'contrast', -100, 100)}
+                      {number('Saturation', 'saturation', -2, 2, 0.1)}
+                      {number('Blur', 'blur', 0, 30)}
+                      {number('Temperature', 'warmth', -100, 100)}
+                      {number('Tint', 'tint', -100, 100)}
+                    </div>
+                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                      <button
+                        data-tip="Apply Mono filter"
+                        onClick={() => patch({ filter: 'mono', saturation: 0, contrast: 10 })}
+                      >
+                        Mono
+                      </button>
+                      <button
+                        data-tip="Apply Dreamy filter"
+                        onClick={() =>
+                          patch({
+                            filter: 'dreamy',
+                            brightness: 0.1,
+                            contrast: -15,
+                            saturation: -0.3,
+                          })
+                        }
+                      >
+                        Dreamy
+                      </button>
+                      <button
+                        data-tip="Apply Film filter"
+                        onClick={() =>
+                          patch({
+                            filter: 'film',
+                            brightness: -0.05,
+                            contrast: 25,
+                            saturation: -0.5,
+                          })
+                        }
+                      >
+                        Film
+                      </button>
+                      <button
+                        data-tip="Reset to original"
+                        onClick={() =>
+                          patch({
+                            filter: 'original',
+                            brightness: 0,
+                            contrast: 0,
+                            saturation: 0,
+                            blur: 0,
+                            warmth: 0,
+                            tint: 0,
+                          })
+                        }
+                      >
+                        Original
+                      </button>
+                    </div>
+                  </Sec>
+
+                  {item.asset?.editable.colors &&
+                    item.asset.assetUrl.startsWith('data:image/svg+xml,') && (
+                      <Sec title="Graphic colors" icon={<DropletIcon />}>
+                        {[
+                          ...new Set(
+                            [
+                              ...decodeURIComponent(
+                                item.asset.assetUrl.slice('data:image/svg+xml,'.length),
+                              ).matchAll(/(?:fill|stroke)="(#[0-9a-f]{6}|currentColor)"/gi),
+                            ].map((match) => match[1].toLowerCase()),
+                          ),
+                        ].map((from) => (
+                          <label className="vs-field" key={from}>
+                            <span>
+                              Replace <code>{from}</code>
+                            </span>
+                            <input
+                              className="vs-color"
+                              aria-label={`Replace color ${from}`}
+                              type="color"
+                              value={
+                                item.colorOverrides?.[from] ||
+                                (from === 'currentcolor' ? '#000000' : from)
+                              }
+                              disabled={mediaBusy}
+                              onChange={(event) =>
+                                void runMedia(() => adapter.recolorAsset(from, event.target.value))
+                              }
+                            />
+                          </label>
+                        ))}
                       </Sec>
                     )}
+
+                  <Sec title="Fit & crop" icon={<CropIcon />}>
+                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                      <button
+                        data-tip="Fit image inside frame"
+                        onClick={() => adapter.setImageFit('fit')}
+                      >
+                        Fit image
+                      </button>
+                      <button
+                        data-tip="Fill frame with image"
+                        onClick={() => adapter.setImageFit('fill')}
+                      >
+                        Fill image
+                      </button>
+                      <button
+                        data-tip="Hold to preview the original"
+                        onMouseDown={() => adapter.previewOriginalImage(true)}
+                        onMouseUp={() => adapter.previewOriginalImage(false)}
+                        onMouseLeave={() => adapter.previewOriginalImage(false)}
+                      >
+                        Hold for original
+                      </button>
+                    </div>
+                    {!crop ? (
+                      <button
+                        className="vs-btn vs-btn--light"
+                        style={{ justifyContent: 'center' }}
+                        onClick={() => adapter.startImageCrop()}
+                      >
+                        <CropIcon /> Edit crop
+                      </button>
+                    ) : (
+                      <>
+                        <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-mute)' }}>
+                          Drag the selected content to reposition it. Source coordinates are
+                          percentages. Apply commits one edit.
+                        </p>
+                        <div className="vs-row-2">
+                          {(['x', 'y', 'width', 'height'] as const).map((key) => (
+                            <label className="vs-field" key={key}>
+                              <span style={{ textTransform: 'capitalize' }}>Crop {key}</span>
+                              <input
+                                className="vs-input"
+                                aria-label={`Crop ${key}`}
+                                type="number"
+                                min={key === 'width' || key === 'height' ? 1 : 0}
+                                max="100"
+                                value={Math.round(crop[key] * 100)}
+                                onChange={(event) => {
+                                  const value = Math.max(
+                                    key === 'width' || key === 'height' ? 0.01 : 0,
+                                    Math.min(1, Number(event.target.value) / 100),
+                                  );
+                                  adapter.updateCropDraft({ ...crop, [key]: value });
+                                }}
+                              />
+                            </label>
+                          ))}
+                        </div>
+                        <div className="vs-row-2">
+                          <button
+                            className="vs-btn vs-btn--primary"
+                            style={{ justifyContent: 'center' }}
+                            onClick={() => adapter.applyCrop()}
+                          >
+                            <CheckIcon /> Apply crop
+                          </button>
+                          <button
+                            className="vs-btn vs-btn--light"
+                            style={{ justifyContent: 'center' }}
+                            onClick={() => adapter.cancelCrop()}
+                          >
+                            Cancel crop
+                          </button>
+                        </div>
+                      </>
+                    )}
+                    <button
+                      className="vs-btn vs-btn--light"
+                      style={{ justifyContent: 'center' }}
+                      onClick={() => patch({ crop: undefined })}
+                    >
+                      Reset crop
+                    </button>
                   </Sec>
-                )}
-              </>
-            ))}
-        </div>
+
+                  {item.asset?.frameSlot && (
+                    <Sec title="Frame content" icon={<ImageIcon />}>
+                      <label className="vs-field">
+                        <span>Content</span>
+                        <select
+                          className="vs-select"
+                          aria-label="Frame content"
+                          value={item.contentAsset?.id || ''}
+                          onChange={(event) => {
+                            if (event.target.value)
+                              void adapter
+                                .attachFrameContent(event.target.value)
+                                .catch((error) => setError(String(error)));
+                          }}
+                        >
+                          <option value="">Choose image or graphic</option>
+                          {boardMedia
+                            .filter((asset) => !asset.frameSlot)
+                            .map((asset) => (
+                              <option value={asset.id} key={asset.id}>
+                                {asset.title}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                      <button
+                        className="vs-btn vs-btn--light"
+                        style={{ justifyContent: 'center' }}
+                        disabled={!item.contentAsset}
+                        onClick={() => adapter.detachFrameContent()}
+                      >
+                        Detach content
+                      </button>
+                    </Sec>
+                  )}
+                </Sec>
+              )}
+            </>
+          ))}
+      </div>
     </aside>
   );
 }

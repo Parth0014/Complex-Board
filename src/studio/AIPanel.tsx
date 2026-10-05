@@ -2,6 +2,45 @@ import { useEffect, useRef, useState } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
 import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
+import { useAIStatus } from './useAIStatus';
+import { requestAI } from '../vision/aiClient';
+
+const modeHelp = {
+  image: {
+    description: 'Create a new image. Preview it before adding it to the board.',
+    example: 'A peaceful Japanese garden at sunrise, warm natural light, inspiring photography',
+    action: 'Create image preview',
+  },
+  quote: {
+    description: 'Write a short affirmation, then add it as editable text.',
+    example: 'An encouraging affirmation about building confidence, in a warm and grounded voice',
+    action: 'Write affirmation',
+  },
+  board: {
+    description:
+      'Turn your goals into an editable composition. Review it before replacing the current board.',
+    example:
+      'This year I want to travel to Japan, develop my career, and build healthy daily habits',
+    action: 'Plan my board',
+  },
+  search: {
+    description: 'Find matching graphics in the curated library using a description of your goal.',
+    example: 'Symbols for travel, curiosity, and a new career chapter',
+    action: 'Find matching elements',
+  },
+  edit: {
+    description:
+      'Select one image, describe the change, then review the preview before applying. Your original is preserved.',
+    example: 'Give this image warmer sunlight while keeping the subject and composition',
+    action: 'Preview image edit',
+  },
+  video: {
+    description:
+      'Animate one selected image as a short MP4. Requires enabled paid video generation.',
+    example: 'Slow camera movement with a gentle breeze and natural lighting',
+    action: 'Preview animation',
+  },
+};
 type Result = {
   image?: string;
   text?: string;
@@ -19,23 +58,23 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
   const [result, setResult] = useState<Result | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
-    [configured, setConfigured] = useState<boolean | null>(null),
     [confirm, setConfirm] = useState(false),
     [suggestions, setSuggestions] = useState<GratitudeAsset[]>([]);
-  const [videoConfigured, setVideoConfigured] = useState(false);
+  const ai = useAIStatus(adapter.ownerWindow);
+  const configured = ai.status?.configured;
+  const videoConfigured = ai.status?.videoConfigured;
+  const help = modeHelp[mode];
+  const selected = adapter.history.document.items.filter((item) =>
+    adapter.selectedIds.includes(item.id),
+  );
+  const needsImage = mode === 'edit' || mode === 'video';
+  const validSelection =
+    selected.length === 1 && selected[0].kind === 'asset' && !selected[0].locked;
   const [masked, setMasked] = useState(false),
     [region, setRegion] = useState({ x: 25, y: 25, width: 50, height: 50 });
   const source = useRef<EditSource | null>(null),
     controller = useRef<AbortController | null>(null);
   useEffect(() => {
-    void adapter.ownerWindow
-      .fetch('/api/ai/status')
-      .then((response) => response.json())
-      .then((value) => {
-        setConfigured(!!value.configured);
-        setVideoConfigured(!!value.videoConfigured);
-      })
-      .catch(() => setConfigured(false));
     return () => controller.current?.abort();
   }, [adapter]);
   const generate = async () => {
@@ -68,7 +107,8 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           body.mask = canvas.toDataURL('image/png');
         }
       }
-      const response = await adapter.ownerWindow.fetch(
+      const value = await requestAI(
+        adapter.ownerWindow,
         mode === 'edit' ? '/api/ai/edit' : mode === 'video' ? '/api/ai/video' : '/api/ai/generate',
         {
           method: 'POST',
@@ -77,8 +117,6 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           signal: controller.current.signal,
         },
       );
-      const value = await response.json();
-      if (!response.ok) throw new Error(value.error || 'Generation failed.');
       setResult(value);
       if (value.keywords) {
         const found = await Promise.all(
@@ -95,7 +133,14 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         );
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Generation failed.');
+      if (error instanceof Error && error.name === 'AbortError')
+        setError('Generation cancelled. Your board is unchanged.');
+      else
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Generation failed. Try again with a simpler description.',
+        );
     } finally {
       setBusy(false);
     }
@@ -134,11 +179,36 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         Generate images, affirmations, or editable boards; edit a selected image or search the
         curated library. Requests use your configured AI service.
       </p>
-      {configured === false && (
-        <p className="ai-status" role="status">AI needs server configuration. See the project AI setup guide.</p>
+      <div
+        className={`ai-status${configured && !ai.error ? ' ai-status--ready' : ''}`}
+        role="status"
+      >
+        {ai.checking
+          ? 'Checking AI connection…'
+          : ai.error ||
+            (configured
+              ? 'AI is ready. Generate a preview, review it, then apply.'
+              : 'AI is not set up yet. Configure your server credentials and start npm run ai:server.')}
+        <button
+          className="panel-secondary-action"
+          disabled={ai.checking || busy}
+          onClick={() => void ai.refresh()}
+        >
+          Check connection
+        </button>
+      </div>
+      {!configured && !ai.checking && (
+        <details className="ai-setup">
+          <summary>How to get AI working</summary>
+          <ol>
+            <li>Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in .env.</li>
+            <li>Run npm run ai:server in a separate terminal and keep it running.</li>
+            <li>Choose Check connection. Background removal uses a separate rembg service.</li>
+          </ol>
+        </details>
       )}
       <label>
-        Generate
+        What would you like to do?
         <select
           className="vs-select"
           aria-label="AI generation type"
@@ -146,7 +216,10 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           value={mode}
           onChange={(event) => {
             setMode(event.target.value as typeof mode);
+            setPrompt(modeHelp[event.target.value as typeof mode].example);
             setResult(null);
+            setError('');
+            setConfirm(false);
             setSuggestions([]);
             source.current = null;
           }}
@@ -161,6 +234,16 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           </option>
         </select>
       </label>
+      <p className="ai-tool-help" id="ai-mode-help">
+        {help.description}
+      </p>
+      {needsImage && (
+        <p className="ai-status" role="status">
+          {validSelection
+            ? `Selected image: ${selected[0].asset?.title || 'Image'}`
+            : 'Select one unlocked image on the board to use this tool.'}
+        </p>
+      )}
       {mode === 'edit' && (
         <>
           <p>Describe the desired change. Apply preserves the original source and can be undone.</p>
@@ -204,21 +287,43 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       <textarea
         className="vs-textarea"
         aria-label="AI prompt"
+        aria-describedby="ai-mode-help"
+        placeholder={help.example}
         maxLength={2000}
         value={prompt}
         onChange={(event) => setPrompt(event.target.value)}
       />
       <button
+        className="panel-secondary-action"
+        disabled={busy}
+        onClick={() => setPrompt(help.example)}
+      >
+        Use example prompt
+      </button>
+      <button
         className="panel-action"
-        disabled={busy || !prompt.trim() || configured === false}
+        aria-label="Generate"
+        title={help.action}
+        data-tip={help.action}
+        disabled={
+          busy || !prompt.trim() || ai.checking || !configured || (needsImage && !validSelection)
+        }
         onClick={() => void generate()}
       >
-        {busy ? 'Generating…' : 'Generate'}
+        {busy ? 'Working…' : help.action}
       </button>
       {busy && <button onClick={() => controller.current?.abort()}>Cancel generation</button>}
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <div className="panel-inline-error" role="alert">
+          <p>{error}</p>
+          <p>
+            Review the connection and prompt, then try again. Existing board items are preserved.
+          </p>
+        </div>
+      )}
       {result && (
         <div className="ai-result">
+          <p className="ai-tool-help">Preview only. Use the button below to apply this result.</p>
           {result.image && <img src={result.image} alt="Generated preview" />}
           {result.video && (
             <>
