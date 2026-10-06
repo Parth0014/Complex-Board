@@ -79,8 +79,10 @@ test('drag snaps to page edge and keyboard selection/group shortcuts work', asyn
   await expect(page.getByRole('button', { name: 'Group', exact: true })).toBeEnabled();
   await page.keyboard.press('Control+g');
   await expect(page.getByRole('button', { name: 'Ungroup', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Group', exact: true })).toHaveCount(0);
   await page.keyboard.press('Control+Shift+g');
-  await expect(page.getByRole('button', { name: 'Ungroup', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Ungroup', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Group', exact: true })).toBeEnabled();
 });
 test('drops a library asset at the pointer and supports object snapping, rotation and lock', async ({
   page,

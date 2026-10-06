@@ -246,7 +246,7 @@ function Content({
         strokeWidth={item.strokeWidth || 4}
         lineCap="round"
         lineJoin="round"
-        tension={0.35}
+        tension={item.strokeTension ?? 0.35}
         hitStrokeWidth={20}
       />
     );

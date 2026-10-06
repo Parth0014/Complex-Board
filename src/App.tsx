@@ -1,4 +1,5 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { KonvaCanvasAdapter } from './vision/canvas/KonvaCanvasAdapter';
 import { KonvaStage } from './vision/canvas/KonvaStage';
 import { StudioShell } from './studio/StudioShell';
@@ -52,17 +53,21 @@ const DRAW_MODES = [
 ] as const;
 
 function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
+  const replacementInput = useRef<HTMLInputElement>(null);
+  const replacementId = useRef<string | null>(null);
+  const [replacingImage, setReplacingImage] = useState(false);
+  const [replacementError, setReplacementError] = useState('');
   useMenuPlacement(adapter.ownerWindow);
   useSyncExternalStore(adapter.subscribe, adapter.getSnapshot);
   const [drawMode, setDrawMode] = useState('select');
   const [drawingMenuOpen, setDrawingMenuOpen] = useState(false);
   const [drawButton, setDrawButton] = useState<HTMLElement | null>(null);
   const [drawPalettePosition, setDrawPalettePosition] = useState({ top: 100, left: 80 });
-  useEffect(() => {
-    if (!drawButton || (!drawingMenuOpen && drawMode === 'select')) return;
+  useLayoutEffect(() => {
+    if (!drawButton || !drawingMenuOpen) return;
     const update = () => {
       const rect = drawButton.getBoundingClientRect();
-      const palette = drawButton.parentElement?.querySelector('.vs-draw-pop');
+      const palette = adapter.ownerWindow.document.querySelector('.vs-draw-pop');
       const height = palette?.getBoundingClientRect().height || 200;
       const next = {
         top: Math.max(8, Math.min(rect.top, adapter.ownerWindow.innerHeight - height - 8)),
@@ -74,6 +79,8 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
     };
     const observer = new adapter.ownerWindow.ResizeObserver(update);
     observer.observe(drawButton);
+    const palette = adapter.ownerWindow.document.querySelector('.vs-draw-pop');
+    if (palette) observer.observe(palette);
     adapter.ownerWindow.addEventListener('resize', update);
     adapter.ownerWindow.document.addEventListener('scroll', update, true);
     update();
@@ -118,6 +125,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
   const item = document.items.find((item) => item.id === selection.ids[0]);
   const selectedItems = document.items.filter((item) => selection.ids.includes(item.id));
   const locked = selectedItems.some((item) => item.locked);
+  const canUngroup = selectedItems.some((item) => item.groupId);
   const unitCount = new Set(selectedItems.map((item) => item.groupId || item.id)).size;
   useEffect(() => {
     const isEditorInput = (target: EventTarget | null) => {
@@ -169,6 +177,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
         if (adapter.selectedIds.length) adapter.delete(adapter.selectedIds);
       } else if (event.key === 'Escape') {
         setDrawMode('select');
+        setDrawingMenuOpen(false);
         if (adapter.groupScope.length) adapter.exitGroup();
         else adapter.select([]);
       } else if (!command && event.key.toLowerCase() === 'v') setDrawMode('select');
@@ -230,57 +239,98 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
       tab={studioTab}
       setTab={setStudioTab}
       drawingTools={
-        <details
-          className="vs-menu vs-drawing-menu"
-          open={drawingMenuOpen || drawMode !== 'select'}
-        >
-          <summary
+        <div className="vs-menu vs-drawing-menu">
+          <button
             ref={setDrawButton}
             className="vs-rail__tab"
             aria-label="Drawing tools"
+            aria-expanded={drawingMenuOpen}
+            aria-controls="drawing-palette"
             onClick={(event) => {
               event.preventDefault();
-              setDrawingMenuOpen((current) => !current);
+              setDrawingMenuOpen(true);
             }}
           >
-            <PenIcon />
+            {(() => {
+              const Icon = DRAW_MODES.find((tool) => tool.id === drawMode)?.Icon || PenIcon;
+              return <Icon />;
+            })()}
             <span>Draw</span>
-          </summary>
-          <div className="vs-menu__pop vs-draw-pop" style={drawPalettePosition}>
-            <p className="vs-menu__kicker">Drawing tools</p>
-            <button
-              className="vs-menu__item"
-              aria-label="Select"
-              aria-pressed={drawMode === 'select'}
-              onClick={(event) => {
-                setDrawMode('select');
-                setDrawingMenuOpen(false);
-              }}
-            >
-              <SelectIcon /> Arrange
-            </button>
-            {DRAW_MODES.map(({ id, label, tip, Icon }) => (
-              <button
-                key={id}
-                className={`vs-menu__item${drawMode === id ? ' is-active' : ''}`}
-                aria-label={label}
-                aria-pressed={drawMode === id}
-                data-tip={tip}
-                onClick={() => {
-                  setDrawMode(id);
-                  setDrawingMenuOpen(false);
-                  adapter.select([]);
-                }}
+          </button>
+          {drawingMenuOpen &&
+            drawButton &&
+            createPortal(
+              <div
+                id="drawing-palette"
+                className="vs-menu__pop vs-draw-pop"
+                style={drawPalettePosition}
+                role="toolbar"
+                aria-label="Drawing palette"
               >
-                <Icon />
-                {label}
-              </button>
-            ))}
-          </div>
-        </details>
+                <p className="vs-menu__kicker">Drawing tools</p>
+                <button
+                  className="vs-menu__item"
+                  aria-label="Select"
+                  aria-pressed={drawMode === 'select'}
+                  onClick={() => {
+                    setDrawMode('select');
+                    setDrawingMenuOpen(false);
+                  }}
+                >
+                  <SelectIcon /> Arrange
+                </button>
+                {DRAW_MODES.map(({ id, label, tip, Icon }) => (
+                  <button
+                    key={id}
+                    className={`vs-menu__item${drawMode === id ? ' is-active' : ''}`}
+                    aria-label={label}
+                    aria-pressed={drawMode === id}
+                    data-tip={tip}
+                    onClick={() => {
+                      setDrawMode(id);
+                      adapter.select([]);
+                    }}
+                  >
+                    <Icon />
+                    {label}
+                  </button>
+                ))}
+              </div>,
+              drawButton.closest('.vs')!,
+            )}
+        </div>
       }
     >
       <div className="vs-stage-fill" ref={setWorkspaceNode}>
+        <input
+          ref={replacementInput}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          aria-label="Replacement image file"
+          hidden
+          onChange={async (event) => {
+            const file = event.target.files?.[0],
+              id = replacementId.current;
+            event.target.value = '';
+            if (!file || !id) return;
+            setReplacingImage(true);
+            setReplacementError('');
+            try {
+              await adapter.replaceImageFile(id, file);
+            } catch (error) {
+              setReplacementError(
+                error instanceof Error ? error.message : 'Unable to replace image.',
+              );
+            } finally {
+              setReplacingImage(false);
+            }
+          }}
+        />
+        {replacementError && (
+          <p className="canvas-message" role="alert">
+            {replacementError}
+          </p>
+        )}
         {selection.count > 0 && !editorPanel && (
           <div
             className="vs-sel vs-dark"
@@ -298,6 +348,22 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
               <small>{selection.count === 1 ? 'selected' : 'selected together'}</small>
             </span>
             <span className="vs-sel__divider" aria-hidden="true" />
+
+            {selection.count === 1 && item?.kind === 'asset' && (
+              <button
+                className="vs-sel__design"
+                aria-label="Replace image"
+                disabled={
+                  locked || replacingImage || !!adapter.cropDraft || adapter.originalPreview
+                }
+                onClick={() => {
+                  replacementId.current = item.id;
+                  replacementInput.current?.click();
+                }}
+              >
+                {replacingImage ? 'Replacing…' : 'Replace image'}
+              </button>
+            )}
 
             {selection.kind === 'text' && item && (
               <>
@@ -610,21 +676,14 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
 
             <button
               className="vs-icon-btn"
-              data-tip="Group selection (Ctrl+G)"
-              aria-label="Group"
-              disabled={locked || selection.count < 2}
-              onClick={() => adapter.groupSelection()}
+              data-tip={
+                canUngroup ? 'Ungroup selection (Ctrl+Shift+G)' : 'Group selection (Ctrl+G)'
+              }
+              aria-label={canUngroup ? 'Ungroup' : 'Group'}
+              disabled={locked || (!canUngroup && selection.count < 2)}
+              onClick={() => (canUngroup ? adapter.ungroupSelection() : adapter.groupSelection())}
             >
-              <GroupIcon />
-            </button>
-            <button
-              className="vs-icon-btn"
-              data-tip="Ungroup selection (Ctrl+Shift+G)"
-              aria-label="Ungroup"
-              disabled={locked || !selectedItems.some((selected) => selected.groupId)}
-              onClick={() => adapter.ungroupSelection()}
-            >
-              <UngroupIcon />
+              {canUngroup ? <UngroupIcon /> : <GroupIcon />}
             </button>
 
             <button

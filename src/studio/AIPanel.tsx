@@ -4,6 +4,7 @@ import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
 import { useAIStatus } from './useAIStatus';
 import { requestAI } from '../vision/aiClient';
+import { ReferenceTemplatePanel } from './ReferenceTemplatePanel';
 
 const modeHelp = {
   image: {
@@ -213,6 +214,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
   return (
     <div className="ai-panel">
       <h4>AI studio</h4>
+      <ReferenceTemplatePanel adapter={adapter} configured={configured === true} />
       <p>
         Turn your ideas into original images and a complete vision board, or write words that
         inspire you.

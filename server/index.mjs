@@ -4,6 +4,7 @@ import { removeBackground } from './background.mjs';
 import { editImage } from './edit.mjs';
 import { upscaleImage } from './upscale.mjs';
 import { generateVideo } from './video.mjs';
+import { analyzeReference } from './reference.mjs';
 const port = Number(process.env.AI_PORT || 8787),
   allowedOrigin = process.env.APP_ORIGIN || 'http://127.0.0.1:5173';
 let active = 0;
@@ -42,6 +43,7 @@ const server = createServer(async (req, res) => {
       '/api/ai/edit',
       '/api/ai/upscale',
       '/api/ai/video',
+      '/api/ai/reference',
     ].includes(req.url) ||
     req.method !== 'POST'
   ) {
@@ -77,13 +79,15 @@ const server = createServer(async (req, res) => {
       200,
       req.url === '/api/ai/remove-background'
         ? await removeBackground(input.image)
-        : req.url === '/api/ai/edit'
-          ? await editImage(input)
-          : req.url === '/api/ai/upscale'
-            ? await upscaleImage(input.image)
-            : req.url === '/api/ai/video'
-              ? await generateVideo(input)
-              : await generateAI(input),
+        : req.url === '/api/ai/reference'
+          ? await analyzeReference(input)
+          : req.url === '/api/ai/edit'
+            ? await editImage(input)
+            : req.url === '/api/ai/upscale'
+              ? await upscaleImage(input.image)
+              : req.url === '/api/ai/video'
+                ? await generateVideo(input)
+                : await generateAI(input),
     );
   } catch (error) {
     respond(error.status || 400, {

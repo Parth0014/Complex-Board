@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { DocumentHistory } from './document';
 import { KonvaCanvasAdapter } from './canvas/KonvaCanvasAdapter';
-import { VISION_TEMPLATES } from './templates';
+import { LEGACY_VISION_TEMPLATES as VISION_TEMPLATES } from './templates';
 import { curatedPackProvider } from '../assets/curatedPack';
 
 describe('document history', () => {

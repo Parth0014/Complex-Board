@@ -26,4 +26,4 @@ The uploaded gallery contains exactly 250 SVGs. Its existing [notice](public/cur
 
 ## Project license
 
-The existing license remains in force while the owner confirms the license and copyright holder for original project contributions. Do not replace third-party copyright notices with the project's name.
+Original contributions owned by Parth Patil are proprietary, copyright (c) 2026 Parth Patil, all rights reserved; see [LICENSE](LICENSE). This restriction does not apply to third-party materials or revoke previously granted permissions. The notices above apply to their respective third-party components.

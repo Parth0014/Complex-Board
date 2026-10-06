@@ -1,5 +1,15 @@
 # AI setup
 
+## Reference to template (experimental)
+
+If Cloudflare returns 403 / error 5016, the vision model agreement has not been accepted. Review [Meta's license](https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE) and [acceptable use policy](https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md). Cloudflare also requires a declaration that the individual is not domiciled in the EU, and a company does not have its principal place of business in the EU. If you agree and are eligible, run `npm run ai:vision:agree -- --accept-license` locally. This sends the documented `agree` prompt using server credentials; the application never accepts automatically. Restart the server to load updated error messages, then retry analysis.
+
+In the AI panel, upload one PNG/JPEG/WebP design and choose Analyze reference. The image is resized to a maximum of 1600 pixels and sent to Cloudflare's Llama 3.2 11B Vision model. Review the layout preview and correct detected text before applying. Applying replaces the active page composition and dimensions in one undoable operation. Other pages are preserved. Select a placeholder and upload a photo to fill it.
+
+Original reference photos are never extracted into the document. The compiler creates original generic SVG photo placeholders and editable text/shapes using an allowlist. The reference is held only in panel memory; provider handling follows Cloudflare's policies. Existing Cloudflare server credentials are used. Access to this vision model requires accepting Meta's license in your Cloudflare account; see the [official vision tutorial](https://developers.cloudflare.com/workers-ai/guides/tutorials/llama-vision-tutorial/). Restart the AI server after updating.
+
+This initial implementation uses vision-model layout estimates, without a separate OCR/segmentation service. Exact text is requested and preserved as returned, but recognition, coordinates, fonts, and complex decorations may need correction. Provider protocol and compilation are tested with mocks; live model quality has not been validated.
+
 The editor has Cloudflare Workers AI integration for image generation (FLUX.1 Schnell), affirmations and editable board plans (Llama 3.1 8B). Live collaboration is excluded at the user's request. The curated gallery remains exactly 250 uploaded assets; generated images belong to board content and are never added to that gallery.
 
 ## Local setup

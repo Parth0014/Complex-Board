@@ -1,0 +1,381 @@
+{
+  "canvas": {
+    "width": 1000,
+    "height": 1000
+  },
+  "id": "future-editorial",
+  "title": "A letter to my future",
+  "category": "future",
+  "description": "A bold editorial collage with a city skyline, dream home, career imagery and a letter to your future self.",
+  "backgroundColor": "#202b28",
+  "accent": "#dfcda7",
+  "heading": "A letter to my future",
+  "prompt": "Make this story yours: edit the words and replace the starter photographs.",
+  "elements": [
+    {
+      "x": 30,
+      "y": 30,
+      "width": 385,
+      "height": 435,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:city",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "City inspiration",
+        "tags": [
+          "city"
+        ],
+        "previewUrl": "/template-photos/city.jpg",
+        "assetUrl": "/template-photos/city.jpg",
+        "width": 800,
+        "height": 1001,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 610,
+      "y": 30,
+      "width": 360,
+      "height": 300,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:desk",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Desk inspiration",
+        "tags": [
+          "desk"
+        ],
+        "previewUrl": "/template-photos/desk.jpg",
+        "assetUrl": "/template-photos/desk.jpg",
+        "width": 800,
+        "height": 533,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1497215728101-856f4ea42174",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 600,
+      "y": 595,
+      "width": 370,
+      "height": 370,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:home",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Home inspiration",
+        "tags": [
+          "home"
+        ],
+        "previewUrl": "/template-photos/home.jpg",
+        "assetUrl": "/template-photos/home.jpg",
+        "width": 800,
+        "height": 600,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 30,
+      "y": 595,
+      "width": 330,
+      "height": 370,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:forest",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Forest inspiration",
+        "tags": [
+          "forest"
+        ],
+        "previewUrl": "/template-photos/forest.jpg",
+        "assetUrl": "/template-photos/forest.jpg",
+        "width": 800,
+        "height": 533,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 335,
+      "y": 290,
+      "width": 345,
+      "height": 385,
+      "rotation": -2,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#ece5d6",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 70,
+      "y": 57,
+      "width": 325,
+      "height": 50,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "THE LIFE I AM BUILDING",
+      "fontSize": 20,
+      "color": "#ffffff",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 342,
+      "y": 338,
+      "width": 315,
+      "height": 160,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "MY\nFUTURE",
+      "fontSize": 66,
+      "color": "#263b32",
+      "fontFamily": "georgia",
+      "align": "center"
+    },
+    {
+      "x": 350,
+      "y": 528,
+      "width": 310,
+      "height": 48,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "Intentional. Brave. Mine.",
+      "fontSize": 25,
+      "color": "#56684c",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 51,
+      "y": 441,
+      "width": 276,
+      "height": 200,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#d2c097",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 63,
+      "y": 453,
+      "width": 252,
+      "height": 35,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "text",
+      "text": "DEAR FUTURE ME",
+      "fontSize": 20,
+      "color": "#263b32",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 69,
+      "y": 496,
+      "width": 240,
+      "height": 135,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "text",
+      "text": "Keep the promises\nyou make to yourself.\nSmall steps count.",
+      "fontSize": 23,
+      "color": "#263b32",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 677,
+      "y": 345,
+      "width": 270,
+      "height": 200,
+      "rotation": 3,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#a5b5a0",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 689,
+      "y": 357,
+      "width": 246,
+      "height": 35,
+      "rotation": 3,
+      "opacity": 1,
+      "kind": "text",
+      "text": "MAKE ROOM FOR",
+      "fontSize": 20,
+      "color": "#22342c",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 695,
+      "y": 400,
+      "width": 234,
+      "height": 135,
+      "rotation": 3,
+      "opacity": 1,
+      "kind": "text",
+      "text": "Meaningful work\nA home full of light\nTime to really live",
+      "fontSize": 23,
+      "color": "#22342c",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 389,
+      "y": 740,
+      "width": 200,
+      "height": 65,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "BECOME",
+      "fontSize": 37,
+      "color": "#dfcda7",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 383,
+      "y": 812,
+      "width": 210,
+      "height": 145,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "the person you\nalways knew\nyou could be.",
+      "fontSize": 27,
+      "color": "#ece5d6",
+      "fontFamily": "georgia",
+      "align": "center"
+    },
+    {
+      "x": 499,
+      "y": 659,
+      "width": 44,
+      "height": 44,
+      "rotation": 10,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "star",
+      "color": "#dfcda7"
+    }
+  ],
+  "layout": {
+    "id": "future-editorial",
+    "title": "A letter to my future",
+    "description": "A bold editorial collage with a city skyline, dream home, career imagery and a letter to your future self.",
+    "slots": [
+      {
+        "id": "photo-0",
+        "x": 0.03,
+        "y": 0.03,
+        "width": 0.385,
+        "height": 0.435,
+        "rotation": 0
+      },
+      {
+        "id": "photo-1",
+        "x": 0.61,
+        "y": 0.03,
+        "width": 0.36,
+        "height": 0.3,
+        "rotation": 0
+      },
+      {
+        "id": "photo-2",
+        "x": 0.6,
+        "y": 0.595,
+        "width": 0.37,
+        "height": 0.37,
+        "rotation": 0
+      },
+      {
+        "id": "photo-3",
+        "x": 0.03,
+        "y": 0.595,
+        "width": 0.33,
+        "height": 0.37,
+        "rotation": 0
+      }
+    ]
+  }
+}

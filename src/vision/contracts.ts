@@ -165,6 +165,7 @@ export interface StudioAdapter extends CanvasAdapter {
   saveStatus: string;
   backup(): Promise<void>;
   uploadPhotos(files: File[], position?: VisionPoint): Promise<void>;
+  replaceImageFile(id: string, file: File): Promise<void>;
   downloadOriginalPhoto(): Promise<void>;
   restore(text: string): Promise<void>;
   exportFormat(format: 'jpeg' | 'transparent' | 'pdf' | '4k' | 'pdf-all'): Promise<void>;
@@ -180,8 +181,13 @@ export interface StudioAdapter extends CanvasAdapter {
   redo(): void;
 }
 export interface EditorAdapter extends StudioAdapter {
+  applyReferenceTemplate(
+    layout: import('./referenceTemplate').ReferenceLayout,
+    revision: number,
+  ): Promise<void>;
   replaceAsset(id: string): Promise<string | null>;
   shapeAssist: boolean;
+  cleanSelectedDrawings(): void;
   clipboardStatus: string;
   copyToSystem(cut?: boolean): Promise<void>;
   pasteFromSystem(): Promise<void>;
@@ -221,7 +227,7 @@ export interface EditorAdapter extends StudioAdapter {
   arrangeSelection(position: 'front' | 'back' | 'forward' | 'backward'): void;
   createShape(shape: NonNullable<BoardItem['shape']>): void;
   connectSelection(): void;
-  createCard(text: string): void;
+  createCard(text: string, context?: 'goal' | 'affirmation'): void;
   attachFrameContent(assetId: string): Promise<void>;
   detachFrameContent(): void;
 }

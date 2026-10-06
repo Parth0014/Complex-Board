@@ -6,7 +6,12 @@ function distributionNotices(): Plugin {
   return {
     name: 'distribution-notices',
     generateBundle() {
-      const files = ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'public/curated-v1/NOTICE.md'];
+      const files = [
+        'LICENSE',
+        'THIRD_PARTY_NOTICES.md',
+        'public/curated-v1/NOTICE.md',
+        'public/template-photos/NOTICE.md',
+      ];
       files.push(...readdirSync('licenses').map((name) => `licenses/${name}`));
       for (const dependency of [
         'react',

@@ -1,74 +1,102 @@
-/* Reserve space for the board and its controls instead of covering the page. */
+/* ============================================================
+   Vision Studio V5 — Layout: workspace grid, stage fill,
+   selection bar, bottom dock, and responsive breakpoints.
+   ============================================================ */
+
+/* AI helper text */
 .ai-tool-help {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 12.5px;
+  line-height: 1.6;
   color: var(--vs-ink-2);
 }
+
 .ai-status {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
+
 .ai-status--ready {
   background: var(--vs-ok-soft);
-  color: #20663f;
+  color: #1a7a42;
 }
+
 .ai-panel .vs-textarea {
-  min-height: 112px;
+  min-height: 120px;
 }
+
 .ai-setup {
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 12.5px;
+  line-height: 1.6;
 }
+
 .ai-setup summary {
   cursor: pointer;
   font-weight: 600;
 }
+
 .ai-setup ol {
   padding-left: 18px;
 }
+
+/* Grid helpers */
 .vs-row-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+
 .vs-row-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+
 .vs-sec__body .vs-check {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
 .vs-sec__body .vs-check input {
   flex-shrink: 0;
 }
+
+/* Rail tab sizing */
 .vs .vs-rail__tab {
-  width: 72px;
+  width: 68px;
   padding-inline: 4px;
-  font-size: 11px;
+  font-size: 10.5px;
 }
+
 .vs-rail {
-  width: 80px;
+  width: 76px;
 }
+
 .vs-lib.is-collapsed {
-  width: 81px;
+  width: 77px;
 }
+
+/* File button */
 .vs-file-btn {
-  border-color: var(--vs-graphite-700);
-  background: var(--vs-graphite-800);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
 }
+
+/* Z-index layers */
 .vs-tools,
 .vs-sel,
 .vs-bottom-dock {
   z-index: var(--vs-z-float);
 }
+
 .vs-stage-fill:has(.vs-menu[open]) {
   z-index: var(--vs-z-popover);
 }
+
 .vs-tools:has(.vs-menu[open]),
 .vs-sel:has(.vs-menu[open]),
 .vs-bottom-dock:has(.vs-menu[open]) {
   z-index: var(--vs-z-popover);
 }
+
+/* Flex-shrink prevention */
 .vs-inspector__body > *,
 .vs-lib__head,
 .vs-lib__foot,
@@ -76,30 +104,36 @@
   flex-shrink: 0;
 }
 
+/* Overflow protection */
 .panel-inline-error,
 .panel-inline-status,
 .vs-alert,
 .canvas-message {
   overflow-wrap: anywhere;
   min-width: 0;
-  max-height: 120px;
+  max-height: 140px;
   overflow: auto;
 }
+
 .vs-alert > span {
   min-width: 0;
 }
+
 .panel-intro-card {
   flex-direction: column;
 }
 
+/* Text panel layout */
 .text-panel__item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px 10px;
+  gap: 6px 12px;
 }
+
 .text-panel__label {
   width: auto;
 }
+
 .text-panel__sample {
   grid-column: 1 / -1;
   grid-row: 2;
@@ -109,15 +143,26 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
 .text-panel__add {
   grid-column: 2;
   grid-row: 1;
 }
+
+/* Selection number inputs */
 .vs .vs-sel__num {
-  color: #fff;
-  background: #303744;
-  border-color: #606b7c;
+  color: var(--vs-ink);
+  background: var(--vs-panel-2);
+  border-color: var(--vs-line);
   flex-shrink: 0;
+}
+
+/* Stage fill — main canvas workspace */
+@media (min-width: 720px) {
+  /* Animating library width repeatedly refits and reallocates the canvas. */
+  .vs .vs-lib {
+    transition: none;
+  }
 }
 
 .vs-stage-fill {
@@ -129,6 +174,8 @@
   min-height: 0;
   display: block;
 }
+
+/* Floating bars */
 .vs-tools,
 .vs-sel {
   position: relative;
@@ -138,17 +185,20 @@
   max-width: 100%;
   min-width: 0;
 }
+
 .vs-sel {
   flex-wrap: wrap;
   justify-content: center;
   overflow: visible;
 }
+
 .vs-tools {
   position: absolute;
-  top: 8px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
 }
+
 .vs-sel {
   grid-row: 2;
   position: absolute;
@@ -156,28 +206,42 @@
   left: 50%;
   transform: translateX(-50%);
   width: max-content;
-  max-width: calc(100% - 28px);
+  max-width: calc(100% - 32px);
 }
+
 .vs-stage-fill > .v1-artboard {
   z-index: 0;
   position: absolute;
   inset: 0;
+  bottom: var(--canvas-footer-height, 0px);
+  height: auto;
   min-height: 0;
   min-width: 0;
+  /* Stage dimensions use clientWidth/clientHeight, so this scroll surface
+     must not add padding or change width when vertical overflow toggles. */
+  padding: 0;
+  scrollbar-gutter: stable both-edges;
+  overflow-anchor: none;
 }
+
+/* Bottom dock */
 .vs-bottom-dock {
   position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: var(--vs-z-float);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 4px 12px;
   min-width: 0;
+  background: var(--vs-panel);
+  border-top: 1px solid var(--vs-line-soft);
 }
+
 .vs-bottom-dock .vs-pages,
 .vs-bottom-dock .vs-zoom,
 .vs-bottom-dock .canvas-tools {
@@ -189,78 +253,98 @@
   flex-wrap: wrap;
   justify-content: center;
 }
+
 .vs-snap-slot {
   min-width: 0;
   max-width: 100%;
 }
+
 .vs-sel .vs-menu__pop {
   top: calc(100% + 10px);
   bottom: auto;
 }
 
+/* ====== Desktop layout (≥720px) ====== */
 @media (min-width: 720px) {
   .vs-body {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 14px;
-    padding: 14px;
+    gap: 0;
+    padding: 0;
   }
+
   .vs-lib {
     position: relative;
     inset: auto;
-    width: 380px;
+    width: 360px;
     min-height: 0;
   }
+
   .vs-canvas {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 14px;
+    gap: 0;
   }
+
   .vs-inspector {
     position: relative;
     inset: auto;
     width: auto;
     min-height: 0;
   }
+
   .vs-stage-fill {
     padding: 0;
   }
+
   .vs-header {
     padding-right: 16px;
   }
 }
+
+/* ====== Medium screens ====== */
 @media (min-width: 720px) and (max-width: 1400px) {
   .vs-lib {
-    width: 340px;
+    width: 320px;
   }
+
   .vs-canvas {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
+
   .vs-bottom-dock .vs-page-dims {
     display: none;
   }
+
   .vs-bottom-dock .vs-zoom .vs-range {
     width: 60px;
   }
 }
+
+/* ====== Mobile layout (<720px) ====== */
 @media (max-width: 719px) {
   .vs-rail {
     width: 100%;
   }
+
   .vs .vs-rail__tab {
     width: auto;
     padding-inline: 12px;
   }
+
   .vs-lib.is-collapsed {
     width: auto;
   }
+
   .vs-stage-fill {
     padding-bottom: 80px;
     gap: 8px;
   }
+
   .vs-bottom-dock .canvas-tools {
     display: none;
   }
+
   .vs-lib__panel {
     min-height: 0;
   }

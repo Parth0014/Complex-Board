@@ -1,0 +1,465 @@
+import complexTemplates from './complexTemplates.json';
+import { resolveTemplateSticker } from './templateStickers';
+import type { BoardItem } from './document';
+import type { GratitudeAsset } from '../assets/contracts';
+import type { VisionTemplate } from './templates';
+
+export type TemplateElement = Omit<BoardItem, 'id'>;
+const bundledPhotos = import.meta.glob<string>('../../public/template-photos/*.jpg', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+const sources: Record<string, string> = {
+  mountain: '1501785888041-af3ef285b470',
+  coast: '1518837695005-2083093ee35b',
+  city: '1519501025264-65ba15a82390',
+  flowers: '1490750967868-88aa4486c946',
+  desk: '1497215728101-856f4ea42174',
+  home: '1600210492486-724fe5c67fb0',
+  forest: '1441974231531-c6227db76b6e',
+  coffee: '1442512595331-e89e73853f31',
+};
+const photoHeights: Record<string, number> = {
+  city: 1001,
+  coast: 533,
+  coffee: 533,
+  desk: 533,
+  flowers: 534,
+  forest: 533,
+  home: 600,
+  mountain: 533,
+};
+export const TEMPLATE_PHOTOS: Record<string, GratitudeAsset> = Object.fromEntries(
+  Object.entries(sources).map(([name, source]) => [
+    name,
+    {
+      id: `template-photo:${name}`,
+      provider: 'template-photo',
+      type: 'photo',
+      title: `${name[0].toUpperCase()}${name.slice(1)} inspiration`,
+      tags: [name],
+      previewUrl: bundledPhotos[`../../public/template-photos/${name}.jpg`],
+      assetUrl: bundledPhotos[`../../public/template-photos/${name}.jpg`],
+      width: 800,
+      height: photoHeights[name],
+      license: {
+        tier: 'A',
+        id: 'unsplash',
+        label: 'Unsplash License',
+        attributionRequired: false,
+        sourceUrl: `https://images.unsplash.com/photo-${source}`,
+        licenseUrl: 'https://unsplash.com/license',
+      },
+      editable: { crop: true, filters: true },
+    } satisfies GratitudeAsset,
+  ]),
+);
+const box = (x: number, y: number, width: number, height: number, rotation = 0) => ({
+  x,
+  y,
+  width,
+  height,
+  rotation,
+  opacity: 1,
+});
+const paper = (
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string,
+  rotation = 0,
+): TemplateElement => ({
+  ...box(x, y, w, h, rotation),
+  kind: 'shape',
+  shape: 'rectangle',
+  color,
+  shadow: 'soft',
+  shadowBlur: 9,
+  shadowOffsetX: 2,
+  shadowOffsetY: 4,
+});
+const text = (
+  copy: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  size: number,
+  color: string,
+  fontFamily: BoardItem['fontFamily'] = 'georgia',
+  rotation = 0,
+): TemplateElement => ({
+  ...box(x, y, w, h, rotation),
+  kind: 'text',
+  text: copy,
+  fontSize: size,
+  color,
+  fontFamily,
+  align: 'center',
+});
+const photo = (
+  name: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rotation = 0,
+): TemplateElement => ({
+  ...box(x, y, w, h, rotation),
+  kind: 'asset',
+  asset: TEMPLATE_PHOTOS[name],
+  imageFit: 'fill',
+  templatePlaceholder: true,
+});
+const polaroid = (
+  name: string,
+  caption: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r = 0,
+): TemplateElement[] => {
+  const angle = (r * Math.PI) / 180;
+  const offset = (dx: number, dy: number) => [
+    x + dx * Math.cos(angle) - dy * Math.sin(angle),
+    y + dx * Math.sin(angle) + dy * Math.cos(angle),
+  ];
+  const [px, py] = offset(12, 12),
+    [tx, ty] = offset(12, h - 44),
+    [ax, ay] = offset(w / 2 - 35, -8);
+  return [
+    paper(x, y, w, h, '#fffdf7', r),
+    photo(name, px, py, w - 24, h - 66, r),
+    text(caption, tx, ty, w - 24, 32, 19, '#52433b', 'virgil', r),
+    { ...paper(ax, ay, 70, 24, '#dccca3', r - 3), opacity: 0.75, shadow: 'none' },
+  ];
+};
+const note = (
+  heading: string,
+  copy: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string,
+  ink: string,
+  r = 0,
+): TemplateElement[] => [
+  paper(x, y, w, h, color, r),
+  text(heading, x + 12, y + 12, w - 24, 35, 20, ink, 'assistant', r),
+  text(copy, x + 18, y + 55, w - 36, h - 65, 23, ink, 'virgil', r),
+];
+const star = (x: number, y: number, color: string, size = 35): TemplateElement => ({
+  ...box(x, y, size, size, 10),
+  kind: 'shape',
+  shape: 'star',
+  color,
+});
+const rich = (
+  id: string,
+  title: string,
+  category: VisionTemplate['category'],
+  description: string,
+  backgroundColor: string,
+  accent: string,
+  elements: TemplateElement[],
+): VisionTemplate => ({
+  id,
+  title,
+  category,
+  description,
+  backgroundColor,
+  accent,
+  heading: title,
+  prompt: 'Make this story yours: edit the words and replace the starter photographs.',
+  elements,
+  layout: {
+    id,
+    title,
+    description,
+    slots: elements
+      .filter((e) => e.kind === 'asset')
+      .map((e, i) => ({
+        id: `photo-${i}`,
+        x: e.x / 1000,
+        y: e.y / 1000,
+        width: e.width / 1000,
+        height: e.height / 1000,
+        rotation: e.rotation,
+      })),
+  },
+});
+
+export const COLLAGE_TEMPLATES: VisionTemplate[] = [
+  rich(
+    'travel-atlas',
+    'The adventure atlas',
+    'travel',
+    'A layered travel journal with postcards, a bucket list, destination photos and a boarding-pass note.',
+    '#ece3d3',
+    '#316a70',
+    [
+      paper(25, 25, 950, 950, '#f6f0e5'),
+      text('COLLECT MOMENTS, NOT THINGS', 140, 38, 720, 35, 20, '#316a70', 'assistant'),
+      text('The adventure atlas', 95, 82, 810, 88, 65, '#253f42'),
+      ...polaroid('mountain', 'somewhere that feels unreal', 55, 205, 395, 325, -4),
+      ...polaroid('city', 'get lost in a new city', 565, 194, 340, 345, 5),
+      ...polaroid('coast', 'take the scenic route', 310, 578, 370, 315, -3),
+      ...note(
+        'MY NEXT STOPS',
+        'Japan / Italy / Bali\nA train ride. A sunrise.\nA story worth telling.',
+        54,
+        601,
+        235,
+        267,
+        '#e4c9a7',
+        '#58442e',
+        -2,
+      ),
+      ...note(
+        'BOARDING PASS',
+        'Destination: everywhere\nPassenger: future me\nDeparture: when I say yes',
+        696,
+        599,
+        245,
+        232,
+        '#d3e2de',
+        '#294c50',
+        2,
+      ),
+      text('MORE WONDER. LESS WHAT IF.', 190, 914, 620, 38, 25, '#316a70', 'assistant'),
+      star(467, 302, '#b98340', 58),
+    ],
+  ),
+  rich(
+    'future-editorial',
+    'A letter to my future',
+    'future',
+    'A bold editorial collage with a city skyline, dream home, career imagery and a letter to your future self.',
+    '#202b28',
+    '#dfcda7',
+    [
+      photo('city', 30, 30, 385, 435),
+      photo('desk', 610, 30, 360, 300),
+      photo('home', 600, 595, 370, 370),
+      photo('forest', 30, 595, 330, 370),
+      paper(335, 290, 345, 385, '#ece5d6', -2),
+      text('THE LIFE I AM BUILDING', 70, 57, 325, 50, 20, '#ffffff', 'assistant'),
+      text('MY\nFUTURE', 342, 338, 315, 160, 66, '#263b32'),
+      text('Intentional. Brave. Mine.', 350, 528, 310, 48, 25, '#56684c', 'virgil'),
+      ...note(
+        'DEAR FUTURE ME',
+        'Keep the promises\nyou make to yourself.\nSmall steps count.',
+        51,
+        441,
+        276,
+        200,
+        '#d2c097',
+        '#263b32',
+        -3,
+      ),
+      ...note(
+        'MAKE ROOM FOR',
+        'Meaningful work\nA home full of light\nTime to really live',
+        677,
+        345,
+        270,
+        200,
+        '#a5b5a0',
+        '#22342c',
+        3,
+      ),
+      text('BECOME', 389, 740, 200, 65, 37, '#dfcda7', 'assistant'),
+      text('the person you\nalways knew\nyou could be.', 383, 812, 210, 145, 27, '#ece5d6'),
+      star(499, 659, '#dfcda7', 44),
+    ],
+  ),
+  rich(
+    'gratitude-journal',
+    'Little things, full heart',
+    'gratitude',
+    'A warm scrapbook of ordinary joys, taped photographs, handwritten reflections and gratitude prompts.',
+    '#eee6cf',
+    '#8a683c',
+    [
+      paper(32, 32, 936, 936, '#faf5e9'),
+      text('A COLLECTION OF EVERYDAY JOY', 120, 48, 760, 36, 20, '#8a683c', 'assistant'),
+      text('Little things,\nfull heart.', 300, 116, 400, 145, 62, '#554a38'),
+      ...polaroid('coffee', 'slow mornings', 58, 136, 225, 270, -5),
+      ...polaroid('flowers', 'beauty in the ordinary', 724, 141, 218, 283, 5),
+      ...polaroid('forest', 'a little room to breathe', 76, 574, 320, 332, -3),
+      ...polaroid('home', 'the feeling of home', 615, 574, 320, 330, 3),
+      ...note(
+        'TODAY I AM GRATEFUL FOR',
+        'The people who stay.\nThe light through my window.\nAnother chance to begin.',
+        278,
+        299,
+        438,
+        248,
+        '#e7d8ad',
+        '#675330',
+        -1,
+      ),
+      text('enough\nis a beautiful\nplace to be.', 402, 635, 198, 193, 34, '#7b7652', 'virgil'),
+      star(471, 849, '#bf9257', 48),
+      text('NOTICE THE GOOD', 280, 930, 440, 32, 19, '#8a683c', 'assistant'),
+    ],
+  ),
+  rich(
+    'love-stories',
+    'Love, in all its forms',
+    'love',
+    'A romantic memory wall with shared adventures, a dream home, love notes and space for the people who matter.',
+    '#f1dfe0',
+    '#994d61',
+    [
+      paper(26, 26, 948, 948, '#fff7f1'),
+      text('Love, in all its forms', 80, 55, 840, 90, 58, '#994d61'),
+      text(
+        'A LIFE FULL OF PEOPLE, PLACES & LITTLE RITUALS',
+        100,
+        151,
+        800,
+        35,
+        18,
+        '#8d6670',
+        'assistant',
+      ),
+      ...polaroid('flowers', 'just because', 61, 223, 268, 340, -5),
+      ...polaroid('coast', 'our next adventure', 648, 219, 290, 350, 5),
+      ...polaroid('home', 'a home for our stories', 341, 601, 324, 308, -2),
+      ...note(
+        'TOGETHER',
+        'More laughter.\nMore Sunday mornings.\nMore being here, now.',
+        352,
+        266,
+        279,
+        266,
+        '#eac7cf',
+        '#733e50',
+        -2,
+      ),
+      ...note(
+        'A LOVE NOTE',
+        'I choose patience.\nI make time.\nI say the kind thing.',
+        62,
+        639,
+        250,
+        238,
+        '#e8dbc8',
+        '#775950',
+        -3,
+      ),
+      ...note(
+        'MY PEOPLE',
+        'Family / friends / me\nLove shows up\nin a thousand ways.',
+        702,
+        645,
+        234,
+        237,
+        '#e1dcd1',
+        '#6a6453',
+        2,
+      ),
+      { ...box(452, 541, 70, 55), kind: 'shape', shape: 'heart', color: '#ad6477' },
+      text('MAKE MEMORIES. KEEP EACH OTHER.', 155, 930, 690, 35, 20, '#994d61', 'assistant'),
+    ],
+  ),
+  rich(
+    'finance-freedom',
+    'Freedom by design',
+    'finance',
+    'An ambitious finance mood board with milestone cards, a dream-home photo, work goals and a personal definition of enough.',
+    '#e4e8dc',
+    '#344f43',
+    [
+      paper(28, 28, 944, 944, '#f7f5eb'),
+      text('BUILD WEALTH. BUY BACK YOUR TIME.', 130, 42, 740, 32, 19, '#64725a', 'assistant'),
+      text('Freedom by design', 100, 94, 800, 78, 58, '#344f43'),
+      photo('home', 55, 211, 520, 329),
+      photo('desk', 614, 211, 157, 236),
+      photo('coffee', 784, 211, 157, 236),
+      text('A PLACE TO CALL MY OWN', 76, 489, 480, 35, 22, '#ffffff', 'assistant'),
+      ...note(
+        'MY WHY',
+        'Less worry. More choice.\nA life on my own terms.',
+        598,
+        470,
+        337,
+        168,
+        '#c7d2bb',
+        '#344f43',
+        2,
+      ),
+      ...note(
+        '01 / SAVE',
+        'Build my safety net\nTarget: __________\nMonthly: _________',
+        55,
+        581,
+        261,
+        267,
+        '#e9dfc6',
+        '#5c523a',
+        -2,
+      ),
+      ...note(
+        '02 / GROW',
+        'Learn before I invest\nBuild useful skills\nTrack my progress',
+        359,
+        624,
+        267,
+        243,
+        '#d3dbc8',
+        '#344f43',
+        1,
+      ),
+      ...note(
+        '03 / LIVE',
+        'Spend with intention\nGive generously\nCelebrate small wins',
+        683,
+        671,
+        253,
+        210,
+        '#e0d6be',
+        '#5c523a',
+        -2,
+      ),
+      text('ENOUGH IS A NUMBER I GET TO DEFINE.', 95, 926, 810, 36, 21, '#344f43', 'assistant'),
+      star(907, 555, '#ae914c', 40),
+    ],
+  ),
+];
+
+export function fitCollageElements(
+  elements: TemplateElement[],
+  page: { width: number; height: number },
+  canvas = { width: 1000, height: 1000 },
+) {
+  const scale = Math.min(page.width / canvas.width, page.height / canvas.height);
+  const x = (page.width - canvas.width * scale) / 2,
+    y = (page.height - canvas.height * scale) / 2;
+  return elements.map((item) => ({
+    ...item,
+    x: x + item.x * scale,
+    y: y + item.y * scale,
+    width: item.width * scale,
+    height: item.height * scale,
+    ...(item.fontSize ? { fontSize: item.fontSize * scale } : {}),
+  }));
+}
+
+export const COMPLEX_TEMPLATES: VisionTemplate[] = complexTemplates.map((template) => ({
+  ...template,
+  elements: template.elements.map((element) => {
+    if (element.kind !== 'asset') return element;
+    if (element.asset?.provider === 'template-sticker')
+      return { ...element, asset: resolveTemplateSticker(element.asset as GratitudeAsset) };
+    const name = element.asset?.id.replace('template-photo:', '');
+    const asset = name ? TEMPLATE_PHOTOS[name] : undefined;
+    if (!asset) throw new Error(`Unknown template photograph: ${name}`);
+    return { ...element, asset };
+  }),
+})) as unknown as VisionTemplate[];

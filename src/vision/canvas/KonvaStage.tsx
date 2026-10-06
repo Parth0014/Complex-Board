@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import Konva from 'konva';
 import { Stage, Layer, Rect, Image, Transformer, Group, Line } from 'react-konva';
 import type { KonvaCanvasAdapter } from './KonvaCanvasAdapter';
@@ -36,9 +36,7 @@ export function KonvaStage({
       return;
     }
     // Reuse the selected toolbar SVG so the pointer and tool always match.
-    const icon = node.ownerDocument.querySelector(
-      `.vs-drawing-menu button[aria-label="${drawMode}"] svg`,
-    );
+    const icon = node.ownerDocument.querySelector('.vs-drawing-menu > button svg');
     if (!icon) {
       node.style.cursor = 'crosshair';
       return;
@@ -58,6 +56,7 @@ export function KonvaStage({
   const stageRef = useRef<Konva.Stage>(null);
   const dragPointer = useRef<{ x: number; y: number } | null>(null);
   const transformer = useRef<Konva.Transformer>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [size, setSize] = useState({ width: 800, height: 700 });
   const drag = useRef<{
     items: BoardItem[];
@@ -100,6 +99,31 @@ export function KonvaStage({
     item: BoardItem;
   } | null>(null);
   const document = adapter.history.document;
+  const hoveredItem =
+    drawMode === 'select' && !adapter.cropDraft && !selectionRect
+      ? document.items.find(
+          (item) =>
+            item.id === hoveredId &&
+            !item.hidden &&
+            adapter.inScope(item) &&
+            !adapter.selectedIds.includes(item.id),
+        )
+      : undefined;
+  // Match the same scoped unit used by selection, including nested groups.
+  const hoveredMembers = hoveredItem
+    ? document.items.filter(
+        (item) =>
+          !item.hidden &&
+          adapter.inScope(item) &&
+          adapter.unitKey(item) === adapter.unitKey(hoveredItem),
+      )
+    : [];
+  const hoverBounds =
+    hoveredItem && !hoveredMembers.some((item) => adapter.selectedIds.includes(item.id))
+      ? adapter.unitKey(hoveredItem) === hoveredItem.id
+        ? hoveredItem
+        : { ...unionBounds(hoveredMembers.map(boundsOf)), rotation: 0 }
+      : undefined;
   const gradientStart = useMemo(() => ({ x: 0, y: 0 }), []);
   const gradientEnd = useMemo(
     () => ({ x: document.width, y: document.height }),
@@ -125,7 +149,7 @@ export function KonvaStage({
   const left = (stageWidth - document.width * scale) / 2;
   const top = (stageHeight - document.height * scale) / 2;
   const centeredView = useRef('');
-  useEffect(() => {
+  useLayoutEffect(() => {
     const anchor = zoomAnchor.current;
     const viewKey = `${scale}:${document.width}:${document.height}:${size.width}:${size.height}`;
     const viewChanged = centeredView.current !== viewKey;
@@ -192,17 +216,42 @@ export function KonvaStage({
     };
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const node = container.current;
+    const dock = node?.parentElement?.querySelector<HTMLElement>('.vs-bottom-dock');
+    const ownerWindow = node?.ownerDocument.defaultView;
+    if (!node || !dock || !ownerWindow) return;
+    // The footer overlays the workspace; exclude its actual (possibly wrapped)
+    // height so the scroll viewport and its scrollbar remain fully accessible.
+    const update = () => {
+      node.style.setProperty('--canvas-footer-height', `${dock.getBoundingClientRect().height}px`);
+    };
+    update();
+    const observer = new ownerWindow.ResizeObserver(update);
+    observer.observe(dock);
+    return () => {
+      observer.disconnect();
+      node.style.removeProperty('--canvas-footer-height');
+    };
+  }, [adapter]);
+
+  useLayoutEffect(() => {
     const node = container.current;
     const ownerWindow = node?.ownerDocument.defaultView;
     if (!node || !ownerWindow) return;
-    const observer = new ownerWindow.ResizeObserver(() => {
+    const measure = () => {
       const width = node.clientWidth,
         height = node.clientHeight;
+      if (!width || !height) return;
       setSize((current) =>
         current.width === width && current.height === height ? current : { width, height },
       );
-    });
+    };
+    // Measure before the first paint instead of displaying the placeholder size.
+    measure();
+    // ResizeObserver runs before paint; commit its geometry in that same paint
+    // cycle so sidebar layout and the canvas never show different viewport sizes.
+    const observer = new ownerWindow.ResizeObserver(() => flushSync(measure));
     observer.observe(node);
     adapter.fit = () => {
       onZoomChange(null);
@@ -213,6 +262,14 @@ export function KonvaStage({
       adapter.fit = undefined;
     };
   }, [adapter, onZoomChange]);
+
+  useLayoutEffect(() => {
+    // Resizing a Stage clears its canvas buffers and draws the previous node
+    // positions. React-Konva then commits the new artboard geometry, scheduling
+    // its redraw for the next frame. Finish that redraw before the browser can
+    // paint a blank or misplaced board. Selection-only updates skip this effect.
+    stageRef.current?.draw();
+  }, [stageWidth, stageHeight, left, top, scale]);
 
   useLayoutEffect(() => {
     const stage = stageRef.current;
@@ -477,6 +534,8 @@ export function KonvaStage({
     height: item.height,
     rotation: item.rotation,
     opacity: item.opacity,
+    onMouseEnter: () => setHoveredId(item.id),
+    onMouseLeave: () => setHoveredId((current) => (current === item.id ? null : current)),
     draggable:
       !adapter.cropDraft &&
       drawMode === 'select' &&
@@ -502,6 +561,7 @@ export function KonvaStage({
       dragPointer.current = pointer ? { ...pointer } : null;
     },
     onDragStart: () => {
+      setHoveredId(null);
       if (!adapter.selectedIds.includes(item.id)) choose(item.id);
       const items = adapter.history.document.items.filter((other) =>
         adapter.selectedIds.includes(other.id),
@@ -618,6 +678,7 @@ export function KonvaStage({
       className="v1-artboard"
       aria-label="Editable vision board"
       tabIndex={0}
+      onMouseLeave={() => setHoveredId(null)}
       data-page-left={left}
       data-page-top={top}
       data-scale={scale}
@@ -669,6 +730,18 @@ export function KonvaStage({
       {snappingContainer &&
         createPortal(
           <div className="canvas-tools" aria-label="Canvas snapping options">
+            <label className="snap-toggle" title="Clean up freehand geometry while drawing">
+              <input
+                type="checkbox"
+                aria-label="Shape assist"
+                defaultChecked={adapter.shapeAssist}
+                onChange={(event) => {
+                  adapter.shapeAssist = event.target.checked;
+                }}
+              />
+              <span className="vs-switch__track" aria-hidden="true" />
+              Shape assist
+            </label>
             <label className="snap-toggle">
               <input
                 type="checkbox"
@@ -815,6 +888,19 @@ export function KonvaStage({
           </Group>
         </Layer>
         <Layer>
+          {hoverBounds && (
+            <Rect
+              x={left + hoverBounds.x * scale}
+              y={top + hoverBounds.y * scale}
+              width={hoverBounds.width * scale}
+              height={hoverBounds.height * scale}
+              rotation={hoverBounds.rotation}
+              stroke="#8b3dff"
+              strokeWidth={1}
+              opacity={0.65}
+              listening={false}
+            />
+          )}
           {guides.vertical !== undefined && (
             <Line
               points={[

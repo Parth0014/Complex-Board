@@ -1,17 +1,20 @@
 import { VISION_LAYOUTS } from './layouts';
 
 import type { VisionLayout } from './layouts';
+import { COLLAGE_TEMPLATES, COMPLEX_TEMPLATES, type TemplateElement } from './collageTemplates';
 
 export interface VisionTemplate {
+  canvas?: { width: number; height: number };
   id: string;
   title: string;
-  category: 'travel' | 'home' | 'career' | 'wellness' | 'gratitude';
+  category: 'travel' | 'home' | 'career' | 'wellness' | 'gratitude' | 'future' | 'love' | 'finance';
   description: string;
   prompt: string;
   accent: string;
   backgroundColor: string;
   heading: string;
   layout: VisionLayout;
+  elements?: TemplateElement[];
 }
 
 export const LEGACY_VISION_TEMPLATE_STYLES: Record<
@@ -51,7 +54,8 @@ const layout = (id: string) => {
   return match;
 };
 
-export const VISION_TEMPLATES: VisionTemplate[] = [
+// Retain definitions for resizing boards saved with the retired basic layouts.
+export const LEGACY_VISION_TEMPLATES: VisionTemplate[] = [
   {
     id: 'travel-story',
     title: 'Places I will explore',
@@ -108,3 +112,4 @@ export const VISION_TEMPLATES: VisionTemplate[] = [
     layout: layout('nine-grid'),
   },
 ];
+export const VISION_TEMPLATES: VisionTemplate[] = [...COLLAGE_TEMPLATES, ...COMPLEX_TEMPLATES];

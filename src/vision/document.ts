@@ -60,6 +60,7 @@ export interface BoardItem {
     | 'arrow';
   connector?: { from: string; to: string };
   points?: number[];
+  strokeTension?: number;
   strokeWidth?: number;
   crop?: { x: number; y: number; width: number; height: number };
   imageFit?: 'fit' | 'fill';

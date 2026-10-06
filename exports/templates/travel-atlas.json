@@ -1,0 +1,441 @@
+{
+  "canvas": {
+    "width": 1000,
+    "height": 1000
+  },
+  "id": "travel-atlas",
+  "title": "The adventure atlas",
+  "category": "travel",
+  "description": "A layered travel journal with postcards, a bucket list, destination photos and a boarding-pass note.",
+  "backgroundColor": "#ece3d3",
+  "accent": "#316a70",
+  "heading": "The adventure atlas",
+  "prompt": "Make this story yours: edit the words and replace the starter photographs.",
+  "elements": [
+    {
+      "x": 25,
+      "y": 25,
+      "width": 950,
+      "height": 950,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#f6f0e5",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 140,
+      "y": 38,
+      "width": 720,
+      "height": 35,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "COLLECT MOMENTS, NOT THINGS",
+      "fontSize": 20,
+      "color": "#316a70",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 95,
+      "y": 82,
+      "width": 810,
+      "height": 88,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "The adventure atlas",
+      "fontSize": 65,
+      "color": "#253f42",
+      "fontFamily": "georgia",
+      "align": "center"
+    },
+    {
+      "x": 55,
+      "y": 205,
+      "width": 395,
+      "height": 325,
+      "rotation": -4,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#fffdf7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 67.80784628804739,
+      "y": 216.1336909181884,
+      "width": 371,
+      "height": 259,
+      "rotation": -4,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:mountain",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Mountain inspiration",
+        "tags": [
+          "mountain"
+        ],
+        "previewUrl": "/template-photos/mountain.jpg",
+        "assetUrl": "/template-photos/mountain.jpg",
+        "width": 800,
+        "height": 533,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 86.5723377252171,
+      "y": 484.4784204380811,
+      "width": 371,
+      "height": 32,
+      "rotation": -4,
+      "opacity": 1,
+      "kind": "text",
+      "text": "somewhere that feels unreal",
+      "fontSize": 19,
+      "color": "#52433b",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 216.54610637726844,
+      "y": 185.68406061450105,
+      "width": 70,
+      "height": 24,
+      "rotation": -7,
+      "opacity": 0.75,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#dccca3",
+      "shadow": "none",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 565,
+      "y": 194,
+      "width": 340,
+      "height": 345,
+      "rotation": 5,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#fffdf7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 575.9084674641291,
+      "y": 207.00020529007287,
+      "width": 316,
+      "height": 279,
+      "rotation": 5,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:city",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "City inspiration",
+        "tags": [
+          "city"
+        ],
+        "previewUrl": "/template-photos/city.jpg",
+        "assetUrl": "/template-photos/city.jpg",
+        "width": 800,
+        "height": 1001,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 550.7204578100559,
+      "y": 494.90047303858734,
+      "width": 316,
+      "height": 32,
+      "rotation": 5,
+      "opacity": 1,
+      "kind": "text",
+      "text": "get lost in a new city",
+      "fontSize": 19,
+      "color": "#52433b",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 700.1835301843669,
+      "y": 197.7964676861999,
+      "width": 70,
+      "height": 24,
+      "rotation": 2,
+      "opacity": 0.75,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#dccca3",
+      "shadow": "none",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 310,
+      "y": 578,
+      "width": 370,
+      "height": 315,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#fffdf7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 322.6115858919702,
+      "y": 589.3555229421395,
+      "width": 346,
+      "height": 249,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:coast",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Coast inspiration",
+        "tags": [
+          "coast"
+        ],
+        "previewUrl": "/template-photos/coast.jpg",
+        "assetUrl": "/template-photos/coast.jpg",
+        "width": 800,
+        "height": 533,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 336.1665985588927,
+      "y": 848.0005724435741,
+      "width": 346,
+      "height": 32,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "text",
+      "text": "take the scenic route",
+      "fontSize": 19,
+      "color": "#52433b",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 459.3757425632425,
+      "y": 562.1605702855219,
+      "width": 70,
+      "height": 24,
+      "rotation": -6,
+      "opacity": 0.75,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#dccca3",
+      "shadow": "none",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 54,
+      "y": 601,
+      "width": 235,
+      "height": 267,
+      "rotation": -2,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#e4c9a7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 66,
+      "y": 613,
+      "width": 211,
+      "height": 35,
+      "rotation": -2,
+      "opacity": 1,
+      "kind": "text",
+      "text": "MY NEXT STOPS",
+      "fontSize": 20,
+      "color": "#58442e",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 72,
+      "y": 656,
+      "width": 199,
+      "height": 202,
+      "rotation": -2,
+      "opacity": 1,
+      "kind": "text",
+      "text": "Japan / Italy / Bali\nA train ride. A sunrise.\nA story worth telling.",
+      "fontSize": 23,
+      "color": "#58442e",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 696,
+      "y": 599,
+      "width": 245,
+      "height": 232,
+      "rotation": 2,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#d3e2de",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 708,
+      "y": 611,
+      "width": 221,
+      "height": 35,
+      "rotation": 2,
+      "opacity": 1,
+      "kind": "text",
+      "text": "BOARDING PASS",
+      "fontSize": 20,
+      "color": "#294c50",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 714,
+      "y": 654,
+      "width": 209,
+      "height": 167,
+      "rotation": 2,
+      "opacity": 1,
+      "kind": "text",
+      "text": "Destination: everywhere\nPassenger: future me\nDeparture: when I say yes",
+      "fontSize": 23,
+      "color": "#294c50",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 190,
+      "y": 914,
+      "width": 620,
+      "height": 38,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "MORE WONDER. LESS WHAT IF.",
+      "fontSize": 25,
+      "color": "#316a70",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 467,
+      "y": 302,
+      "width": 58,
+      "height": 58,
+      "rotation": 10,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "star",
+      "color": "#b98340"
+    }
+  ],
+  "layout": {
+    "id": "travel-atlas",
+    "title": "The adventure atlas",
+    "description": "A layered travel journal with postcards, a bucket list, destination photos and a boarding-pass note.",
+    "slots": [
+      {
+        "id": "photo-0",
+        "x": 0.06780784628804738,
+        "y": 0.2161336909181884,
+        "width": 0.371,
+        "height": 0.259,
+        "rotation": -4
+      },
+      {
+        "id": "photo-1",
+        "x": 0.575908467464129,
+        "y": 0.20700020529007288,
+        "width": 0.316,
+        "height": 0.279,
+        "rotation": 5
+      },
+      {
+        "id": "photo-2",
+        "x": 0.3226115858919702,
+        "y": 0.5893555229421394,
+        "width": 0.346,
+        "height": 0.249,
+        "rotation": -3
+      }
+    ]
+  }
+}

@@ -1,5 +1,25 @@
 import { test, expect } from '@playwright/test';
 
+test('Shape assist toggles without moving or resizing the sidebar', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.locator('.create-extra > summary').filter({ hasText: 'Drawing options' }).click();
+  const toggle = page.getByRole('checkbox', { name: 'Shape assist', exact: true });
+  await toggle.scrollIntoViewIfNeeded();
+  const geometry = () => page.locator('.vs-lib').evaluate(node => {
+    const rect = node.getBoundingClientRect();
+    const body = node.querySelector('.vs-lib__body')!;
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+      scrollTop: body.scrollTop, scrollWidth: body.scrollWidth, clientWidth: body.clientWidth };
+  });
+  const before = await geometry();
+  for (let i = 0; i < 4; i++) {
+    await page.locator('.create-assist-toggle .vs-switch__track').click();
+    expect(await toggle.isChecked()).toBe(i % 2 === 0);
+    expect(await geometry()).toEqual(before);
+  }
+});
+
 test('asset selection changes redraw only the overlay, not the image artwork', async ({ page }) => {
   await page.addInitScript(() => {
     const counter = window as Window & { imageDraws: number };
@@ -45,12 +65,22 @@ test('drawing tools live in the slim sidebar and Escape returns to arranging', a
   await expect(page.getByRole('button', { name: 'Select', exact: true })).toBeVisible();
   const board = page.getByLabel('Editable vision board', { exact: true });
   expect(await board.evaluate(node => getComputedStyle(node).cursor)).toContain('url(');
+  await page.getByLabel('Drawing tools', { exact: true }).click();
+  await expect(page.getByRole('toolbar', { name: 'Drawing palette' })).toBeVisible();
+  expect(await board.evaluate(node => getComputedStyle(node).cursor)).toContain('url(');
+  await page.getByLabel('Drawing tools', { exact: true }).click();
   await page.getByRole('button', { name: 'Select', exact: true }).click();
   expect(await board.evaluate(node => getComputedStyle(node).cursor)).toBe('default');
   await page.getByLabel('Drawing tools', { exact: true }).click();
   await page.getByRole('button', { name: 'pen', exact: true }).click();
   await page.keyboard.press('Escape');
   expect(await board.evaluate(node => getComputedStyle(node).cursor)).toBe('default');
+  await expect(page.getByRole('toolbar', { name: 'Drawing palette' })).toHaveCount(0);
+  await page.getByLabel('Drawing tools', { exact: true }).click();
+  await page.mouse.click(600, 150);
+  await expect(page.getByRole('toolbar', { name: 'Drawing palette' })).toBeVisible();
+  await page.getByRole('button', { name: 'Select', exact: true }).click();
+  await expect(page.getByRole('toolbar', { name: 'Drawing palette' })).toHaveCount(0);
 });
 
 test('objects beyond board edges do not expand or reposition the canvas surface', async ({ page }) => {

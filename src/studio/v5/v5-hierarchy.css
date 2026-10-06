@@ -5,47 +5,56 @@
 @media (min-width: 720px) {
   .vs-canvas:has(> .vs-inspector[hidden]) { grid-template-columns: minmax(0, 1fr); }
 }
+
 .vs [data-tip]::after { display: none; }
 .vs-tooltip {
   position: fixed;
   z-index: 1000;
   width: max-content;
-  max-width: min(230px, calc(100vw - 16px));
-  padding: 7px 10px;
+  max-width: min(240px, calc(100vw - 32px));
+  padding: 8px 12px;
   border-radius: 8px;
-  background: var(--vs-graphite-950);
-  color: var(--vs-chrome-ink);
-  font: 500 12px/1.4 var(--vs-font);
+  background: rgba(22, 24, 30, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--vs-chrome-ink, #fff);
+  font: 500 12.5px/1.4 var(--vs-font);
   text-align: center;
   overflow-wrap: anywhere;
   pointer-events: none;
-  box-shadow: var(--vs-shadow-1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
+
 .vs-compose-action {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 8px 14px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--vs-ink-2);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
-.vs-compose-action.is-active { background: var(--vs-accent-soft); color: var(--vs-accent); }
-.vs-compose-action:hover { background: var(--vs-panel-2); }
-.vs-drawing-menu .vs-menu__pop { flex-direction: row; flex-wrap: wrap; min-width: 190px; }
+.vs-compose-action.is-active { background: var(--vs-accent-soft); color: var(--vs-accent); font-weight: 600; }
+.vs-compose-action:hover:not(.is-active) { background: var(--vs-panel-2); color: var(--vs-ink); }
+.vs-drawing-menu .vs-menu__pop { flex-direction: row; flex-wrap: wrap; min-width: 200px; }
 .vs-drawing-menu .vs-menu__kicker { width: 100%; }
-.vs-canvas { background: #eef0f4; }
+
+/* Quiet framing leaves the artwork as the largest area of contrast. */
+.vs-canvas { background: #f2f4f7; }
+
 .vs-board-size {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
   min-width: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--vs-ink-2);
 }
 .vs-board-size select {
@@ -53,70 +62,81 @@
   min-width: 0;
   border: 0;
   background: var(--vs-panel-2);
-  padding: 5px;
+  padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
+  color: var(--vs-ink);
+  transition: background 0.15s ease;
 }
+.vs-board-size select:hover { background: var(--vs-panel-3, #e4e7ec); }
+
 .vs {
-  --vs-mute: #677080;
-  --vs-shadow-utility: 0 1px 3px rgba(16, 18, 24, 0.06);
+  --vs-mute: #717c91;
+  --vs-shadow-utility: 0 2px 8px rgba(16, 18, 24, 0.04), 0 0 0 1px rgba(16, 18, 24, 0.04);
 }
 
 .vs-title__input {
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
 }
+.vs-title__input:hover { background: var(--vs-panel-2); }
 
 .vs-brand__name { color: var(--vs-chrome-mute); }
-.vs-brand__name strong { color: var(--vs-chrome-ink); }
-.vs-header .vs-btn--primary { padding: 10px 18px; }
-.vs-header .vs-btn--ghost { border-color: transparent; }
+.vs-brand__name strong { color: var(--vs-chrome-ink); font-weight: 600; }
+.vs-header .vs-btn--primary { padding: 8px 16px; font-weight: 500; }
+.vs-header .vs-btn--ghost { border-color: transparent; color: var(--vs-chrome-ink); }
 .vs-file-btn { background: transparent; border-color: transparent; }
 
-/* Quiet framing leaves the artwork as the largest area of contrast. */
-.vs-canvas {
-  background: #eef0f4;
-}
 .vs-lib,
-.vs-inspector { box-shadow: var(--vs-shadow-utility); }
-.vs-lib__head { padding: 20px 16px 16px; }
-.vs-lib__head .vs-sec-head { margin-bottom: 0; gap: 6px; }
-.vs-lib__head h3 { font-size: 20px; line-height: 1.2; letter-spacing: -0.035em; }
-.vs-lib__head p { line-height: 1.5; }
-.vs-lib__body { padding-top: 18px; }
-.vs-lib__foot { background: var(--vs-panel-2); }
+.vs-inspector { box-shadow: var(--vs-shadow-utility); background: var(--vs-panel); }
+.vs-lib__head { padding: 24px 20px 16px; }
+.vs-lib__head .vs-sec-head { margin-bottom: 0; gap: 8px; }
+.vs-lib__head h3 { font-size: 22px; font-weight: 600; line-height: 1.2; letter-spacing: -0.03em; color: var(--vs-ink); }
+.vs-lib__head p { line-height: 1.5; color: var(--vs-ink-2); margin-top: 6px; font-size: 14px; }
+.vs-lib__body { padding-top: 16px; }
+.vs-lib__foot { background: var(--vs-panel-2); border-top: 1px solid var(--vs-line-soft); }
 
 /* Selection has both a color cue and a persistent structural marker. */
-.vs-rail__tab.is-active { font-weight: 750; }
+.vs-rail__tab { transition: color 0.15s ease, background 0.15s ease; position: relative; }
+.vs-rail__tab.is-active { font-weight: 600; color: var(--vs-ink); }
 .vs-rail__tab.is-active::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 12px;
-  bottom: 12px;
+  top: 14px;
+  bottom: 14px;
   width: 3px;
-  border-radius: 3px;
-  background: currentColor;
+  border-radius: 0 4px 4px 0;
+  background: var(--vs-accent);
+  transition: transform 0.2s cubic-bezier(0.1, 0, 0.2, 1);
 }
-.vs-inspector__tabs { padding-bottom: 12px; border-bottom: 1px solid var(--vs-line-soft); }
-.vs-inspector__tabs .vs-segmented button.is-active { color: var(--vs-accent); }
+
+.vs-inspector__tabs { padding: 4px 20px 16px; border-bottom: 1px solid var(--vs-line-soft); }
+.vs-inspector__tabs .vs-segmented button.is-active { color: var(--vs-accent); font-weight: 600; }
+.vs-inspector__tabs .vs-segmented { background: var(--vs-panel-2); padding: 4px; border-radius: 8px; }
+
 .vs-sec { border-color: var(--vs-line-soft); }
 .vs-sec > summary,
-.vs-sec__head { font-size: 13px; font-weight: 700; }
+.vs-sec__head { font-size: 14px; font-weight: 600; color: var(--vs-ink); padding: 12px 20px; }
 .vs-sec[open] > summary { background: var(--vs-panel-2); border-bottom: 1px solid var(--vs-line-soft); }
-.vs-sec__body { padding: 14px 12px; gap: 12px; }
+.vs-sec__body { padding: 16px 20px; gap: 16px; }
 
 /* Guidance supports the task without looking like a primary action. */
-.panel-intro-card { background: var(--vs-panel-2); border-color: var(--vs-line-soft); }
-.panel-section-heading { margin-bottom: 12px; }
-.panel-section-heading h3 { font-size: 15px; letter-spacing: -0.015em; }
-.panel-section-heading p { line-height: 1.5; margin-top: 4px; }
-.panel-section-heading--divided { margin-top: 24px; padding-top: 20px; }
-.templates-panel__meta h3 { font-size: 15px; line-height: 1.35; }
-.templates-panel__prompt { color: var(--vs-ink-2); }
-.asset-title { font-size: 11.5px; font-weight: 500; }
-.panel-action { box-shadow: none; min-height: 38px; }
+.panel-intro-card { background: var(--vs-panel-2); border: 1px solid var(--vs-line-soft); padding: 16px; }
+.panel-section-heading { margin-bottom: 16px; }
+.panel-section-heading h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: var(--vs-ink); }
+.panel-section-heading p { line-height: 1.5; margin-top: 6px; color: var(--vs-ink-2); font-size: 13.5px; }
+.panel-section-heading--divided { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--vs-line-soft); }
+
+.templates-panel__meta h3 { font-size: 16px; font-weight: 600; line-height: 1.4; }
+.templates-panel__prompt { color: var(--vs-ink-2); margin-top: 4px; }
+.asset-title { font-size: 12px; font-weight: 500; color: var(--vs-ink); }
+.panel-action { box-shadow: 0 1px 2px rgba(16, 18, 24, 0.05); min-height: 40px; font-weight: 500; }
 
 /* Keep contextual editing prominent; soften always-present navigation. */
 .vs-tools,
@@ -125,32 +145,34 @@
 .canvas-tools {
   background: var(--vs-panel);
   color: var(--vs-ink-2);
-  border-color: var(--vs-line);
-  box-shadow: var(--vs-shadow-utility);
+  border: 1px solid rgba(16, 18, 24, 0.08);
+  box-shadow: 0 4px 12px rgba(16, 18, 24, 0.06), 0 1px 3px rgba(16, 18, 24, 0.04);
 }
 .vs-tools .vs-icon-btn,
 .vs-pages .vs-icon-btn,
-.vs-zoom .vs-icon-btn { color: var(--vs-ink-2); }
+.vs-zoom .vs-icon-btn { color: var(--vs-ink-2); transition: all 0.15s ease; }
 .vs-tools .vs-icon-btn:hover:not(:disabled),
 .vs-pages .vs-icon-btn:hover:not(:disabled),
 .vs-zoom .vs-icon-btn:hover:not(:disabled) { background: var(--vs-panel-2); color: var(--vs-ink); }
 .vs-tools .vs-icon-btn.is-active { background: var(--vs-accent-soft); color: var(--vs-accent); }
-.vs-tools__divider { background: var(--vs-line); }
-.vs-zoom .vs-range { background: #d6d9e0; }
-.vs-sel { box-shadow: var(--vs-shadow-1); }
-.snap-toggle { color: var(--vs-ink-2); }
+.vs-tools__divider { background: rgba(16, 18, 24, 0.08); width: 1px; margin: 6px 0; }
+.vs-zoom .vs-range { background: var(--vs-line-soft); }
+
+.vs-sel { box-shadow: 0 8px 24px rgba(16, 18, 24, 0.08), 0 2px 6px rgba(16, 18, 24, 0.04); border: 1px solid rgba(16, 18, 24, 0.08); }
+.snap-toggle { color: var(--vs-ink-2); transition: all 0.15s ease; }
 .snap-toggle:hover { background: var(--vs-panel-2); color: var(--vs-ink); }
 
 @media (max-width: 719px) {
-  .vs-title__input { font-size: 13px; }
-  .vs-lib__head { padding-top: 16px; }
-  .vs-lib__head h3 { font-size: 18px; }
+  .vs-title__input { font-size: 14px; }
+  .vs-lib__head { padding: 20px 16px 12px; }
+  .vs-lib__head h3 { font-size: 20px; }
   .vs-rail__tab.is-active::before {
     top: auto;
     bottom: 0;
-    left: 12px;
-    right: 12px;
+    left: 16px;
+    right: 16px;
     width: auto;
     height: 3px;
+    border-radius: 4px 4px 0 0;
   }
 }

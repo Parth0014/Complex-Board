@@ -32,3 +32,7 @@ See [editor features and limits](docs/PASTED_FEATURE_STATUS.md), [canvas interac
 Keep asset license metadata and [the curated library notice](public/curated-v1/NOTICE.md) when distributing the app. Generated builds, dependencies, test reports and local credentials are excluded from Git.
 
 See [third-party notices](THIRD_PARTY_NOTICES.md), [privacy and storage](docs/PRIVACY.md), and [implementation progress](docs/IMPLEMENTATION_PROGRESS.md). GitHub CI verifies the editor with Chromium; local browser tests use Edge.
+
+## Copyright
+
+Copyright (c) 2026 Parth Patil. All rights reserved for original contributions owned by Parth Patil. Written permission is required to use or redistribute those contributions; see [LICENSE](LICENSE). Third-party components retain their own licenses and notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

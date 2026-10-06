@@ -1,0 +1,4331 @@
+[
+  {
+    "canvas": {
+      "width": 1000,
+      "height": 1000
+    },
+    "id": "year-sticker-collage",
+    "title": "2026 is my year",
+    "category": "future",
+    "description": "A warm yearly journal with six taped photographs, layered milestone notes and botanical details.",
+    "backgroundColor": "#eee4d3",
+    "accent": "#566852",
+    "heading": "2026 is my year",
+    "prompt": "Make this story yours: edit the words and replace the starter photographs.",
+    "elements": [
+      {
+        "x": 24,
+        "y": 24,
+        "width": 952,
+        "height": 952,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#f8f2e7",
+        "shadow": "soft",
+        "shadowBlur": 9,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 42,
+        "y": 42,
+        "width": 916,
+        "height": 916,
+        "rotation": 0,
+        "opacity": 0.45,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#f8f2e7",
+        "borderWidth": 1,
+        "borderColor": "#566852",
+        "noFill": true
+      },
+      {
+        "x": 130,
+        "y": 55,
+        "width": 740,
+        "height": 30,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "A YEAR OF LITTLE BEGINNINGS",
+        "fontSize": 17,
+        "color": "#566852",
+        "fontFamily": "assistant",
+        "align": "center",
+        "letterSpacing": 2
+      },
+      {
+        "x": 100,
+        "y": 97,
+        "width": 800,
+        "height": 75,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "2026 is my year",
+        "fontSize": 55,
+        "color": "#566852",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 180,
+        "y": 171,
+        "width": 640,
+        "height": 28,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Small steps. Beautiful possibilities.",
+        "fontSize": 20,
+        "color": "#566852",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 60,
+        "y": 235,
+        "width": 280,
+        "height": 245,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab",
+        "shadow": "soft",
+        "shadowBlur": 8,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 65,
+        "y": 230,
+        "width": 270,
+        "height": 235,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 6,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 75.50965490997517,
+        "y": 239.4629357851163,
+        "width": 250,
+        "height": 180,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:mountain",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Mountain inspiration",
+          "tags": [
+            "mountain"
+          ],
+          "previewUrl": "/template-photos/mountain.jpg",
+          "assetUrl": "/template-photos/mountain.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 85.29647872740567,
+        "y": 426.2066587842216,
+        "width": 250,
+        "height": 28,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "go somewhere new",
+        "fontSize": 19,
+        "color": "#514c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 167.38781847353462,
+        "y": 215.62173069418563,
+        "width": 64,
+        "height": 22,
+        "rotation": -5,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 86.92738610321422,
+        "y": 419.11158012845374,
+        "width": 246,
+        "height": 1,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab"
+      },
+      {
+        "x": 318.0252499153257,
+        "y": 434.0373076309501,
+        "width": 16,
+        "height": 14,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 11,
+        "color": "#514c40",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 360,
+        "y": 230,
+        "width": 280,
+        "height": 260,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab",
+        "shadow": "soft",
+        "shadowBlur": 8,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 365,
+        "y": 225,
+        "width": 270,
+        "height": 250,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 6,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 374.64491330316594,
+        "y": 235.34290323721598,
+        "width": 250,
+        "height": 195,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:city",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "City inspiration",
+          "tags": [
+            "city"
+          ],
+          "previewUrl": "/template-photos/city.jpg",
+          "assetUrl": "/template-photos/city.jpg",
+          "width": 800,
+          "height": 1001,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 367.5952149692607,
+        "y": 437.21985029507334,
+        "width": 250,
+        "height": 28,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "a braver chapter",
+        "fontSize": 19,
+        "color": "#514c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 468.25135065328936,
+        "y": 219.60013071718572,
+        "width": 64,
+        "height": 22,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 369.83829310021645,
+        "y": 430.2939134993446,
+        "width": 246,
+        "height": 1,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab"
+      },
+      {
+        "x": 598.755896903641,
+        "y": 465.3043500704355,
+        "width": 16,
+        "height": 14,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 11,
+        "color": "#514c40",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 675,
+        "y": 235,
+        "width": 260,
+        "height": 245,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab",
+        "shadow": "soft",
+        "shadowBlur": 8,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 680,
+        "y": 230,
+        "width": 250,
+        "height": 235,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 6,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 689.4629357851163,
+        "y": 240.50965490997518,
+        "width": 230,
+        "height": 180,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:flowers",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Flowers inspiration",
+          "tags": [
+            "flowers"
+          ],
+          "previewUrl": "/template-photos/flowers.jpg",
+          "assetUrl": "/template-photos/flowers.jpg",
+          "width": 800,
+          "height": 534,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1490750967868-88aa4486c946",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 679.6761119676858,
+        "y": 427.2533779090805,
+        "width": 230,
+        "height": 28,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "make room for joy",
+        "fontSize": 19,
+        "color": "#514c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 773.3435703383618,
+        "y": 225.87957811780262,
+        "width": 64,
+        "height": 22,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 682.0397227308955,
+        "y": 420.36764307828435,
+        "width": 226,
+        "height": 1,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab"
+      },
+      {
+        "x": 890.3388542107965,
+        "y": 458.32119132767605,
+        "width": 16,
+        "height": 14,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 11,
+        "color": "#514c40",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 60,
+        "y": 665,
+        "width": 280,
+        "height": 235,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab",
+        "shadow": "soft",
+        "shadowBlur": 8,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 65,
+        "y": 660,
+        "width": 270,
+        "height": 225,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 6,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 75.34290323721596,
+        "y": 669.644913303166,
+        "width": 250,
+        "height": 170,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:home",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Home inspiration",
+          "tags": [
+            "home"
+          ],
+          "previewUrl": "/template-photos/home.jpg",
+          "assetUrl": "/template-photos/home.jpg",
+          "width": 800,
+          "height": 600,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 81.52011415355864,
+        "y": 846.5370896855459,
+        "width": 250,
+        "height": 28,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "a place to belong",
+        "fontSize": 19,
+        "color": "#514c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 167.62315971264434,
+        "y": 647.4108343964706,
+        "width": 64,
+        "height": 22,
+        "rotation": -4,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 83.27459933067932,
+        "y": 839.4715549030072,
+        "width": 246,
+        "height": 1,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab"
+      },
+      {
+        "x": 314.0767759560389,
+        "y": 858.4282229909477,
+        "width": 16,
+        "height": 14,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 11,
+        "color": "#514c40",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 365,
+        "y": 680,
+        "width": 280,
+        "height": 240,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab",
+        "shadow": "soft",
+        "shadowBlur": 8,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 370,
+        "y": 675,
+        "width": 270,
+        "height": 230,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 6,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 379.64491330316594,
+        "y": 685.342903237216,
+        "width": 250,
+        "height": 175,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:coast",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Coast inspiration",
+          "tags": [
+            "coast"
+          ],
+          "previewUrl": "/template-photos/coast.jpg",
+          "assetUrl": "/template-photos/coast.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 373.29320490331077,
+        "y": 867.2320337546913,
+        "width": 250,
+        "height": 28,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "take the scenic route",
+        "fontSize": 19,
+        "color": "#514c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 473.25135065328936,
+        "y": 669.6001307171857,
+        "width": 64,
+        "height": 22,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 375.53628303426643,
+        "y": 860.3060969589627,
+        "width": 246,
+        "height": 1,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab"
+      },
+      {
+        "x": 604.453886837691,
+        "y": 895.3165335300534,
+        "width": 16,
+        "height": 14,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 11,
+        "color": "#514c40",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 680,
+        "y": 670,
+        "width": 260,
+        "height": 235,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab",
+        "shadow": "soft",
+        "shadowBlur": 8,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 685,
+        "y": 665,
+        "width": 250,
+        "height": 225,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 6,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 695.5096549099751,
+        "y": 674.4629357851163,
+        "width": 230,
+        "height": 170,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:forest",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Forest inspiration",
+          "tags": [
+            "forest"
+          ],
+          "previewUrl": "/template-photos/forest.jpg",
+          "assetUrl": "/template-photos/forest.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 704.7731191649762,
+        "y": 851.2203634366759,
+        "width": 230,
+        "height": 28,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "keep growing",
+        "fontSize": 19,
+        "color": "#514c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 777.4015231259889,
+        "y": 651.145090256615,
+        "width": 64,
+        "height": 22,
+        "rotation": -5,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 706.4040265407847,
+        "y": 844.1252847809079,
+        "width": 226,
+        "height": 1,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d8c9ab"
+      },
+      {
+        "x": 917.5292996578047,
+        "y": 860.0977314082633,
+        "width": 16,
+        "height": 14,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 11,
+        "color": "#514c40",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 70,
+        "y": 505,
+        "width": 268,
+        "height": 118,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dfd8be",
+        "shadow": "soft",
+        "shadowBlur": 5,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 82.44638338136167,
+        "y": 517.5732867908182,
+        "width": 244,
+        "height": 24,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "BECOME",
+        "fontSize": 15,
+        "color": "#566852",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 86.52644026019648,
+        "y": 548.4497039383027,
+        "width": 238,
+        "height": 53,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Curious. Kind. Brave.\nMore myself, every day.",
+        "fontSize": 22,
+        "color": "#566852",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 89.31521576103876,
+        "y": 542.3486604860806,
+        "width": 232,
+        "height": 1,
+        "rotation": -2,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#566852"
+      },
+      {
+        "x": 178.68930366816394,
+        "y": 494.2002190702937,
+        "width": 50,
+        "height": 18,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 365,
+        "y": 512,
+        "width": 272,
+        "height": 120,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#d5dfd1",
+        "shadow": "soft",
+        "shadowBlur": 5,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 376.771291058192,
+        "y": 525.2074489142806,
+        "width": 248,
+        "height": 24,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "MY NEXT CHAPTER",
+        "fontSize": 15,
+        "color": "#566852",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 379.2298095441054,
+        "y": 556.2550846834405,
+        "width": 242,
+        "height": 55,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "One new adventure.\nOne promise kept.",
+        "fontSize": 22,
+        "color": "#566852",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 382.3340670681983,
+        "y": 550.308355731814,
+        "width": 236,
+        "height": 1,
+        "rotation": 1,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#566852"
+      },
+      {
+        "x": 476.1052610074204,
+        "y": 506.9382832484438,
+        "width": 50,
+        "height": 18,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 670,
+        "y": 506,
+        "width": 268,
+        "height": 125,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#ebd7d1",
+        "shadow": "soft",
+        "shadowBlur": 5,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 681.5389964670966,
+        "y": 519.4108747116783,
+        "width": 244,
+        "height": 24,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "A LITTLE REMINDER",
+        "fontSize": 15,
+        "color": "#566852",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 683.4552845503764,
+        "y": 550.4966888393777,
+        "width": 238,
+        "height": 60,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "I can begin again.\nSmall steps still count.",
+        "fontSize": 22,
+        "color": "#566852",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 686.6628540116486,
+        "y": 544.6050423673706,
+        "width": 232,
+        "height": 1,
+        "rotation": 2,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#566852"
+      },
+      {
+        "x": 779.1778966219989,
+        "y": 502.80830935143894,
+        "width": 50,
+        "height": 18,
+        "rotation": 4,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 47,
+        "y": 78,
+        "width": 46,
+        "height": 115,
+        "rotation": -8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:branch",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "branch",
+          "tags": [
+            "sticker",
+            "branch"
+          ],
+          "previewUrl": "/template-stickers/branch.svg",
+          "assetUrl": "/template-stickers/branch.svg",
+          "width": 200.0,
+          "height": 400.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 897,
+        "y": 85,
+        "width": 33,
+        "height": 45,
+        "rotation": 8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:sparkle",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "sparkle",
+          "tags": [
+            "sticker",
+            "sparkle"
+          ],
+          "previewUrl": "/template-stickers/sparkle.svg",
+          "assetUrl": "/template-stickers/sparkle.svg",
+          "width": 100.0,
+          "height": 100.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 435,
+        "y": 22,
+        "width": 125,
+        "height": 27,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 938,
+        "y": 609,
+        "width": 24,
+        "height": 28,
+        "rotation": 12,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:clover",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "clover",
+          "tags": [
+            "sticker",
+            "clover"
+          ],
+          "previewUrl": "/template-stickers/clover.svg",
+          "assetUrl": "/template-stickers/clover.svg",
+          "width": 100.0,
+          "height": 100.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 34,
+        "y": 604,
+        "width": 30,
+        "height": 30,
+        "rotation": -8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:daisy",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "daisy",
+          "tags": [
+            "sticker",
+            "daisy"
+          ],
+          "previewUrl": "/template-stickers/daisy.svg",
+          "assetUrl": "/template-stickers/daisy.svg",
+          "width": 200.0,
+          "height": 200.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 480,
+        "y": 940,
+        "width": 25,
+        "height": 22,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:heart",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "heart",
+          "tags": [
+            "sticker",
+            "heart"
+          ],
+          "previewUrl": "/template-stickers/heart.svg",
+          "assetUrl": "/template-stickers/heart.svg",
+          "width": 100.0,
+          "height": 90.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 110,
+        "y": 919,
+        "width": 780,
+        "height": 24,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "COLLECT THE MOMENTS THAT MAKE YOU, YOU.",
+        "fontSize": 15,
+        "color": "#566852",
+        "fontFamily": "assistant",
+        "align": "center",
+        "letterSpacing": 1.5
+      },
+      {
+        "x": 90,
+        "y": 957,
+        "width": 820,
+        "height": 15,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "01 / MY PERSONAL JOURNAL",
+        "fontSize": 11,
+        "color": "#566852",
+        "fontFamily": "assistant",
+        "align": "center"
+      }
+    ],
+    "layout": {
+      "id": "year-sticker-collage",
+      "title": "2026 is my year",
+      "description": "Six photo slots with journal notes and layered paper.",
+      "slots": [
+        {
+          "id": "photo-0",
+          "x": 0.07550965490997517,
+          "y": 0.2394629357851163,
+          "width": 0.25,
+          "height": 0.18,
+          "rotation": -3
+        },
+        {
+          "id": "photo-1",
+          "x": 0.37464491330316596,
+          "y": 0.235342903237216,
+          "width": 0.25,
+          "height": 0.195,
+          "rotation": 2
+        },
+        {
+          "id": "photo-2",
+          "x": 0.6894629357851163,
+          "y": 0.2405096549099752,
+          "width": 0.23,
+          "height": 0.18,
+          "rotation": 3
+        },
+        {
+          "id": "photo-3",
+          "x": 0.07534290323721596,
+          "y": 0.669644913303166,
+          "width": 0.25,
+          "height": 0.17,
+          "rotation": -2
+        },
+        {
+          "id": "photo-4",
+          "x": 0.3796449133031659,
+          "y": 0.685342903237216,
+          "width": 0.25,
+          "height": 0.175,
+          "rotation": 2
+        },
+        {
+          "id": "photo-5",
+          "x": 0.6955096549099751,
+          "y": 0.6744629357851163,
+          "width": 0.23,
+          "height": 0.17,
+          "rotation": -3
+        }
+      ]
+    }
+  },
+  {
+    "canvas": {
+      "width": 1000,
+      "height": 1000
+    },
+    "id": "dark-ambition",
+    "title": "The future, in focus",
+    "category": "future",
+    "description": "An evergreen editorial journal with two hero photographs, intention notes and a four-photo memory strip.",
+    "backgroundColor": "#243630",
+    "accent": "#ddcca7",
+    "heading": "The future, in focus",
+    "prompt": "Make this story yours: edit the words and replace the starter photographs.",
+    "elements": [
+      {
+        "x": 24,
+        "y": 24,
+        "width": 952,
+        "height": 952,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#30453d",
+        "shadow": "soft",
+        "shadowBlur": 9,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 42,
+        "y": 42,
+        "width": 916,
+        "height": 916,
+        "rotation": 0,
+        "opacity": 0.45,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#30453d",
+        "borderWidth": 1,
+        "borderColor": "#ddcca7",
+        "noFill": true
+      },
+      {
+        "x": 130,
+        "y": 55,
+        "width": 740,
+        "height": 30,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "A LIFE BUILT WITH INTENTION",
+        "fontSize": 17,
+        "color": "#ddcca7",
+        "fontFamily": "assistant",
+        "align": "center",
+        "letterSpacing": 2
+      },
+      {
+        "x": 100,
+        "y": 97,
+        "width": 800,
+        "height": 75,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "The future, in focus",
+        "fontSize": 55,
+        "color": "#ddcca7",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 180,
+        "y": 171,
+        "width": 640,
+        "height": 28,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Dream deeply. Begin deliberately.",
+        "fontSize": 20,
+        "color": "#ddcca7",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 107.5,
+        "y": 223.92592592592592,
+        "width": 320.0,
+        "height": 331.85185185185185,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83",
+        "shadow": "soft",
+        "shadowBlur": 9.481481481481481,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 113.42592592592592,
+        "y": 218.0,
+        "width": 308.14814814814815,
+        "height": 320.0,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 7.111111111111111,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 125.68418161447818,
+        "y": 229.43100835930778,
+        "width": 284.44444444444446,
+        "height": 254.8148148148148,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:city",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "City inspiration",
+          "tags": [
+            "city"
+          ],
+          "previewUrl": "/template-photos/city.jpg",
+          "assetUrl": "/template-photos/city.jpg",
+          "width": 800,
+          "height": 1001,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 134.86662696909175,
+        "y": 492.3818392905543,
+        "width": 284.44444444444446,
+        "height": 33.18518518518518,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "space to dream",
+        "fontSize": 22.51851851851852,
+        "color": "#4b5343",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 229.13105846228015,
+        "y": 203.2863192651651,
+        "width": 75.85185185185185,
+        "height": 26.074074074074073,
+        "rotation": -4,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 136.9460168086422,
+        "y": 484.0078721408789,
+        "width": 279.7037037037037,
+        "height": 1.1851851851851851,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83"
+      },
+      {
+        "x": 398.6447052295827,
+        "y": 506.8886579838007,
+        "width": 18.962962962962962,
+        "height": 16.59259259259259,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 13.037037037037036,
+        "color": "#4b5343",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 546.8137254901961,
+        "y": 224.27450980392157,
+        "width": 351.37254901960785,
+        "height": 332.54901960784315,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83",
+        "shadow": "soft",
+        "shadowBlur": 10.03921568627451,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 553.0882352941177,
+        "y": 218.0,
+        "width": 338.8235294117647,
+        "height": 320.0,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 7.529411764705882,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 565.1916559098553,
+        "y": 230.97932955258474,
+        "width": 313.72549019607845,
+        "height": 250.98039215686273,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:desk",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Desk inspiration",
+          "tags": [
+            "desk"
+          ],
+          "previewUrl": "/template-photos/desk.jpg",
+          "assetUrl": "/template-photos/desk.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1497215728101-856f4ea42174",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 556.125998413488,
+        "y": 490.5857937947216,
+        "width": 313.72549019607845,
+        "height": 35.13725490196079,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "work with purpose",
+        "fontSize": 23.84313725490196,
+        "color": "#4b5343",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 682.6585576825593,
+        "y": 211.2236934490174,
+        "width": 80.31372549019608,
+        "height": 27.607843137254903,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 558.9408415582167,
+        "y": 481.8944221294935,
+        "width": 308.70588235294116,
+        "height": 1.2549019607843137,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83"
+      },
+      {
+        "x": 846.209991429181,
+        "y": 525.8290876304702,
+        "width": 20.07843137254902,
+        "height": 17.568627450980394,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 13.803921568627452,
+        "color": "#4b5343",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 86.03703703703704,
+        "y": 746.074074074074,
+        "width": 162.92592592592592,
+        "height": 172.14814814814815,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83",
+        "shadow": "soft",
+        "shadowBlur": 4.9185185185185185,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 89.11111111111111,
+        "y": 743.0,
+        "width": 156.77777777777777,
+        "height": 166.0,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 3.688888888888889,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 94.92906422344188,
+        "y": 749.461491537244,
+        "width": 144.4814814814815,
+        "height": 132.1851851851852,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:home",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Home inspiration",
+          "tags": [
+            "home"
+          ],
+          "previewUrl": "/template-photos/home.jpg",
+          "assetUrl": "/template-photos/home.jpg",
+          "width": 800,
+          "height": 600,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 87.78578770690493,
+        "y": 885.7633271475238,
+        "width": 144.4814814814815,
+        "height": 17.214814814814815,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "a home full of light",
+        "fontSize": 11.681481481481482,
+        "color": "#4b5343",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 148.03505160404154,
+        "y": 740.5471458866521,
+        "width": 39.34814814814815,
+        "height": 13.525925925925925,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 89.23897062058204,
+        "y": 881.5298753626639,
+        "width": 142.0222222222222,
+        "height": 0.6148148148148148,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83"
+      },
+      {
+        "x": 220.37422372987785,
+        "y": 905.0251637074072,
+        "width": 9.837037037037037,
+        "height": 8.607407407407408,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 6.762962962962963,
+        "color": "#4b5343",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 286.25,
+        "y": 749.125,
+        "width": 202.5,
+        "height": 168.75,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83",
+        "shadow": "soft",
+        "shadowBlur": 6.0,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 290.0,
+        "y": 745.375,
+        "width": 195.0,
+        "height": 161.25,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 4.5,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 297.8822411824814,
+        "y": 752.4722018388372,
+        "width": 180.0,
+        "height": 120.0,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:forest",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Forest inspiration",
+          "tags": [
+            "forest"
+          ],
+          "previewUrl": "/template-photos/forest.jpg",
+          "assetUrl": "/template-photos/forest.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 304.4373197019101,
+        "y": 877.5505510668477,
+        "width": 180.0,
+        "height": 21.0,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "time to really live",
+        "fontSize": 14.25,
+        "color": "#4b5343",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 363.0460030998213,
+        "y": 734.7875578565502,
+        "width": 48.0,
+        "height": 16.5,
+        "rotation": -5,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 305.6605002337665,
+        "y": 872.2292420750216,
+        "width": 177.0,
+        "height": 0.75,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83"
+      },
+      {
+        "x": 471.4941765821908,
+        "y": 883.816057373716,
+        "width": 12.0,
+        "height": 10.5,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 8.25,
+        "color": "#4b5343",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 511.3888888888889,
+        "y": 748.3611111111111,
+        "width": 202.22222222222223,
+        "height": 169.72222222222223,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83",
+        "shadow": "soft",
+        "shadowBlur": 5.777777777777778,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 515.0,
+        "y": 744.75,
+        "width": 195.0,
+        "height": 162.5,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 4.333333333333333,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 522.0950770851936,
+        "y": 752.0971674003988,
+        "width": 180.55555555555554,
+        "height": 122.77777777777777,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:mountain",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Mountain inspiration",
+          "tags": [
+            "mountain"
+          ],
+          "previewUrl": "/template-photos/mountain.jpg",
+          "assetUrl": "/template-photos/mountain.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 519.8640777956275,
+        "y": 879.9110310978908,
+        "width": 180.55555555555554,
+        "height": 20.22222222222222,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "beyond the familiar",
+        "fontSize": 13.722222222222221,
+        "color": "#4b5343",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 589.4909997426428,
+        "y": 739.5492551047903,
+        "width": 46.22222222222222,
+        "height": 15.88888888888889,
+        "rotation": -1,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 521.3965338545086,
+        "y": 874.881454559454,
+        "width": 177.66666666666666,
+        "height": 0.7222222222222222,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83"
+      },
+      {
+        "x": 687.1420235132931,
+        "y": 897.2775232398635,
+        "width": 11.555555555555555,
+        "height": 10.11111111111111,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 7.944444444444445,
+        "color": "#4b5343",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 739.7444444444445,
+        "y": 746.6888888888889,
+        "width": 195.5111111111111,
+        "height": 173.37777777777777,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83",
+        "shadow": "soft",
+        "shadowBlur": 5.902222222222222,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 743.4333333333334,
+        "y": 743.0,
+        "width": 188.13333333333333,
+        "height": 166.0,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 4.426666666666667,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 751.0640974994571,
+        "y": 750.1158027036691,
+        "width": 173.37777777777777,
+        "height": 125.42222222222222,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:coast",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Coast inspiration",
+          "tags": [
+            "coast"
+          ],
+          "previewUrl": "/template-photos/coast.jpg",
+          "assetUrl": "/template-photos/coast.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 755.6215064421812,
+        "y": 880.6229195013361,
+        "width": 173.37777777777777,
+        "height": 20.657777777777778,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "more freedom",
+        "fontSize": 14.017777777777777,
+        "color": "#4b5343",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 813.6164574784898,
+        "y": 733.905103925372,
+        "width": 47.217777777777776,
+        "height": 16.23111111111111,
+        "rotation": -4,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 756.9159266173012,
+        "y": 875.4101249506631,
+        "width": 170.42666666666665,
+        "height": 0.7377777777777778,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#8c9a83"
+      },
+      {
+        "x": 916.1367184418884,
+        "y": 889.7821545034956,
+        "width": 11.804444444444444,
+        "height": 10.328888888888889,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 8.115555555555556,
+        "color": "#4b5343",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 70.0,
+        "y": 575.0566037735849,
+        "width": 260.0,
+        "height": 109.88679245283019,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#e6dcc6",
+        "shadow": "soft",
+        "shadowBlur": 4.90566037735849,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 81.54919122690536,
+        "y": 588.0148555385395,
+        "width": 236.45283018867926,
+        "height": 23.547169811320757,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "DEAR FUTURE ME",
+        "fontSize": 14.716981132075471,
+        "color": "#344c40",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 83.9613225715751,
+        "y": 618.4766868592246,
+        "width": 230.56603773584905,
+        "height": 46.113207547169814,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Keep the promises\nyou make to yourself.",
+        "fontSize": 21.58490566037736,
+        "color": "#344c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 87.00700919898699,
+        "y": 612.6421603406477,
+        "width": 224.67924528301887,
+        "height": 0.9811320754716981,
+        "rotation": 1,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#344c40"
+      },
+      {
+        "x": 175.57549607296977,
+        "y": 570.0304602065564,
+        "width": 49.056603773584904,
+        "height": 17.660377358490567,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 372.0,
+        "y": 574.6296296296297,
+        "width": 260.0,
+        "height": 110.74074074074073,
+        "rotation": -1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#c5d0bf",
+        "shadow": "soft",
+        "shadowBlur": 4.814814814814815,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 383.7722738616517,
+        "y": 586.9445692649789,
+        "width": 236.88888888888889,
+        "height": 23.11111111111111,
+        "rotation": -1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "MAKE ROOM FOR",
+        "fontSize": 14.444444444444443,
+        "color": "#344c40",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 387.1817094101943,
+        "y": 616.741456472162,
+        "width": 231.1111111111111,
+        "height": 48.148148148148145,
+        "rotation": -1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Meaningful work.\nA slower morning.",
+        "fontSize": 21.185185185185183,
+        "color": "#344c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 389.9693221812306,
+        "y": 610.914140614884,
+        "width": 225.33333333333331,
+        "height": 0.9629629629629629,
+        "rotation": -1,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#344c40"
+      },
+      {
+        "x": 477.79215074724794,
+        "y": 566.0412532248484,
+        "width": 48.148148148148145,
+        "height": 17.333333333333332,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 674.0,
+        "y": 570.4580152671756,
+        "width": 260.0,
+        "height": 119.08396946564885,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dbcbb0",
+        "shadow": "soft",
+        "shadowBlur": 4.961832061068702,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 685.4509125245996,
+        "y": 583.7665168894517,
+        "width": 236.18320610687022,
+        "height": 23.81679389312977,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "THE WAY FORWARD",
+        "fontSize": 14.885496183206106,
+        "color": "#344c40",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 687.352572454572,
+        "y": 614.6150347261,
+        "width": 230.22900763358777,
+        "height": 54.58015267175573,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Choose one small step.\nThen take another.",
+        "fontSize": 21.83206106870229,
+        "color": "#344c40",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 690.5356566527811,
+        "y": 608.7683626546426,
+        "width": 224.27480916030535,
+        "height": 0.9923664122137404,
+        "rotation": 2,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#344c40"
+      },
+      {
+        "x": 779.3691918955909,
+        "y": 567.1867894043748,
+        "width": 49.61832061068702,
+        "height": 17.862595419847327,
+        "rotation": 4,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 47,
+        "y": 78,
+        "width": 46,
+        "height": 115,
+        "rotation": -8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:branch",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "branch",
+          "tags": [
+            "sticker",
+            "branch"
+          ],
+          "previewUrl": "/template-stickers/branch.svg",
+          "assetUrl": "/template-stickers/branch.svg",
+          "width": 200.0,
+          "height": 400.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 897,
+        "y": 85,
+        "width": 33,
+        "height": 45,
+        "rotation": 8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:sparkle",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "sparkle",
+          "tags": [
+            "sticker",
+            "sparkle"
+          ],
+          "previewUrl": "/template-stickers/sparkle.svg",
+          "assetUrl": "/template-stickers/sparkle.svg",
+          "width": 100.0,
+          "height": 100.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 435,
+        "y": 22,
+        "width": 125,
+        "height": 27,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 938,
+        "y": 609,
+        "width": 24,
+        "height": 28,
+        "rotation": 12,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:clover",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "clover",
+          "tags": [
+            "sticker",
+            "clover"
+          ],
+          "previewUrl": "/template-stickers/clover.svg",
+          "assetUrl": "/template-stickers/clover.svg",
+          "width": 100.0,
+          "height": 100.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 34,
+        "y": 604,
+        "width": 30,
+        "height": 30,
+        "rotation": -8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:daisy",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "daisy",
+          "tags": [
+            "sticker",
+            "daisy"
+          ],
+          "previewUrl": "/template-stickers/daisy.svg",
+          "assetUrl": "/template-stickers/daisy.svg",
+          "width": 200.0,
+          "height": 200.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 480,
+        "y": 940,
+        "width": 25,
+        "height": 22,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:heart",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "heart",
+          "tags": [
+            "sticker",
+            "heart"
+          ],
+          "previewUrl": "/template-stickers/heart.svg",
+          "assetUrl": "/template-stickers/heart.svg",
+          "width": 100.0,
+          "height": 90.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 110,
+        "y": 919,
+        "width": 780,
+        "height": 24,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "COLLECT THE MOMENTS THAT MAKE YOU, YOU.",
+        "fontSize": 15,
+        "color": "#ddcca7",
+        "fontFamily": "assistant",
+        "align": "center",
+        "letterSpacing": 1.5
+      },
+      {
+        "x": 90,
+        "y": 957,
+        "width": 820,
+        "height": 15,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "01 / MY PERSONAL JOURNAL",
+        "fontSize": 11,
+        "color": "#ddcca7",
+        "fontFamily": "assistant",
+        "align": "center"
+      }
+    ],
+    "layout": {
+      "id": "dark-ambition",
+      "title": "The future, in focus",
+      "description": "Six photo slots with journal notes and layered paper.",
+      "slots": [
+        {
+          "id": "photo-0",
+          "x": 0.12568418161447817,
+          "y": 0.22943100835930777,
+          "width": 0.28444444444444444,
+          "height": 0.2548148148148148,
+          "rotation": -2
+        },
+        {
+          "id": "photo-1",
+          "x": 0.5651916559098553,
+          "y": 0.23097932955258474,
+          "width": 0.3137254901960784,
+          "height": 0.25098039215686274,
+          "rotation": 2
+        },
+        {
+          "id": "photo-2",
+          "x": 0.09492906422344188,
+          "y": 0.749461491537244,
+          "width": 0.1444814814814815,
+          "height": 0.13218518518518518,
+          "rotation": 3
+        },
+        {
+          "id": "photo-3",
+          "x": 0.29788224118248136,
+          "y": 0.7524722018388372,
+          "width": 0.18,
+          "height": 0.12,
+          "rotation": -3
+        },
+        {
+          "id": "photo-4",
+          "x": 0.5220950770851935,
+          "y": 0.7520971674003988,
+          "width": 0.18055555555555555,
+          "height": 0.12277777777777778,
+          "rotation": 1
+        },
+        {
+          "id": "photo-5",
+          "x": 0.7510640974994571,
+          "y": 0.7501158027036692,
+          "width": 0.17337777777777777,
+          "height": 0.1254222222222222,
+          "rotation": -2
+        }
+      ]
+    }
+  },
+  {
+    "canvas": {
+      "width": 1000,
+      "height": 1000
+    },
+    "id": "pastel-torn-life",
+    "title": "A life in bloom",
+    "category": "wellness",
+    "description": "A blush-and-sage journal with a central column of reflections, six surrounding photographs and delicate keepsakes.",
+    "backgroundColor": "#eee4e0",
+    "accent": "#946879",
+    "heading": "A life in bloom",
+    "prompt": "Make this story yours: edit the words and replace the starter photographs.",
+    "elements": [
+      {
+        "x": 24,
+        "y": 24,
+        "width": 952,
+        "height": 952,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fff8f2",
+        "shadow": "soft",
+        "shadowBlur": 9,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 42,
+        "y": 42,
+        "width": 916,
+        "height": 916,
+        "rotation": 0,
+        "opacity": 0.45,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fff8f2",
+        "borderWidth": 1,
+        "borderColor": "#946879",
+        "noFill": true
+      },
+      {
+        "x": 130,
+        "y": 55,
+        "width": 740,
+        "height": 30,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "ROOM FOR EVERYTHING THAT MATTERS",
+        "fontSize": 17,
+        "color": "#946879",
+        "fontFamily": "assistant",
+        "align": "center",
+        "letterSpacing": 2
+      },
+      {
+        "x": 100,
+        "y": 97,
+        "width": 800,
+        "height": 75,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "A life in bloom",
+        "fontSize": 55,
+        "color": "#946879",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 180,
+        "y": 171,
+        "width": 640,
+        "height": 28,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Grow gently, in your own time.",
+        "fontSize": 20,
+        "color": "#946879",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 82.0,
+        "y": 229.0625,
+        "width": 221.0,
+        "height": 203.125,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf",
+        "shadow": "soft",
+        "shadowBlur": 6.5,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 86.0625,
+        "y": 225.0,
+        "width": 212.875,
+        "height": 195.0,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 4.875,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 94.60159461435482,
+        "y": 232.68863532540698,
+        "width": 196.625,
+        "height": 150.3125,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:flowers",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Flowers inspiration",
+          "tags": [
+            "flowers"
+          ],
+          "previewUrl": "/template-photos/flowers.jpg",
+          "assetUrl": "/template-photos/flowers.jpg",
+          "width": 800,
+          "height": 534,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1490750967868-88aa4486c946",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 102.76600378825407,
+        "y": 388.4748427471205,
+        "width": 196.625,
+        "height": 22.75,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "everyday beauty",
+        "fontSize": 15.4375,
+        "color": "#745d64",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 166.0070565217945,
+        "y": 213.4877480468154,
+        "width": 52.0,
+        "height": 17.875,
+        "rotation": -5,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 104.09111603109852,
+        "y": 382.7100913393091,
+        "width": 193.375,
+        "height": 0.8125,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf"
+      },
+      {
+        "x": 285.3670384025344,
+        "y": 395.17742865066657,
+        "width": 13.0,
+        "height": 11.375,
+        "rotation": -3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 8.9375,
+        "color": "#745d64",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 702.8125,
+        "y": 229.0625,
+        "width": 219.375,
+        "height": 203.125,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf",
+        "shadow": "soft",
+        "shadowBlur": 6.5,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 706.875,
+        "y": 225.0,
+        "width": 211.25,
+        "height": 195.0,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 4.875,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 714.7114920588223,
+        "y": 233.40360888023798,
+        "width": 195.0,
+        "height": 150.3125,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:coffee",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Coffee inspiration",
+          "tags": [
+            "coffee"
+          ],
+          "previewUrl": "/template-photos/coffee.jpg",
+          "assetUrl": "/template-photos/coffee.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1442512595331-e89e73853f31",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 709.2671705732322,
+        "y": 389.3085778952169,
+        "width": 195.0,
+        "height": 22.75,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "slow mornings",
+        "fontSize": 15.4375,
+        "color": "#745d64",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 786.7066971710326,
+        "y": 220.47082700235947,
+        "width": 52.0,
+        "height": 17.875,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 711.0896715546337,
+        "y": 383.68125424868737,
+        "width": 191.75,
+        "height": 0.8125,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf"
+      },
+      {
+        "x": 888.9651741753859,
+        "y": 411.8436755519908,
+        "width": 13.0,
+        "height": 11.375,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 8.9375,
+        "color": "#745d64",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 82.8125,
+        "y": 469.0625,
+        "width": 219.375,
+        "height": 203.125,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf",
+        "shadow": "soft",
+        "shadowBlur": 6.5,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 86.875,
+        "y": 465.0,
+        "width": 211.25,
+        "height": 195.0,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 4.875,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 95.27860888023798,
+        "y": 472.83649205882233,
+        "width": 195.0,
+        "height": 150.3125,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:coast",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Coast inspiration",
+          "tags": [
+            "coast"
+          ],
+          "previewUrl": "/template-photos/coast.jpg",
+          "assetUrl": "/template-photos/coast.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 100.72293036582818,
+        "y": 628.7414610738012,
+        "width": 195.0,
+        "height": 22.75,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "a little adventure",
+        "fontSize": 15.4375,
+        "color": "#745d64",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 166.19629203175842,
+        "y": 454.9130821524862,
+        "width": 52.0,
+        "height": 17.875,
+        "rotation": -4,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 102.14844957223869,
+        "y": 623.0007140629887,
+        "width": 191.75,
+        "height": 0.8125,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf"
+      },
+      {
+        "x": 281.55516761081316,
+        "y": 638.6865652951481,
+        "width": 13.0,
+        "height": 11.375,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 8.9375,
+        "color": "#745d64",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 689.1511627906976,
+        "y": 469.5348837209302,
+        "width": 246.69767441860463,
+        "height": 204.06976744186045,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf",
+        "shadow": "soft",
+        "shadowBlur": 7.255813953488372,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 693.6860465116279,
+        "y": 465.0,
+        "width": 237.62790697674419,
+        "height": 195.0,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 5.441860465116279,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 702.43375857729,
+        "y": 474.3807727035215,
+        "width": 219.48837209302323,
+        "height": 145.11627906976744,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:home",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Home inspiration",
+          "tags": [
+            "home"
+          ],
+          "previewUrl": "/template-photos/home.jpg",
+          "assetUrl": "/template-photos/home.jpg",
+          "width": 800,
+          "height": 600,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 697.1477022511647,
+        "y": 625.7536205262045,
+        "width": 219.48837209302323,
+        "height": 25.3953488372093,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "people & places",
+        "fontSize": 17.232558139534884,
+        "color": "#745d64",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 783.7069234061233,
+        "y": 459.97583201127105,
+        "width": 58.04651162790697,
+        "height": 19.953488372093023,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 699.1821219513338,
+        "y": 619.471956920776,
+        "width": 215.86046511627904,
+        "height": 0.9069767441860465,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf"
+      },
+      {
+        "x": 899.5536710281617,
+        "y": 650.9723844394125,
+        "width": 14.511627906976743,
+        "height": 12.69767441860465,
+        "rotation": 2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 9.976744186046512,
+        "color": "#745d64",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 73.91891891891892,
+        "y": 709.3918918918919,
+        "width": 237.16216216216216,
+        "height": 203.78378378378378,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf",
+        "shadow": "soft",
+        "shadowBlur": 7.027027027027027,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 78.3108108108108,
+        "y": 705.0,
+        "width": 228.3783783783784,
+        "height": 195.0,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 5.27027027027027,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 87.39579338404106,
+        "y": 713.471883306835,
+        "width": 210.8108108108108,
+        "height": 146.6891891891892,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:forest",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Forest inspiration",
+          "tags": [
+            "forest"
+          ],
+          "previewUrl": "/template-photos/forest.jpg",
+          "assetUrl": "/template-photos/forest.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 92.72975700168006,
+        "y": 866.2166164634021,
+        "width": 210.8108108108108,
+        "height": 24.594594594594597,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "rest & renewal",
+        "fontSize": 16.68918918918919,
+        "color": "#745d64",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 164.0635589532524,
+        "y": 694.0952239486338,
+        "width": 56.21621621621622,
+        "height": 19.324324324324326,
+        "rotation": -4,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 94.2708588464482,
+        "y": 860.0104034787398,
+        "width": 207.2972972972973,
+        "height": 0.8783783783783784,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf"
+      },
+      {
+        "x": 288.224067536799,
+        "y": 876.9680804864797,
+        "width": 14.054054054054054,
+        "height": 12.297297297297298,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 9.662162162162163,
+        "color": "#745d64",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 690.0581395348837,
+        "y": 709.5348837209302,
+        "width": 244.88372093023256,
+        "height": 204.06976744186045,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf",
+        "shadow": "soft",
+        "shadowBlur": 7.255813953488372,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 694.5930232558139,
+        "y": 705.0,
+        "width": 235.81395348837208,
+        "height": 195.0,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#fffdf7",
+        "shadow": "soft",
+        "shadowBlur": 5.441860465116279,
+        "shadowOffsetY": 3
+      },
+      {
+        "x": 703.1756859446403,
+        "y": 714.5320125927681,
+        "width": 217.67441860465115,
+        "height": 145.11627906976744,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-photo:desk",
+          "provider": "template-photo",
+          "type": "photo",
+          "title": "Desk inspiration",
+          "tags": [
+            "desk"
+          ],
+          "previewUrl": "/template-photos/desk.jpg",
+          "assetUrl": "/template-photos/desk.jpg",
+          "width": 800,
+          "height": 533,
+          "license": {
+            "tier": "A",
+            "id": "unsplash",
+            "label": "Unsplash License",
+            "attributionRequired": false,
+            "sourceUrl": "https://images.unsplash.com/photo-1497215728101-856f4ea42174",
+            "licenseUrl": "https://unsplash.com/license"
+          },
+          "editable": {
+            "crop": true,
+            "filters": true
+          }
+        },
+        "imageFit": "fill",
+        "templatePlaceholder": true
+      },
+      {
+        "x": 695.2486142467266,
+        "y": 865.7895511940831,
+        "width": 217.67441860465115,
+        "height": 25.3953488372093,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "make something lovely",
+        "fontSize": 17.232558139534884,
+        "color": "#745d64",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 783.7821395924012,
+        "y": 701.500210652597,
+        "width": 58.04651162790697,
+        "height": 19.953488372093023,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 697.3923542412656,
+        "y": 859.5443498359191,
+        "width": 214.04651162790697,
+        "height": 0.9069767441860465,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dacbbf"
+      },
+      {
+        "x": 895.3721599684848,
+        "y": 894.4420104094313,
+        "width": 14.511627906976743,
+        "height": 12.69767441860465,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "text",
+        "text": "?",
+        "fontSize": 9.976744186046512,
+        "color": "#745d64",
+        "fontFamily": "georgia",
+        "align": "center"
+      },
+      {
+        "x": 348.0,
+        "y": 254.29770992366412,
+        "width": 300.0,
+        "height": 137.40458015267174,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#dce3d5",
+        "shadow": "soft",
+        "shadowBlur": 5.7251908396946565,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 362.25158402445993,
+        "y": 268.69460319559346,
+        "width": 272.5190839694656,
+        "height": 27.48091603053435,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "NOURISH",
+        "fontSize": 17.175572519083968,
+        "color": "#946879",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 366.9234048780876,
+        "y": 304.0492793186671,
+        "width": 265.64885496183206,
+        "height": 62.977099236641216,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Move gently. Rest well.\nListen to what I need.",
+        "fontSize": 25.190839694656486,
+        "color": "#946879",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 370.11665926836497,
+        "y": 297.06335170161896,
+        "width": 258.77862595419845,
+        "height": 1.1450381679389312,
+        "rotation": -2,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#946879"
+      },
+      {
+        "x": 469.0203792218778,
+        "y": 242.05143232107005,
+        "width": 57.25190839694656,
+        "height": 20.610687022900763,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 348.0,
+        "y": 488.7692307692308,
+        "width": 300.0,
+        "height": 138.46153846153845,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#eed8de",
+        "shadow": "soft",
+        "shadowBlur": 5.769230769230768,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 361.58225891329846,
+        "y": 504.008594901093,
+        "width": 272.30769230769226,
+        "height": 27.69230769230769,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "CONNECT",
+        "fontSize": 17.307692307692307,
+        "color": "#946879",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 364.41901101242934,
+        "y": 539.8327900193544,
+        "width": 265.38461538461536,
+        "height": 63.46153846153845,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Make time for my people.\nMake time for myself.",
+        "fontSize": 25.384615384615383,
+        "color": "#946879",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 368.00084661715186,
+        "y": 532.9711796905547,
+        "width": 258.46153846153845,
+        "height": 1.1538461538461537,
+        "rotation": 1,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#946879"
+      },
+      {
+        "x": 469.27635558055624,
+        "y": 482.8079640113308,
+        "width": 57.692307692307686,
+        "height": 20.769230769230766,
+        "rotation": 3,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 348.0,
+        "y": 721.4615384615385,
+        "width": 300.0,
+        "height": 143.07692307692307,
+        "rotation": -1,
+        "opacity": 1,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#e8dec7",
+        "shadow": "soft",
+        "shadowBlur": 5.769230769230768,
+        "shadowOffsetY": 2
+      },
+      {
+        "x": 362.105831106417,
+        "y": 736.2176051843682,
+        "width": 272.30769230769226,
+        "height": 27.69230769230769,
+        "rotation": -1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "CREATE",
+        "fontSize": 17.307692307692307,
+        "color": "#946879",
+        "fontFamily": "assistant",
+        "align": "center"
+      },
+      {
+        "x": 366.19110151221497,
+        "y": 771.9209759503715,
+        "width": 265.38461538461536,
+        "height": 68.07692307692307,
+        "rotation": -1,
+        "opacity": 1,
+        "kind": "text",
+        "text": "Follow my curiosity.\nLet something bloom.",
+        "fontSize": 25.384615384615383,
+        "color": "#946879",
+        "fontFamily": "virgil",
+        "align": "center"
+      },
+      {
+        "x": 369.53128841242136,
+        "y": 764.9385412693136,
+        "width": 258.46153846153845,
+        "height": 1.1538461538461537,
+        "rotation": -1,
+        "opacity": 0.2,
+        "kind": "shape",
+        "shape": "rectangle",
+        "color": "#946879"
+      },
+      {
+        "x": 468.99443209195397,
+        "y": 711.2714193746045,
+        "width": 57.692307692307686,
+        "height": 20.769230769230766,
+        "rotation": 1,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-sage",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-sage",
+          "tags": [
+            "sticker",
+            "tape-sage"
+          ],
+          "previewUrl": "/template-stickers/tape-sage.svg",
+          "assetUrl": "/template-stickers/tape-sage.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 47,
+        "y": 78,
+        "width": 46,
+        "height": 115,
+        "rotation": -8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:branch",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "branch",
+          "tags": [
+            "sticker",
+            "branch"
+          ],
+          "previewUrl": "/template-stickers/branch.svg",
+          "assetUrl": "/template-stickers/branch.svg",
+          "width": 200.0,
+          "height": 400.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 897,
+        "y": 85,
+        "width": 33,
+        "height": 45,
+        "rotation": 8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:sparkle",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "sparkle",
+          "tags": [
+            "sticker",
+            "sparkle"
+          ],
+          "previewUrl": "/template-stickers/sparkle.svg",
+          "assetUrl": "/template-stickers/sparkle.svg",
+          "width": 100.0,
+          "height": 100.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 435,
+        "y": 22,
+        "width": 125,
+        "height": 27,
+        "rotation": -2,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:tape-kraft",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "tape-kraft",
+          "tags": [
+            "sticker",
+            "tape-kraft"
+          ],
+          "previewUrl": "/template-stickers/tape-kraft.svg",
+          "assetUrl": "/template-stickers/tape-kraft.svg",
+          "width": 140.0,
+          "height": 44.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 938,
+        "y": 609,
+        "width": 24,
+        "height": 28,
+        "rotation": 12,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:clover",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "clover",
+          "tags": [
+            "sticker",
+            "clover"
+          ],
+          "previewUrl": "/template-stickers/clover.svg",
+          "assetUrl": "/template-stickers/clover.svg",
+          "width": 100.0,
+          "height": 100.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 34,
+        "y": 604,
+        "width": 30,
+        "height": 30,
+        "rotation": -8,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:daisy",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "daisy",
+          "tags": [
+            "sticker",
+            "daisy"
+          ],
+          "previewUrl": "/template-stickers/daisy.svg",
+          "assetUrl": "/template-stickers/daisy.svg",
+          "width": 200.0,
+          "height": 200.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 480,
+        "y": 940,
+        "width": 25,
+        "height": 22,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "asset",
+        "asset": {
+          "id": "template-sticker:heart",
+          "provider": "template-sticker",
+          "type": "sticker",
+          "title": "heart",
+          "tags": [
+            "sticker",
+            "heart"
+          ],
+          "previewUrl": "/template-stickers/heart.svg",
+          "assetUrl": "/template-stickers/heart.svg",
+          "width": 100.0,
+          "height": 90.0,
+          "license": {
+            "tier": "A",
+            "id": "original",
+            "label": "Original artwork",
+            "attributionRequired": false
+          },
+          "editable": {
+            "crop": false,
+            "filters": false
+          }
+        }
+      },
+      {
+        "x": 110,
+        "y": 919,
+        "width": 780,
+        "height": 24,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "COLLECT THE MOMENTS THAT MAKE YOU, YOU.",
+        "fontSize": 15,
+        "color": "#946879",
+        "fontFamily": "assistant",
+        "align": "center",
+        "letterSpacing": 1.5
+      },
+      {
+        "x": 90,
+        "y": 957,
+        "width": 820,
+        "height": 15,
+        "rotation": 0,
+        "opacity": 1,
+        "kind": "text",
+        "text": "01 / MY PERSONAL JOURNAL",
+        "fontSize": 11,
+        "color": "#946879",
+        "fontFamily": "assistant",
+        "align": "center"
+      }
+    ],
+    "layout": {
+      "id": "pastel-torn-life",
+      "title": "A life in bloom",
+      "description": "Six photo slots with journal notes and layered paper.",
+      "slots": [
+        {
+          "id": "photo-0",
+          "x": 0.09460159461435483,
+          "y": 0.23268863532540698,
+          "width": 0.196625,
+          "height": 0.1503125,
+          "rotation": -3
+        },
+        {
+          "id": "photo-1",
+          "x": 0.7147114920588222,
+          "y": 0.23340360888023798,
+          "width": 0.195,
+          "height": 0.1503125,
+          "rotation": 2
+        },
+        {
+          "id": "photo-2",
+          "x": 0.09527860888023798,
+          "y": 0.47283649205882233,
+          "width": 0.195,
+          "height": 0.1503125,
+          "rotation": -2
+        },
+        {
+          "id": "photo-3",
+          "x": 0.70243375857729,
+          "y": 0.47438077270352147,
+          "width": 0.21948837209302324,
+          "height": 0.14511627906976746,
+          "rotation": 2
+        },
+        {
+          "id": "photo-4",
+          "x": 0.08739579338404106,
+          "y": 0.713471883306835,
+          "width": 0.2108108108108108,
+          "height": 0.1466891891891892,
+          "rotation": -2
+        },
+        {
+          "id": "photo-5",
+          "x": 0.7031756859446403,
+          "y": 0.7145320125927681,
+          "width": 0.21767441860465114,
+          "height": 0.14511627906976746,
+          "rotation": 3
+        }
+      ]
+    }
+  }
+]

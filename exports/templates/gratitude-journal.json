@@ -1,0 +1,500 @@
+{
+  "canvas": {
+    "width": 1000,
+    "height": 1000
+  },
+  "id": "gratitude-journal",
+  "title": "Little things, full heart",
+  "category": "gratitude",
+  "description": "A warm scrapbook of ordinary joys, taped photographs, handwritten reflections and gratitude prompts.",
+  "backgroundColor": "#eee6cf",
+  "accent": "#8a683c",
+  "heading": "Little things, full heart",
+  "prompt": "Make this story yours: edit the words and replace the starter photographs.",
+  "elements": [
+    {
+      "x": 32,
+      "y": 32,
+      "width": 936,
+      "height": 936,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#faf5e9",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 120,
+      "y": 48,
+      "width": 760,
+      "height": 36,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "A COLLECTION OF EVERYDAY JOY",
+      "fontSize": 20,
+      "color": "#8a683c",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 300,
+      "y": 116,
+      "width": 400,
+      "height": 145,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "Little things,\nfull heart.",
+      "fontSize": 62,
+      "color": "#554a38",
+      "fontFamily": "georgia",
+      "align": "center"
+    },
+    {
+      "x": 58,
+      "y": 136,
+      "width": 225,
+      "height": 270,
+      "rotation": -5,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#fffdf7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 71.00020529007284,
+      "y": 146.90846746412905,
+      "width": 201,
+      "height": 204,
+      "rotation": -5,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:coffee",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Coffee inspiration",
+        "tags": [
+          "coffee"
+        ],
+        "previewUrl": "/template-photos/coffee.jpg",
+        "assetUrl": "/template-photos/coffee.jpg",
+        "width": 800,
+        "height": 533,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1442512595331-e89e73853f31",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 89.65153423807169,
+      "y": 360.0941328557626,
+      "width": 201,
+      "height": 32,
+      "rotation": -5,
+      "opacity": 1,
+      "kind": "text",
+      "text": "slow mornings",
+      "fontSize": 19,
+      "color": "#52433b",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 134.507843160129,
+      "y": 121.27587235232252,
+      "width": 70,
+      "height": 24,
+      "rotation": -8,
+      "opacity": 0.75,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#dccca3",
+      "shadow": "none",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 724,
+      "y": 141,
+      "width": 218,
+      "height": 283,
+      "rotation": 5,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#fffdf7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 734.9084674641291,
+      "y": 154.00020529007287,
+      "width": 194,
+      "height": 217,
+      "rotation": 5,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:flowers",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Flowers inspiration",
+        "tags": [
+          "flowers"
+        ],
+        "previewUrl": "/template-photos/flowers.jpg",
+        "assetUrl": "/template-photos/flowers.jpg",
+        "width": 800,
+        "height": 534,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1490750967868-88aa4486c946",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 715.1241138604106,
+      "y": 380.1364017568991,
+      "width": 194,
+      "height": 32,
+      "rotation": 5,
+      "opacity": 1,
+      "kind": "text",
+      "text": "beauty in the ordinary",
+      "fontSize": 19,
+      "color": "#52433b",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 798.4156536007704,
+      "y": 139.47996737859273,
+      "width": 70,
+      "height": 24,
+      "rotation": 2,
+      "opacity": 0.75,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#dccca3",
+      "shadow": "none",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 76,
+      "y": 574,
+      "width": 320,
+      "height": 332,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#fffdf7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 88.61158589197022,
+      "y": 585.3555229421395,
+      "width": 296,
+      "height": 266,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:forest",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Forest inspiration",
+        "tags": [
+          "forest"
+        ],
+        "previewUrl": "/template-photos/forest.jpg",
+        "assetUrl": "/template-photos/forest.jpg",
+        "width": 800,
+        "height": 533,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 103.05630981502271,
+      "y": 860.9772745344019,
+      "width": 296,
+      "height": 32,
+      "rotation": -3,
+      "opacity": 1,
+      "kind": "text",
+      "text": "a little room to breathe",
+      "fontSize": 19,
+      "color": "#52433b",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 200.41000419437816,
+      "y": 559.4689691915954,
+      "width": 70,
+      "height": 24,
+      "rotation": -6,
+      "opacity": 0.75,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#dccca3",
+      "shadow": "none",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 615,
+      "y": 574,
+      "width": 320,
+      "height": 330,
+      "rotation": 3,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#fffdf7",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 626.3555229421395,
+      "y": 586.6115858919702,
+      "width": 296,
+      "height": 264,
+      "rotation": 3,
+      "opacity": 1,
+      "kind": "asset",
+      "asset": {
+        "id": "template-photo:home",
+        "provider": "template-photo",
+        "type": "photo",
+        "title": "Home inspiration",
+        "tags": [
+          "home"
+        ],
+        "previewUrl": "/template-photos/home.jpg",
+        "assetUrl": "/template-photos/home.jpg",
+        "width": 800,
+        "height": 600,
+        "license": {
+          "tier": "A",
+          "id": "unsplash",
+          "label": "Unsplash License",
+          "attributionRequired": false,
+          "sourceUrl": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0",
+          "licenseUrl": "https://unsplash.com/license"
+        },
+        "editable": {
+          "crop": true,
+          "filters": true
+        }
+      },
+      "imageFit": "fill",
+      "templatePlaceholder": true
+    },
+    {
+      "x": 612.015470931573,
+      "y": 860.2360784147235,
+      "width": 296,
+      "height": 32,
+      "rotation": 3,
+      "opacity": 1,
+      "kind": "text",
+      "text": "the feeling of home",
+      "fontSize": 19,
+      "color": "#52433b",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 740.2473794942653,
+      "y": 572.5529582523315,
+      "width": 70,
+      "height": 24,
+      "rotation": 0,
+      "opacity": 0.75,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#dccca3",
+      "shadow": "none",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 278,
+      "y": 299,
+      "width": 438,
+      "height": 248,
+      "rotation": -1,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "rectangle",
+      "color": "#e7d8ad",
+      "shadow": "soft",
+      "shadowBlur": 9,
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 4
+    },
+    {
+      "x": 290,
+      "y": 311,
+      "width": 414,
+      "height": 35,
+      "rotation": -1,
+      "opacity": 1,
+      "kind": "text",
+      "text": "TODAY I AM GRATEFUL FOR",
+      "fontSize": 20,
+      "color": "#675330",
+      "fontFamily": "assistant",
+      "align": "center"
+    },
+    {
+      "x": 296,
+      "y": 354,
+      "width": 402,
+      "height": 183,
+      "rotation": -1,
+      "opacity": 1,
+      "kind": "text",
+      "text": "The people who stay.\nThe light through my window.\nAnother chance to begin.",
+      "fontSize": 23,
+      "color": "#675330",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 402,
+      "y": 635,
+      "width": 198,
+      "height": 193,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "enough\nis a beautiful\nplace to be.",
+      "fontSize": 34,
+      "color": "#7b7652",
+      "fontFamily": "virgil",
+      "align": "center"
+    },
+    {
+      "x": 471,
+      "y": 849,
+      "width": 48,
+      "height": 48,
+      "rotation": 10,
+      "opacity": 1,
+      "kind": "shape",
+      "shape": "star",
+      "color": "#bf9257"
+    },
+    {
+      "x": 280,
+      "y": 930,
+      "width": 440,
+      "height": 32,
+      "rotation": 0,
+      "opacity": 1,
+      "kind": "text",
+      "text": "NOTICE THE GOOD",
+      "fontSize": 19,
+      "color": "#8a683c",
+      "fontFamily": "assistant",
+      "align": "center"
+    }
+  ],
+  "layout": {
+    "id": "gratitude-journal",
+    "title": "Little things, full heart",
+    "description": "A warm scrapbook of ordinary joys, taped photographs, handwritten reflections and gratitude prompts.",
+    "slots": [
+      {
+        "id": "photo-0",
+        "x": 0.07100020529007284,
+        "y": 0.14690846746412906,
+        "width": 0.201,
+        "height": 0.204,
+        "rotation": -5
+      },
+      {
+        "id": "photo-1",
+        "x": 0.7349084674641291,
+        "y": 0.15400020529007288,
+        "width": 0.194,
+        "height": 0.217,
+        "rotation": 5
+      },
+      {
+        "id": "photo-2",
+        "x": 0.08861158589197023,
+        "y": 0.5853555229421394,
+        "width": 0.296,
+        "height": 0.266,
+        "rotation": -3
+      },
+      {
+        "id": "photo-3",
+        "x": 0.6263555229421395,
+        "y": 0.5866115858919702,
+        "width": 0.296,
+        "height": 0.264,
+        "rotation": 3
+      }
+    ]
+  }
+}

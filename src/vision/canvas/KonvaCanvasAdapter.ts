@@ -1,6 +1,9 @@
+import { assistStroke } from '../strokeAssist';
+import { resolveTemplateSticker } from '../templateStickers';
 import { curatedPackProvider } from '../../assets/curatedPack';
 import Konva from 'konva';
 import { requestAI } from '../aiClient';
+import { compileReference, placeholderUrl, type ReferenceLayout } from '../referenceTemplate';
 import type { GratitudeAsset } from '../../assets/contracts';
 import type {
   CanvasAdapter,
@@ -14,7 +17,8 @@ import type {
 import { DocumentHistory, type BoardItem } from '../document';
 import { getLayoutSlotBounds, fitTemplateLayout, type VisionLayout } from '../layouts';
 import type { VisionTemplate } from '../templates';
-import { VISION_TEMPLATES } from '../templates';
+import { VISION_TEMPLATES, LEGACY_VISION_TEMPLATES } from '../templates';
+import { TEMPLATE_PHOTOS, fitCollageElements } from '../collageTemplates';
 import { boundsOf, unionBounds, constrainItems } from './geometry';
 import { loadBoard, saveBoard, validateBoard } from '../storage';
 import { imagePdf, imagesPdf } from '../pdf';
@@ -140,6 +144,14 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           canonical = mediaAsset(
             mediaRecords.get(asset.mediaId!) || (await loadMedia(this.ownerWindow, asset.mediaId!)),
           );
+        else if (
+          asset.provider === 'template-photo' &&
+          Object.values(TEMPLATE_PHOTOS).some((photo) => photo.id === asset.id)
+        )
+          canonical = Object.values(TEMPLATE_PHOTOS).find((photo) => photo.id === asset.id)!;
+        else if (asset.provider === 'template-sticker') canonical = resolveTemplateSticker(asset);
+        else if (asset.provider === 'template-photo' && asset.id === 'reference-placeholder')
+          canonical = { ...asset, assetUrl: placeholderUrl, previewUrl: placeholderUrl };
         else if (
           asset.provider === 'generated' &&
           /^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(asset.assetUrl) &&
@@ -502,12 +514,36 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       (document.width !== previous.width || document.height !== previous.height)
     ) {
       const heading = document.items.find((item) => item.slotId === 'template-heading');
-      const template = VISION_TEMPLATES.find((template) =>
+      const template = [...VISION_TEMPLATES, ...LEGACY_VISION_TEMPLATES].find((template) =>
         heading?.templateId
           ? template.id === heading.templateId
           : heading?.text === template.heading,
       );
-      if (template) {
+      if (template?.elements) {
+        const canvas = template.canvas || { width: 1000, height: 1000 };
+        const oldScale = Math.min(previous.width / canvas.width, previous.height / canvas.height);
+        const newScale = Math.min(document.width / canvas.width, document.height / canvas.height);
+        const oldX = (previous.width - oldScale * canvas.width) / 2;
+        const oldY = (previous.height - oldScale * canvas.height) / 2;
+        const newX = (document.width - newScale * canvas.width) / 2;
+        const newY = (document.height - newScale * canvas.height) / 2;
+        const ratio = newScale / oldScale;
+        document = {
+          ...document,
+          items: document.items.map((item) =>
+            item.templateId === template.id
+              ? {
+                  ...item,
+                  x: newX + (item.x - oldX) * ratio,
+                  y: newY + (item.y - oldY) * ratio,
+                  width: item.width * ratio,
+                  height: item.height * ratio,
+                  ...(item.fontSize ? { fontSize: item.fontSize * ratio } : {}),
+                }
+              : item,
+          ),
+        };
+      } else if (template) {
         const validSlots = new Set(template.layout.slots.map((slot) => slot.id));
         const used = new Set<string>();
         const cleaned = document.items.filter((item) => {
@@ -590,6 +626,25 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.history.commit(next);
     this.persist();
     this.changed();
+  }
+  async applyReferenceTemplate(layout: ReferenceLayout, revision: number) {
+    if (revision !== this.history.revision)
+      throw new Error('The board changed. Analyze again before applying.');
+    const items = compileReference(layout, () => this.id());
+    for (const item of items) if (item.asset) await this.decode(item.asset);
+    if (revision !== this.history.revision)
+      throw new Error('The board changed. Analyze again before applying.');
+    this.commit({
+      ...this.history.document,
+      width: layout.width,
+      height: layout.height,
+      color: layout.background,
+      background: undefined,
+      gradient: undefined,
+      items,
+    });
+    this.select([]);
+    this.fitBoard();
   }
   addPage() {
     const doc = this.history.document,
@@ -819,7 +874,15 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     }
     this.images.set(asset.assetUrl, image);
   }
-  async uploadPhotos(files: File[], position?: VisionPoint) {
+  async replaceImageFile(id: string, file: File) {
+    const item = this.history.document.items.find((item) => item.id === id);
+    if (!item || item.kind !== 'asset' || item.locked)
+      throw new Error('Select an unlocked image to replace.');
+    if (this.cropDraft || this.originalPreview)
+      throw new Error('Apply or cancel image editing before replacing an image.');
+    await this.uploadPhotos([file], undefined, id);
+  }
+  async uploadPhotos(files: File[], position?: VisionPoint, replaceId?: string) {
     if (!files.length) return;
     if (files.length > 20) throw new Error('Add up to 20 photos at a time.');
     const revision = this.history.revision,
@@ -852,6 +915,34 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     if (revision !== this.history.revision)
       throw new Error('The board changed while saving photos. Please add them again.');
     const board = this.history.document;
+    const templatePhoto = replaceId
+      ? board.items.find((item) => item.id === replaceId)
+      : !position && records.length === 1 && this.selectedIds.length === 1
+        ? board.items.find(
+            (item) => item.id === this.selectedIds[0] && item.asset?.provider === 'template-photo',
+          )
+        : undefined;
+    if (templatePhoto) {
+      this.commit({
+        ...board,
+        items: board.items.map((item) =>
+          item.id === templatePhoto.id
+            ? {
+                ...item,
+                ...(item.asset?.frameSlot
+                  ? { contentAsset: mediaAsset(records[0]) }
+                  : { asset: mediaAsset(records[0]), contentAsset: undefined }),
+                templatePlaceholder: false,
+                crop: undefined,
+                rendition: undefined,
+                imageFit: 'fill',
+              }
+            : item,
+        ),
+      });
+      this.select([templatePhoto.id]);
+      return;
+    }
     const items = records.map((record, index) => {
       const asset = mediaAsset(record),
         scale = Math.min(
@@ -1614,41 +1705,30 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   shapeAssist = false;
   createDrawing(points: number[], color: string, width: number, opacity = 1) {
     if (points.length < 4) return;
-    const xs = points.filter((_, i) => i % 2 === 0),
-      ys = points.filter((_, i) => i % 2 === 1),
+    const assisted = this.shapeAssist ? assistStroke(points) : { points, tension: 0.35 };
+    const xs = assisted.points.filter((_, i) => i % 2 === 0),
+      ys = assisted.points.filter((_, i) => i % 2 === 1),
       x = Math.min(...xs),
       y = Math.min(...ys),
       w = Math.max(1, Math.max(...xs) - x),
       h = Math.max(1, Math.max(...ys) - y),
       id = this.id();
-    const closed =
-      this.shapeAssist &&
-      points.length >= 12 &&
-      Math.hypot(xs[0] - xs[xs.length - 1], ys[0] - ys[ys.length - 1]) < Math.min(w, h) * 0.2;
-    const edgeError =
-      xs.reduce(
-        (sum, px, index) => sum + Math.min(px - x, x + w - px, ys[index] - y, y + h - ys[index]),
-        0,
-      ) /
-      xs.length /
-      Math.min(w, h);
-    const shape = closed ? (edgeError < 0.08 ? 'rectangle' : 'circle') : undefined;
     this.items((items) => [
       ...items,
       {
         id,
-        kind: shape ? 'shape' : 'drawing',
-        shape,
+        kind: 'drawing',
+        strokeTension: assisted.tension,
         x,
         y,
         width: w,
         height: h,
-        points: points.map((n, i) => n - (i % 2 ? y : x)),
+        points: assisted.points.map((n, i) => n - (i % 2 ? y : x)),
         color,
         strokeWidth: width,
-        borderWidth: shape ? width : undefined,
+
         borderColor: color,
-        noFill: !!shape,
+
         rotation: 0,
         opacity,
         groupPath: [...this.groupScope],
@@ -1657,44 +1737,164 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     ]);
     this.select([id]);
   }
-  createCard(text: string) {
-    const group = this.id(),
-      background = this.id(),
-      label = this.id();
-    this.items((items) => [
-      ...items,
+  cleanSelectedDrawings() {
+    const patches = this.history.document.items
+      .filter(
+        (item) =>
+          this.selectedIds.includes(item.id) &&
+          item.kind === 'drawing' &&
+          !item.locked &&
+          item.points?.length,
+      )
+      .map((item) => {
+        const assisted = assistStroke(item.points!);
+        return { id: item.id, patch: { points: assisted.points, strokeTension: assisted.tension } };
+      });
+    if (patches.length) this.patchItems(patches);
+  }
+  createCard(text: string, context: 'goal' | 'affirmation' = 'goal') {
+    if (!text.trim()) return;
+    const group = this.id();
+    const affirmation = context === 'affirmation';
+    const width = Math.min(420, this.history.document.width * 0.8);
+    const padding = 28;
+    const measure = new Konva.Text({
+      text,
+      width: width - padding * 2,
+      fontSize: 28,
+      fontFamily: fontFamily(affirmation ? 'georgia' : 'assistant'),
+      lineHeight: 1.2,
+    });
+    const textHeight = Math.ceil(measure.height());
+    measure.destroy();
+    const height = Math.max(340, textHeight + 235);
+    const x = Math.max(0, (this.history.document.width - width) / 2);
+    const y = Math.max(0, (this.history.document.height - height) / 2);
+    const base = {
+      rotation: 0,
+      opacity: 1,
+      groupId: this.groupScope[0] || group,
+      groupPath: [...this.groupScope, group],
+    };
+    const label = this.id();
+    const pieces: BoardItem[] = [
       {
-        id: background,
+        ...base,
+        id: this.id(),
         kind: 'shape',
         shape: 'rectangle',
-        fill: '#fff3bd',
-        x: 120,
-        y: 160,
-        width: 360,
-        height: 240,
-        radius: 12,
-        rotation: 0,
-        opacity: 1,
-        groupId: this.groupScope[0] || group,
-        groupPath: [...this.groupScope, group],
+        x,
+        y,
+        width,
+        height,
+        color: affirmation ? '#faeaf0' : '#eaf2fb',
+        radius: affirmation ? 32 : 12,
+        borderWidth: 1,
+        borderColor: affirmation ? '#edc8d9' : '#c5d8ed',
       },
       {
+        ...base,
+        id: this.id(),
+        kind: 'text',
+        text: affirmation ? 'A LITTLE LOVE FOR MYSELF' : 'THE FUTURE I?M BUILDING',
+        x: x + padding,
+        y: y + 92,
+        width: width - padding * 2,
+        height: 22,
+        fontFamily: 'assistant',
+        fontSize: 13,
+        bold: true,
+        letterSpacing: 2,
+        align: affirmation ? 'center' : 'left',
+        color: affirmation ? '#a45b7d' : '#4e7299',
+      },
+      {
+        ...base,
         id: label,
         kind: 'text',
         text,
-        x: 140,
-        y: 190,
-        width: 320,
-        height: 180,
-        fontFamily: 'assistant',
-        fontSize: 30,
-        color: '#33272b',
-        rotation: 0,
-        opacity: 1,
-        groupId: this.groupScope[0] || group,
-        groupPath: [...this.groupScope, group],
+        x: x + padding,
+        y: y + 130,
+        width: width - padding * 2,
+        height: textHeight,
+        fontFamily: affirmation ? 'georgia' : 'assistant',
+        fontSize: 28,
+        lineHeight: 1.2,
+        italic: affirmation,
+        bold: !affirmation,
+        align: affirmation ? 'center' : 'left',
+        color: affirmation ? '#753d60' : '#244668',
       },
-    ]);
+      {
+        ...base,
+        id: this.id(),
+        kind: 'text',
+        text: affirmation
+          ? 'Breathe. Believe. Become.'
+          : 'NEXT STEP  __________________\nWORKING TOWARDS IT, ONE DAY AT A TIME',
+        x: x + padding,
+        y: y + height - 70,
+        width: width - padding * 2,
+        height: 45,
+        fontFamily: 'assistant',
+        fontSize: 14,
+        align: affirmation ? 'center' : 'left',
+        color: affirmation ? '#a45b7d' : '#4e7299',
+      },
+    ];
+    const decoration = (
+      shape: BoardItem['shape'],
+      dx: number,
+      dy: number,
+      w: number,
+      h: number,
+      color: string,
+      extra: Partial<BoardItem> = {},
+    ): BoardItem => ({
+      ...base,
+      id: this.id(),
+      kind: 'shape',
+      shape,
+      x: x + dx,
+      y: y + dy,
+      width: w,
+      height: h,
+      color,
+      ...extra,
+    });
+    if (affirmation) {
+      pieces.splice(
+        1,
+        0,
+        decoration('circle', width / 2 - 34, 20, 68, 68, '#f5d4e2'),
+        decoration('heart', width / 2 - 20, 35, 40, 35, '#c8799d'),
+        decoration('star', 24, height - 48, 16, 16, '#c4a4dc'),
+        decoration('star', width - 45, 36, 20, 20, '#c4a4dc'),
+        decoration('heart', width - 54, height - 47, 17, 15, '#df9dba'),
+      );
+    } else {
+      pieces.splice(
+        1,
+        0,
+        decoration('circle', padding, 22, 60, 60, '#c9dff5'),
+        decoration('circle', padding + 9, 31, 42, 42, '#eaf2fb', {
+          borderColor: '#4e7299',
+          borderWidth: 2,
+        }),
+        decoration('circle', padding + 22, 44, 16, 16, '#4e7299'),
+        decoration('arrow', padding + 29, 21, 37, 37, '#244668', {
+          borderColor: '#244668',
+          borderWidth: 3,
+        }),
+        decoration('rectangle', padding, height - 92, width - padding * 2, 6, '#ccdded', {
+          radius: 3,
+        }),
+        decoration('rectangle', padding, height - 92, (width - padding * 2) * 0.15, 6, '#4e7299', {
+          radius: 3,
+        }),
+      );
+    }
+    this.items((items) => [...items, ...pieces]);
     this.select([label]);
   }
   async attachFrameContent(assetId: string) {
@@ -2004,10 +2204,16 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.commit({ ...document, items });
   }
   applyTemplate(template: VisionTemplate) {
+    if (template.elements) return this.applyCollageTemplate(template);
     const document = this.history.document;
     let index = 0;
     const items = document.items
-      .filter((item) => item.slotId !== 'template-heading' && !isTemplatePlaceholder(item))
+      .filter(
+        (item) =>
+          item.slotId !== 'template-heading' &&
+          !isTemplatePlaceholder(item) &&
+          (!item.slotId?.startsWith('collage:') || item.asset?.provider === 'upload'),
+      )
       .map((item) => {
         if (item.kind === 'text' || item.kind === 'drawing' || item.connector) return item;
         const slot = template.layout.slots[index++];
@@ -2068,6 +2274,42 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       items,
     });
     this.select([]);
+  }
+  private async applyCollageTemplate(template: VisionTemplate) {
+    const revision = this.history.revision;
+    await Promise.all(
+      template.elements!.filter((item) => item.asset).map((item) => this.decode(item.asset!)),
+    );
+    if (revision !== this.history.revision)
+      throw new Error('The board changed while preparing this template. Please try again.');
+    const document = this.history.document;
+    const pieces = fitCollageElements(template.elements!, document, template.canvas).map(
+      (item, index) => ({
+        ...item,
+        id: this.id(),
+        templateId: template.id,
+        slotId: item.text === template.heading ? 'template-heading' : `collage:${index}`,
+      }),
+    );
+    // Use the headline as the template marker even when its display copy differs.
+    if (!pieces.some((item) => item.slotId === 'template-heading'))
+      pieces.find((item) => item.kind === 'text')!.slotId = 'template-heading';
+    const existing = document.items.filter(
+      (item) =>
+        item.slotId !== 'template-heading' &&
+        (!item.slotId?.startsWith('collage:') || item.asset?.provider === 'upload') &&
+        !isTemplatePlaceholder(item),
+    );
+    this.commit({
+      ...document,
+      title: template.title,
+      color: template.backgroundColor,
+      background: undefined,
+      gradient: undefined,
+      items: [...pieces, ...existing],
+    });
+    this.select([]);
+    this.fitBoard();
   }
   fitBoard() {
     this.fit?.();

@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "ai:server": "node --env-file-if-exists=.env server/index.mjs",
+    "ai:vision:agree": "node --env-file-if-exists=.env scripts/agree-vision-model.mjs",
     "lint": "eslint src server tests scripts *.ts --max-warnings=0",
     "format:check": "prettier --check src server tests scripts *.ts *.mjs *.json .github/workflows",
     "format": "prettier --write src server tests scripts *.ts *.mjs *.json .github/workflows"
@@ -36,5 +37,6 @@
     "typescript-eslint": "^8.71.0",
     "vite": "^6.0.0",
     "vitest": "^4.1.11"
-  }
+  },
+  "license": "UNLICENSED"
 }
