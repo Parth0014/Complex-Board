@@ -1,6 +1,7 @@
 /** Studio shell types for Module 1 (engine mounting + shell). */
 
-export type StudioTab = 'templates' | 'elements' | 'uploads' | 'text' | 'create' | 'background' | 'ai';
+export type StudioTab =
+  'templates' | 'elements' | 'uploads' | 'text' | 'create' | 'background' | 'ai';
 
 export const STUDIO_TABS: readonly StudioTab[] = [
   'templates',

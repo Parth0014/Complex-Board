@@ -1,5 +1,9 @@
 /* Continuous corners for app chrome; canvas artwork keeps its own styling. */
-.vs *, .vs *::before, .vs *::after { corner-shape: squircle; }
+.vs *,
+.vs *::before,
+.vs *::after {
+  corner-shape: squircle;
+}
 .vs {
   --vs-r-sm: 8px;
   --vs-r-md: 14px;
@@ -14,19 +18,48 @@
   border-radius: var(--vs-r-lg);
   corner-shape: squircle;
 }
-.vs :is(.vs-menu__pop, .vs-sec, .vs-tools, .vs-sel, .vs-segmented,
-  .panel-intro-card, .panel-empty-state, .templates-panel__card, .asset-thumb,
-  .background-live-preview, .background-gradient-card, .create-replace-warning,
-  .vs-alert, .panel-inline-error, .panel-inline-status, .canvas-message,
-  .vs-history, .vs-page-select, .vs-sel__chip) {
+.vs
+  :is(
+    .vs-menu__pop,
+    .vs-sec,
+    .vs-tools,
+    .vs-sel,
+    .vs-segmented,
+    .panel-intro-card,
+    .panel-empty-state,
+    .templates-panel__card,
+    .asset-thumb,
+    .background-live-preview,
+    .background-gradient-card,
+    .create-replace-warning,
+    .vs-alert,
+    .panel-inline-error,
+    .panel-inline-status,
+    .canvas-message,
+    .vs-history,
+    .vs-page-select,
+    .vs-sel__chip
+  ) {
   border-radius: var(--vs-r-md);
   corner-shape: squircle;
 }
-.vs :is(.vs-icon-btn, .vs-compose-action, .vs-sel__design, .vs-rail__tab,
-  .vs-segmented button, .panel-action, .panel-secondary-action,
-  .templates-panel__apply, .vs-menu__item, .snap-toggle,
-  .vs-bottom-dock .vs-icon-btn, .vs-bottom-dock .snap-toggle,
-  .vs-bottom-dock .vs-page-select, .vs-bottom-dock select) {
+.vs
+  :is(
+    .vs-icon-btn,
+    .vs-compose-action,
+    .vs-sel__design,
+    .vs-rail__tab,
+    .vs-segmented button,
+    .panel-action,
+    .panel-secondary-action,
+    .templates-panel__apply,
+    .vs-menu__item,
+    .snap-toggle,
+    .vs-bottom-dock .vs-icon-btn,
+    .vs-bottom-dock .snap-toggle,
+    .vs-bottom-dock .vs-page-select,
+    .vs-bottom-dock select
+  ) {
   border-radius: var(--vs-r-sm);
   corner-shape: squircle;
 }
@@ -42,9 +75,12 @@
   border-radius: 8px;
   corner-shape: squircle;
 }
-.vs-tooltip { border-radius: var(--vs-r-sm); corner-shape: squircle; }
+.vs-tooltip {
+  border-radius: var(--vs-r-sm);
+  corner-shape: squircle;
+}
 /* The unified toolbar has one outer contour, without nested card outlines. */
-.vs .vs-bottom-dock :is(.vs-pages, .vs-zoom, .canvas-tools) { 
+.vs .vs-bottom-dock :is(.vs-pages, .vs-zoom, .canvas-tools) {
   border-radius: 0;
   border: none;
   box-shadow: none;

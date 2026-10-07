@@ -3,14 +3,9 @@ import type { EditorAdapter } from '../vision/contracts';
 import { requestAI } from '../vision/aiClient';
 import { type ReferenceLayout } from '../vision/referenceTemplate';
 import { fontFamily } from '../vision/fonts';
+import { UploadIcon } from './icons';
 
-export function ReferenceTemplatePanel({
-  adapter,
-  configured,
-}: {
-  adapter: EditorAdapter;
-  configured: boolean;
-}) {
+export function ReferenceTemplatePanel({ adapter }: { adapter: EditorAdapter }) {
   const [reference, setReference] = useState<{
     image: string;
     width: number;
@@ -111,23 +106,27 @@ export function ReferenceTemplatePanel({
     }
   };
   return (
-    <section className="ai-result" aria-label="Reference to template">
-      <h4>Reference to template</h4>
-      <p>
-        Upload one design. Keep its detected text and layout; every photo becomes a replaceable
-        placeholder.
-      </p>
+    <section className="ai-reference-content" aria-label="Reference to template">
+      <p>Upload a design to create an editable template.</p>
       <p className="ai-tool-help">
-        The reference is sent to Cloudflare for analysis. Its photos are never added to your board.
-        Layout and fonts are approximate; check the text before applying.
+        Analyzed by Cloudflare. Photos become placeholders; review text and layout.
       </p>
-      <input
-        aria-label="Upload design reference"
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        disabled={busy}
-        onChange={(event) => void upload(event.target.files?.[0])}
-      />
+      <label className="ai-reference-picker">
+        <UploadIcon />
+        <strong>{reference ? 'Change reference' : 'Choose a reference image'}</strong>
+        <span>PNG, JPG or WebP ? Max 20 MB</span>
+        <input
+          aria-label="Upload design reference"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          disabled={busy}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = '';
+            if (file) void upload(file);
+          }}
+        />
+      </label>
       {reference && (
         <img
           src={reference.image}
@@ -135,11 +134,7 @@ export function ReferenceTemplatePanel({
           style={{ width: '100%', maxHeight: 260, objectFit: 'contain' }}
         />
       )}
-      <button
-        className="panel-action"
-        disabled={!reference || !configured || busy}
-        onClick={() => void analyze()}
-      >
+      <button className="panel-action" disabled={!reference || busy} onClick={() => void analyze()}>
         {busy ? 'Working…' : 'Analyze reference'}
       </button>
       {busy && <button onClick={() => controller.current?.abort()}>Cancel analysis</button>}
@@ -219,10 +214,7 @@ export function ReferenceTemplatePanel({
                 </label>
               ),
           )}
-          <p>
-            Applying replaces the current page composition and size. You can undo it. Select a
-            placeholder and upload your photo to replace it.
-          </p>
+          <p>Replaces this page and its size. You can undo it.</p>
           {!confirm ? (
             <button
               className="panel-action"

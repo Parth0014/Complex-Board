@@ -1346,7 +1346,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   async composeBoard(
     title: string,
     goals: string[],
-    theme = 'minimal',
+    theme = 'scrapbook',
     visuals?: GeneratedBoardVisuals,
   ) {
     const revision = this.history.revision;
@@ -1391,92 +1391,380 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     for (const asset of assets) await this.decode(asset);
     if (revision !== this.history.revision)
       throw new Error('Board changed while building the composition.');
-    const doc = this.history.document,
-      items: BoardItem[] = [
-        {
+    const doc = this.history.document;
+    const items: BoardItem[] = [];
+
+    // Theme colors & palette resolution
+    const bg =
+      visuals?.palette?.background ||
+      (theme === 'dark' ? '#1b1d28' : theme === 'scrapbook' ? '#ece3d3' : '#f4effb');
+    const textInk =
+      visuals?.palette?.text ||
+      (theme === 'dark' ? '#f4effb' : theme === 'scrapbook' ? '#2b231d' : '#49375e');
+    const cardBg =
+      visuals?.palette?.card ||
+      (theme === 'dark' ? '#282a3d' : theme === 'scrapbook' ? '#fffdf7' : '#ffffff');
+    const accent = theme === 'dark' ? '#a78bfa' : theme === 'scrapbook' ? '#8a683c' : '#7c3aed';
+    const tapePalette = ['#dccca3', '#d3e2de', '#e4c9a7', '#eac7cf', '#c7d2bb', '#dfcda7'];
+
+    // 1. Matting / Board paper backing
+    items.push({
+      id: this.id(),
+      kind: 'shape',
+      shape: 'rectangle',
+      x: 24,
+      y: 24,
+      width: doc.width - 48,
+      height: doc.height - 48,
+      fill: theme === 'dark' ? '#222436' : theme === 'scrapbook' ? '#f7f2e9' : '#faf7fd',
+      radius: 16,
+      shadow: 'soft',
+      shadowBlur: 14,
+      shadowOffsetY: 4,
+      rotation: 0,
+      opacity: 1,
+    });
+
+    // 2. Eyebrow Tagline
+    const eyebrowText =
+      theme === 'editorial'
+        ? 'THE LIFE I AM BUILDING • INTENTIONAL LIVING'
+        : theme === 'gallery'
+          ? 'CURATED VISION & ASPIRATIONS'
+          : 'COLLECT MOMENTS, NOT THINGS';
+    items.push({
+      id: this.id(),
+      kind: 'text',
+      text: eyebrowText,
+      fontFamily: 'assistant',
+      fontSize: Math.max(14, Math.round(doc.width * 0.018)),
+      bold: true,
+      color: accent,
+      align: 'center',
+      x: 50,
+      y: 42,
+      width: doc.width - 100,
+      height: 30,
+      rotation: 0,
+      opacity: 0.9,
+    });
+
+    // 3. Artistic Board Title
+    items.push({
+      id: this.id(),
+      kind: 'text',
+      text: title,
+      fontFamily: theme === 'gallery' ? 'assistant' : 'georgia',
+      fontSize: Math.max(36, Math.min(62, Math.round(doc.width * 0.052))),
+      bold: true,
+      color: textInk,
+      align: 'center',
+      x: 50,
+      y: 72,
+      width: doc.width - 100,
+      height: 80,
+      rotation: 0,
+      opacity: 1,
+    });
+
+    // 4. Calculate grid & polaroid dimensions
+    const count = assets.length;
+    const isLandscape = doc.width > doc.height;
+    const columns = isLandscape ? (count <= 4 ? 2 : 3) : count <= 4 ? 2 : 2;
+    const rows = Math.ceil(count / columns);
+    const marginX = 54;
+    const headerH = 160;
+    const footerH = 65;
+    const availW = doc.width - marginX * 2;
+    const availH = doc.height - headerH - footerH;
+    const cellW = availW / columns;
+    const cellH = availH / Math.max(1, rows);
+
+    // Organic rotation presets for scrapbook/polaroid feel
+    const angles = [-3.2, 2.8, -2.2, 3.1, -1.8, 2.4, -2.9, 1.9];
+
+    assets.forEach((asset, index) => {
+      const col = index % columns;
+      const row = Math.floor(index / columns);
+      const cx = marginX + col * cellW + cellW * 0.04;
+      const cy = headerH + row * cellH + cellH * 0.04;
+      const w = cellW * 0.92;
+      const h = cellH * 0.92;
+      const r = theme === 'gallery' ? 0 : angles[index % angles.length];
+      const rad = (r * Math.PI) / 180;
+      const group = this.id();
+
+      // Trigonometric offset helper for rotating children with the card
+      const offset = (dx: number, dy: number) => [
+        cx + dx * Math.cos(rad) - dy * Math.sin(rad),
+        cy + dx * Math.sin(rad) + dy * Math.cos(rad),
+      ];
+
+      if (theme === 'editorial') {
+        // Editorial Magazine layout card
+        items.push(
+          {
+            id: this.id(),
+            kind: 'shape',
+            shape: 'rectangle',
+            x: cx,
+            y: cy,
+            width: w,
+            height: h,
+            fill: cardBg,
+            radius: 8,
+            shadow: 'soft',
+            shadowBlur: 10,
+            shadowOffsetY: 4,
+            rotation: 0,
+            opacity: 1,
+            groupId: this.groupScope[0] || group,
+            groupPath: [...this.groupScope, group],
+          },
+          {
+            id: this.id(),
+            kind: 'asset',
+            asset,
+            imageFit: 'fill',
+            x: cx + 12,
+            y: cy + 12,
+            width: w - 24,
+            height: Math.max(50, h - 74),
+            rotation: 0,
+            opacity: 1,
+            groupId: this.groupScope[0] || group,
+            groupPath: [...this.groupScope, group],
+          },
+          {
+            id: this.id(),
+            kind: 'text',
+            text: `0${index + 1} / ${goals[index].toUpperCase()}`,
+            fontFamily: 'georgia',
+            fontSize: Math.max(13, Math.round(w * 0.05)),
+            bold: true,
+            color: textInk,
+            align: 'center',
+            x: cx + 12,
+            y: cy + h - 52,
+            width: w - 24,
+            height: 40,
+            rotation: 0,
+            opacity: 1,
+            groupId: this.groupScope[0] || group,
+            groupPath: [...this.groupScope, group],
+          },
+        );
+      } else {
+        // Scrapbook / Polaroid with washi tape & handwriting
+        const photoPadX = 14;
+        const photoPadY = 14;
+        const bottomCaptionH = Math.max(54, Math.round(h * 0.22));
+        const photoW = w - photoPadX * 2;
+        const photoH = Math.max(40, h - photoPadY - bottomCaptionH);
+
+        const [px, py] = offset(photoPadX, photoPadY);
+        const [tx, ty] = offset(10, h - bottomCaptionH + 4);
+        const tapeW = Math.min(74, Math.round(w * 0.28));
+        const tapeH = 22;
+        const [ax, ay] = offset(w / 2 - tapeW / 2, -9);
+
+        // Polaroid paper background
+        items.push({
+          id: this.id(),
+          kind: 'shape',
+          shape: 'rectangle',
+          x: cx,
+          y: cy,
+          width: w,
+          height: h,
+          fill: cardBg,
+          radius: 4,
+          rotation: r,
+          shadow: 'soft',
+          shadowBlur: 12,
+          shadowOffsetX: 2,
+          shadowOffsetY: 5,
+          opacity: 1,
+          groupId: this.groupScope[0] || group,
+          groupPath: [...this.groupScope, group],
+        });
+
+        // Photo
+        items.push({
+          id: this.id(),
+          kind: 'asset',
+          asset,
+          imageFit: 'fill',
+          x: px,
+          y: py,
+          width: photoW,
+          height: photoH,
+          rotation: r,
+          opacity: 1,
+          groupId: this.groupScope[0] || group,
+          groupPath: [...this.groupScope, group],
+        });
+
+        // Caption in Virgil font (handwritten)
+        items.push({
           id: this.id(),
           kind: 'text',
-          text: title,
-          fontFamily: 'assistant',
-          fontSize: 58,
-          bold: true,
-          color: visuals?.palette?.text || '#49375e',
+          text: goals[index],
+          fontFamily: 'virgil',
+          fontSize: Math.max(16, Math.min(26, Math.round(w * 0.068))),
+          color: textInk,
           align: 'center',
-          x: 40,
-          y: 30,
-          width: doc.width - 80,
-          height: 100,
-          rotation: 0,
+          x: tx,
+          y: ty,
+          width: w - 20,
+          height: bottomCaptionH - 8,
+          rotation: r,
           opacity: 1,
-        },
-      ];
-    const columns = doc.width > doc.height ? 3 : 2,
-      rows = Math.ceil(assets.length / columns),
-      w = (doc.width - 100) / columns,
-      h = (doc.height - 200) / Math.max(1, rows);
-    assets.forEach((asset, index) => {
-      const x = 40 + (index % columns) * w,
-        y = 150 + Math.floor(index / columns) * h,
-        group = this.id();
+          groupId: this.groupScope[0] || group,
+          groupPath: [...this.groupScope, group],
+        });
+
+        // Washi tape sticker on top of polaroid
+        items.push({
+          id: this.id(),
+          kind: 'shape',
+          shape: 'rectangle',
+          x: ax,
+          y: ay,
+          width: tapeW,
+          height: tapeH,
+          fill: tapePalette[index % tapePalette.length],
+          rotation: r - 3,
+          opacity: 0.8,
+          groupId: this.groupScope[0] || group,
+          groupPath: [...this.groupScope, group],
+        });
+      }
+    });
+
+    // 5. Aesthetic Affirmation Sticky Note if odd count (e.g. 5 goals)
+    if (count === 5 && theme === 'scrapbook') {
+      const col = 5 % columns;
+      const row = Math.floor(5 / columns);
+      const nx = marginX + col * cellW + cellW * 0.06;
+      const ny = headerH + row * cellH + cellH * 0.06;
+      const nw = cellW * 0.88;
+      const nh = cellH * 0.88;
+      const noteGroup = this.id();
       items.push(
         {
           id: this.id(),
           kind: 'shape',
           shape: 'rectangle',
-          x,
-          y,
-          width: w - 20,
-          height: h - 20,
-          fill:
-            visuals?.palette?.card ||
-            (theme === 'dark' ? '#ece1f9' : theme === 'scrapbook' ? '#fff2ca' : '#fff'),
-          radius: theme === 'scrapbook' ? 0 : 18,
-          rotation: 0,
-          opacity: 1,
+          x: nx,
+          y: ny,
+          width: nw,
+          height: nh,
+          fill: '#fef3c7',
+          radius: 2,
+          rotation: 1.5,
           shadow: 'soft',
-          groupId: this.groupScope[0] || group,
-          groupPath: [...this.groupScope, group],
-        },
-        {
-          id: this.id(),
-          kind: 'asset',
-          asset,
-          imageFit: visuals ? 'fill' : 'fit',
-          x: x + 25,
-          y: y + 20,
-          width: w - 70,
-          height: Math.max(40, h - 140),
-          rotation: 0,
-          opacity: 1,
-          groupId: this.groupScope[0] || group,
-          groupPath: [...this.groupScope, group],
+          shadowBlur: 10,
+          shadowOffsetY: 4,
+          opacity: 0.95,
+          groupId: this.groupScope[0] || noteGroup,
+          groupPath: [...this.groupScope, noteGroup],
         },
         {
           id: this.id(),
           kind: 'text',
-          text: goals[index],
+          text: 'DEAR FUTURE ME',
           fontFamily: 'assistant',
-          fontSize: 28,
-          color: visuals?.palette?.text || '#49375e',
+          fontSize: Math.max(13, Math.round(nw * 0.065)),
+          bold: true,
+          color: '#78350f',
           align: 'center',
-          x: x + 15,
-          y: y + h - 110,
-          width: w - 50,
-          height: 80,
-          rotation: 0,
+          x: nx + 12,
+          y: ny + 16,
+          width: nw - 24,
+          height: 26,
+          rotation: 1.5,
           opacity: 1,
-          groupId: this.groupScope[0] || group,
-          groupPath: [...this.groupScope, group],
+          groupId: this.groupScope[0] || noteGroup,
+          groupPath: [...this.groupScope, noteGroup],
+        },
+        {
+          id: this.id(),
+          kind: 'text',
+          text: 'Keep the promises you make to yourself.\nSmall daily steps add up.\nYou are capable of magic.',
+          fontFamily: 'virgil',
+          fontSize: Math.max(14, Math.min(22, Math.round(nw * 0.06))),
+          color: '#78350f',
+          align: 'center',
+          x: nx + 16,
+          y: ny + 50,
+          width: nw - 32,
+          height: nh - 60,
+          rotation: 1.5,
+          opacity: 0.95,
+          groupId: this.groupScope[0] || noteGroup,
+          groupPath: [...this.groupScope, noteGroup],
         },
       );
+    }
+
+    // 6. Balanced decorative star accents
+    if (theme === 'scrapbook') {
+      items.push(
+        {
+          id: this.id(),
+          kind: 'shape',
+          shape: 'star',
+          x: doc.width * 0.12,
+          y: 80,
+          width: 38,
+          height: 38,
+          rotation: 15,
+          fill: '#d97706',
+          opacity: 0.75,
+        },
+        {
+          id: this.id(),
+          kind: 'shape',
+          shape: 'star',
+          x: doc.width * 0.86,
+          y: doc.height - 90,
+          width: 34,
+          height: 34,
+          rotation: -12,
+          fill: '#d97706',
+          opacity: 0.75,
+        },
+      );
+    }
+
+    // 7. Footer anchor quote / mantra
+    const footerQuote =
+      theme === 'editorial'
+        ? 'MORE INTENTION. LESS WHAT IF.'
+        : 'ENOUGH IS A BEAUTIFUL PLACE TO BE.';
+    items.push({
+      id: this.id(),
+      kind: 'text',
+      text: footerQuote,
+      fontFamily: 'assistant',
+      fontSize: Math.max(14, Math.round(doc.width * 0.017)),
+      bold: true,
+      color: accent,
+      align: 'center',
+      x: 50,
+      y: doc.height - 54,
+      width: doc.width - 100,
+      height: 28,
+      rotation: 0,
+      opacity: 0.85,
     });
+
     this.groupScope = [];
     this.commit({
       ...doc,
       title,
-      color:
-        visuals?.palette?.background ||
-        (theme === 'dark' ? '#25263a' : theme === 'scrapbook' ? '#f7e9d3' : '#f4effb'),
+      color: bg,
       background: undefined,
       gradient: undefined,
       items,

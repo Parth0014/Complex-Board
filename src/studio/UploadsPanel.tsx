@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { StudioAdapter } from '../vision/contracts';
-import { ImageIcon, InfoIcon, SparklesIcon, UploadIcon } from './icons';
+import { UploadIcon } from './icons';
 
 export function UploadsPanel({
   adapter,
@@ -24,9 +24,7 @@ export function UploadsPanel({
     setMessage('Preparing your photos…');
     try {
       await adapter.uploadPhotos(files);
-      setMessage(
-        `${files.length} photo${files.length === 1 ? '' : 's'} added. Originals are saved on this device.`,
-      );
+      setMessage(`${files.length} photo${files.length === 1 ? '' : 's'} added.`);
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Unable to add photos.');
       setMessage('');
@@ -37,22 +35,12 @@ export function UploadsPanel({
 
   return (
     <div className="uploads-panel">
-      <div className="panel-intro-card panel-intro-card--photo">
-        <span className="panel-intro-card__icon" aria-hidden="true">
-          <ImageIcon />
-        </span>
-        <div>
-          <strong>Your photos, your vision</strong>
-          <p>Add memories, places and people that make the board feel unmistakably yours.</p>
-        </div>
-      </div>
-
       <label className={`upload-picker${busy ? ' is-busy' : ''}`}>
         <span className="upload-picker__icon" aria-hidden="true">
           <UploadIcon />
         </span>
         <span className="upload-picker__copy">
-          <strong>{busy ? 'Preparing photos…' : 'Choose photos'}</strong>
+          <strong>{busy ? 'Preparing photos…' : 'Upload photos'}</strong>
           <span>PNG, JPEG or WebP · up to 25 MB each</span>
         </span>
         <span className="upload-picker__button">Browse</span>
@@ -70,30 +58,25 @@ export function UploadsPanel({
         />
       </label>
 
-      <div className="upload-tip">
-        <SparklesIcon />
-        <p>You can also drag photos straight onto the canvas. Your originals stay on this device.</p>
-      </div>
+      {message && (
+        <p className="panel-inline-status" role="status">
+          {message}
+        </p>
+      )}
 
-      {message && <p className="panel-inline-status" role="status">{message}</p>}
-
-      <div className="uploads-panel__actions">
-        <button
-          className="panel-secondary-action"
-          disabled={!hasOriginal || busy}
-          onClick={() => {
-            void adapter.downloadOriginalPhoto().catch((error) => onError(String(error)));
-          }}
-        >
-          Download original photo
-        </button>
-        <p>Select one uploaded photo on the board to download its untouched original.</p>
-      </div>
-
-      <div className="privacy-note">
-        <InfoIcon />
-        <p>Board backups can carry your photos and edits to another browser when you choose to export one.</p>
-      </div>
+      {hasOriginal && (
+        <div className="uploads-panel__actions">
+          <button
+            className="panel-secondary-action"
+            disabled={busy}
+            onClick={() => {
+              void adapter.downloadOriginalPhoto().catch((error) => onError(String(error)));
+            }}
+          >
+            Download original
+          </button>
+        </div>
+      )}
     </div>
   );
 }

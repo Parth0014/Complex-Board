@@ -94,7 +94,7 @@
   color: var(--ui-ink-muted);
   font-size: 8px;
   font-weight: 750;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -176,7 +176,7 @@
 .resize-control__label {
   font-size: 8px;
   font-weight: 750;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -239,7 +239,7 @@
   margin: 1px 0 3px;
   color: #a09398;
   font-size: 8px;
-  letter-spacing: .15em;
+  letter-spacing: 0.15em;
   text-align: center;
 }
 
@@ -343,8 +343,7 @@
   min-height: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 18%, rgb(255 255 255 / 34%), transparent 43%),
-    var(--ui-canvas);
+    radial-gradient(circle at 50% 18%, rgb(255 255 255 / 34%), transparent 43%), var(--ui-canvas);
 }
 
 .v1-workspace {
@@ -563,7 +562,7 @@
 
 .feature-panel__eyebrow {
   font-size: 7.5px;
-  letter-spacing: .13em;
+  letter-spacing: 0.13em;
 }
 
 .feature-panel__close {
@@ -580,7 +579,7 @@
   border-top: 1px solid var(--ui-line);
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -1049,7 +1048,7 @@
   }
 
   .page-add::after {
-    content: "+";
+    content: '+';
     font-size: 14px;
   }
 
@@ -1135,7 +1134,7 @@
 .v1-selection .compact-number > span {
   font-size: 8px;
   font-weight: 700;
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -1203,7 +1202,7 @@
   min-width: 32px;
   padding: 0 !important;
   font-weight: 800 !important;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
 }
 
 .sr-only {

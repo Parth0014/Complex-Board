@@ -48,15 +48,12 @@ export function CuratedPanel({
   );
   const visibleAssets = useMemo(() => assets.filter((asset) => ids.has(asset.id)), [assets, ids]);
   const selectedCategory =
-    category === 'all' ? 'All assets' : manifest.categories.find((item) => item.id === category)?.label;
+    category === 'all'
+      ? 'All assets'
+      : manifest.categories.find((item) => item.id === category)?.label;
 
   return (
     <div className="elements-panel">
-      <div className="panel-intro-card">
-        <strong>Curated for vision boards</strong>
-        <p>250 lightweight graphics, frames and surfaces — ready to drag or add with one tap.</p>
-      </div>
-
       <div className="elements-panel__filters">
         <label className="elements-panel__search">
           <span>Search library</span>
@@ -93,7 +90,11 @@ export function CuratedPanel({
         <span>{selectedCategory}</span>
         <span>{visibleAssets.length} results</span>
       </div>
-      {error && <p className="panel-inline-error" role="alert">{error}</p>}
+      {error && (
+        <p className="panel-inline-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="v1-asset-grid" aria-busy={busy}>
         {visibleAssets.map((asset) => (

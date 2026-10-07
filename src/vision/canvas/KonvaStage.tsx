@@ -8,9 +8,18 @@ import { boundsOf, unionBounds, snapMovement, snapResize, type Bounds } from './
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../../assets/contracts';
 import { curatedPackProvider } from '../../assets/curatedPack';
 
+import { fontFamily } from '../fonts';
 import { ItemContent } from './ItemContent';
 import { dragCrop } from '../crop';
 import { updateConnectors } from '../connectors';
+
+// A new hitFunc identity makes React-Konva redraw the artwork layer even when
+// only selection changes. Keep this geometry-only callback stable.
+const itemHitRegion = (context: Konva.Context, shape: Konva.Shape) => {
+  context.beginPath();
+  context.rect(0, 0, shape.width(), shape.height());
+  context.fillShape(shape);
+};
 
 export function KonvaStage({
   adapter,
@@ -19,6 +28,7 @@ export function KonvaStage({
   onScaleChange,
   drawMode = 'select',
   snappingContainer,
+  onObjectContextMenu,
 }: {
   adapter: KonvaCanvasAdapter;
   zoom: number | null;
@@ -26,6 +36,7 @@ export function KonvaStage({
   onScaleChange: (percent: number) => void;
   drawMode?: string;
   snappingContainer?: HTMLDivElement | null;
+  onObjectContextMenu?: (x: number, y: number) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -56,6 +67,14 @@ export function KonvaStage({
   const stageRef = useRef<Konva.Stage>(null);
   const dragPointer = useRef<{ x: number; y: number } | null>(null);
   const transformer = useRef<Konva.Transformer>(null);
+  const textEditor = useRef<HTMLTextAreaElement>(null);
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
+  useLayoutEffect(() => {
+    if (editing?.id) {
+      textEditor.current?.focus();
+      textEditor.current?.select();
+    }
+  }, [editing?.id]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [size, setSize] = useState({ width: 800, height: 700 });
   const drag = useRef<{
@@ -99,6 +118,27 @@ export function KonvaStage({
     item: BoardItem;
   } | null>(null);
   const document = adapter.history.document;
+  const editingItem = document.items.find((item) => item.id === editing?.id);
+  const finishTextEditing = (save: boolean) => {
+    if (save && editing && editingItem && editing.text !== editingItem.text) {
+      adapter.patchItems([{ id: editing.id, patch: { text: editing.text, textRuns: undefined } }]);
+    }
+    setEditing(null);
+  };
+  const editText = (item: BoardItem) => {
+    if (item.kind !== 'text') {
+      adapter.enterGroup(item.id);
+    } else if (
+      !item.locked &&
+      drawMode === 'select' &&
+      !adapter.cropDraft &&
+      adapter.inScope(item)
+    ) {
+      choose(item.id);
+      setHoveredId(null);
+      setEditing({ id: item.id, text: item.text || '' });
+    }
+  };
   const hoveredItem =
     drawMode === 'select' && !adapter.cropDraft && !selectionRect
       ? document.items.find(
@@ -278,14 +318,14 @@ export function KonvaStage({
       (item) => adapter.selectedIds.includes(item.id) && item.locked,
     );
     transformer.current.nodes(
-      locked
+      locked || editing
         ? []
         : adapter.selectedIds
             .map((id) => stage.findOne(`#${id}`))
             .filter((node): node is Konva.Node => !!node),
     );
     transformer.current.getLayer()?.draw();
-  }, [adapter, document.items, adapter.selectedIds, scale, left, top]);
+  }, [adapter, document.items, adapter.selectedIds, scale, left, top, editing]);
 
   useEffect(() => {
     adapter.exporter = (ratio, selectedOnly, transparent) => {
@@ -534,8 +574,6 @@ export function KonvaStage({
     height: item.height,
     rotation: item.rotation,
     opacity: item.opacity,
-    onMouseEnter: () => setHoveredId(item.id),
-    onMouseLeave: () => setHoveredId((current) => (current === item.id ? null : current)),
     draggable:
       !adapter.cropDraft &&
       drawMode === 'select' &&
@@ -550,8 +588,14 @@ export function KonvaStage({
     onClick: (event: Konva.KonvaEventObject<MouseEvent>) =>
       choose(item.id, event.evt.shiftKey || event.evt.ctrlKey || event.evt.metaKey),
     onTap: () => choose(item.id),
-    onDblClick: () => adapter.enterGroup(item.id),
-    onDblTap: () => adapter.enterGroup(item.id),
+    onContextMenu: (event: Konva.KonvaEventObject<PointerEvent>) => {
+      event.evt.preventDefault();
+      event.cancelBubble = true;
+      choose(item.id);
+      onObjectContextMenu?.(event.evt.clientX, event.evt.clientY);
+    },
+    onDblClick: () => editText(item),
+    onDblTap: () => editText(item),
     onMouseDown: () => {
       const pointer = stageRef.current?.getPointerPosition();
       dragPointer.current = pointer ? { ...pointer } : null;
@@ -573,6 +617,7 @@ export function KonvaStage({
       const stage = stageRef.current;
       const pointer = stage?.getPointerPosition();
       if (!stage || !pointer) return;
+      if (container.current) container.current.style.cursor = 'grabbing';
       const selectedIds = new Set(items.map((selected) => selected.id));
       const nodes = new Map<string, Konva.Node>();
       for (const selected of items) {
@@ -654,6 +699,7 @@ export function KonvaStage({
       );
     },
     onDragEnd: () => {
+      if (container.current) container.current.style.cursor = 'default';
       const movement = drag.current;
       drag.current = null;
       setGuides({});
@@ -678,6 +724,19 @@ export function KonvaStage({
       className="v1-artboard"
       aria-label="Editable vision board"
       tabIndex={0}
+      onContextMenu={(event) => {
+        if (event.defaultPrevented) return;
+        event.preventDefault();
+        adapter.select([]);
+        onObjectContextMenu?.(event.clientX, event.clientY);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+          event.preventDefault();
+          const rect = event.currentTarget.getBoundingClientRect();
+          onObjectContextMenu?.(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+      }}
       onMouseLeave={() => setHoveredId(null)}
       data-page-left={left}
       data-page-top={top}
@@ -798,7 +857,52 @@ export function KonvaStage({
         }}
         onMouseDown={startMarquee}
         onTouchStart={startMarquee}
-        onMouseMove={moveMarquee}
+        onMouseMove={(event) => {
+          moveMarquee(event);
+          const pointer = stageRef.current?.getPointerPosition();
+          if (!pointer || drawMode !== 'select' || adapter.cropDraft || marquee.current) {
+            setHoveredId(null);
+            return;
+          }
+          const x = (pointer.x - left) / scale;
+          const y = (pointer.y - top) / scale;
+          // Hover follows the full selection boundary, including transparent
+          // pixels and gaps between group members, in front-to-back order.
+          const units = new Set<string>();
+          let hit: string | null = null;
+          for (const item of [...document.items].reverse()) {
+            if (item.hidden || !adapter.inScope(item)) continue;
+            const key = adapter.unitKey(item);
+            if (units.has(key)) continue;
+            units.add(key);
+            const box =
+              key === item.id
+                ? item
+                : {
+                    ...unionBounds(
+                      document.items
+                        .filter(
+                          (member) =>
+                            !member.hidden &&
+                            adapter.inScope(member) &&
+                            adapter.unitKey(member) === key,
+                        )
+                        .map(boundsOf),
+                    ),
+                    rotation: 0,
+                  };
+            const angle = (box.rotation * Math.PI) / 180;
+            const dx = x - box.x,
+              dy = y - box.y;
+            const localX = dx * Math.cos(angle) + dy * Math.sin(angle);
+            const localY = -dx * Math.sin(angle) + dy * Math.cos(angle);
+            if (localX >= 0 && localY >= 0 && localX <= box.width && localY <= box.height) {
+              hit = item.id;
+              break;
+            }
+          }
+          setHoveredId(hit);
+        }}
         onTouchMove={moveMarquee}
         onMouseUp={finishMarquee}
         onTouchEnd={finishMarquee}
@@ -858,7 +962,16 @@ export function KonvaStage({
             {document.items
               .filter((item) => !item.hidden)
               .map((item) => (
-                <Group key={item.id} {...props(item)}>
+                <Group key={item.id} {...props(item)} visible={editing?.id !== item.id}>
+                  {!item.connector && (
+                    <Rect
+                      width={item.width}
+                      height={item.height}
+                      fill="rgba(0,0,0,0.001)"
+                      hitFunc={itemHitRegion}
+                      listening={true}
+                    />
+                  )}
                   <ItemContent
                     item={item}
                     adapter={adapter}
@@ -1029,6 +1142,54 @@ export function KonvaStage({
           />
         </Layer>
       </Stage>
+      {editing && editingItem && (
+        <textarea
+          ref={textEditor}
+          aria-label="Edit text on canvas"
+          value={editing.text}
+          onChange={(event) => setEditing({ ...editing, text: event.target.value })}
+          onBlur={() => finishTextEditing(true)}
+          onKeyDown={(event) => {
+            event.stopPropagation();
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              finishTextEditing(false);
+            } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+              event.preventDefault();
+              finishTextEditing(true);
+            }
+          }}
+          style={{
+            position: 'absolute',
+            zIndex: 10,
+            left: left + editingItem.x * scale,
+            top: top + editingItem.y * scale,
+            width: editingItem.width,
+            minHeight: editingItem.height,
+            height: Math.max(editingItem.height, textEditor.current?.scrollHeight || 0),
+            transform: `rotate(${editingItem.rotation || 0}deg) scale(${scale})`,
+            transformOrigin: 'top left',
+            boxSizing: 'border-box',
+            padding: editingItem.textPadding || 0,
+            border: 'none',
+            outline: '2px solid #8b3dff',
+            borderRadius: 0,
+            margin: 0,
+            resize: 'none',
+            overflow: 'hidden',
+            background: 'transparent',
+            color: editingItem.color,
+            fontFamily: fontFamily(editingItem.fontFamily),
+            fontSize: editingItem.fontSize,
+            fontWeight: editingItem.bold ? 'bold' : editingItem.fontWeight || 'normal',
+            fontStyle: editingItem.italic ? 'italic' : 'normal',
+            lineHeight: editingItem.lineHeight || 1,
+            letterSpacing: editingItem.letterSpacing || 0,
+            textAlign: editingItem.align || 'left',
+            opacity: editingItem.opacity,
+          }}
+        />
+      )}
     </div>
   );
 }

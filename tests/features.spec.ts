@@ -1,3 +1,4 @@
+import { openProperties, closeProperties } from './helpers/editor';
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 test('shapes, styling, drawing and autosave survive reload', async ({ page }) => {
@@ -41,7 +42,7 @@ test('curated frame clipping, crop and PDF/JPG export retain content after reloa
   await page.getByLabel('Category', { exact: true }).selectOption('photo-frames');
   await page.getByRole('button', { name: 'Classic portrait', exact: true }).click();
   await page.getByRole('button', { name: 'Close panel', exact: true }).click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
+  await openProperties(page);
   await page.getByLabel('Frame content', { exact: true }).selectOption({ label: 'Focused desk' });
   await expect(page.getByLabel('Frame content', { exact: true })).not.toHaveValue('');
   await page.getByRole('button', { name: 'Edit crop', exact: true }).click();
@@ -63,7 +64,7 @@ test('curated frame clipping, crop and PDF/JPG export retain content after reloa
   await page.reload();
   await page.getByText('Board items (1)', { exact: true }).click();
   await page.locator('.v1-items li button').first().click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
+  await openProperties(page);
   await expect(page.getByLabel('Frame content', { exact: true })).not.toHaveValue('');
   expect(errors).toEqual([]);
 });
@@ -71,35 +72,51 @@ test('nested groups allow member edits without losing parent identity', async ({
   await page.goto('/');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'Add goal card', exact: true }).click();
-  await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
+  const count = Number(
+    (await page.getByText(/Board items \(\d+\)/).textContent())!.match(/\d+/)![0],
+  );
   await page.getByRole('button', { name: 'Duplicate', exact: true }).click();
   await page.keyboard.press('Control+a');
   await page.keyboard.press('Control+g');
+  await openProperties(page);
   await page.getByRole('button', { name: 'Layers', exact: true }).click();
   await page.locator('.layer-group>summary').first().click();
   await page.locator('.layer-group .layer-group>summary').first().click();
-  await page.locator('.layer-row>button').filter({ hasText: 'I am building' }).first().click();
+  await page
+    .locator('.layer-row>button')
+    .filter({ hasText: 'Plan my next adventure' })
+    .first()
+    .click();
   await expect(page.getByRole('button', { name: /Exit group/ })).toContainText('(2)');
-  await page.getByRole('textbox', { name: 'Text', exact: true }).fill('My edited goal');
-  await page.getByRole('textbox', { name: 'Text', exact: true }).blur();
+  await openProperties(page);
+  await page.getByRole('textbox', { name: 'Styled text', exact: true }).fill('My edited goal');
+  await page.getByRole('textbox', { name: 'Styled text', exact: true }).blur();
   await page.keyboard.press('Escape');
-  await expect(page.getByText('Board items (4)', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Layers', exact: true }).click();
+  await expect(page.getByText(`Board items (${count * 2})`, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /Exit group/ })).toContainText('(1)');
 });
 test('AI preview creates editable content and surfaces server failures', async ({ page }) => {
   await page.route('**/api/ai/status', (route) => route.fulfill({ json: { configured: true } }));
   await page.route('**/api/ai/generate', (route) =>
     route.fulfill({
-      json: { title: 'My dream year', goals: ['Travel to Japan', 'Build my career'] },
+      json:
+        route.request().postDataJSON().mode === 'board'
+          ? { title: 'My dream year', goals: ['Travel to Japan', 'Build my career'] }
+          : {
+              image:
+                'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+            },
     }),
   );
   await page.goto('/');
   await page.getByRole('button', { name: 'AI', exact: true }).click();
   await page.getByLabel('AI generation type', { exact: true }).selectOption('board');
+  await page.getByLabel('Board layout style', { exact: true }).selectOption('gallery');
   await page.getByRole('button', { name: 'Generate', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'My dream year', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Add to board', exact: true }).click();
-  await expect(page.getByText('Board items (7)', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Use this board', exact: true }).click();
+  await expect(page.getByText('Board items (12)', { exact: true })).toBeVisible();
   await page.route('**/api/ai/generate', (route) =>
     route.fulfill({ status: 429, json: { error: 'Generation quota reached' } }),
   );
@@ -114,24 +131,28 @@ test('page switching, graphic recolor and backups preserve independent content',
   await page.getByLabel('Category', { exact: true }).selectOption('goal-objects');
   await page.getByRole('button', { name: 'Focused desk', exact: true }).click();
   await page.getByRole('button', { name: 'Close panel', exact: true }).click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
-  await page.getByLabel('Replace color currentcolor', { exact: true }).fill('#ff0000');
-  await expect(page.getByLabel('Replace color currentcolor', { exact: true })).toHaveValue(
+  await openProperties(page);
+  await page.getByLabel('Replace color currentcolor', { exact: true }).click();
+  await page.getByLabel('Replace color currentcolor hex', { exact: true }).fill('#ff0000');
+  await expect(page.getByLabel('Replace color currentcolor hex', { exact: true })).toHaveValue(
     '#ff0000',
   );
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
   await page.getByRole('button', { name: 'Add page', exact: true }).click();
   await expect(page.getByText('Board items (0)', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'circle', exact: true }).click();
-  await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
+  await closeProperties(page);
   await page.getByLabel('Active page', { exact: true }).selectOption({ label: '1' });
   await page.getByText('Board items (1)', { exact: true }).click();
   await page.locator('.v1-items li button').first().click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
-  await expect(page.getByLabel('Replace color currentcolor', { exact: true })).toHaveValue(
+  await openProperties(page);
+  await page.getByLabel('Replace color currentcolor', { exact: true }).click();
+  await expect(page.getByLabel('Replace color currentcolor hex', { exact: true })).toHaveValue(
     '#ff0000',
   );
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save backup', exact: true }).click();
@@ -163,11 +184,12 @@ test('generated image insertion persists and monochrome edits appear in exported
   });
   await page.route('**/api/ai/generate', (route) => route.fulfill({ json: { image } }));
   await page.getByRole('button', { name: 'AI', exact: true }).click();
+  await page.getByLabel('AI generation type', { exact: true }).selectOption('image');
   await page.getByRole('button', { name: 'Generate', exact: true }).click();
   await expect(page.getByAltText('Generated preview')).toBeVisible();
   await page.getByRole('button', { name: 'Add to board', exact: true }).click();
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
+  await openProperties(page);
   await page.getByRole('button', { name: 'Mono', exact: true }).click();
   await page.getByRole('button', { name: /Share/ }).click();
   const pending = page.waitForEvent('download');

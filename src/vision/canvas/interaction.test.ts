@@ -190,10 +190,14 @@ it('constrains numeric edits, nudges, duplicate and page-size changes at the doc
   const adapter = setup();
   adapter.patchItems([{ id: 'a', patch: { x: -500, y: 2000 } }]);
   expect(adapter.history.document.items[0].x).toBe(0);
-  expect(adapter.history.document.items[0].y).toBe(1270);
+  expect(adapter.history.document.items[0].y).toBe(
+    adapter.history.document.height - adapter.history.document.items[0].height,
+  );
   adapter.select(['a']);
   adapter.duplicateSelection();
-  expect(adapter.history.document.items[3].y).toBe(1270);
+  expect(adapter.history.document.items[3].y).toBe(
+    adapter.history.document.height - adapter.history.document.items[3].height,
+  );
   adapter.commit({ ...adapter.history.document, width: 500, height: 500 });
   for (const value of adapter.history.document.items) {
     const box = boundsOf(value);

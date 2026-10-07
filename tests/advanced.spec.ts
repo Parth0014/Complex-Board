@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { openProperties, openSection } from './helpers/editor';
 async function backup(page: Page) {
   if (!(await page.getByRole('button', { name: 'Save backup', exact: true }).isVisible()))
     await page.getByText('File', { exact: true }).click();
@@ -17,15 +18,17 @@ test('rich text, custom shadows and multi-page PDF survive reload without changi
   await page.goto('/');
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.locator('.text-panel button').first().click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
+  await openProperties(page);
   const text = page.getByRole('textbox', { name: 'Styled text', exact: true });
   await text.fill('Dream big today');
+  await openSection(page, 'Advanced text');
   await text.evaluate((node: HTMLTextAreaElement) => {
     node.setSelectionRange(6, 9);
     node.dispatchEvent(new Event('select', { bubbles: true }));
   });
   await page.getByRole('button', { name: 'Superscript', exact: true }).click();
   await page.getByLabel('Shadow preset', { exact: true }).selectOption('soft');
+  await openSection(page, 'Shadow details');
   await page.getByLabel('Shadow opacity', { exact: true }).fill('0.6');
   await page.getByLabel('Shadow X', { exact: true }).fill('12');
   await page.getByLabel('Shadow X', { exact: true }).blur();
@@ -56,6 +59,7 @@ test('connected objects move with their arrow and duplicate bindings independent
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'rectangle', exact: true }).click();
   await page.getByRole('button', { name: 'circle', exact: true }).click();
+  await openProperties(page);
   await page.getByLabel('Item X', { exact: true }).fill('600');
   await page.getByLabel('Item X', { exact: true }).blur();
   await page.keyboard.press('Control+a');
@@ -64,8 +68,9 @@ test('connected objects move with their arrow and duplicate bindings independent
   expect(first.items).toHaveLength(3);
   const arrow = first.items.find((item: { connector: unknown }) => item.connector);
   expect(arrow.connector.from).not.toBe(arrow.connector.to);
+  await page.getByLabel('Editable vision board', { exact: true }).focus();
   await page.keyboard.press('Control+a');
-  await page.getByRole('button', { name: 'Duplicate', exact: true }).click();
+  await page.keyboard.press('Control+d');
   const copied = await backup(page);
   expect(copied.items).toHaveLength(6);
   const copy = copied.items[5];
@@ -78,21 +83,24 @@ test('native clipboard transfers editable groups across tabs', async ({ page, co
   await page.goto('/');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'Add goal card', exact: true }).click();
-  await page.getByText('Clipboard tools', { exact: true }).click();
-  await page.getByRole('button', { name: 'Copy to clipboard', exact: true }).click();
-  await expect(page.getByText('Copied to clipboard', { exact: true })).toBeVisible();
+  const original = await backup(page);
+  await page.getByLabel('Editable vision board', { exact: true }).focus();
+  await page.keyboard.press('Control+c');
   await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   const second = await context.newPage();
   await second.goto('/');
-  await expect(second.getByText('Board items (2)', { exact: true })).toBeVisible();
-  await second.getByRole('button', { name: 'Create', exact: true }).click();
-  await second.getByText('Clipboard tools', { exact: true }).click();
-  await second.getByRole('button', { name: 'Paste from clipboard', exact: true }).click();
-  await expect(second.getByText('Board items (4)', { exact: true })).toBeVisible();
+  await expect(
+    second.getByText(`Board items (${original.items.length})`, { exact: true }),
+  ).toBeVisible();
+  await second.getByLabel('Editable vision board', { exact: true }).focus();
+  await second.keyboard.press('Control+v');
+  await expect(
+    second.getByText(`Board items (${original.items.length * 2})`, { exact: true }),
+  ).toBeVisible();
   const saved = await backup(second);
-  expect(saved.items[0].groupPath[0]).not.toBe(saved.items[2].groupPath[0]);
+  expect(saved.items[0].groupPath[0]).not.toBe(saved.items[original.items.length].groupPath[0]);
 });
-test('AI image edits preserve originals and stale previews cannot overwrite later changes', async ({
+test('cutout edits preserve originals and stale responses cannot overwrite later changes', async ({
   page,
 }) => {
   await page.route('**/api/ai/status', (route) =>
@@ -116,21 +124,32 @@ test('AI image edits preserve originals and stale previews cannot overwrite late
   await page.route('**/api/ai/generate', (route) =>
     route.fulfill({ json: { image: images.original } }),
   );
-  await page.route('**/api/ai/edit', (route) => route.fulfill({ json: { image: images.edited } }));
+  await page.route('**/api/ai/remove-background', (route) =>
+    route.fulfill({ json: { image: images.edited } }),
+  );
   await page.getByRole('button', { name: 'AI', exact: true }).click();
+  await page.getByLabel('AI generation type', { exact: true }).selectOption('image');
   await page.getByRole('button', { name: 'Generate', exact: true }).click();
   await page.getByRole('button', { name: 'Add to board', exact: true }).click();
-  await page.getByLabel('AI generation type', { exact: true }).selectOption('edit');
-  await page.getByRole('button', { name: 'Generate', exact: true }).click();
-  await page.getByRole('button', { name: 'Apply image edit', exact: true }).click();
+  await openProperties(page);
+  await openSection(page, 'AI tools');
+  await page.getByRole('button', { name: 'Remove bg', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Remove bg', exact: true })).toBeEnabled();
   let saved = await backup(page);
   expect(saved.items[0].asset.assetUrl).toBe(images.original);
   expect(saved.items[0].rendition).toBe(images.edited);
-  await page.getByRole('button', { name: 'Generate', exact: true }).click();
-  await expect(page.getByAltText('Generated preview')).toBeVisible();
+  let release: (() => void) | undefined;
+  await page.route('**/api/ai/remove-background', async (route) => {
+    await new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await route.fulfill({ json: { image: images.edited } });
+  });
+  await page.getByRole('button', { name: 'Remove bg', exact: true }).click();
+  await expect.poll(() => Boolean(release)).toBe(true);
   await page.getByLabel('Item X', { exact: true }).fill('180');
   await page.getByLabel('Item X', { exact: true }).blur();
-  await page.getByRole('button', { name: 'Apply image edit', exact: true }).click();
+  release!();
   await expect(page.getByRole('alert')).toContainText('Board changed');
   saved = await backup(page);
   expect(saved.items[0].x).toBe(180);
@@ -167,9 +186,10 @@ test('shape-frame export clips pixels and layer extraction remains editable and 
   );
   await page.route('**/api/ai/edit', (route) => route.fulfill({ json: { image: images.source } }));
   await page.getByRole('button', { name: 'AI', exact: true }).click();
+  await page.getByLabel('AI generation type', { exact: true }).selectOption('image');
   await page.getByRole('button', { name: 'Generate', exact: true }).click();
   await page.getByRole('button', { name: 'Add to board', exact: true }).click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
+  await openProperties(page);
   await page.getByLabel('Shape frame', { exact: true }).selectOption('circle');
   await page.getByRole('button', { name: /Share/ }).click();
   const pending = page.waitForEvent('download');
@@ -196,6 +216,7 @@ test('shape-frame export clips pixels and layer extraction remains editable and 
   expect(pixels.center.slice(0, 3)).toEqual([34, 51, 221]);
   await page.getByRole('button', { name: 'Close export', exact: true }).click();
   await page.getByLabel('Shape frame', { exact: true }).selectOption('');
+  await openSection(page, 'AI tools');
   await page.getByRole('button', { name: 'Split foreground/background', exact: true }).click();
   await expect(page.getByText('Board items (2)', { exact: true })).toBeVisible();
   const saved = await backup(page);

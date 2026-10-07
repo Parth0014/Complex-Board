@@ -1,11 +1,11 @@
-# Vision Studio — V5 Redesign Notes
+# Gratitude Studio — V5 Redesign Notes
 
-A from-scratch UI/UX rebuild ("Graphite" system). New name, new visual language, new
+A from-scratch UI/UX rebuild ("Graphite" system). Consistent name, new visual language, new
 layout. No references carried over from earlier designs.
 
 ## What changed
 
-**Identity.** The app is now **Vision Studio** (was "Gratitude Studio"). Cool graphite +
+**Identity.** The app uses the **Gratitude Studio** name consistently. Cool graphite +
 paper + cobalt accent. Inter throughout.
 
 **Layout — one zone per job, ordered by frequency.**

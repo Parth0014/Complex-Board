@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { openSection } from './helpers/editor';
 
 test('AI board generates original images and applies the preview as one editable composition', async ({
   page,
@@ -28,13 +29,14 @@ test('AI board generates original images and applies the preview as one editable
   await page.locator('.text-panel button').first().click();
   await page.getByRole('button', { name: 'AI', exact: true }).click();
   await page.getByLabel('AI generation type').selectOption('board');
+  await page.getByLabel('Board layout style').selectOption('gallery');
   await page.getByRole('button', { name: 'Generate', exact: true }).click();
   await expect(page.locator('.ai-board-preview img')).toHaveCount(2);
   expect(requests).toEqual(['board', 'image', 'image']);
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Use this board', exact: true }).click();
   await page.getByRole('button', { name: 'Replace composition', exact: true }).click();
-  await expect(page.getByText('Board items (7)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Board items (12)', { exact: true })).toBeVisible();
   await page.getByText('File', { exact: true }).click();
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save backup', exact: true }).click();
@@ -51,7 +53,7 @@ test('AI board generates original images and applies the preview as one editable
   }
   await page.getByText('File', { exact: true }).click();
   await page.reload();
-  await expect(page.getByText('Board items (7)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Board items (12)', { exact: true })).toBeVisible();
 });
 
 test('failed AI board images never replace the existing canvas', async ({ page }) => {
@@ -75,9 +77,7 @@ test('failed AI board images never replace the existing canvas', async ({ page }
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Use this board', exact: true })).toHaveCount(0);
 });
-test('AI gives mode guidance, checks selection and offers connection recovery', async ({
-  page,
-}) => {
+test('AI gives current mode guidance and recovers after a generation failure', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
@@ -89,26 +89,22 @@ test('AI gives mode guidance, checks selection and offers connection recovery', 
   );
   await page.goto('/');
   await page.getByRole('button', { name: 'AI', exact: true }).click();
-  await expect(page.getByText('AI is ready.', { exact: false })).toBeVisible();
-  await page.getByLabel('AI generation type').selectOption('edit');
-  await expect(page.getByText('Select one unlocked image', { exact: false })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Generate', exact: true })).toBeDisabled();
-  for (const mode of ['image', 'quote', 'board', 'search']) {
+  for (const mode of ['image', 'quote', 'board']) {
     await page.getByLabel('AI generation type').selectOption(mode);
     await expect(page.getByRole('button', { name: 'Generate', exact: true })).toBeEnabled();
     await expect(page.getByLabel('AI prompt')).not.toHaveValue('');
   }
-  await page.route('**/api/ai/status', (route) =>
-    route.fulfill({ status: 503, body: 'Unavailable' }),
+  await page.getByLabel('AI generation type').selectOption('quote');
+  await page.route('**/api/ai/generate', (route) =>
+    route.fulfill({ status: 503, json: { error: 'Temporarily unavailable' } }),
   );
-  await page.getByRole('button', { name: 'Check connection', exact: true }).click();
-  await expect(
-    page.getByText('The AI server returned an unreadable response.', { exact: false }),
-  ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Generate', exact: true })).toBeDisabled();
-  await page.route('**/api/ai/status', (route) => route.fulfill({ json: { configured: true } }));
-  await page.getByRole('button', { name: 'Check connection', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Generate', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Generate', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Temporarily unavailable');
+  await page.route('**/api/ai/generate', (route) =>
+    route.fulfill({ json: { text: 'Keep growing' } }),
+  );
+  await page.getByRole('button', { name: 'Generate', exact: true }).click();
+  await expect(page.getByText('Keep growing', { exact: true })).toBeVisible();
   expect(errors.filter((error) => /Maximum update depth/.test(error))).toEqual([]);
 });
 test('unconfigured cutout tool explains setup without sending doomed requests', async ({
@@ -126,6 +122,7 @@ test('unconfigured cutout tool explains setup without sending doomed requests', 
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
   await page.locator('.v1-asset-grid button').first().click();
   await page.getByRole('button', { name: 'Open properties', exact: true }).click();
+  await openSection(page, 'AI tools');
   await expect(page.getByRole('button', { name: 'Remove bg', exact: true })).toBeDisabled();
   await expect(page.getByText('Background removal needs rembg.', { exact: false })).toBeAttached();
   expect(requests).toBe(0);

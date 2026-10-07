@@ -17,7 +17,7 @@ test('five photo collage templates apply, resize and survive reload', async ({ p
       .locator('.templates-panel__card')
       .filter({ has: page.getByRole('heading', { name: title, exact: true }) });
     expect(await card.locator('svg image').count()).toBeGreaterThanOrEqual(3);
-    await card.getByRole('button', { name: 'Use this template' }).click();
+    await card.getByRole('button', { name: 'Use template' }).click();
     await page.waitForTimeout(300);
     const templateError = await page.locator('.templates-panel [role="alert"]').allTextContents();
     expect(templateError).toEqual([]);
@@ -50,7 +50,7 @@ test('uploaded photos replace starter images without changing layout or disappea
     page
       .locator('.templates-panel__card')
       .filter({ has: page.getByRole('heading', { name: title, exact: true }) });
-  await template(titles[0]).getByRole('button', { name: 'Use this template' }).click();
+  await template(titles[0]).getByRole('button', { name: 'Use template' }).click();
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(titles[0]);
   const board = page.getByLabel('Editable vision board', { exact: true });
   const point = await board.evaluate((node) => {
@@ -69,7 +69,7 @@ test('uploaded photos replace starter images without changing layout or disappea
   await (await chooser).setFiles('public/template-photos/flowers.jpg');
   await expect(page.getByRole('button', { name: 'Replace image', exact: true })).toBeEnabled();
   await expect(page.getByText(before!, { exact: true })).toBeVisible();
-  await template(titles[4]).getByRole('button', { name: 'Use this template' }).click();
+  await template(titles[4]).getByRole('button', { name: 'Use template' }).click();
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(titles[4]);
   await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');

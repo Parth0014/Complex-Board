@@ -238,7 +238,7 @@ export const ApertureIcon = ic(Aperture, 15);
 /* Shapes (Create panel previews) */
 export const ShapeIcon = ({ shape, size = 22 }: { shape: string; size?: number }) => {
   const geometry = shapeGeometry[shape];
-  const previewHeight = shape === 'rectangle' ? 100 * 160 / 240 : shape === 'cloud' ? 65 : 100;
+  const previewHeight = shape === 'rectangle' ? (100 * 160) / 240 : shape === 'cloud' ? 65 : 100;
   if (geometry)
     return (
       <svg

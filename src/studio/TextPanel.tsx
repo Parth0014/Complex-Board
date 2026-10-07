@@ -10,10 +10,6 @@ export interface TextPanelProps {
 /** Typographic presets that insert editable text at the board center. */
 export const TextPanel = ({ onInsertText }: TextPanelProps) => (
   <div className="text-panel">
-    <div className="panel-intro-card">
-      <strong>Say what you want to remember</strong>
-      <p>Choose a voice, add it to the canvas, then make the words completely your own.</p>
-    </div>
     <ul className="text-panel__list">
       {VISION_TEXT_PRESETS.map((preset) => (
         <li key={preset.id}>

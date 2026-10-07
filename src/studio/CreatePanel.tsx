@@ -33,7 +33,6 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
       <section className="create-panel__section create-panel__section--primary">
         <div className="panel-section-heading">
           <h3>Quick shapes</h3>
-          <p>Choose a shape to add to your board.</p>
         </div>
         <div className="create-shape-grid" aria-label="Quick shapes">
           {SHAPES.map((shape) => (
@@ -70,10 +69,6 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
       <section className="create-panel__section">
         <div className="panel-section-heading">
           <h3>Drawing cleanup</h3>
-          <p>
-            Select one or several drawing strokes to straighten lines and smooth outlines. Separate
-            strokes stay separate.
-          </p>
         </div>
         <button
           className="panel-secondary-action"
@@ -92,7 +87,6 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
       <section className="create-panel__section">
         <div className="panel-section-heading">
           <h3>Goal cards</h3>
-          <p>Turn a clear intention into an action card.</p>
         </div>
         <textarea
           className="create-card-copy vs-textarea"
@@ -113,7 +107,6 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
       <section className="create-panel__section">
         <div className="panel-section-heading">
           <h3>Affirmations</h3>
-          <p>A gentle reminder to believe in yourself and your journey.</p>
         </div>
         <textarea
           className="create-card-copy vs-textarea"

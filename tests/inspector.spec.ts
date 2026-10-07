@@ -2,16 +2,18 @@ import { test, expect } from '@playwright/test';
 
 test('inspector closes, releases workspace space, and reopens', async ({ page }) => {
   await page.goto('/');
-  const inspector = page.getByRole('complementary', { name: 'Object inspector' });
+  const inspector = page.getByLabel('Object inspector', { exact: true });
   const board = page.getByLabel('Editable vision board', { exact: true });
+  await expect(inspector).toBeHidden();
+  await page.getByRole('button', { name: 'Text', exact: true }).click();
+  await page.locator('.text-panel button').first().click();
+  await page.getByRole('button', { name: 'Open properties', exact: true }).click();
   const before = (await board.boundingBox())!.width;
   await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
   await expect(inspector).toBeHidden();
   await expect.poll(async () => (await board.boundingBox())!.width).toBeGreaterThan(before);
-  await page.getByRole('button', { name: 'Open editor panel', exact: true }).click();
+  await page.getByRole('button', { name: 'Open properties', exact: true }).click();
   await expect(inspector).toBeVisible();
-  await page.getByRole('button', { name: 'Text', exact: true }).click();
-  await page.locator('.text-panel button').first().click();
   await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
   await expect(inspector).toBeHidden();
 });
@@ -19,6 +21,9 @@ test('inspector closes, releases workspace space, and reopens', async ({ page })
 test('top and right inspector tooltips stay inside the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 720 });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Text', exact: true }).click();
+  await page.locator('.text-panel button').first().click();
+  await page.getByRole('button', { name: 'Open properties', exact: true }).click();
   for (const name of ['Style', 'Layers', 'Close editor panel']) {
     await page.getByRole('button', { name, exact: true }).hover();
     const tooltip = page.getByRole('tooltip');

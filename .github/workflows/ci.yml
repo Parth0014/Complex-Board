@@ -17,7 +17,7 @@ jobs:
       - run: npm run format:check
       - run: npm run build
       - run: npm test
-      - run: node --test server/ai.test.mjs server/edit.test.mjs server/media.test.mjs
+      - run: node --test server/*.test.mjs
       - run: node scripts/verify-curated-pack.mjs
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test

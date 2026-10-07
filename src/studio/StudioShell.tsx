@@ -5,13 +5,11 @@ import { BackgroundPanel } from './BackgroundPanel';
 import { TooltipLayer } from './TooltipLayer';
 import { TextPanel } from './TextPanel';
 import {
-  ArrowRightIcon,
   CloseIcon,
   DotsIcon,
   DownloadIcon,
   ExportIcon,
   FileTextIcon,
-  HeartIcon,
   InfoIcon,
   PlusIcon,
   PrinterIcon,
@@ -28,6 +26,7 @@ import type { EditorAdapter } from '../vision/contracts';
 import { useDialogFocus } from './useDialogFocus';
 import { UploadsPanel } from './UploadsPanel';
 import { CreatePanel } from './CreatePanel';
+import { useAIStatus } from './useAIStatus';
 
 const AIPanel = lazy(() => import('./AIPanel').then(({ AIPanel }) => ({ default: AIPanel })));
 const ADD_TABS: readonly StudioTab[] = [
@@ -38,16 +37,6 @@ const ADD_TABS: readonly StudioTab[] = [
   'create',
   'background',
 ];
-
-const PANEL_SUBTITLES: Record<StudioTab, string> = {
-  templates: 'Start with structure, then make it yours.',
-  elements: 'Symbols, frames and details for your story.',
-  text: 'Add words with a voice that feels like you.',
-  uploads: 'Add your own photos from this device.',
-  create: 'Shapes, cards and complete starting compositions.',
-  background: 'Set the tone behind everything else.',
-  ai: 'Generate ideas or visual directions without leaving your board.',
-};
 
 export function StudioShell({
   adapter,
@@ -66,6 +55,7 @@ export function StudioShell({
   const [confirmClear, setConfirmClear] = useState(false);
   const [error, setError] = useState('');
   const [elementCategory, setElementCategory] = useState('all');
+  const { status: aiStatus } = useAIStatus(adapter.ownerWindow);
   const document = adapter.history.document;
   useDialogFocus(adapter.ownerWindow, share || confirmClear, () => {
     setShare(false);
@@ -83,7 +73,7 @@ export function StudioShell({
         <div className="vs-brand">
           <VisionMark />
           <span className="vs-brand__name">
-            Vision <strong>Studio</strong>
+            Gratitude <strong>Studio</strong>
           </span>
         </div>
 
@@ -259,29 +249,27 @@ export function StudioShell({
             ))}
             <span className="vs-rail__divider" aria-hidden="true" />
             {drawingTools}
-            <button
-              className={`vs-rail__tab vs-rail__tab--ai${tab === 'ai' ? ' is-active' : ''}`}
-              data-tip="AI — generate images and ideas"
-              data-tip-pos="right"
-              aria-label="AI"
-              aria-pressed={tab === 'ai'}
-              onClick={() => setTab(tab === 'ai' ? null : 'ai')}
-            >
-              <TabIcon tab="ai" />
-              <span>AI</span>
-              <span className="vs-rail__badge" aria-hidden="true" />
-            </button>
+            {aiStatus?.configured && (
+              <button
+                className={`vs-rail__tab vs-rail__tab--ai${tab === 'ai' ? ' is-active' : ''}`}
+                data-tip="AI — generate images and ideas"
+                data-tip-pos="right"
+                aria-label="AI"
+                aria-pressed={tab === 'ai'}
+                onClick={() => setTab(tab === 'ai' ? null : 'ai')}
+              >
+                <TabIcon tab="ai" />
+                <span>AI</span>
+                <span className="vs-rail__badge" aria-hidden="true" />
+              </button>
+            )}
           </nav>
 
           {tab && (
             <section className="vs-lib__panel" aria-label={`${STUDIO_TAB_LABELS[tab]} panel`}>
               <div className="vs-lib__head">
                 <div className="vs-sec-head" style={{ marginBottom: 0 }}>
-                  <span className="vs-eyebrow">
-                    {tab === 'ai' ? 'Smart tools' : 'Add to board'}
-                  </span>
                   <h3>{STUDIO_TAB_LABELS[tab]}</h3>
-                  <p>{PANEL_SUBTITLES[tab]}</p>
                 </div>
                 <button
                   type="button"
@@ -328,10 +316,6 @@ export function StudioShell({
                     onInsert={(asset) => adapter.insertAsset(asset)}
                   />
                 )}
-              </div>
-              <div className="vs-lib__foot">
-                <HeartIcon />
-                <span>Made for your next chapter.</span>
               </div>
             </section>
           )}

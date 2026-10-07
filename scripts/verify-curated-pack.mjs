@@ -27,17 +27,26 @@ for (const asset of manifest.assets) {
   assert.doesNotMatch(svg, /<script\b|\bon\w+\s*=|(?:href|src)\s*=\s*["']https?:/i);
   files[`../../public/curated-v1/${asset.file}`] = svg;
 }
-let provider = readFileSync(new URL('../src/assets/curatedPack.ts', import.meta.url), 'utf8');
+let provider = stripTypeScriptTypes(
+  readFileSync(new URL('../src/assets/curatedPack.ts', import.meta.url), 'utf8'),
+);
 const sources = readFileSync(new URL('../src/assets/curatedSources.ts', import.meta.url), 'utf8');
 assert.ok(sources.includes("import.meta.glob('../../public/curated-v1/assets/**/*.svg'"));
 assert.ok(sources.includes('eager: true'));
-provider = provider
-  .replace(/^import .*;\r?\n/gm, '')
-  .replace("await import('./curatedSources')", `{ files: ${JSON.stringify(files)} }`);
-provider = `const manifest = ${JSON.stringify(manifest)};\n` + provider;
-const { curatedPackProvider } = await import(
-  `data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(provider)).toString('base64')}`
-);
+// Resolve dependencies as modules instead of injecting bindings by matching
+// source statements. This supports both static and lazy imports of the pack.
+const moduleUrl = (source) =>
+  `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
+const dependencies = {
+  '../../public/curated-v1/manifest.json': moduleUrl(`export default ${JSON.stringify(manifest)}`),
+  './curatedSources': moduleUrl(`export const files = ${JSON.stringify(files)}`),
+};
+for (const [specifier, url] of Object.entries(dependencies)) {
+  provider = provider
+    .replaceAll(`'${specifier}'`, JSON.stringify(url))
+    .replaceAll(`"${specifier}"`, JSON.stringify(url));
+}
+const { curatedPackProvider } = await import(moduleUrl(provider));
 let cursor;
 const all = [];
 do {

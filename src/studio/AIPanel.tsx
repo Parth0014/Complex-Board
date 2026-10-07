@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { EditorAdapter, GeneratedBoardVisuals } from '../vision/contracts';
-import { curatedPackProvider } from '../assets/curatedPack';
-import type { GratitudeAsset } from '../assets/contracts';
-import { useAIStatus } from './useAIStatus';
 import { requestAI } from '../vision/aiClient';
 import { ReferenceTemplatePanel } from './ReferenceTemplatePanel';
+import { CloseIcon, ImageIcon } from './icons';
+import { useDialogFocus } from './useDialogFocus';
 
 const modeHelp = {
   image: {
@@ -18,28 +17,10 @@ const modeHelp = {
     action: 'Write affirmation',
   },
   board: {
-    description:
-      'AI plans your goals, generates an original image for each, and builds an editable board with matching colors and captions. Review the images before applying.',
+    description: 'Describe your goals and style. Generation may take a few minutes.',
     example:
       'This year I want to travel to Japan, develop my career, and build healthy daily habits',
     action: 'Create my vision board',
-  },
-  search: {
-    description: 'Find matching graphics in the curated library using a description of your goal.',
-    example: 'Symbols for travel, curiosity, and a new career chapter',
-    action: 'Find matching elements',
-  },
-  edit: {
-    description:
-      'Select one image, describe the change, then review the preview before applying. Your original is preserved.',
-    example: 'Give this image warmer sunlight while keeping the subject and composition',
-    action: 'Preview image edit',
-  },
-  video: {
-    description:
-      'Animate one selected image as a short MP4. Requires enabled paid video generation.',
-    example: 'Slow camera movement with a gentle breeze and natural lighting',
-    action: 'Preview animation',
   },
 };
 type Result = {
@@ -47,36 +28,23 @@ type Result = {
   text?: string;
   title?: string;
   goals?: string[];
-  keywords?: string[];
-  video?: string;
   imagePrompts?: string[];
   images?: GeneratedBoardVisuals['images'];
   palette?: GeneratedBoardVisuals['palette'];
 };
-type EditSource = ReturnType<EditorAdapter['editingSource']>;
 export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
   const [prompt, setPrompt] = useState(modeHelp.board.example),
-    [mode, setMode] = useState<'image' | 'quote' | 'board' | 'search' | 'edit' | 'video'>('board');
+    [mode, setMode] = useState<'image' | 'quote' | 'board'>('board');
+  const [boardStyle, setBoardStyle] = useState<'scrapbook' | 'editorial' | 'gallery'>('scrapbook');
   const [result, setResult] = useState<Result | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
-    [confirm, setConfirm] = useState(false),
-    [suggestions, setSuggestions] = useState<GratitudeAsset[]>([]);
+    [confirm, setConfirm] = useState(false);
+  const [referenceOpen, setReferenceOpen] = useState(false);
+  useDialogFocus(adapter.ownerWindow, referenceOpen, () => setReferenceOpen(false));
   const [progress, setProgress] = useState('');
-  const ai = useAIStatus(adapter.ownerWindow);
-  const configured = ai.status?.configured;
-  const videoConfigured = ai.status?.videoConfigured;
   const help = modeHelp[mode];
-  const selected = adapter.history.document.items.filter((item) =>
-    adapter.selectedIds.includes(item.id),
-  );
-  const needsImage = mode === 'edit' || mode === 'video';
-  const validSelection =
-    selected.length === 1 && selected[0].kind === 'asset' && !selected[0].locked;
-  const [masked, setMasked] = useState(false),
-    [region, setRegion] = useState({ x: 25, y: 25, width: 50, height: 50 });
-  const source = useRef<EditSource | null>(null),
-    controller = useRef<AbortController | null>(null);
+  const controller = useRef<AbortController | null>(null);
   useEffect(() => {
     return () => controller.current?.abort();
   }, [adapter]);
@@ -84,45 +52,17 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
     setBusy(true);
     setError('');
     setResult(null);
-    setSuggestions([]);
     setProgress(
       mode === 'board' ? 'Planning your goals and visual direction…' : 'Creating your preview…',
     );
-    source.current = null;
     controller.current = new adapter.ownerWindow.AbortController();
     try {
-      let body: Record<string, unknown> = { prompt, mode };
-      if (mode === 'edit' || mode === 'video') {
-        const current = adapter.editingSource();
-        source.current = current;
-        body = { prompt, image: current.image };
-        if (masked && mode === 'edit') {
-          const canvas = adapter.ownerWindow.document.createElement('canvas');
-          canvas.width = current.width;
-          canvas.height = current.height;
-          const context = canvas.getContext('2d')!;
-          context.fillStyle = '#000';
-          context.fillRect(0, 0, canvas.width, canvas.height);
-          context.fillStyle = '#fff';
-          context.fillRect(
-            (region.x / 100) * canvas.width,
-            (region.y / 100) * canvas.height,
-            (Math.min(region.width, 100 - region.x) / 100) * canvas.width,
-            (Math.min(region.height, 100 - region.y) / 100) * canvas.height,
-          );
-          body.mask = canvas.toDataURL('image/png');
-        }
-      }
-      const value = await requestAI(
-        adapter.ownerWindow,
-        mode === 'edit' ? '/api/ai/edit' : mode === 'video' ? '/api/ai/video' : '/api/ai/generate',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          signal: controller.current.signal,
-        },
-      );
+      const value = await requestAI(adapter.ownerWindow, '/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, mode }),
+        signal: controller.current.signal,
+      });
       if (mode === 'board') {
         if (!Array.isArray(value.goals) || value.goals.length < 1 || value.goals.length > 6)
           throw new Error('The board plan needs 1 to 6 goals. Please regenerate.');
@@ -147,20 +87,6 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         value.images = images;
       }
       setResult(value);
-      if (value.keywords) {
-        const found = await Promise.all(
-          value.keywords.map((q: string) =>
-            curatedPackProvider.search({ search: q, limit: 12 }, adapter.ownerWindow),
-          ),
-        );
-        setSuggestions(
-          [
-            ...new Map(
-              found.flatMap((result) => result.items).map((asset) => [asset.id, asset]),
-            ).values(),
-          ].slice(0, 24),
-        );
-      }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError')
         setError('Generation cancelled. Your board is unchanged.');
@@ -180,9 +106,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
     setProgress('Adding your creation to the board…');
     setError('');
     try {
-      if (result.image && source.current)
-        await adapter.applyEditedImage(source.current.id, source.current.revision, result.image);
-      else if (result.image) await adapter.insertGeneratedImage(result.image, prompt, background);
+      if (result.image) await adapter.insertGeneratedImage(result.image, prompt, background);
       else if (result.text)
         adapter.createTextPreset({
           id: 'ai-quote',
@@ -198,7 +122,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           throw new Error(
             'The generated board images are missing. Regenerate the preview before applying.',
           );
-        await adapter.composeBoard(result.title, result.goals, 'minimal', {
+        await adapter.composeBoard(result.title, result.goals, boardStyle, {
           images: result.images,
           palette: result.palette,
         });
@@ -213,42 +137,8 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
   };
   return (
     <div className="ai-panel">
-      <h4>AI studio</h4>
-      <ReferenceTemplatePanel adapter={adapter} configured={configured === true} />
-      <p>
-        Turn your ideas into original images and a complete vision board, or write words that
-        inspire you.
-      </p>
-      <div
-        className={`ai-status${configured && !ai.error ? ' ai-status--ready' : ''}`}
-        role="status"
-      >
-        {ai.checking
-          ? 'Checking AI connection…'
-          : ai.error ||
-            (configured
-              ? 'AI is ready. Generate a preview, review it, then apply.'
-              : 'AI is not set up yet. Configure your server credentials and start npm run ai:server.')}
-        <button
-          className="panel-secondary-action"
-          disabled={ai.checking || busy}
-          onClick={() => void ai.refresh()}
-        >
-          Check connection
-        </button>
-      </div>
-      {!configured && !ai.checking && (
-        <details className="ai-setup">
-          <summary>How to get AI working</summary>
-          <ol>
-            <li>Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in .env.</li>
-            <li>Run npm run ai:server in a separate terminal and keep it running.</li>
-            <li>Choose Check connection. Background removal uses a separate rembg service.</li>
-          </ol>
-        </details>
-      )}
       <label>
-        What would you like to do?
+        Create
         <select
           className="vs-select"
           aria-label="AI generation type"
@@ -260,76 +150,32 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
             setResult(null);
             setError('');
             setConfirm(false);
-            setSuggestions([]);
-            source.current = null;
           }}
         >
           <option value="image">Image</option>
           <option value="quote">Affirmation</option>
           <option value="board">Complete vision board</option>
-          <option value="search">Search curated assets</option>
-          <option value="edit">Edit selected image</option>
-          <option value="video" disabled={!videoConfigured}>
-            Animate selected image (paid)
-          </option>
         </select>
       </label>
+      {mode === 'board' && (
+        <label>
+          Style
+          <select
+            className="vs-select"
+            aria-label="Board layout style"
+            disabled={busy}
+            value={boardStyle}
+            onChange={(event) => setBoardStyle(event.target.value as typeof boardStyle)}
+          >
+            <option value="scrapbook">Scrapbook & Polaroids (Layered, tape & notes)</option>
+            <option value="editorial">Editorial Story (Magazine layout & serif titles)</option>
+            <option value="gallery">Modern Gallery (Clean cards & sleek frames)</option>
+          </select>
+        </label>
+      )}
       <p className="ai-tool-help" id="ai-mode-help">
         {help.description}
       </p>
-      {mode === 'board' && (
-        <p className="ai-tool-help">
-          Describe your goals, preferred colors, and visual style. Each board creates several new
-          images and may take a few minutes.
-        </p>
-      )}
-      {needsImage && (
-        <p className="ai-status" role="status">
-          {validSelection
-            ? `Selected image: ${selected[0].asset?.title || 'Image'}`
-            : 'Select one unlocked image on the board to use this tool.'}
-        </p>
-      )}
-      {mode === 'edit' && (
-        <>
-          <p>Describe the desired change. Apply preserves the original source and can be undone.</p>
-          <label>
-            Edit a region
-            <input
-              aria-label="Edit a region"
-              type="checkbox"
-              checked={masked}
-              onChange={(event) => setMasked(event.target.checked)}
-            />
-          </label>
-          {masked && (
-            <>
-              {Object.keys(region).map((key) => (
-                <label key={key}>
-                  Region {key}
-                  <input
-                    aria-label={`Region ${key}`}
-                    type="number"
-                    min={key === 'width' || key === 'height' ? 1 : 0}
-                    max={99}
-                    value={region[key as keyof typeof region]}
-                    onChange={(event) =>
-                      setRegion({
-                        ...region,
-                        [key]: Math.max(
-                          key === 'width' || key === 'height' ? 1 : 0,
-                          Math.min(99, Number(event.target.value)),
-                        ),
-                      })
-                    }
-                  />
-                </label>
-              ))}
-              <p>The region uses percentages of the source image.</p>
-            </>
-          )}
-        </>
-      )}
       <textarea
         className="vs-textarea"
         aria-label="AI prompt"
@@ -351,9 +197,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         aria-label="Generate"
         title={help.action}
         data-tip={help.action}
-        disabled={
-          busy || !prompt.trim() || ai.checking || !configured || (needsImage && !validSelection)
-        }
+        disabled={busy || !prompt.trim()}
         onClick={() => void generate()}
       >
         {busy ? 'Working…' : help.action}
@@ -376,19 +220,6 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         <div className="ai-result">
           <p className="ai-tool-help">Preview only. Use the button below to apply this result.</p>
           {result.image && <img src={result.image} alt="Generated preview" />}
-          {result.video && (
-            <>
-              <video
-                src={result.video}
-                controls
-                aria-label="Generated video preview"
-                style={{ width: '100%' }}
-              />
-              <a href={result.video} download="vision-board-animation.mp4">
-                Download MP4
-              </a>
-            </>
-          )}
           {result.text && <p>{result.text}</p>}
           {result.goals && (
             <>
@@ -413,54 +244,27 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
               </ul>
             </>
           )}
-          {result.video ? null : result.keywords ? (
-            <>
-              <p>
-                {suggestions.length
-                  ? 'Suggested curated assets'
-                  : 'No matching assets. Try a different description.'}
-              </p>
-              <div className="shape-grid">
-                {suggestions.map((asset) => (
-                  <button
-                    key={asset.id}
-                    onClick={() =>
-                      void adapter.insertAsset(asset).catch((error) => setError(String(error)))
-                    }
-                  >
-                    <img src={asset.previewUrl} alt="" width={64} height={64} />
-                    {asset.title}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="ai-result__actions">
+          <div className="ai-result__actions">
+            <button
+              className="panel-action"
+              disabled={busy}
+              onClick={() => {
+                if (result.goals && adapter.history.document.items.length) setConfirm(true);
+                else void insert();
+              }}
+            >
+              {result.goals ? 'Use this board' : 'Add to board'}
+            </button>
+            {result.image && (
               <button
-                className="panel-action"
+                className="panel-secondary-action"
                 disabled={busy}
-                onClick={() => {
-                  if (result.goals && adapter.history.document.items.length) setConfirm(true);
-                  else void insert();
-                }}
+                onClick={() => void insert(true)}
               >
-                {source.current
-                  ? 'Apply image edit'
-                  : result.goals
-                    ? 'Use this board'
-                    : 'Add to board'}
+                Use as background
               </button>
-              {result.image && !source.current && (
-                <button
-                  className="panel-secondary-action"
-                  disabled={busy}
-                  onClick={() => void insert(true)}
-                >
-                  Use as background
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
           {confirm && (
             <>
               <p>Replace the current composition? You can undo this.</p>
@@ -468,6 +272,40 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
               <button onClick={() => setConfirm(false)}>Keep current board</button>
             </>
           )}
+        </div>
+      )}
+      <button
+        className="panel-secondary-action ai-reference-trigger"
+        disabled={busy}
+        onClick={() => setReferenceOpen(true)}
+      >
+        <ImageIcon /> Use an image reference
+      </button>
+      {referenceOpen && (
+        <div
+          className="vs-veil"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setReferenceOpen(false);
+          }}
+        >
+          <div
+            className="vs-dialog ai-reference-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image reference"
+          >
+            <div className="vs-dialog__head">
+              <h2>Image reference</h2>
+              <button
+                className="vs-icon-btn"
+                aria-label="Close image reference"
+                onClick={() => setReferenceOpen(false)}
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <ReferenceTemplatePanel adapter={adapter} />
+          </div>
         </div>
       )}
     </div>

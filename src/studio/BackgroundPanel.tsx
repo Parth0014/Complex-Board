@@ -59,7 +59,6 @@ export function BackgroundPanel({
       </div>
       <div className="panel-section-heading">
         <h3>{document.gradient ? 'Start color' : 'Choose a color'}</h3>
-        <p>Click a color to apply it immediately.</p>
       </div>
       <div className="background-color-grid">
         {COLORS.map(([color, name]) => (
@@ -122,7 +121,6 @@ export function BackgroundPanel({
       )}
       <details className="create-extra background-textures">
         <summary>Paper &amp; textures</summary>
-        <p>Find paper and surface artwork in the Elements library.</p>
         <button className="panel-secondary-action" onClick={onBrowseSurfaces}>
           Browse surfaces
         </button>

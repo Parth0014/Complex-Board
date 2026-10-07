@@ -1,12 +1,20 @@
 /* Visual priority: board content, current task, then workspace utilities. */
 /* Canvas keyboard focus must not look like an object selection. */
-.vs .v1-artboard:focus-visible { outline: none; }
-.vs-inspector[hidden] { display: none; }
+.vs .v1-artboard:focus-visible {
+  outline: none;
+}
+.vs-inspector[hidden] {
+  display: none;
+}
 @media (min-width: 720px) {
-  .vs-canvas:has(> .vs-inspector[hidden]) { grid-template-columns: minmax(0, 1fr); }
+  .vs-canvas:has(> .vs-inspector[hidden]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.vs [data-tip]::after { display: none; }
+.vs [data-tip]::after {
+  display: none;
+}
 .vs-tooltip {
   position: fixed;
   z-index: 1000;
@@ -22,8 +30,12 @@
   text-align: center;
   overflow-wrap: anywhere;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .vs-compose-action {
@@ -40,13 +52,28 @@
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.vs-compose-action.is-active { background: var(--vs-accent-soft); color: var(--vs-accent); font-weight: 600; }
-.vs-compose-action:hover:not(.is-active) { background: var(--vs-panel-2); color: var(--vs-ink); }
-.vs-drawing-menu .vs-menu__pop { flex-direction: row; flex-wrap: wrap; min-width: 200px; }
-.vs-drawing-menu .vs-menu__kicker { width: 100%; }
+.vs-compose-action.is-active {
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent);
+  font-weight: 600;
+}
+.vs-compose-action:hover:not(.is-active) {
+  background: var(--vs-panel-2);
+  color: var(--vs-ink);
+}
+.vs-drawing-menu .vs-menu__pop {
+  flex-direction: row;
+  flex-wrap: wrap;
+  min-width: 200px;
+}
+.vs-drawing-menu .vs-menu__kicker {
+  width: 100%;
+}
 
 /* Quiet framing leaves the artwork as the largest area of contrast. */
-.vs-canvas { background: #f2f4f7; }
+.vs-canvas {
+  background: #f2f4f7;
+}
 
 .vs-board-size {
   display: inline-flex;
@@ -68,7 +95,9 @@
   color: var(--vs-ink);
   transition: background 0.15s ease;
 }
-.vs-board-size select:hover { background: var(--vs-panel-3, #e4e7ec); }
+.vs-board-size select:hover {
+  background: var(--vs-panel-3, #e4e7ec);
+}
 
 .vs {
   --vs-mute: #717c91;
@@ -84,26 +113,74 @@
   border-radius: 6px;
   transition: background 0.15s ease;
 }
-.vs-title__input:hover { background: var(--vs-panel-2); }
+.vs-title__input:hover {
+  background: var(--vs-panel-2);
+}
 
-.vs-brand__name { color: var(--vs-chrome-mute); }
-.vs-brand__name strong { color: var(--vs-chrome-ink); font-weight: 600; }
-.vs-header .vs-btn--primary { padding: 8px 16px; font-weight: 500; }
-.vs-header .vs-btn--ghost { border-color: transparent; color: var(--vs-chrome-ink); }
-.vs-file-btn { background: transparent; border-color: transparent; }
+.vs-brand__name {
+  color: var(--vs-chrome-mute);
+}
+.vs-brand__name strong {
+  color: var(--vs-chrome-ink);
+  font-weight: 600;
+}
+.vs-header .vs-btn--primary {
+  padding: 8px 16px;
+  font-weight: 500;
+}
+.vs-header .vs-btn--ghost {
+  border-color: transparent;
+  color: var(--vs-chrome-ink);
+}
+.vs-file-btn {
+  background: transparent;
+  border-color: transparent;
+}
 
 .vs-lib,
-.vs-inspector { box-shadow: var(--vs-shadow-utility); background: var(--vs-panel); }
-.vs-lib__head { padding: 24px 20px 16px; }
-.vs-lib__head .vs-sec-head { margin-bottom: 0; gap: 8px; }
-.vs-lib__head h3 { font-size: 22px; font-weight: 600; line-height: 1.2; letter-spacing: -0.03em; color: var(--vs-ink); }
-.vs-lib__head p { line-height: 1.5; color: var(--vs-ink-2); margin-top: 6px; font-size: 14px; }
-.vs-lib__body { padding-top: 16px; }
-.vs-lib__foot { background: var(--vs-panel-2); border-top: 1px solid var(--vs-line-soft); }
+.vs-inspector {
+  box-shadow: var(--vs-shadow-utility);
+  background: var(--vs-panel);
+}
+.vs-lib__head {
+  padding: 24px 20px 16px;
+}
+.vs-lib__head .vs-sec-head {
+  margin-bottom: 0;
+  gap: 8px;
+}
+.vs-lib__head h3 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--vs-ink);
+}
+.vs-lib__head p {
+  line-height: 1.5;
+  color: var(--vs-ink-2);
+  margin-top: 6px;
+  font-size: 14px;
+}
+.vs-lib__body {
+  padding-top: 16px;
+}
+.vs-lib__foot {
+  background: var(--vs-panel-2);
+  border-top: 1px solid var(--vs-line-soft);
+}
 
 /* Selection has both a color cue and a persistent structural marker. */
-.vs-rail__tab { transition: color 0.15s ease, background 0.15s ease; position: relative; }
-.vs-rail__tab.is-active { font-weight: 600; color: var(--vs-ink); }
+.vs-rail__tab {
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+  position: relative;
+}
+.vs-rail__tab.is-active {
+  font-weight: 600;
+  color: var(--vs-ink);
+}
 .vs-rail__tab.is-active::before {
   content: '';
   position: absolute;
@@ -116,27 +193,85 @@
   transition: transform 0.2s cubic-bezier(0.1, 0, 0.2, 1);
 }
 
-.vs-inspector__tabs { padding: 4px 20px 16px; border-bottom: 1px solid var(--vs-line-soft); }
-.vs-inspector__tabs .vs-segmented button.is-active { color: var(--vs-accent); font-weight: 600; }
-.vs-inspector__tabs .vs-segmented { background: var(--vs-panel-2); padding: 4px; border-radius: 8px; }
+.vs-inspector__tabs {
+  padding: 4px 20px 16px;
+  border-bottom: 1px solid var(--vs-line-soft);
+}
+.vs-inspector__tabs .vs-segmented button.is-active {
+  color: var(--vs-accent);
+  font-weight: 600;
+}
+.vs-inspector__tabs .vs-segmented {
+  background: var(--vs-panel-2);
+  padding: 4px;
+  border-radius: 8px;
+}
 
-.vs-sec { border-color: var(--vs-line-soft); }
+.vs-sec {
+  border-color: var(--vs-line-soft);
+}
 .vs-sec > summary,
-.vs-sec__head { font-size: 14px; font-weight: 600; color: var(--vs-ink); padding: 12px 20px; }
-.vs-sec[open] > summary { background: var(--vs-panel-2); border-bottom: 1px solid var(--vs-line-soft); }
-.vs-sec__body { padding: 16px 20px; gap: 16px; }
+.vs-sec__head {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vs-ink);
+  padding: 12px 20px;
+}
+.vs-sec[open] > summary {
+  background: var(--vs-panel-2);
+  border-bottom: 1px solid var(--vs-line-soft);
+}
+.vs-sec__body {
+  padding: 16px 20px;
+  gap: 16px;
+}
 
 /* Guidance supports the task without looking like a primary action. */
-.panel-intro-card { background: var(--vs-panel-2); border: 1px solid var(--vs-line-soft); padding: 16px; }
-.panel-section-heading { margin-bottom: 16px; }
-.panel-section-heading h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: var(--vs-ink); }
-.panel-section-heading p { line-height: 1.5; margin-top: 6px; color: var(--vs-ink-2); font-size: 13.5px; }
-.panel-section-heading--divided { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--vs-line-soft); }
+.panel-intro-card {
+  background: var(--vs-panel-2);
+  border: 1px solid var(--vs-line-soft);
+  padding: 16px;
+}
+.panel-section-heading {
+  margin-bottom: 16px;
+}
+.panel-section-heading h3 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--vs-ink);
+}
+.panel-section-heading p {
+  line-height: 1.5;
+  margin-top: 6px;
+  color: var(--vs-ink-2);
+  font-size: 13.5px;
+}
+.panel-section-heading--divided {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--vs-line-soft);
+}
 
-.templates-panel__meta h3 { font-size: 16px; font-weight: 600; line-height: 1.4; }
-.templates-panel__prompt { color: var(--vs-ink-2); margin-top: 4px; }
-.asset-title { font-size: 12px; font-weight: 500; color: var(--vs-ink); }
-.panel-action { box-shadow: 0 1px 2px rgba(16, 18, 24, 0.05); min-height: 40px; font-weight: 500; }
+.templates-panel__meta h3 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.templates-panel__prompt {
+  color: var(--vs-ink-2);
+  margin-top: 4px;
+}
+.asset-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vs-ink);
+}
+.panel-action {
+  box-shadow: 0 1px 2px rgba(16, 18, 24, 0.05);
+  min-height: 40px;
+  font-weight: 500;
+}
 
 /* Keep contextual editing prominent; soften always-present navigation. */
 .vs-tools,
@@ -146,26 +281,60 @@
   background: var(--vs-panel);
   color: var(--vs-ink-2);
   border: 1px solid rgba(16, 18, 24, 0.08);
-  box-shadow: 0 4px 12px rgba(16, 18, 24, 0.06), 0 1px 3px rgba(16, 18, 24, 0.04);
+  box-shadow:
+    0 4px 12px rgba(16, 18, 24, 0.06),
+    0 1px 3px rgba(16, 18, 24, 0.04);
 }
 .vs-tools .vs-icon-btn,
 .vs-pages .vs-icon-btn,
-.vs-zoom .vs-icon-btn { color: var(--vs-ink-2); transition: all 0.15s ease; }
+.vs-zoom .vs-icon-btn {
+  color: var(--vs-ink-2);
+  transition: all 0.15s ease;
+}
 .vs-tools .vs-icon-btn:hover:not(:disabled),
 .vs-pages .vs-icon-btn:hover:not(:disabled),
-.vs-zoom .vs-icon-btn:hover:not(:disabled) { background: var(--vs-panel-2); color: var(--vs-ink); }
-.vs-tools .vs-icon-btn.is-active { background: var(--vs-accent-soft); color: var(--vs-accent); }
-.vs-tools__divider { background: rgba(16, 18, 24, 0.08); width: 1px; margin: 6px 0; }
-.vs-zoom .vs-range { background: var(--vs-line-soft); }
+.vs-zoom .vs-icon-btn:hover:not(:disabled) {
+  background: var(--vs-panel-2);
+  color: var(--vs-ink);
+}
+.vs-tools .vs-icon-btn.is-active {
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent);
+}
+.vs-tools__divider {
+  background: rgba(16, 18, 24, 0.08);
+  width: 1px;
+  margin: 6px 0;
+}
+.vs-zoom .vs-range {
+  background: var(--vs-line-soft);
+}
 
-.vs-sel { box-shadow: 0 8px 24px rgba(16, 18, 24, 0.08), 0 2px 6px rgba(16, 18, 24, 0.04); border: 1px solid rgba(16, 18, 24, 0.08); }
-.snap-toggle { color: var(--vs-ink-2); transition: all 0.15s ease; }
-.snap-toggle:hover { background: var(--vs-panel-2); color: var(--vs-ink); }
+.vs-sel {
+  box-shadow:
+    0 8px 24px rgba(16, 18, 24, 0.08),
+    0 2px 6px rgba(16, 18, 24, 0.04);
+  border: 1px solid rgba(16, 18, 24, 0.08);
+}
+.snap-toggle {
+  color: var(--vs-ink-2);
+  transition: all 0.15s ease;
+}
+.snap-toggle:hover {
+  background: var(--vs-panel-2);
+  color: var(--vs-ink);
+}
 
 @media (max-width: 719px) {
-  .vs-title__input { font-size: 14px; }
-  .vs-lib__head { padding: 20px 16px 12px; }
-  .vs-lib__head h3 { font-size: 20px; }
+  .vs-title__input {
+    font-size: 14px;
+  }
+  .vs-lib__head {
+    padding: 20px 16px 12px;
+  }
+  .vs-lib__head h3 {
+    font-size: 20px;
+  }
   .vs-rail__tab.is-active::before {
     top: auto;
     bottom: 0;

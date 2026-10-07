@@ -70,8 +70,11 @@ test('curated insertion, text, history and export', async ({ page }) => {
   const canvasBounds = await page
     .getByLabel('Editable vision board', { exact: true })
     .boundingBox();
-  // Context controls have their own row above the editable page viewport.
-  expect(toolbarBounds!.y + toolbarBounds!.height).toBeLessThanOrEqual(canvasBounds!.y);
+  // Context controls float over the workspace and stay inside its bounds.
+  expect(toolbarBounds!.y).toBeGreaterThanOrEqual(canvasBounds!.y);
+  expect(toolbarBounds!.y + toolbarBounds!.height).toBeLessThanOrEqual(
+    canvasBounds!.y + canvasBounds!.height,
+  );
   const railBounds = await page.getByRole('navigation', { name: 'Studio tools' }).boundingBox();
   expect(railBounds!.width).toBeLessThanOrEqual(90);
   await page.screenshot({ path: 'test-results/editor.png' });

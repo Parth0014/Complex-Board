@@ -21,7 +21,7 @@ test('complex templates apply all layers and survive resizing and reload', async
     );
     if (template.canvas.height === 1700)
       await expect(card.locator('svg').first()).toHaveAttribute('viewBox', '0 0 1000 1700');
-    await card.getByRole('button', { name: 'Use this template' }).click();
+    await card.getByRole('button', { name: 'Use template' }).click();
     await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(template.title);
     await expect(
       page.getByText(`Board items (${template.elements.length})`, { exact: true }),

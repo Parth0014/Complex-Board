@@ -6,7 +6,7 @@ Add your own PNG/JPEG/WebP photos through Uploads or by dropping files onto the 
 
 ## Run
 
-Use Node.js 22 or later. From this project directory:
+Use Node.js 22.15 or later. From this project directory:
 
 ```sh
 npm ci
@@ -16,14 +16,18 @@ npm run dev
 ## Verify
 
 ```sh
+npm run lint
+npm run format:check
 npm run build
 npm test
-node --test server/ai.test.mjs server/edit.test.mjs server/media.test.mjs
+node --test server/*.test.mjs
 node scripts/verify-curated-pack.mjs
 npx playwright test
 ```
 
 Browser tests use installed Microsoft Edge and the built preview.
+
+See [deployment instructions](DEPLOY.md) for static hosting and optional AI.
 
 ## Features and setup
 

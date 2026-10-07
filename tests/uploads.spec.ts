@@ -1,3 +1,4 @@
+import { openProperties, openSection } from './helpers/editor';
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
@@ -31,7 +32,7 @@ test('photos retain originals, edits, undo and portable backups in a fresh brows
   page.on('pageerror', (error) => errors.push(error.message));
   let aiRequests = 0;
   await page.route('**/api/ai/**', (route) => {
-    aiRequests++;
+    if (!route.request().url().endsWith('/status')) aiRequests++;
     return route.fulfill({ status: 503, json: { error: 'No AI' } });
   });
   await page.goto('/');
@@ -41,16 +42,15 @@ test('photos retain originals, edits, undo and portable backups in a fresh brows
     .getByLabel('Upload photos', { exact: true })
     .setInputFiles({ name: 'my-home.png', mimeType: 'image/png', buffer: original });
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
-  await expect(
-    page.getByText('1 photo added. Originals are saved on this device.', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('1 photo added.', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'test-results/photo-uploads.png', fullPage: true });
   const originalPending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download original photo', exact: true }).click();
+  await page.getByRole('button', { name: 'Download original', exact: true }).click();
   const originalDownload = await originalPending;
   expect(readFileSync((await originalDownload.path())!)).toEqual(original);
   await page.getByRole('button', { name: 'Close panel', exact: true }).click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
+  await openProperties(page);
+  await openSection(page, 'Adjustments');
   await page.getByRole('button', { name: 'Mono', exact: true }).click();
   const saved = JSON.parse(await backup(page));
   expect(saved.media).toHaveLength(1);
@@ -88,7 +88,7 @@ test('photos retain originals, edits, undo and portable backups in a fresh brows
     expect(png.readUInt32BE(16)).toBe(1080);
     expect(png.readUInt32BE(20)).toBe(1080);
     const pixel = await restored.evaluate(
-      async (url) => {
+      async ({ url, x, y }) => {
         const image = new Image();
         image.src = url;
         await image.decode();
@@ -97,9 +97,13 @@ test('photos retain originals, edits, undo and portable backups in a fresh brows
         canvas.height = image.height;
         const ctx = canvas.getContext('2d')!;
         ctx.drawImage(image, 0, 0);
-        return [...ctx.getImageData(540, 675, 1, 1).data];
+        return [...ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data];
       },
-      `data:image/png;base64,${png.toString('base64')}`,
+      {
+        url: `data:image/png;base64,${png.toString('base64')}`,
+        x: saved.items[0].x + saved.items[0].width / 2,
+        y: saved.items[0].y + saved.items[0].height / 2,
+      },
     );
     expect(pixel[0]).toBe(pixel[1]);
     expect(pixel[1]).toBe(pixel[2]);
@@ -155,8 +159,21 @@ test('photo drops stay contained and duplicate uploads share storage through fra
     return transfer;
   }, original.toString('base64'));
   const canvas = page.getByLabel('Editable vision board', { exact: true });
+  await expect(canvas.locator('canvas').first()).toBeVisible();
+  const dropPoint = await canvas.evaluate((node) => {
+    const rect = node.querySelector('canvas')!.getBoundingClientRect();
+    const scale = Number(node.getAttribute('data-scale'));
+    return {
+      x: rect.left + Number(node.getAttribute('data-page-left')) + 10 * scale,
+      y: rect.top + Number(node.getAttribute('data-page-top')) + 10 * scale,
+    };
+  });
   await canvas.dispatchEvent('dragover', { dataTransfer: transfer });
-  await canvas.dispatchEvent('drop', { dataTransfer: transfer, clientX: 0, clientY: 0 });
+  await canvas.dispatchEvent('drop', {
+    dataTransfer: transfer,
+    clientX: dropPoint.x,
+    clientY: dropPoint.y,
+  });
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
   let saved = JSON.parse(await backup(page));
   expect(saved.items[0].x).toBeGreaterThanOrEqual(0);
@@ -177,7 +194,7 @@ test('photo drops stay contained and duplicate uploads share storage through fra
   await page.getByLabel('Category', { exact: true }).selectOption('photo-frames');
   await page.getByRole('button', { name: 'Classic portrait', exact: true }).click();
   await page.getByRole('button', { name: 'Close panel', exact: true }).click();
-  await page.getByRole('button', { name: 'Style', exact: true }).click();
+  await openProperties(page);
   await page.getByLabel('Frame content', { exact: true }).selectOption(saved.media[0].id);
   await page.getByRole('button', { name: 'Edit crop', exact: true }).click();
   await page.getByLabel('Crop width', { exact: true }).fill('70');

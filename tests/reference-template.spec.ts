@@ -41,6 +41,7 @@ test('reference preview preserves text, creates placeholders, persists and undoe
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Use an image reference', exact: true }).click();
   await page
     .getByLabel('Upload design reference')
     .setInputFiles('public/template-photos/flowers.jpg');

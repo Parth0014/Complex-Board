@@ -95,25 +95,34 @@ describe('adapter commands', () => {
     const { adapter } = environment();
     adapter.applyTemplate(VISION_TEMPLATES[0]);
     adapter.applyTemplate(VISION_TEMPLATES[1]);
-    expect(adapter.history.document.items).toHaveLength(1);
+    expect(
+      adapter.history.document.items.filter((item) => item.slotId === 'template-heading'),
+    ).toHaveLength(1);
+    expect(adapter.history.document.items.filter((item) => item.templatePlaceholder)).toHaveLength(
+      VISION_TEMPLATES[1].layout.slots.length,
+    );
+    expect(adapter.history.document.title).toBe(VISION_TEMPLATES[1].title);
     adapter.undo();
     expect(adapter.history.document.title).toBe(VISION_TEMPLATES[0].title);
   });
   it('duplicates with new identity and preserves the background during deletion', () => {
     const { adapter } = environment();
     adapter.applyTemplate(VISION_TEMPLATES[0]);
-    const item = adapter.history.document.items[0];
+    // An interior text item tests the ordinary offset without edge clamping.
+    adapter.activateTool('text');
+    const item = adapter.history.document.items.at(-1)!;
+    const before = adapter.history.document.items.length;
     const color = adapter.history.document.color;
     adapter.select([item.id]);
     adapter.duplicateSelection();
-    const copy = adapter.history.document.items[1];
+    const copy = adapter.history.document.items.at(-1)!;
     expect(copy.id).not.toBe(item.id);
     expect(copy.x).toBe(item.x + 24);
     adapter.clearBoard();
     expect(adapter.history.document.items).toHaveLength(0);
     expect(adapter.history.document.color).toBe(color);
     adapter.undo();
-    expect(adapter.history.document.items).toHaveLength(2);
+    expect(adapter.history.document.items).toHaveLength(before + 1);
   });
   it('rejects assets outside the uploaded pack', async () => {
     const { adapter, ownerWindow } = environment();

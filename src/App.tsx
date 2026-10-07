@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { KonvaCanvasAdapter } from './vision/canvas/KonvaCanvasAdapter';
+import { boundsOf, unionBounds } from './vision/canvas/geometry';
 import { KonvaStage } from './vision/canvas/KonvaStage';
 import { StudioShell } from './studio/StudioShell';
 import { BoardSizeControl } from './studio/BoardSizeControl';
@@ -15,12 +16,19 @@ import './studio/v5/v5-corners.css';
 import { EditorFeatures, type EditorPanel } from './studio/EditorFeatures';
 import type { StudioTab } from './studio/studioTypes';
 import {
-  AlignIcon,
+  MoveIcon,
+  BringFrontIcon,
+  ForwardIcon,
+  BackwardIcon,
+  SendBackIcon,
+  PasteIcon,
+  LayersIcon,
+  ScissorsIcon,
   BoldIcon,
   ChevronDownIcon,
   DistributeHIcon,
   DistributeVIcon,
-  DropletIcon,
+  ContrastIcon,
   DuplicateIcon,
   EraserIcon,
   FitIcon,
@@ -33,7 +41,6 @@ import {
   PenIcon,
   PlusIcon,
   SelectIcon,
-  SlidersIcon,
   TrashIcon,
   UnderlineIcon,
   UngroupIcon,
@@ -90,6 +97,97 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
       adapter.ownerWindow.document.removeEventListener('scroll', update, true);
     };
   }, [drawButton, drawingMenuOpen, drawMode, adapter]);
+  const [layerFlyout, setLayerFlyout] = useState<{ left: number; top: number } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [contextPosition, setContextPosition] = useState({ left: 8, top: 8, maxHeight: 500 });
+  useLayoutEffect(() => {
+    const menu = contextMenuRef.current;
+    if (!menu || !contextMenu) return;
+    const update = () => {
+      const dock = adapter.ownerWindow.document
+        .querySelector('.vs-bottom-dock')
+        ?.getBoundingClientRect();
+      const canvas = adapter.ownerWindow.document
+        .querySelector('.v1-artboard')
+        ?.getBoundingClientRect();
+      const bottom = Math.min(
+        adapter.ownerWindow.innerHeight - 12,
+        (dock?.top ?? adapter.ownerWindow.innerHeight) - 12,
+      );
+      const start = Math.max(12, (canvas?.top ?? 0) + 12);
+      const maxHeight = Math.max(100, bottom - start);
+      const height = Math.min(menu.scrollHeight, maxHeight);
+      const selected = adapter.history.document.items.filter((item) =>
+        adapter.selectedIds.includes(item.id),
+      );
+      let anchorX = contextMenu.x;
+      let anchorY = contextMenu.y;
+      if (selected.length) {
+        const board = adapter.ownerWindow.document.querySelector<HTMLElement>('.v1-artboard');
+        const stage = board?.querySelector('canvas')?.getBoundingClientRect();
+        if (board && stage) {
+          const box = unionBounds(selected.map(boundsOf));
+          const scale = Number(board.dataset.scale);
+          const x = stage.left + Number(board.dataset.pageLeft) + box.x * scale;
+          const y = stage.top + Number(board.dataset.pageTop) + box.y * scale;
+          const right = x + box.width * scale;
+          anchorX =
+            right + menu.offsetWidth + 12 < adapter.ownerWindow.innerWidth
+              ? right + 12
+              : x - menu.offsetWidth - 12;
+          anchorY = y;
+        }
+      }
+      const next = {
+        left: Math.max(
+          12,
+          Math.min(anchorX, adapter.ownerWindow.innerWidth - menu.offsetWidth - 12),
+        ),
+        top: Math.max(start, Math.min(anchorY, bottom - height)),
+        maxHeight,
+      };
+      setContextPosition((previous) =>
+        previous.left === next.left &&
+        previous.top === next.top &&
+        previous.maxHeight === next.maxHeight
+          ? previous
+          : next,
+      );
+    };
+    const observer = new adapter.ownerWindow.ResizeObserver(update);
+    observer.observe(menu);
+    update();
+    adapter.ownerWindow.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      adapter.ownerWindow.removeEventListener('resize', update);
+    };
+  }, [contextMenu, adapter]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = (event: PointerEvent) => {
+      if (!contextMenuRef.current?.contains(event.target as Node)) {
+        setContextMenu(null);
+        setEditorPanel(null);
+      }
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setContextMenu(null);
+        setEditorPanel(null);
+      }
+    };
+    const doc = adapter.ownerWindow.document;
+    doc.addEventListener('pointerdown', close);
+    doc.addEventListener('keydown', escape, true);
+    return () => {
+      doc.removeEventListener('pointerdown', close);
+      doc.removeEventListener('keydown', escape, true);
+    };
+  }, [contextMenu, adapter]);
   const [editorPanel, setEditorPanel] = useState<EditorPanel>(null);
   const [studioTab, setStudioTab] = useState<StudioTab | null>(null);
   const [zoom, setZoom] = useState<number | null>(null);
@@ -220,19 +318,6 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
     };
   }, [adapter]);
 
-  const selectionType =
-    selection.count === 1
-      ? item?.kind === 'text'
-        ? 'Text'
-        : item?.kind === 'asset'
-          ? 'Media'
-          : item?.kind === 'shape'
-            ? 'Shape'
-            : item?.kind === 'drawing'
-              ? 'Drawing'
-              : 'Object'
-      : `${selection.count} items`;
-
   return (
     <StudioShell
       adapter={adapter}
@@ -248,7 +333,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
             aria-controls="drawing-palette"
             onClick={(event) => {
               event.preventDefault();
-              setDrawingMenuOpen(true);
+              setDrawingMenuOpen((open) => !open);
             }}
           >
             {(() => {
@@ -343,12 +428,6 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
               maxWidth: toolbarPosition.width,
             }}
           >
-            <span className="vs-sel__chip">
-              {selectionType}
-              <small>{selection.count === 1 ? 'selected' : 'selected together'}</small>
-            </span>
-            <span className="vs-sel__divider" aria-hidden="true" />
-
             {selection.count === 1 && item?.kind === 'asset' && (
               <button
                 className="vs-sel__design"
@@ -367,15 +446,6 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
 
             {selection.kind === 'text' && item && (
               <>
-                <input
-                  className="vs-sel__num"
-                  style={{ width: 130 }}
-                  aria-label="Text"
-                  value={item.text || ''}
-                  onChange={(event) =>
-                    adapter.patchItems([{ id: item.id, patch: { text: event.target.value } }])
-                  }
-                />
                 <input
                   className="vs-sel__num"
                   data-tip="Text size"
@@ -596,21 +666,23 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
             )}
 
             <button
-              className="vs-icon-btn"
+              className="vs-icon-btn vs-sel__action"
               data-tip="Duplicate (Ctrl+D)"
               aria-label="Duplicate"
               onClick={() => adapter.duplicateSelection()}
             >
               <DuplicateIcon />
+              <span>Duplicate</span>
             </button>
 
             <details className="vs-menu">
               <summary
-                className="vs-icon-btn"
+                className="vs-icon-btn vs-sel__action"
                 data-tip="Align and distribute"
                 aria-label="Position"
               >
-                <AlignIcon />
+                <MoveIcon />
+                <span>Position</span>
               </summary>
               <div className="vs-menu__pop">
                 <p className="vs-menu__kicker">Align {unitCount === 1 ? 'to page' : 'selection'}</p>
@@ -652,8 +724,13 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
             </details>
 
             <details className="vs-menu">
-              <summary className="vs-icon-btn" data-tip="Opacity" aria-label="Opacity">
-                <DropletIcon />
+              <summary
+                className="vs-icon-btn vs-sel__action"
+                data-tip="Opacity"
+                aria-label="Opacity"
+              >
+                <ContrastIcon />
+                <span>Opacity</span>
               </summary>
               <div className="vs-menu__pop">
                 <label className="vs-sel__opacity">
@@ -675,7 +752,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
             </details>
 
             <button
-              className="vs-icon-btn"
+              className="vs-icon-btn vs-sel__action"
               data-tip={
                 canUngroup ? 'Ungroup selection (Ctrl+Shift+G)' : 'Group selection (Ctrl+G)'
               }
@@ -684,42 +761,38 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
               onClick={() => (canUngroup ? adapter.ungroupSelection() : adapter.groupSelection())}
             >
               {canUngroup ? <UngroupIcon /> : <GroupIcon />}
+              <span>{canUngroup ? 'Ungroup' : 'Group'}</span>
             </button>
 
             <button
-              className="vs-icon-btn"
+              className="vs-icon-btn vs-sel__action"
               data-tip={selectedItems.every((selected) => selected.locked) ? 'Unlock' : 'Lock'}
               aria-label={selectedItems.every((selected) => selected.locked) ? 'Unlock' : 'Lock'}
               onClick={() => adapter.toggleLock()}
             >
               {selectedItems.every((selected) => selected.locked) ? <UnlockIcon /> : <LockIcon />}
+              <span>{selectedItems.every((selected) => selected.locked) ? 'Unlock' : 'Lock'}</span>
             </button>
 
             <button
-              className="vs-icon-btn is-danger"
+              className="vs-icon-btn vs-sel__action is-danger"
               data-tip="Delete (Del)"
               aria-label="Delete"
               onClick={() => adapter.delete(adapter.selectedIds)}
             >
               <TrashIcon />
-            </button>
-
-            <span className="vs-sel__divider" aria-hidden="true" />
-            <button
-              className={`vs-sel__design${editorPanel === 'style' ? ' is-active' : ''}`}
-              data-tip="Open full properties"
-              aria-label="Open properties"
-              aria-pressed={editorPanel === 'style'}
-              onClick={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
-            >
-              <SlidersIcon />
-              <span>Style</span>
+              <span>Delete</span>
             </button>
           </div>
         )}
 
         <KonvaStage
           key="vision-canvas"
+          onObjectContextMenu={(x, y) => {
+            setLayerFlyout(null);
+            setContextMenu({ x, y });
+            setEditorPanel('style');
+          }}
           snappingContainer={snappingContainer}
           drawMode={drawMode}
           adapter={adapter}
@@ -846,7 +919,241 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
         </div>
       </div>
 
-      <EditorFeatures adapter={adapter} panel={editorPanel} setPanel={setEditorPanel} />
+      {contextMenu &&
+        createPortal(
+          <div
+            className={`vs vs-object-context${contextMenu.x > 620 ? ' opens-left' : ''}`}
+            ref={contextMenuRef}
+            onMouseOver={(event) => {
+              if ((event.target as HTMLElement).closest('summary')) setLayerFlyout(null);
+            }}
+            role="menu"
+            aria-label="Canvas context menu"
+            style={contextPosition}
+          >
+            {layerFlyout && selection.count > 0 && (
+              <div
+                className="vs-context-flyout vs-context-layer"
+                role="menu"
+                aria-label="Layer actions"
+                style={layerFlyout}
+              >
+                {(
+                  [
+                    ['front', 'Bring to front', BringFrontIcon, 'Ctrl+Alt+]'],
+                    ['forward', 'Bring forward', ForwardIcon, 'Ctrl+]'],
+                    ['backward', 'Send backward', BackwardIcon, 'Ctrl+['],
+                    ['back', 'Send to back', SendBackIcon, 'Ctrl+Alt+['],
+                  ] as const
+                ).map(([position, label, Icon, shortcut]) => (
+                  <button
+                    key={position}
+                    role="menuitem"
+                    disabled={locked}
+                    onClick={() => adapter.arrangeSelection(position)}
+                  >
+                    <Icon />
+                    {label}
+                    <kbd>{shortcut}</kbd>
+                  </button>
+                ))}
+                <div className="vs-context-separator" />
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setLayerFlyout(null);
+                    setEditorPanel('layers');
+                  }}
+                >
+                  <LayersIcon />
+                  Show layers
+                </button>
+              </div>
+            )}
+            {selection.count > 0 ? (
+              <>
+                <EditorFeatures
+                  adapter={adapter}
+                  panel={editorPanel}
+                  setPanel={(panel) => {
+                    setEditorPanel(panel);
+                    if (!panel) setContextMenu(null);
+                  }}
+                />
+                <div className="vs-context-actions">
+                  <button
+                    role="menuitem"
+                    disabled={!selection.count}
+                    onClick={() => {
+                      void adapter.copyToSystem();
+                      setContextMenu(null);
+                      setEditorPanel(null);
+                    }}
+                  >
+                    <DuplicateIcon />
+                    Copy<kbd>Ctrl+C</kbd>
+                  </button>
+                  <button
+                    role="menuitem"
+                    disabled={!selection.count || locked}
+                    onClick={() => {
+                      void adapter.copyToSystem(true);
+                      setContextMenu(null);
+                      setEditorPanel(null);
+                    }}
+                  >
+                    <ScissorsIcon />
+                    Cut<kbd>Ctrl+X</kbd>
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      void adapter.pasteFromSystem();
+                      setContextMenu(null);
+                      setEditorPanel(null);
+                    }}
+                  >
+                    <PasteIcon />
+                    Paste<kbd>Ctrl+V</kbd>
+                  </button>
+                  <button
+                    role="menuitem"
+                    disabled={!selection.count}
+                    onClick={() => {
+                      adapter.duplicateSelection();
+                      setContextMenu(null);
+                      setEditorPanel(null);
+                    }}
+                  >
+                    <DuplicateIcon />
+                    Duplicate
+                  </button>
+                  <button
+                    role="menuitem"
+                    disabled={!selection.count}
+                    onClick={() => {
+                      adapter.patchItems(
+                        adapter.selectedIds.map((id) => ({ id, patch: { locked: !locked } })),
+                      );
+                    }}
+                  >
+                    {locked ? <UnlockIcon /> : <LockIcon />}
+                    {locked ? 'Unlock' : 'Lock'}
+                  </button>
+                  <button
+                    role="menuitem"
+                    disabled={!selection.count || locked}
+                    onClick={() => {
+                      adapter.delete(adapter.selectedIds);
+                      setContextMenu(null);
+                      setEditorPanel(null);
+                    }}
+                  >
+                    <TrashIcon />
+                    Delete
+                  </button>
+                </div>
+                <div className="vs-context-actions">
+                  <button
+                    role="menuitem"
+                    aria-haspopup="menu"
+                    aria-expanded={!!layerFlyout}
+                    onMouseEnter={(event) => {
+                      const row = event.currentTarget.getBoundingClientRect();
+                      const menu = contextMenuRef.current!.getBoundingClientRect();
+                      setLayerFlyout({
+                        left:
+                          menu.right + 288 < adapter.ownerWindow.innerWidth
+                            ? menu.right + 6
+                            : Math.max(12, menu.left - 282),
+                        top: Math.min(row.top, adapter.ownerWindow.innerHeight - 224),
+                      });
+                    }}
+                    onClick={(event) => {
+                      const row = event.currentTarget.getBoundingClientRect();
+                      const menu = contextMenuRef.current!.getBoundingClientRect();
+                      setLayerFlyout({
+                        left:
+                          menu.right + 288 < adapter.ownerWindow.innerWidth
+                            ? menu.right + 6
+                            : Math.max(12, menu.left - 282),
+                        top: Math.min(row.top, adapter.ownerWindow.innerHeight - 224),
+                      });
+                    }}
+                  >
+                    <LayersIcon />
+                    {editorPanel === 'layers' ? 'Object settings' : 'Layer'}
+                    <ChevronDownIcon />
+                  </button>
+                  <button
+                    role="menuitem"
+                    disabled={locked || (!canUngroup && selection.count < 2)}
+                    onClick={() => {
+                      if (canUngroup) adapter.ungroupSelection();
+                      else adapter.groupSelection();
+                      setContextMenu(null);
+                      setEditorPanel(null);
+                    }}
+                  >
+                    <GroupIcon />
+                    {canUngroup ? 'Ungroup' : 'Group'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="vs-context-actions vs-context-empty">
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    void adapter.pasteFromSystem();
+                    setContextMenu(null);
+                    setEditorPanel(null);
+                  }}
+                >
+                  <PasteIcon />
+                  Paste<kbd>Ctrl+V</kbd>
+                </button>
+                <button
+                  role="menuitem"
+                  disabled={!document.items.some((item) => !item.hidden)}
+                  onClick={() => {
+                    adapter.select(
+                      document.items.filter((item) => !item.hidden).map((item) => item.id),
+                    );
+                    setContextMenu(null);
+                    setEditorPanel(null);
+                  }}
+                >
+                  <SelectIcon />
+                  Select all<kbd>Ctrl+A</kbd>
+                </button>
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    adapter.addPage();
+                    setContextMenu(null);
+                    setEditorPanel(null);
+                  }}
+                >
+                  <PlusIcon />
+                  Add page
+                </button>
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    adapter.fitBoard();
+                    setContextMenu(null);
+                    setEditorPanel(null);
+                  }}
+                >
+                  <FitIcon />
+                  Fit board to view
+                </button>
+              </div>
+            )}
+          </div>,
+          adapter.ownerWindow.document.body,
+        )}
     </StudioShell>
   );
 }

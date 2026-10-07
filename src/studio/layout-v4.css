@@ -266,7 +266,10 @@
   background: #fff;
   border: 1px solid var(--ui-line);
   border-radius: 11px;
-  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
 }
 
 .create-shape-grid button:hover {

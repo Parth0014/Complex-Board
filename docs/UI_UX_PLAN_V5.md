@@ -1,6 +1,6 @@
-# Vision Studio — V5 UI/UX Redesign Plan
+# Gratitude Studio — V5 UI/UX Redesign Plan
 
-Fresh identity: **Vision Studio** (new name, new visual system — no carry-over from the
+Fresh identity: **Gratitude Studio** (consistent name, new visual system — no carry-over from the
 previous warm/plum aesthetic). Cool graphite + paper + cobalt accent. Every glyph in the
 chrome is a Lucide icon; every interactive control carries a tooltip.
 
@@ -66,7 +66,7 @@ canvas-floating controls, light cards for panels.
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ HEADER (56px, graphite)                                      │
-│ [mark Vision Studio] [board title · saved]  [undo|redo][New] │
+│ [mark Gratitude Studio] [board title · saved]  [undo|redo][New] │
 │                                         [Export][···]        │
 ├──────────┬───────────────────────────────────────┬───────────┤
 │ LIBRARY  │  [tool pill: select·pan‖pen·…·eraser] │ INSPECTOR │

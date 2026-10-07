@@ -1,20 +1,79 @@
 import { test, expect } from '@playwright/test';
+import { openProperties, closeProperties } from './helpers/editor';
+
+test('hover outlines a group over the blank gap between its members', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  for (const x of [200, 500]) {
+    await page.getByRole('button', { name: 'circle', exact: true }).click();
+    await openProperties(page);
+    for (const [name, value] of [
+      ['Width', '100'],
+      ['Height', '100'],
+      ['Item X', String(x)],
+      ['Item Y', '300'],
+    ]) {
+      await page.getByRole('spinbutton', { name, exact: true }).fill(value);
+    }
+    await page.getByRole('spinbutton', { name: 'Item Y', exact: true }).blur();
+    await closeProperties(page);
+  }
+  const board = page.getByLabel('Editable vision board', { exact: true });
+  await board.focus();
+  await page.keyboard.press('Control+a');
+  await page.keyboard.press('Control+g');
+  await page.keyboard.press('Escape');
+  const moveTo = async (x: number, y: number) => {
+    const point = await board.evaluate(
+      (node, point) => {
+        const rect = node.querySelector('canvas')!.getBoundingClientRect();
+        const scale = Number(node.getAttribute('data-scale'));
+        return {
+          x: rect.x + Number(node.getAttribute('data-page-left')) + point.x * scale,
+          y: rect.y + Number(node.getAttribute('data-page-top')) + point.y * scale,
+        };
+      },
+      { x, y },
+    );
+    await page.mouse.move(point.x, point.y);
+  };
+  const overlayPixels = () =>
+    board.evaluate((node) => {
+      const canvas = node.querySelectorAll('canvas')[1];
+      const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+      let count = 0;
+      for (let i = 3; i < pixels.length; i += 4) if (pixels[i]) count++;
+      return count;
+    });
+  await moveTo(400, 350);
+  await expect.poll(overlayPixels).toBeGreaterThan(0);
+  await moveTo(150, 350);
+  await expect.poll(overlayPixels).toBe(0);
+});
 
 test('Shape assist toggles without moving or resizing the sidebar', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
-  await page.locator('.create-extra > summary').filter({ hasText: 'Drawing options' }).click();
+  await page.getByLabel('Drawing tools', { exact: true }).click();
   const toggle = page.getByRole('checkbox', { name: 'Shape assist', exact: true });
   await toggle.scrollIntoViewIfNeeded();
-  const geometry = () => page.locator('.vs-lib').evaluate(node => {
-    const rect = node.getBoundingClientRect();
-    const body = node.querySelector('.vs-lib__body')!;
-    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height,
-      scrollTop: body.scrollTop, scrollWidth: body.scrollWidth, clientWidth: body.clientWidth };
-  });
+  const geometry = () =>
+    page.locator('.vs-lib').evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const body = node.querySelector('.vs-lib__body')!;
+      return {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        scrollTop: body.scrollTop,
+        scrollWidth: body.scrollWidth,
+        clientWidth: body.clientWidth,
+      };
+    });
   const before = await geometry();
   for (let i = 0; i < 4; i++) {
-    await page.locator('.create-assist-toggle .vs-switch__track').click();
+    await toggle.setChecked(i % 2 === 0);
     expect(await toggle.isChecked()).toBe(i % 2 === 0);
     expect(await geometry()).toEqual(before);
   }
@@ -34,16 +93,33 @@ test('asset selection changes redraw only the overlay, not the image artwork', a
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
   await page.locator('.v1-asset-grid button').first().click();
   await page.waitForTimeout(400);
-  await page.evaluate(() => (window as Window & { imageDraws: number }).imageDraws = 0);
+  await page.evaluate(() => ((window as Window & { imageDraws: number }).imageDraws = 0));
   const board = page.getByLabel('Editable vision board', { exact: true });
+  const geometry = () =>
+    board.evaluate((node) => ({
+      width: node.clientWidth,
+      height: node.clientHeight,
+      left: node.getAttribute('data-page-left'),
+      top: node.getAttribute('data-page-top'),
+      scale: node.getAttribute('data-scale'),
+      canvases: Array.from(node.querySelectorAll('canvas')).map((canvas) => ({
+        width: canvas.width,
+        height: canvas.height,
+      })),
+    }));
+  const before = await geometry();
   for (let i = 0; i < 4; i++) {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('toolbar', { name: 'Selection controls' })).toHaveCount(0);
+    expect(await geometry()).toEqual(before);
     const box = (await board.locator('canvas').first().boundingBox())!;
     const scale = Number(await board.getAttribute('data-scale'));
-    await page.mouse.click(box.x + Number(await board.getAttribute('data-page-left')) + 180 * scale,
-      box.y + Number(await board.getAttribute('data-page-top')) + 180 * scale);
+    await page.mouse.click(
+      box.x + Number(await board.getAttribute('data-page-left')) + 180 * scale,
+      box.y + Number(await board.getAttribute('data-page-top')) + 180 * scale,
+    );
     await expect(page.getByRole('toolbar', { name: 'Selection controls' })).toBeVisible();
+    expect(await geometry()).toEqual(before);
   }
   await page.waitForTimeout(100);
   expect(await page.evaluate(() => (window as Window & { imageDraws: number }).imageDraws)).toBe(0);
@@ -54,27 +130,31 @@ test('drawing tools live in the slim sidebar and Escape returns to arranging', a
   await expect(page.getByRole('toolbar', { name: 'Canvas tools' })).toHaveCount(0);
   await page.getByLabel('Drawing tools', { exact: true }).click();
   const trigger = (await page.getByLabel('Drawing tools', { exact: true }).boundingBox())!;
-  await expect.poll(async () => {
-    const palette = (await page.locator('.vs-draw-pop').boundingBox())!;
-    return Math.abs(palette.y - trigger.y);
-  }).toBeLessThan(2);
-  expect((await page.locator('.vs-draw-pop').boundingBox())!.x).toBeGreaterThan(trigger.x + trigger.width);
+  await expect
+    .poll(async () => {
+      const palette = (await page.locator('.vs-draw-pop').boundingBox())!;
+      return Math.abs(palette.y - trigger.y);
+    })
+    .toBeLessThan(2);
+  expect((await page.locator('.vs-draw-pop').boundingBox())!.x).toBeGreaterThan(
+    trigger.x + trigger.width,
+  );
   await page.getByRole('button', { name: 'pen', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Select', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'marker', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Select', exact: true })).toBeVisible();
   const board = page.getByLabel('Editable vision board', { exact: true });
-  expect(await board.evaluate(node => getComputedStyle(node).cursor)).toContain('url(');
+  expect(await board.evaluate((node) => getComputedStyle(node).cursor)).toContain('url(');
   await page.getByLabel('Drawing tools', { exact: true }).click();
   await expect(page.getByRole('toolbar', { name: 'Drawing palette' })).toBeVisible();
-  expect(await board.evaluate(node => getComputedStyle(node).cursor)).toContain('url(');
+  expect(await board.evaluate((node) => getComputedStyle(node).cursor)).toContain('url(');
   await page.getByLabel('Drawing tools', { exact: true }).click();
   await page.getByRole('button', { name: 'Select', exact: true }).click();
-  expect(await board.evaluate(node => getComputedStyle(node).cursor)).toBe('default');
+  expect(await board.evaluate((node) => getComputedStyle(node).cursor)).toBe('default');
   await page.getByLabel('Drawing tools', { exact: true }).click();
   await page.getByRole('button', { name: 'pen', exact: true }).click();
   await page.keyboard.press('Escape');
-  expect(await board.evaluate(node => getComputedStyle(node).cursor)).toBe('default');
+  expect(await board.evaluate((node) => getComputedStyle(node).cursor)).toBe('default');
   await expect(page.getByRole('toolbar', { name: 'Drawing palette' })).toHaveCount(0);
   await page.getByLabel('Drawing tools', { exact: true }).click();
   await page.mouse.click(600, 150);
@@ -83,7 +163,9 @@ test('drawing tools live in the slim sidebar and Escape returns to arranging', a
   await expect(page.getByRole('toolbar', { name: 'Drawing palette' })).toHaveCount(0);
 });
 
-test('objects beyond board edges do not expand or reposition the canvas surface', async ({ page }) => {
+test('objects beyond board edges do not expand or reposition the canvas surface', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'rectangle', exact: true }).click();
@@ -91,17 +173,22 @@ test('objects beyond board edges do not expand or reposition the canvas surface'
   await page.getByRole('checkbox', { name: 'Snap to edges', exact: true }).uncheck();
   await page.waitForTimeout(350);
   const board = page.getByLabel('Editable vision board', { exact: true });
-  const geometry = () => board.evaluate(node => ({
-    left: node.getAttribute('data-page-left'), top: node.getAttribute('data-page-top'),
-    width: node.scrollWidth, height: node.scrollHeight,
-  }));
+  const geometry = () =>
+    board.evaluate((node) => ({
+      left: node.getAttribute('data-page-left'),
+      top: node.getAttribute('data-page-top'),
+      width: node.scrollWidth,
+      height: node.scrollHeight,
+    }));
   const before = await geometry();
   await page.getByRole('spinbutton', { name: 'Item X', exact: true }).fill('-200');
   await page.getByRole('spinbutton', { name: 'Item X', exact: true }).blur();
   expect(await geometry()).toEqual(before);
 });
 
-test('editing toolbar leaves the canvas fixed and marquee can start outside the board', async ({ page }) => {
+test('editing toolbar leaves the canvas fixed and marquee can start outside the board', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'rectangle', exact: true }).click();
@@ -109,10 +196,10 @@ test('editing toolbar leaves the canvas fixed and marquee can start outside the 
   const board = page.getByLabel('Editable vision board', { exact: true });
   const canvas = board.locator('canvas').first();
   const selectedBounds = await canvas.boundingBox();
-  await canvas.evaluate(node => node.setAttribute('data-stable-canvas', 'original'));
+  await canvas.evaluate((node) => node.setAttribute('data-stable-canvas', 'original'));
   const selectedScale = await board.getAttribute('data-scale');
   const toolbar = page.getByRole('toolbar', { name: 'Selection controls' });
-  expect(await toolbar.evaluate(node => getComputedStyle(node).position)).toBe('fixed');
+  expect(await toolbar.evaluate((node) => getComputedStyle(node).position)).toBe('fixed');
   const toolbarBounds = (await toolbar.boundingBox())!;
   const boardTop = selectedBounds!.y + Number(await board.getAttribute('data-page-top'));
   expect(toolbarBounds.y + toolbarBounds.height).toBeLessThanOrEqual(boardTop);
@@ -135,7 +222,9 @@ test('editing toolbar leaves the canvas fixed and marquee can start outside the 
   expect(await board.getAttribute('data-scale')).toBe(selectedScale);
 });
 
-test('clicking empty workspace outside the board clears selection without deleting content', async ({ page }) => {
+test('clicking empty workspace outside the board clears selection without deleting content', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.locator('.text-panel button').first().click();
@@ -150,7 +239,9 @@ test('clicking empty workspace outside the board clears selection without deleti
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
 });
 
-test('deleting the final selected item leaves an empty board without a selection-like focus ring', async ({ page }) => {
+test('deleting the final selected item leaves an empty board without a selection-like focus ring', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.locator('.text-panel button').first().click();

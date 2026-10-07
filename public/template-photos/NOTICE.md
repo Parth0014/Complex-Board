@@ -2,8 +2,15 @@
 
 These eight photographs are distributed with the editable collage templates under the
 [Unsplash License](https://unsplash.com/license). The layouts, captions, and paper elements
-are original to Vision Studio. Pinterest and Canva examples were used as design references;
+are original to Gratitude Studio. Pinterest and Canva examples were used as design references;
 their templates and imagery are not included.
+
+License terms checked on 7 October 2026: the linked license permits copying,
+distribution and commercial use. It prohibits selling photographs without
+significant modification and compiling a competing image service. These eight
+starter images accompany editable board compositions; they are not offered as
+a standalone stock-photo collection. The source links below record the existing
+provenance; individual photographer identities have not been independently verified.
 
 | File | Original image |
 | --- | --- |

@@ -1,5 +1,5 @@
 /* ============================================================
-   Vision Studio V5 — app chrome redesign
+   Gratitude Studio V5 — app chrome redesign
    Premium UI: Header, library dock, canvas, selection pills, 
    inspector, bottom clusters, dialogs, responsive breakpoints.
    ============================================================ */
@@ -26,10 +26,13 @@
   gap: 16px;
   padding: 0 16px;
   /* Rich dark background with subtle texture/gradient */
-  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%), #0f1117;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%), #0f1117;
   color: #ffffff;
   /* Subtle bottom glow separator */
-  box-shadow: inset 0 -1px 0 0 rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow:
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.2);
   border: none;
   z-index: var(--vs-z-popover);
   position: relative;
@@ -152,7 +155,8 @@
   transition: all 0.25s var(--vs-spring);
 }
 
-.vs-file-btn:hover, .vs-menu[open] .vs-file-btn {
+.vs-file-btn:hover,
+.vs-menu[open] .vs-file-btn {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
   filter: brightness(1.1);
@@ -161,7 +165,6 @@
 .vs-file-btn .vs-menu__pop {
   color: var(--vs-ink);
 }
-
 
 /* ---------------- library dock ---------------- */
 .vs-lib {
@@ -177,7 +180,9 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.04);
   overflow: hidden;
   transition: width 0.4s var(--vs-spring);
 }
@@ -276,7 +281,7 @@
   border-radius: 50%;
   background: #8b5cf6;
   border: 2px solid #fff;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 .vs-lib__panel {
@@ -323,7 +328,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(0,0,0,0.01);
+  background: rgba(0, 0, 0, 0.01);
 }
 
 .vs-lib__foot svg {
@@ -337,7 +342,9 @@
   position: relative;
   overflow: hidden;
   /* Clean subtle dot pattern */
-  background: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px) 0 0 / 24px 24px, #fafafa;
+  background:
+    radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px) 0 0 / 24px 24px,
+    #fafafa;
 }
 
 .vs-stage-fill {
@@ -372,8 +379,8 @@
   font-weight: 600;
   padding: 10px 16px;
   border-radius: 100px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   max-width: min(520px, 80%);
 }
 
@@ -492,7 +499,9 @@
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 100px;
   padding: 6px 10px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.03);
   overflow-x: auto;
   scrollbar-width: none;
   transition: all 0.4s var(--vs-spring);
@@ -514,7 +523,7 @@
   padding: 8px 16px;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(99,102,241,0.2);
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.2);
 }
 
 .vs-sel__chip small {
@@ -633,7 +642,7 @@
   transform: translateX(-50%);
   min-width: 200px;
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 .vs-sel .vs-menu__pop .vs-menu__item {
@@ -692,7 +701,7 @@
 .vs-sel__design:hover {
   background: var(--vs-accent-deep, #4f46e5);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .vs-sel__design.is-active {
@@ -782,9 +791,13 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.08),
+    0 2px 10px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  transition: transform 0.4s var(--vs-spring), opacity 0.4s var(--vs-spring);
+  transition:
+    transform 0.4s var(--vs-spring),
+    opacity 0.4s var(--vs-spring);
 }
 
 @media (max-width: 719px) {
@@ -843,10 +856,11 @@
   border-radius: 14px;
   background: #ffffff;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
-.vs-sec > summary, .vs-sec__head {
+.vs-sec > summary,
+.vs-sec__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -959,11 +973,13 @@
 
 .vs-swatch:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .vs-swatch.is-active {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--vs-accent);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--vs-accent);
 }
 
 .vs-quickstyles {
@@ -1027,7 +1043,7 @@
 
 .vs-inspector__empty:hover .vs-empty__icon {
   transform: scale(1.05) rotate(2deg);
-  border-color: rgba(0,0,0,0.15);
+  border-color: rgba(0, 0, 0, 0.15);
   background: rgba(0, 0, 0, 0.04);
 }
 
@@ -1147,13 +1163,16 @@
 }
 
 /* ---------------- bottom clusters ---------------- */
-.vs-pages, .vs-zoom {
+.vs-pages,
+.vs-zoom {
   position: absolute;
   z-index: var(--vs-z-float);
   bottom: 24px;
   display: flex;
   align-items: center;
-  transition: left 0.4s var(--vs-spring), right 0.4s var(--vs-spring);
+  transition:
+    left 0.4s var(--vs-spring),
+    right 0.4s var(--vs-spring);
   gap: 6px;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
@@ -1176,16 +1195,20 @@
 }
 
 @media (max-width: 1149px) {
-  .canvas-tools { display: none; }
+  .canvas-tools {
+    display: none;
+  }
 }
 
-.vs-pages .vs-icon-btn, .vs-zoom .vs-icon-btn {
+.vs-pages .vs-icon-btn,
+.vs-zoom .vs-icon-btn {
   width: 36px;
   height: 36px;
   border-radius: 100px;
   transition: all 0.2s var(--vs-spring);
 }
-.vs-pages .vs-icon-btn:hover, .vs-zoom .vs-icon-btn:hover {
+.vs-pages .vs-icon-btn:hover,
+.vs-zoom .vs-icon-btn:hover {
   background: rgba(0, 0, 0, 0.04);
 }
 
@@ -1242,7 +1265,7 @@
   overflow-y: auto;
   min-width: 240px;
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 .vs-items-pop .vs-menu__item {
@@ -1290,7 +1313,10 @@
 }
 
 @keyframes vs-fade {
-  from { opacity: 0; backdrop-filter: blur(0px); }
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
 }
 
 .vs-dialog {
@@ -1300,13 +1326,18 @@
   overflow-y: auto;
   background: #ffffff;
   border-radius: 24px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.08);
   padding: 28px;
   animation: vs-pop 0.4s var(--vs-spring);
 }
 
 @keyframes vs-pop {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
 }
 
 .vs-dialog__head {
@@ -1376,7 +1407,7 @@
 
 .vs-export__card:hover {
   border-color: var(--vs-accent);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
 }
 
@@ -1448,7 +1479,7 @@
   color: var(--vs-accent);
   background: var(--vs-accent-soft);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .vs-export__utils {
@@ -1474,7 +1505,7 @@
 .vs-export__util:hover {
   border-color: var(--vs-accent);
   background: #ffffff;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   transform: translateY(-1px);
 }
 
@@ -1564,7 +1595,6 @@
   max-width: min(560px, calc(100% - 40px));
 }
 
-
 /* ---------------- responsive ---------------- */
 @media (max-width: 1279px) {
   .vs-sel {
@@ -1638,7 +1668,7 @@
     width: 100%;
     flex-direction: row;
     border-right: 0;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     padding: 10px 12px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1699,7 +1729,8 @@
   .canvas-tools {
     display: none;
   }
-  .vs-export__featured, .vs-export__utils {
+  .vs-export__featured,
+  .vs-export__utils {
     grid-template-columns: 1fr;
   }
   .vs-export__grid {
@@ -1708,7 +1739,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vs *, .vs *::before, .vs *::after {
+  .vs *,
+  .vs *::before,
+  .vs *::after {
     transition: none !important;
     animation: none !important;
   }

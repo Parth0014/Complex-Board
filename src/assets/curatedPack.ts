@@ -1,6 +1,5 @@
 import manifest from '../../public/curated-v1/manifest.json';
 import type { AssetProvider, GratitudeAsset } from './contracts';
-import { files } from './curatedSources';
 
 let loaded: Promise<GratitudeAsset[]> | undefined;
 function getAssets(): Promise<GratitudeAsset[]> {
@@ -12,6 +11,7 @@ function getAssets(): Promise<GratitudeAsset[]> {
   return loaded;
 }
 async function loadAssets(): Promise<GratitudeAsset[]> {
+  const { files } = await import('./curatedSources');
   return manifest.assets.map((entry) => {
     const source = files[`../../public/curated-v1/${entry.file}`];
     if (!source) throw new Error(`Missing curated asset: ${entry.file}`);

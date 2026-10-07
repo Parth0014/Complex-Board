@@ -22,7 +22,9 @@ export function BoardSizeControl({ adapter }: { adapter: EditorAdapter }) {
         }}
       >
         {!BOARD_SIZES.some(([size]) => size === value) && (
-          <option value={value} disabled hidden>Current board</option>
+          <option value={value} disabled hidden>
+            Current board
+          </option>
         )}
         {BOARD_SIZES.map(([size, label]) => (
           <option key={size} value={size}>

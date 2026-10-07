@@ -110,13 +110,9 @@ export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
   const [error, setError] = useState('');
   return (
     <div className="templates-panel">
-      <p className="library-help">
-        Start with a layered photo collage or a simple layout. Edit every photo, note and title to
-        tell your story.
-      </p>
       {applied && (
         <p className="panel-inline-status" role="status">
-          Template added. Make the words yours and replace the photos with your own.
+          Template added.
         </p>
       )}
       {error && (
@@ -135,7 +131,6 @@ export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
             </div>
             <div className="templates-panel__meta">
               <h3>{template.title}</h3>
-              <p className="templates-panel__desc">{template.description}</p>
               <button
                 type="button"
                 className="templates-panel__apply"
@@ -153,7 +148,7 @@ export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
                   }
                 }}
               >
-                Use this template <ArrowRightIcon />
+                Use template <ArrowRightIcon />
               </button>
             </div>
           </li>
