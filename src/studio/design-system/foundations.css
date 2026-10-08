@@ -1,0 +1,40 @@
+/* Gratitude Studio: foundation v1. Opt-in until the component migration. */
+:root {
+  --gs-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --gs-text: #25272b;
+  --gs-text-secondary: #62666e;
+  --gs-text-disabled: #92969e;
+  --gs-surface: #ffffff;
+  --gs-surface-muted: #f6f7f8;
+  --gs-workspace: #eff1f3;
+  --gs-hover: #eef0f2;
+  --gs-line: #e4e6e9;
+  --gs-control-line: #b6bbc3;
+  --gs-accent: #5846d6;
+  --gs-accent-hover: #4937bf;
+  --gs-accent-soft: #efecfc;
+  --gs-danger: #b42318;
+  --gs-success: #20734b;
+  --gs-space-1: 4px;
+  --gs-space-2: 8px;
+  --gs-space-3: 12px;
+  --gs-space-4: 16px;
+  --gs-space-5: 24px;
+  --gs-space-6: 32px;
+  --gs-radius-control: 5px;
+  --gs-radius-menu: 8px;
+  --gs-radius-dialog: 12px;
+  --gs-control-height: 32px;
+  --gs-touch-target: 44px;
+  --gs-icon-size: 16px;
+  --gs-icon-stroke: 1.5;
+  --gs-shadow-popup: 0 4px 18px #20242b1a;
+  --gs-shadow-dialog: 0 12px 40px #20242b29;
+  --gs-focus: 0 0 0 2px #ffffff, 0 0 0 4px #5846d6;
+  --gs-duration-feedback: 100ms;
+  --gs-duration-overlay: 150ms;
+  --gs-header-height: 48px;
+  --gs-rail-width: 56px;
+  --gs-library-width: 272px;
+  --gs-footer-height: 40px;
+}

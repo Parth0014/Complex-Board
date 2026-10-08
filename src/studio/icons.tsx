@@ -21,6 +21,8 @@ import {
   CaseUpper,
   Check,
   ChevronDown,
+  ChevronRight,
+  CopyPlus,
   Circle,
   ClipboardPaste,
   Cloud,
@@ -95,12 +97,12 @@ import type { StudioTab } from './studioTypes';
 
 /**
  * Single icon surface for the whole app. Every icon is a Lucide glyph on a
- * 24px grid with a consistent 1.8 stroke — no emoji, no text glyphs in chrome.
+ * 24px grid with a consistent 1.5 stroke — no emoji, no text glyphs in chrome.
  */
 function ic(Icon: LucideIcon, defaultSize = 18) {
   return function StudioIcon({
     size = defaultSize,
-    strokeWidth = 1.8,
+    strokeWidth = 1.5,
   }: {
     size?: number;
     strokeWidth?: number;
@@ -121,7 +123,7 @@ export const TabIcon = ({ tab, size = 20 }: { tab: StudioTab; size?: number }) =
     ai: WandSparkles,
   };
   const Icon = map[tab];
-  return <Icon size={size} strokeWidth={1.8} aria-hidden="true" focusable="false" />;
+  return <Icon size={size} strokeWidth={1.5} aria-hidden="true" focusable="false" />;
 };
 
 /* Brand */
@@ -163,6 +165,7 @@ export const ShareIcon = ic(Share2);
 export const DotsIcon = ic(MoreHorizontal);
 export const ArrowRightIcon = ic(ArrowRight, 15);
 export const ChevronDownIcon = ic(ChevronDown, 14);
+export const ChevronRightIcon = ic(ChevronRight, 14);
 export const HeartIcon = ic(Heart, 15);
 export const TypeIcon = ic(Type, 16);
 export const CloseIcon = ic(X);
@@ -173,6 +176,7 @@ export const BackupDownIcon = ic(FileDown, 16);
 
 /* Selection + inspector */
 export const DuplicateIcon = ic(Copy);
+export const DuplicateItemIcon = ic(CopyPlus);
 export const TrashIcon = ic(Trash2);
 export const LayersIcon = ic(Layers);
 export const CropIcon = ic(Crop);
@@ -274,7 +278,7 @@ export const ShapeIcon = ({ shape, size = 22 }: { shape: string; size?: number }
     hexagon: Hexagon,
   };
   const Icon = map[shape] ?? Square;
-  return <Icon size={size} strokeWidth={1.8} aria-hidden="true" focusable="false" />;
+  return <Icon size={size} strokeWidth={1.5} aria-hidden="true" focusable="false" />;
 };
 
 /* Legacy alias kept for any lingering import */

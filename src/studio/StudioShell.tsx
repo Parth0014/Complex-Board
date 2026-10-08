@@ -309,12 +309,7 @@ export function StudioShell({
                     }}
                   />
                 ) : (
-                  <CuratedPanel
-                    key={elementCategory}
-                    initialCategory={elementCategory}
-                    ownerWindow={adapter.ownerWindow}
-                    onInsert={(asset) => adapter.insertAsset(asset)}
-                  />
+                  <CuratedPanel key={elementCategory} adapter={adapter} />
                 )}
               </div>
             </section>

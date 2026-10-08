@@ -12,16 +12,16 @@
   --vs-z-modal: 50;
 
   /* Premium warmer, blue-tinted darks */
-  --vs-ink: #0f1117;
-  --vs-ink-2: #3f4354;
-  --vs-mute: #71778c;
-  --vs-faint: #b4b9c9;
+  --vs-ink: var(--gs-text);
+  --vs-ink-2: var(--gs-text-secondary);
+  --vs-mute: var(--gs-text-secondary);
+  --vs-faint: var(--gs-text-disabled);
 
-  --vs-line: #e2e4ec;
-  --vs-line-soft: #f0f2f8;
-  --vs-panel: #ffffff;
-  --vs-panel-2: #f8f9fc;
-  --vs-wash: #f3f5f9;
+  --vs-line: var(--gs-control-line);
+  --vs-line-soft: var(--gs-line);
+  --vs-panel: var(--gs-surface);
+  --vs-panel-2: var(--gs-surface-muted);
+  --vs-wash: var(--gs-workspace);
 
   --vs-surface-glass: rgba(255, 255, 255, 0.7);
   --vs-border-subtle: rgba(15, 17, 23, 0.08);
@@ -35,31 +35,31 @@
   --vs-chrome-mute: #a3abc0;
 
   /* Indigo to Violet Accent */
-  --vs-accent: #4f46e5;
-  --vs-accent-deep: #4338ca;
-  --vs-accent-soft: #eef2ff;
+  --vs-accent: var(--gs-accent);
+  --vs-accent-deep: var(--gs-accent-hover);
+  --vs-accent-soft: var(--gs-accent-soft);
   --vs-accent-ink: #ffffff;
-  --vs-gradient-accent: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --vs-gradient-accent: var(--gs-accent);
 
-  --vs-danger: #ef4444;
+  --vs-danger: var(--gs-danger);
   --vs-danger-soft: #fef2f2;
-  --vs-ok: #10b981;
+  --vs-ok: var(--gs-success);
   --vs-ok-soft: #ecfdf5;
   --vs-warn: #f59e0b;
   --vs-warn-soft: #fffbeb;
 
-  --vs-r-sm: 8px;
-  --vs-r-md: 12px;
-  --vs-r-lg: 16px;
+  --vs-r-sm: var(--gs-radius-control);
+  --vs-r-md: var(--gs-radius-menu);
+  --vs-r-lg: var(--gs-radius-dialog);
   --vs-r-pill: 999px;
 
   /* Colored, nuanced shadows */
-  --vs-shadow-1: 0 1px 2px rgba(15, 17, 23, 0.04), 0 4px 12px rgba(15, 17, 23, 0.03);
-  --vs-shadow-2: 0 4px 12px rgba(15, 17, 23, 0.05), 0 16px 32px rgba(15, 17, 23, 0.08);
-  --vs-shadow-3: 0 12px 32px rgba(15, 17, 23, 0.08), 0 32px 80px rgba(15, 17, 23, 0.12);
+  --vs-shadow-1: var(--gs-shadow-popup);
+  --vs-shadow-2: var(--gs-shadow-popup);
+  --vs-shadow-3: var(--gs-shadow-dialog);
 
-  --vs-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  --vs-header-h: 56px;
+  --vs-font: var(--gs-font);
+  --vs-header-h: var(--gs-header-height);
   --vs-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 

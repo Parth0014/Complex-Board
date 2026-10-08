@@ -10,6 +10,9 @@ export type GeneratedBoardVisuals = {
 
 export type VisionTheme = 'light' | 'dark';
 export type VisionFontFamily =
+  | 'fraunces'
+  | 'caveat-brush'
+  | 'dm-sans'
   | 'cascadia'
   | 'georgia'
   | 'nunito'
@@ -194,6 +197,8 @@ export interface EditorAdapter extends StudioAdapter {
   copyStyle(): void;
   pasteStyle(): void;
   canPasteStyle: boolean;
+  resizeObjectBounds(id: string, width: number, height: number): void;
+  fitObjectBounds(id: string): void;
   recolorAsset(from: string, to: string): Promise<void>;
   removeBackground(): Promise<void>;
   upscaleImage(): Promise<void>;

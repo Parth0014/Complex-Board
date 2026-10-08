@@ -12,6 +12,8 @@ export interface BoardItem {
   height: number;
   rotation: number;
   opacity: number;
+  fixedBounds?: boolean;
+  contentSize?: { width: number; height: number };
   text?: string;
   fontFamily?: VisionFontFamily;
   fontSize?: number;
@@ -26,6 +28,8 @@ export interface BoardItem {
   flipY?: boolean;
   borderWidth?: number;
   borderColor?: string;
+  stickerWidth?: number;
+  stickerColor?: string;
   shadow?: 'none' | 'soft' | 'medium' | 'hard';
   borderStyle?: 'solid' | 'dashed' | 'dotted';
   radius?: number;
@@ -47,6 +51,9 @@ export interface BoardItem {
   textRuns?: TextRun[];
   kerning?: boolean;
   ligatures?: boolean;
+  vectorPath?: string;
+  vectorClip?: number[];
+  vectorBox?: { x: number; y: number; width: number; height: number };
   shape?:
     | 'rectangle'
     | 'circle'

@@ -185,7 +185,10 @@ export function KonvaStage({
     );
   // Object movement must never resize the scroll surface or move the board origin.
   const stageWidth = Math.max(size.width, document.width * scale + 96);
-  const stageHeight = Math.max(size.height, document.height * scale + 80);
+  // Keep room to scroll edge artwork clear of the floating toolbar and footer,
+  // even when the whole board already fits in the viewport.
+  const verticalScrollSpace = 240;
+  const stageHeight = Math.max(size.height, document.height * scale) + verticalScrollSpace * 2;
   const left = (stageWidth - document.width * scale) / 2;
   const top = (stageHeight - document.height * scale) / 2;
   const centeredView = useRef('');
@@ -926,8 +929,6 @@ export function KonvaStage({
             y={top}
             scaleX={scale}
             scaleY={scale}
-            clipWidth={adapter.snapToEdges ? document.width : undefined}
-            clipHeight={adapter.snapToEdges ? document.height : undefined}
           >
             <Rect
               id="page-background"
@@ -1130,6 +1131,14 @@ export function KonvaStage({
                   width: Math.max(10, node.width() * node.scaleX()),
                   height: Math.max(10, node.height() * node.scaleY()),
                   rotation: node.rotation(),
+                  ...(item?.contentSize
+                    ? {
+                        contentSize: {
+                          width: item.contentSize.width * node.scaleX(),
+                          height: item.contentSize.height * node.scaleY(),
+                        },
+                      }
+                    : {}),
                   ...(item?.kind === 'text'
                     ? { fontSize: Math.max(8, (item.fontSize || 40) * node.scaleY()) }
                     : {}),

@@ -125,7 +125,9 @@ export function RichText({
               node.style.italic ? 'italic' : '',
             ].join(' ')}
             fill={node.style.color || item.color || '#33272b'}
-            strokeWidth={item.effect === 'outline' ? 2 : 0}
+            strokeWidth={item.borderWidth || (item.effect === 'outline' ? 2 : 0)}
+            fillAfterStrokeEnabled
+            lineJoin="round"
             textDecoration={[
               node.style.underline ? 'underline' : '',
               node.style.strike ? 'line-through' : '',

@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  /><title>Gratitude Studio ? Design system</title
+  ><link rel="stylesheet" href="../../src/studio/design-system/foundations.css" /><style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--gs-surface-muted);
+      color: var(--gs-text);
+      font: 13px/1.5 var(--gs-font);
+    }
+    main {
+      max-width: 1040px;
+      margin: 48px auto;
+      padding: 0 24px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.6px;
+    }
+    h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+    }
+    p {
+      color: var(--gs-text-secondary);
+      max-width: 650px;
+    }
+    .samples {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+      color: inherit;
+    }
+    button {
+      height: 32px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: var(--gs-hover);
+    }
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--gs-accent);
+      outline-offset: 2px;
+    }
+    .primary {
+      background: var(--gs-accent);
+      color: white;
+    }
+    .primary:hover {
+      background: var(--gs-accent-hover);
+    }
+    .active {
+      background: var(--gs-accent-soft);
+      color: var(--gs-accent);
+    }
+    button:disabled {
+      color: var(--gs-text-disabled);
+    }
+    input,
+    select {
+      height: 32px;
+      padding: 0 8px;
+      border: 1px solid var(--gs-control-line);
+      border-radius: 5px;
+      background: white;
+    }
+    .palette span {
+      width: 110px;
+      height: 68px;
+      padding: 40px 8px 0;
+      border: 1px solid var(--gs-line);
+      border-radius: 5px;
+      font-size: 11px;
+    }
+    .mock {
+      border: 1px solid var(--gs-line);
+      background: var(--gs-workspace);
+      height: 380px;
+      display: grid;
+      grid-template-columns: 56px 232px 1fr;
+      grid-template-rows: 48px 1fr 40px;
+    }
+    .head {
+      grid-column: 1/-1;
+      background: white;
+      border-bottom: 1px solid var(--gs-line);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 16px;
+    }
+    .head small {
+      color: var(--gs-text-secondary);
+    }
+    .head .primary {
+      margin-left: auto;
+    }
+    .rail,
+    .library {
+      background: white;
+      border-right: 1px solid var(--gs-line);
+      padding: 12px 8px;
+    }
+    .rail button {
+      padding: 0;
+      width: 38px;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+    .library {
+      padding: 16px;
+    }
+    .shapes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 16px;
+    }
+    .shapes button {
+      height: 48px;
+      font-size: 12px;
+    }
+    .board {
+      background: #fff7df;
+      width: 65%;
+      height: 70%;
+      margin: auto;
+      display: grid;
+      place-items: center;
+      color: #5a4a33;
+    }
+    .foot {
+      grid-column: 1/-1;
+      border-top: 1px solid var(--gs-line);
+      background: white;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    .foot .zoom {
+      margin-left: auto;
+    }
+    .menu {
+      width: 260px;
+      background: white;
+      border: 1px solid var(--gs-line);
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: var(--gs-shadow-popup);
+    }
+    .menu button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      text-align: left;
+      gap: 10px;
+    }
+    .menu kbd {
+      margin-left: auto;
+      font: 11px var(--gs-font);
+      background: var(--gs-surface-muted);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .menu hr {
+      border: 0;
+      border-top: 1px solid var(--gs-line);
+      margin: 6px;
+    }
+    .danger {
+      color: var(--gs-danger);
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .panel {
+      background: white;
+      border: 1px solid var(--gs-line);
+      border-radius: 8px;
+      padding: 12px;
+      width: 280px;
+      display: grid;
+      gap: 12px;
+    }
+    .swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      padding: 0;
+    }
+    .type div {
+      margin-bottom: 6px;
+    }
+    @media (max-width: 700px) {
+      .mock {
+        grid-template-columns: 48px 1fr;
+      }
+      .library {
+        display: none;
+      }
+      main {
+        margin-top: 24px;
+      }
+      .board {
+        width: 80%;
+      }
+    }
+  </style>
+  <main>
+    <small>GRATITUDE STUDIO / FOUNDATION V1</small>
+    <h1>Quiet tools. Clear choices.</h1>
+    <p>
+      A restrained editor system. One accent, compact controls, clear alignment, and consistent
+      behavior. This specimen defines the next redesign; the live app is unchanged.
+    </p>
+    <h2>Semantic palette</h2>
+    <div class="samples palette">
+      <span style="background: #fff">Surface</span><span style="background: #eff1f3">Workspace</span
+      ><span style="background: #25272b; color: white">Text</span
+      ><span style="background: #5846d6; color: white">Accent</span
+      ><span style="background: #efecfc">Selected</span>
+    </div>
+    <h2>Controls</h2>
+    <div class="samples">
+      <button class="primary">Share</button><button>Duplicate</button
+      ><button class="active" aria-pressed="true">Snap</button><button disabled>Group</button
+      ><label class="field">Text size<input type="number" value="40" style="width: 80px" /></label
+      ><label class="field"
+        >Font<select>
+          <option>System sans</option>
+        </select></label
+      >
+    </div>
+    <h2>Editor density</h2>
+    <div class="mock">
+      <div class="head">
+        <strong>Gratitude Studio</strong><span>A year of becoming</span><small>Saved</small
+        ><button class="primary">Share</button><button>File</button>
+      </div>
+      <div class="rail">
+        <button class="active">Create</button><button>Text</button><button>Photos</button>
+      </div>
+      <div class="library">
+        <strong>Create</strong>
+        <p>Shapes</p>
+        <div class="shapes">
+          <button>Rectangle</button><button>Circle</button><button>Triangle</button
+          ><button>Star</button><button>Heart</button><button>Line</button>
+        </div>
+      </div>
+      <div class="board">Your board comes first.</div>
+      <div class="foot">
+        <span>Page 1</span><button>Add page</button><button>Canvas settings</button
+        ><span class="zoom">? &nbsp; 50% &nbsp; +</span>
+      </div>
+    </div>
+    <h2>Menus and property panels</h2>
+    <div class="samples" style="align-items: flex-start">
+      <div class="menu">
+        <div class="samples" style="padding: 8px">
+          <button
+            class="swatch"
+            style="background: #573575"
+            aria-label="Soft violet"
+            title="Soft violet"
+          ></button
+          ><button
+            class="swatch"
+            style="background: #c89640"
+            aria-label="Golden glow"
+            title="Golden glow"
+          ></button
+          ><button class="swatch" style="background: #222" aria-label="Ink" title="Ink"></button>
+        </div>
+        <button class="active">Text <span style="margin-left: auto">?</span></button
+        ><button>Fill &amp; gradient <span style="margin-left: auto">?</span></button
+        ><button>Appearance <span style="margin-left: auto">?</span></button>
+        <hr />
+        <button>Copy <kbd>Ctrl+C</kbd></button><button>Duplicate <kbd>Ctrl+D</kbd></button
+        ><button>Layer <span style="margin-left: auto">?</span></button>
+        <hr />
+        <button class="danger">Delete <kbd>Del</kbd></button>
+      </div>
+      <div class="panel">
+        <label class="field"
+          >Font<select>
+            <option>System sans</option>
+          </select></label
+        >
+        <div class="samples">
+          <label class="field"
+            >Text size<input style="width: 110px" type="number" value="40" /></label
+          ><label class="field"
+            >Opacity (%)<input style="width: 110px" type="number" value="100"
+          /></label>
+        </div>
+        <label class="field"
+          >Text color
+          <div class="samples">
+            <span style="width: 28px; height: 28px; background: #25272b; border-radius: 6px"></span
+            ><span>#25272B</span>
+          </div></label
+        ><button>Advanced text &nbsp; ?</button>
+      </div>
+    </div>
+    <h2>Typography</h2>
+    <div class="type">
+      <div style="font-size: 18px; font-weight: 600">Dialog title ? 18 / 26</div>
+      <div style="font-size: 15px; font-weight: 600">Panel heading ? 15 / 22</div>
+      <div>Controls and body ? 13 / 20</div>
+      <div style="font-size: 12px; color: #62666e">Section labels and metadata ? 12 / 18</div>
+    </div>
+    <p>
+      See DESIGN_SYSTEM.md for interaction rules, responsive behavior, accessibility targets, and
+      migration acceptance criteria.
+    </p>
+  </main>
+</html>

@@ -8,11 +8,11 @@ The following font files were retained from the previous repository. Their upstr
 
 Actual binary metadata and the Virgil upstream SHA-256 match were inspected; see [font provenance](licenses/FONT_PROVENANCE.md), including the legacy embedded license wording.
 
-| File | Family / upstream | License text |
-|---|---|---|
-| `public/Assistant-Regular.woff2` | [Assistant](https://github.com/hafontia/Assistant) | [Assistant OFL](licenses/Assistant-OFL.txt) |
-| `public/Cascadia.woff2` | [Cascadia Code](https://github.com/microsoft/cascadia-code) | [Cascadia OFL](licenses/Cascadia-OFL.txt) |
-| `public/Virgil.woff2` | [Virgil](https://github.com/excalidraw/virgil) | [Virgil OFL](licenses/Virgil-OFL.md) |
+| File                             | Family / upstream                                           | License text                                |
+| -------------------------------- | ----------------------------------------------------------- | ------------------------------------------- |
+| `public/Assistant-Regular.woff2` | [Assistant](https://github.com/hafontia/Assistant)          | [Assistant OFL](licenses/Assistant-OFL.txt) |
+| `public/Cascadia.woff2`          | [Cascadia Code](https://github.com/microsoft/cascadia-code) | [Cascadia OFL](licenses/Cascadia-OFL.txt)   |
+| `public/Virgil.woff2`            | [Virgil](https://github.com/excalidraw/virgil)              | [Virgil OFL](licenses/Virgil-OFL.md)        |
 
 Arial and Georgia are browser/system font choices and are not bundled. Older `comic-shanns` and `playfair-display` document IDs are compatibility aliases for Cascadia Code and Georgia respectively; they do not represent bundled copies of those named fonts.
 
@@ -22,7 +22,7 @@ React, React DOM, Konva and react-konva are MIT-licensed. Their upstream notices
 
 ## Artwork
 
-The uploaded gallery contains exactly 250 SVGs. Its existing [notice](public/curated-v1/NOTICE.md) and per-asset manifest metadata are preserved. This change adds no replacement artwork or stock providers.
+The Elements gallery and its 250 bundled SVGs have been removed. Template artwork retains its separate notices.
 
 ## Project license
 

@@ -1,0 +1,1 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"><defs><pattern id="patterns-stripes-blue-p" width="60" height="10" patternUnits="userSpaceOnUse"><rect width="30" height="10" fill="#B8D3EE"/></pattern></defs><rect width="800" height="600" fill="#E8F1FA"/><rect width="800" height="600" fill="url(#patterns-stripes-blue-p)"/></svg>

@@ -1,88 +1,269 @@
-/* Continuous corners for app chrome; canvas artwork keeps its own styling. */
-.vs *,
-.vs *::before,
-.vs *::after {
-  corner-shape: squircle;
-}
+/* Editor surfaces use the shared foundation rather than decorative corners. */
 .vs {
-  --vs-r-sm: 8px;
-  --vs-r-md: 14px;
-  --vs-r-lg: 20px;
-  --vs-r-pill: 9999px;
+  font-size: 13px;
+  line-height: 1.5;
+  --vs-r-sm: var(--gs-radius-control);
+  --vs-r-md: var(--gs-radius-menu);
+  --vs-r-lg: var(--gs-radius-dialog);
 }
-.vs :is(button, input:not([type='range']), select, textarea, summary) {
-  border-radius: var(--vs-r-sm);
-  corner-shape: squircle;
+.vs :is(button, input, select, textarea, summary) {
+  corner-shape: round;
 }
-.vs :is(.vs-lib, .vs-inspector, .vs-modal, .vs-export, .vs-bottom-dock) {
-  border-radius: var(--vs-r-lg);
-  corner-shape: squircle;
+.vs .vs-header {
+  background: var(--gs-surface);
+  color: var(--gs-text);
+  border-bottom: 1px solid var(--gs-line);
+  box-shadow: none;
+  padding: 0 16px;
 }
-.vs
-  :is(
-    .vs-menu__pop,
-    .vs-sec,
-    .vs-tools,
-    .vs-sel,
-    .vs-segmented,
-    .panel-intro-card,
-    .panel-empty-state,
-    .templates-panel__card,
-    .asset-thumb,
-    .background-live-preview,
-    .background-gradient-card,
-    .create-replace-warning,
-    .vs-alert,
-    .panel-inline-error,
-    .panel-inline-status,
-    .canvas-message,
-    .vs-history,
-    .vs-page-select,
-    .vs-sel__chip
-  ) {
-  border-radius: var(--vs-r-md);
-  corner-shape: squircle;
+.vs .vs-header :is(.vs-icon-btn, .vs-file-btn, .vs-compose-action, .vs-history button) {
+  color: var(--gs-text-secondary);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
-.vs
-  :is(
-    .vs-icon-btn,
-    .vs-compose-action,
-    .vs-sel__design,
-    .vs-rail__tab,
-    .vs-segmented button,
-    .panel-action,
-    .panel-secondary-action,
-    .templates-panel__apply,
-    .vs-menu__item,
-    .snap-toggle,
-    .vs-bottom-dock .vs-icon-btn,
-    .vs-bottom-dock .snap-toggle,
-    .vs-bottom-dock .vs-page-select,
-    .vs-bottom-dock select
-  ) {
-  border-radius: var(--vs-r-sm);
-  corner-shape: squircle;
+.vs .vs-brand__name,
+.vs .vs-title input {
+  color: var(--gs-text);
+  font-size: 13px;
 }
-.vs .background-color-grid > button > span:first-child,
-.vs :is(.vs-swatch, .vs-color, .text-panel__add, .panel-intro-card__icon, .vs-empty__icon) {
-  border-radius: 8px;
-  corner-shape: squircle;
+.vs .vs-brand {
+  border-color: var(--gs-line);
 }
-.vs .vs-switch__track,
-.vs .vs-switch__track::after,
-.vs .snap-toggle .vs-switch__track,
-.vs .snap-toggle .vs-switch__track::after {
-  border-radius: 8px;
-  corner-shape: squircle;
+.vs .vs-history {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
-.vs-tooltip {
-  border-radius: var(--vs-r-sm);
-  corner-shape: squircle;
+.vs :is(.vs-btn, .panel-action, .panel-secondary-action, .vs-compose-action) {
+  border-radius: 5px;
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  box-shadow: none;
 }
-/* The unified toolbar has one outer contour, without nested card outlines. */
-.vs .vs-bottom-dock :is(.vs-pages, .vs-zoom, .canvas-tools) {
+.vs :is(.vs-btn--primary, .vs-share-btn) {
+  background: var(--gs-accent);
+  color: white;
+  box-shadow: none;
+}
+.vs button:active:not(:disabled) {
+  transform: none;
+}
+.vs .vs-canvas {
+  background: var(--gs-workspace);
+}
+.vs .vs-lib {
   border-radius: 0;
-  border: none;
+  box-shadow: none;
+  border-color: var(--gs-line);
+}
+.vs .vs-lib:not(.is-collapsed) {
+  width: 328px;
+}
+.vs .vs-lib.is-collapsed {
+  width: 56px;
+}
+.vs .vs-rail {
+  width: 56px;
+  min-width: 56px;
+  padding: 8px 4px;
+  background: var(--gs-surface);
+  border-right: 1px solid var(--gs-line);
+}
+.vs .vs-rail__tab {
+  width: 48px;
+  min-height: 48px;
+  padding: 6px 2px;
+  gap: 3px;
+  font-size: 10px;
+  border-radius: 5px;
+}
+.vs .vs-rail__tab svg {
+  width: 18px;
+  height: 18px;
+}
+.vs .vs-rail__tab::before {
+  display: none;
+}
+.vs .vs-rail__tab.is-active {
+  background: var(--gs-accent-soft);
+  color: var(--gs-accent);
+}
+.vs .vs-lib__panel {
+  width: 272px;
+}
+.vs .vs-lib__head {
+  padding: 14px 16px;
+  min-height: 48px;
+}
+.vs .vs-lib__head h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+.vs .vs-lib__body {
+  padding: 16px;
+}
+.vs .vs-lib__body :is(h3, .panel-section-heading h3) {
+  font-size: 13px;
+  font-weight: 500;
+}
+.vs .shape-grid {
+  gap: 4px;
+}
+.vs .shape-grid button {
+  min-height: 48px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 5px;
   box-shadow: none;
   background: transparent;
+  font-size: 12px;
+  gap: 4px;
+}
+.vs .shape-grid button:hover:not(:disabled) {
+  background: var(--gs-hover);
+  transform: none;
+}
+.vs .shape-grid button svg {
+  width: 20px;
+  height: 20px;
+}
+.vs :is(.vs-input, .vs-select, .vs-textarea) {
+  border-radius: 5px;
+  border-width: 1px;
+  font-size: 13px;
+  box-shadow: none;
+}
+.vs :is(.vs-icon-btn, .vs-sel__menubtn, .vs-page-select) {
+  min-height: 30px;
+  border-radius: 5px;
+  font-size: 12px;
+  box-shadow: none;
+}
+.vs .vs-sel {
+  padding: 4px 6px;
+  border: 1px solid var(--gs-line);
+  border-radius: 8px;
+  box-shadow: var(--gs-shadow-popup);
+  backdrop-filter: none;
+  gap: 4px;
+}
+.vs .vs-bottom-dock {
+  min-height: 40px;
+  padding: 4px 10px;
+  border-radius: 0;
+  background: var(--gs-surface);
+  border-color: var(--gs-line);
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.vs .vs-bottom-dock :is(.vs-pages, .vs-zoom) {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+.vs .vs-pages {
+  order: 0;
+}
+.vs .vs-canvas-settings {
+  order: 1;
+  margin-left: auto;
+}
+.vs .vs-zoom {
+  order: 2;
+}
+.vs .vs-canvas-settings .vs-menu__pop {
+  width: 240px;
+  padding: 8px;
+}
+.vs .vs-canvas-settings .canvas-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+}
+.vs .vs-canvas-settings .snap-toggle {
+  width: 100%;
+  justify-content: space-between;
+  padding: 8px;
+  font-size: 12px;
+  background: transparent;
+}
+.vs .vs-zoom .vs-range {
+  width: 72px;
+}
+.vs :is(.vs-menu__pop, .vs-object-context, .vs-context-flyout) {
+  border-radius: 8px;
+  box-shadow: var(--gs-shadow-popup);
+}
+.vs :focus-visible {
+  outline: 2px solid var(--gs-accent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+@media (max-width: 719px) {
+  .vs .vs-lib:not(.is-collapsed) {
+    width: min(328px, 100vw);
+  }
+  .vs .vs-bottom-dock {
+    flex-wrap: wrap;
+  }
+  .vs .vs-zoom .vs-range {
+    display: none;
+  }
+  .vs .vs-canvas-settings summary {
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vs * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.vs {
+  --vs-font: var(--gs-font);
+  font-family: var(--gs-font);
+}
+.vs .vs-header :is(.vs-brand__name strong, .vs-save, .vs-new-btn, .vs-file-btn) {
+  color: var(--gs-text-secondary);
+}
+.vs .vs-header button:not(.vs-share-btn):not(.vs-btn--primary) {
+  color: var(--gs-text);
+}
+.vs .vs-save__dot {
+  box-shadow: none;
+}
+.vs .create-shape-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.vs .create-shape-grid button {
+  min-height: 52px;
+  height: 52px;
+  padding: 6px 4px;
+  gap: 4px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: none;
+}
+.vs .create-shape-grid button:hover {
+  background: var(--gs-hover);
+  transform: none;
+}
+.vs .create-shape-grid button svg {
+  width: 20px;
+  height: 20px;
+}
+.vs .create-shape-grid button span {
+  font-size: 11px;
 }

@@ -1,0 +1,136 @@
+/* Microsoft Fluent 2 tokens, shared by editor chrome and document portals. */
+:root {
+  --gs-font: var(--fluent-fontFamilyBase);
+  --gs-text: var(--fluent-colorNeutralForeground1);
+  --gs-text-secondary: var(--fluent-colorNeutralForeground2);
+  --gs-text-disabled: var(--fluent-colorNeutralForegroundDisabled);
+  --gs-surface: var(--fluent-colorNeutralBackground1);
+  --gs-surface-muted: var(--fluent-colorNeutralBackground2);
+  --gs-workspace: var(--fluent-colorNeutralBackground3);
+  --gs-hover: var(--fluent-colorNeutralBackground1Hover);
+  --gs-line: var(--fluent-colorNeutralStroke2);
+  --gs-control-line: var(--fluent-colorNeutralStroke1);
+  --gs-accent: var(--fluent-colorBrandBackground);
+  --gs-accent-hover: var(--fluent-colorBrandBackgroundHover);
+  --gs-accent-soft: var(--fluent-colorBrandBackground2);
+  --gs-danger: var(--fluent-colorPaletteRedForeground1);
+  --gs-success: var(--fluent-colorPaletteGreenForeground1);
+  --gs-radius-control: var(--fluent-borderRadiusMedium);
+  --gs-radius-menu: var(--fluent-borderRadiusXLarge);
+  --gs-radius-dialog: var(--fluent-borderRadiusXLarge);
+  --gs-shadow-popup: var(--fluent-shadow8);
+  --gs-shadow-dialog: var(--fluent-shadow28);
+  --gs-duration-feedback: var(--fluent-durationFaster);
+  --gs-duration-overlay: var(--fluent-durationFast);
+  --gs-focus: 0 0 0 2px var(--gs-surface), 0 0 0 4px var(--gs-accent);
+}
+.vs {
+  --vs-ease: var(--fluent-curveEasyEase);
+  font-size: var(--fluent-fontSizeBase300);
+  line-height: var(--fluent-lineHeightBase300);
+}
+.vs
+  :is(
+    .vs-btn,
+    .panel-action,
+    .panel-secondary-action,
+    .vs-compose-action,
+    input,
+    select,
+    textarea
+  ) {
+  border-radius: var(--gs-radius-control);
+}
+.vs :is(input, select, textarea) {
+  border-color: var(--gs-control-line);
+  background: var(--gs-surface);
+  color: var(--gs-text);
+}
+.vs :is(input, select, textarea):hover:not(:disabled) {
+  border-color: var(--fluent-colorNeutralStroke1Hover);
+}
+.vs :is(.vs-btn--primary, .vs-share-btn):hover:not(:disabled) {
+  background: var(--gs-accent-hover);
+}
+.vs :is(.vs-btn--primary, .vs-share-btn):active:not(:disabled) {
+  background: var(--fluent-colorBrandBackgroundPressed);
+}
+.vs :is(.vs-context-flyout, .vs-object-context, .vs-selectionbar, .vs-canvas-settings),
+.studio-color-popover {
+  border-radius: var(--gs-radius-menu);
+  background: var(--gs-surface);
+  color: var(--gs-text);
+  box-shadow: var(--gs-shadow-popup);
+  font-family: var(--gs-font);
+}
+.vs :is([role='menuitem'], .vs-context-action, .vs-inspector summary) {
+  font-size: var(--fluent-fontSizeBase300);
+  font-weight: var(--fluent-fontWeightRegular);
+  border-radius: var(--gs-radius-control);
+}
+.vs :is([role='menuitem'], .vs-context-action, .vs-inspector summary):hover:not(:disabled) {
+  background: var(--gs-hover);
+}
+.vs :is(button, summary, input, select, textarea):focus-visible,
+.studio-color-popover :is(button, input):focus-visible {
+  outline: 2px solid var(--fluent-colorStrokeFocus2);
+  outline-offset: 2px;
+}
+.studio-color-popover input {
+  font-family: var(--gs-font);
+  border-radius: var(--gs-radius-control);
+}
+
+/* Native select semantics, with the same quiet popup treatment as our menus. */
+@supports (appearance: base-select) {
+  .vs select::picker(select) {
+    padding: 4px;
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu);
+    box-shadow: var(--gs-shadow-popup);
+    font-family: var(--gs-font);
+    font-size: 13px;
+    min-width: max(160px, anchor-size(width));
+    animation: none;
+  }
+  .vs select option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 32px;
+    padding: 6px 10px;
+    border-radius: var(--gs-radius-control);
+    font-weight: 400;
+    color: var(--gs-text);
+    background: var(--gs-surface);
+  }
+  .vs select option:checked {
+    background: var(--gs-surface-muted);
+    color: var(--gs-text);
+    font-weight: 600;
+  }
+  .vs select option:hover,
+  .vs select option:focus-visible {
+    background: var(--gs-hover);
+    color: var(--gs-text);
+  }
+  .vs select option::checkmark {
+    content: '';
+    order: 1;
+    margin-left: auto;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background: var(--gs-text-secondary);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3 3 7-7' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+  .vs select::picker-icon {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: var(--gs-text-secondary);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+}

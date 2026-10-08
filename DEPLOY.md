@@ -11,7 +11,6 @@ npm run lint
 npm run format:check
 npm test
 node --test server/*.test.mjs
-node scripts/verify-curated-pack.mjs
 npm run build
 npx playwright test
 ```

@@ -3,6 +3,18 @@ import { DocumentHistory } from './document';
 import { KonvaCanvasAdapter } from './canvas/KonvaCanvasAdapter';
 import { LEGACY_VISION_TEMPLATES as VISION_TEMPLATES } from './templates';
 import { curatedPackProvider } from '../assets/curatedPack';
+import type { GratitudeAsset } from '../assets/contracts';
+const testAsset: GratitudeAsset = {
+  id: 'test:image',
+  provider: 'curated-v1',
+  type: 'sticker',
+  title: 'Test image',
+  tags: [],
+  previewUrl: 'data:image/png;base64,AA==',
+  assetUrl: 'data:image/png;base64,AA==',
+  license: { tier: 'A', id: 'test', label: 'Test fixture', attributionRequired: false },
+  editable: {},
+};
 
 describe('document history', () => {
   it('coalesces input previews into one undo command and cancels without losing redo', () => {
@@ -62,7 +74,7 @@ function environment() {
 
 describe('adapter commands', () => {
   it('drops an image insertion completed after undo', async () => {
-    const { adapter, ownerWindow, pending } = environment();
+    const { adapter, pending } = environment();
     adapter.createTextPreset({
       id: 'a',
       label: 'a',
@@ -72,8 +84,8 @@ describe('adapter commands', () => {
       fontSize: 40,
       color: '#33272b',
     });
-    const page = await curatedPackProvider.search({ limit: 1 }, ownerWindow);
-    const operation = adapter.insertAsset(page.items[0]);
+    vi.spyOn(curatedPackProvider, 'resolve').mockResolvedValueOnce(testAsset);
+    const operation = adapter.insertAsset(testAsset);
     // Attach a rejection handler immediately so the assertion cannot become an
     // unhandled promise if the loader timing changes between Vitest versions.
     const outcome = operation.then(
@@ -125,9 +137,8 @@ describe('adapter commands', () => {
     expect(adapter.history.document.items).toHaveLength(before + 1);
   });
   it('rejects assets outside the uploaded pack', async () => {
-    const { adapter, ownerWindow } = environment();
-    const asset = (await curatedPackProvider.search({ limit: 1 }, ownerWindow)).items[0];
-    await expect(adapter.insertAsset({ ...asset, provider: 'pexels' })).rejects.toThrow(
+    const { adapter } = environment();
+    await expect(adapter.insertAsset({ ...testAsset, provider: 'pexels' })).rejects.toThrow(
       'uploaded curated',
     );
   });

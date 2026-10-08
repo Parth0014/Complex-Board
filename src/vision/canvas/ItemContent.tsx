@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Group, Rect, Image, Ellipse, Line, Arrow, Star, Path, Text, TextPath } from 'react-konva';
 import type { BoardItem } from '../document';
@@ -27,7 +27,7 @@ function colorBalance(this: Konva.Node, data: ImageData) {
 }
 
 function Content({
-  item: input,
+  item: raw,
   adapter,
 }: {
   item: BoardItem;
@@ -35,6 +35,7 @@ function Content({
   imageToken?: HTMLImageElement;
   previewToken?: object | boolean;
 }) {
+  const input = raw.contentSize ? { ...raw, ...raw.contentSize } : raw;
   const item = adapter.originalPreview
     ? {
         ...input,
@@ -174,7 +175,9 @@ function Content({
         .join(' '),
       letterSpacing: item.letterSpacing || 0,
       ...common,
-      strokeWidth: item.effect === 'outline' ? 2 : 0,
+      strokeWidth: item.borderWidth || (item.effect === 'outline' ? 2 : 0),
+      fillAfterStrokeEnabled: true,
+      lineJoin: 'round' as const,
       stroke: item.borderColor || '#33272b',
     };
     return (
@@ -249,6 +252,39 @@ function Content({
         tension={item.strokeTension ?? 0.35}
         hitStrokeWidth={20}
       />
+    );
+  }
+  if (item.kind === 'shape' && item.vectorPath && item.vectorBox) {
+    const box = item.vectorBox;
+    return (
+      <Group
+        x={(-box.x * item.width) / box.width}
+        y={(-box.y * item.height) / box.height}
+        scaleX={item.width / box.width}
+        scaleY={item.height / box.height}
+        clipFunc={
+          item.vectorClip
+            ? (ctx) => {
+                const points = item.vectorClip!;
+                ctx.beginPath();
+                ctx.moveTo(points[0], points[1]);
+                for (let i = 2; i < points.length; i += 2) ctx.lineTo(points[i], points[i + 1]);
+                ctx.closePath();
+              }
+            : undefined
+        }
+      >
+        <Path
+          {...common}
+          data={item.vectorPath}
+          strokeScaleEnabled={false}
+          fillLinearGradientStartPoint={{ x: box.x, y: box.y }}
+          fillLinearGradientEndPoint={{ x: box.x + box.width, y: box.y + box.height }}
+          fillRadialGradientStartPoint={{ x: box.x + box.width / 2, y: box.y + box.height / 2 }}
+          fillRadialGradientEndPoint={{ x: box.x + box.width / 2, y: box.y + box.height / 2 }}
+          fillRadialGradientEndRadius={Math.max(box.width, box.height) / 2}
+        />
+      </Group>
     );
   }
   if (item.kind === 'shape') {
@@ -453,6 +489,7 @@ function Content({
         (mask ? (
           <Path
             {...common}
+            name="item-border"
             data={mask}
             scaleX={item.width / 100}
             scaleY={item.height / 100}
@@ -463,6 +500,7 @@ function Content({
         ) : (
           <Rect
             {...common}
+            name="item-border"
             fillEnabled={false}
             width={item.width}
             height={item.height}
@@ -476,4 +514,64 @@ function Content({
 
 // Selection changes do not change artwork. Explicit tokens still refresh image
 // loading and non-destructive previews held outside the document.
-export const ItemContent = memo(Content);
+function StickerContent(props: Parameters<typeof Content>[0]) {
+  const { item, adapter, imageToken, previewToken } = props;
+  const artwork = useRef<Konva.Group>(null);
+  const [outline, setOutline] = useState<HTMLCanvasElement>();
+  const radius = Math.max(0, Math.min(30, item.stickerWidth || 0));
+  useLayoutEffect(() => {
+    if (!radius || !artwork.current) {
+      setOutline(undefined);
+      return;
+    }
+    // A detached clone keeps board zoom/rotation out of the alpha silhouette.
+    const clone = artwork.current.clone({ x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0 });
+    try {
+      // Borders and shadows must not turn a transparent silhouette into a box.
+      clone.find('.item-border').forEach((node) => node.destroy());
+      clone.find('Shape').forEach((node) => node.setAttr('shadowEnabled', false));
+      const source = clone.toCanvas({
+        x: 0,
+        y: 0,
+        width: item.width,
+        height: item.height,
+        pixelRatio: 1,
+      });
+      const canvas = adapter.ownerWindow.document.createElement('canvas');
+      canvas.width = Math.ceil(item.width + radius * 2);
+      canvas.height = Math.ceil(item.height + radius * 2);
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.drawImage(source, radius, radius);
+      const steps = Math.max(24, Math.ceil(2 * Math.PI * radius * 2));
+      for (let index = 0; index < steps; index++) {
+        const angle = (index / steps) * Math.PI * 2;
+        context.drawImage(
+          source,
+          radius + Math.cos(angle) * radius,
+          radius + Math.sin(angle) * radius,
+        );
+      }
+      context.globalCompositeOperation = 'source-in';
+      context.fillStyle = item.stickerColor || '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      setOutline(canvas);
+    } finally {
+      clone.destroy();
+    }
+  }, [item, adapter, radius, imageToken, previewToken]);
+  return (
+    <>
+      {radius > 0 && outline && <Image image={outline} x={-radius} y={-radius} listening={false} />}
+      <Group
+        ref={artwork}
+        clipWidth={item.contentSize ? item.width : undefined}
+        clipHeight={item.contentSize ? item.height : undefined}
+      >
+        <Content {...props} />
+      </Group>
+    </>
+  );
+}
+
+export const ItemContent = memo(StickerContent);

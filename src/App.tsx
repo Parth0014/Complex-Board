@@ -4,8 +4,11 @@ import { KonvaCanvasAdapter } from './vision/canvas/KonvaCanvasAdapter';
 import { boundsOf, unionBounds } from './vision/canvas/geometry';
 import { KonvaStage } from './vision/canvas/KonvaStage';
 import { StudioShell } from './studio/StudioShell';
+import { ColorPicker } from './studio/ColorPicker';
+import { svgColors, svgColorValue } from './vision/svgColors';
 import { BoardSizeControl } from './studio/BoardSizeControl';
 import { useMenuPlacement } from './studio/useMenuPlacement';
+import './studio/design-system/foundations.css';
 import './studio/v5/v5-tokens.css';
 import './studio/v5/v5-chrome.css';
 import './studio/v5/v5-panels.css';
@@ -13,6 +16,7 @@ import './studio/v5/v5-layout.css';
 import './studio/v5/v5-hierarchy.css';
 import './studio/v5/v5-controls.css';
 import './studio/v5/v5-corners.css';
+import './studio/design-system/fluent.css';
 import { EditorFeatures, type EditorPanel } from './studio/EditorFeatures';
 import type { StudioTab } from './studio/studioTypes';
 import {
@@ -26,6 +30,8 @@ import {
   ScissorsIcon,
   BoldIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
+  DuplicateItemIcon,
   DistributeHIcon,
   DistributeVIcon,
   ContrastIcon,
@@ -64,6 +70,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
   const replacementId = useRef<string | null>(null);
   const [replacingImage, setReplacingImage] = useState(false);
   const [replacementError, setReplacementError] = useState('');
+  const [graphicError, setGraphicError] = useState('');
   useMenuPlacement(adapter.ownerWindow);
   useSyncExternalStore(adapter.subscribe, adapter.getSnapshot);
   const [drawMode, setDrawMode] = useState('select');
@@ -99,6 +106,29 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
   }, [drawButton, drawingMenuOpen, drawMode, adapter]);
   const [layerFlyout, setLayerFlyout] = useState<{ left: number; top: number } | null>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
+  const layerCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelLayerClose = () => {
+    if (layerCloseTimer.current) clearTimeout(layerCloseTimer.current);
+  };
+  const scheduleLayerClose = () => {
+    cancelLayerClose();
+    layerCloseTimer.current = setTimeout(() => setLayerFlyout(null), 180);
+  };
+  useEffect(() => {
+    const doc = adapter.ownerWindow.document;
+    const closeOther = (event: Event) => {
+      if ((event as CustomEvent).detail !== 'layer') {
+        cancelLayerClose();
+        setLayerFlyout(null);
+      }
+    };
+    doc.addEventListener('vs-submenu-open', closeOther);
+    return () => {
+      cancelLayerClose();
+      doc.removeEventListener('vs-submenu-open', closeOther);
+    };
+  }, [adapter]);
+
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [contextPosition, setContextPosition] = useState({ left: 8, top: 8, maxHeight: 500 });
   useLayoutEffect(() => {
@@ -168,7 +198,10 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
   useEffect(() => {
     if (!contextMenu) return;
     const close = (event: PointerEvent) => {
-      if (!contextMenuRef.current?.contains(event.target as Node)) {
+      if (
+        !contextMenuRef.current?.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest('.studio-color-popover')
+      ) {
         setContextMenu(null);
         setEditorPanel(null);
       }
@@ -189,6 +222,25 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
     };
   }, [contextMenu, adapter]);
   const [editorPanel, setEditorPanel] = useState<EditorPanel>(null);
+  const closeMenu = () => {
+    setContextMenu(null);
+    setEditorPanel(null);
+  };
+  const openLayerFlyout = (event: { currentTarget: HTMLElement }) => {
+    cancelLayerClose();
+    adapter.ownerWindow.document.dispatchEvent(
+      new CustomEvent('vs-submenu-open', { detail: 'layer' }),
+    );
+    const row = event.currentTarget.getBoundingClientRect();
+    const menu = contextMenuRef.current!.getBoundingClientRect();
+    setLayerFlyout({
+      left:
+        menu.right + 288 < adapter.ownerWindow.innerWidth
+          ? menu.right + 6
+          : Math.max(12, menu.left - 282),
+      top: Math.min(row.top, adapter.ownerWindow.innerHeight - 224),
+    });
+  };
   const [studioTab, setStudioTab] = useState<StudioTab | null>(null);
   const [zoom, setZoom] = useState<number | null>(null);
   const [displayZoom, setDisplayZoom] = useState(40);
@@ -428,21 +480,23 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
               maxWidth: toolbarPosition.width,
             }}
           >
-            {selection.count === 1 && item?.kind === 'asset' && (
-              <button
-                className="vs-sel__design"
-                aria-label="Replace image"
-                disabled={
-                  locked || replacingImage || !!adapter.cropDraft || adapter.originalPreview
-                }
-                onClick={() => {
-                  replacementId.current = item.id;
-                  replacementInput.current?.click();
-                }}
-              >
-                {replacingImage ? 'Replacing…' : 'Replace image'}
-              </button>
-            )}
+            {selection.count === 1 &&
+              item?.kind === 'asset' &&
+              item.asset?.provider !== 'curated-v1' && (
+                <button
+                  className="vs-sel__design"
+                  aria-label="Replace image"
+                  disabled={
+                    locked || replacingImage || !!adapter.cropDraft || adapter.originalPreview
+                  }
+                  onClick={() => {
+                    replacementId.current = item.id;
+                    replacementInput.current?.click();
+                  }}
+                >
+                  {replacingImage ? 'Replacing…' : 'Replace image'}
+                </button>
+              )}
 
             {selection.kind === 'text' && item && (
               <>
@@ -460,13 +514,10 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                     })
                   }
                 />
-                <input
-                  className="vs-sel__color"
-                  data-tip="Text color"
-                  aria-label="Text color"
-                  type="color"
-                  value={item.color}
-                  onChange={(event) => adapter.updateSelection({ strokeColor: event.target.value })}
+                <ColorPicker
+                  label="Text color"
+                  value={item.color || '#33272b'}
+                  onChange={(value) => adapter.updateSelection({ strokeColor: value })}
                 />
                 <details className="vs-menu">
                   <summary className="vs-sel__menubtn">
@@ -582,6 +633,21 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
 
             {selection.count === 1 && item?.kind === 'asset' && (
               <>
+                {item.asset?.editable.colors &&
+                  svgColors(item.asset.assetUrl).map((from, index) => (
+                    <ColorPicker
+                      key={from}
+                      label={`Graphic color ${index + 1}`}
+                      value={item.colorOverrides?.[from] || svgColorValue(from)}
+                      onChange={(value) =>
+                        void adapter
+                          .recolorAsset(from, value)
+                          .then(() => setGraphicError(''))
+                          .catch((error) => setGraphicError(String(error)))
+                      }
+                    />
+                  ))}
+                {graphicError && <span role="alert">{graphicError}</span>}
                 <details className="vs-menu">
                   <summary className="vs-sel__menubtn">
                     Graphic style <ChevronDownIcon />
@@ -628,13 +694,11 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                     </label>
                     <label>
                       Border color
-                      <input
-                        type="color"
+                      <ColorPicker
+                        label="Border color"
                         value={item.borderColor || '#33272b'}
-                        onChange={(event) =>
-                          adapter.patchItems([
-                            { id: item.id, patch: { borderColor: event.target.value } },
-                          ])
+                        onChange={(value) =>
+                          adapter.patchItems([{ id: item.id, patch: { borderColor: value } }])
                         }
                       />
                     </label>
@@ -741,12 +805,12 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                     type="range"
                     min="0"
                     max="100"
-                    value={selection.style.opacity || 0}
+                    value={selection.style.opacity ?? 100}
                     onChange={(event) =>
                       adapter.updateSelection({ opacity: Number(event.target.value) })
                     }
                   />
-                  <output>{Math.round(selection.style.opacity || 0)}%</output>
+                  <output>{Math.round(selection.style.opacity ?? 100)}%</output>
                 </label>
               </div>
             </details>
@@ -915,7 +979,14 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
               <FitIcon />
             </button>
           </div>
-          <div className="vs-snap-slot" ref={setSnappingContainer} />
+          <details className="vs-menu vs-canvas-settings">
+            <summary className="vs-page-select" aria-label="Canvas settings">
+              Canvas settings <ChevronDownIcon />
+            </summary>
+            <div className="vs-menu__pop">
+              <div className="vs-snap-slot" ref={setSnappingContainer} />
+            </div>
+          </details>
         </div>
       </div>
 
@@ -937,13 +1008,15 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                 role="menu"
                 aria-label="Layer actions"
                 style={layerFlyout}
+                onMouseEnter={cancelLayerClose}
+                onMouseLeave={scheduleLayerClose}
               >
                 {(
                   [
-                    ['front', 'Bring to front', BringFrontIcon, 'Ctrl+Alt+]'],
-                    ['forward', 'Bring forward', ForwardIcon, 'Ctrl+]'],
-                    ['backward', 'Send backward', BackwardIcon, 'Ctrl+['],
-                    ['back', 'Send to back', SendBackIcon, 'Ctrl+Alt+['],
+                    ['front', 'Bring to front', BringFrontIcon, 'Ctrl+]'],
+                    ['forward', 'Bring forward', ForwardIcon, ']'],
+                    ['backward', 'Send backward', BackwardIcon, '['],
+                    ['back', 'Send to back', SendBackIcon, 'Ctrl+['],
                   ] as const
                 ).map(([position, label, Icon, shortcut]) => (
                   <button
@@ -980,14 +1053,13 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                     if (!panel) setContextMenu(null);
                   }}
                 />
+                {/* 1 · Clipboard: most used, fixed length, always first */}
                 <div className="vs-context-actions">
                   <button
                     role="menuitem"
-                    disabled={!selection.count}
                     onClick={() => {
                       void adapter.copyToSystem();
-                      setContextMenu(null);
-                      setEditorPanel(null);
+                      closeMenu();
                     }}
                   >
                     <DuplicateIcon />
@@ -995,11 +1067,10 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                   </button>
                   <button
                     role="menuitem"
-                    disabled={!selection.count || locked}
+                    disabled={locked}
                     onClick={() => {
                       void adapter.copyToSystem(true);
-                      setContextMenu(null);
-                      setEditorPanel(null);
+                      closeMenu();
                     }}
                   >
                     <ScissorsIcon />
@@ -1009,8 +1080,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                     role="menuitem"
                     onClick={() => {
                       void adapter.pasteFromSystem();
-                      setContextMenu(null);
-                      setEditorPanel(null);
+                      closeMenu();
                     }}
                   >
                     <PasteIcon />
@@ -1018,85 +1088,70 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                   </button>
                   <button
                     role="menuitem"
-                    disabled={!selection.count}
                     onClick={() => {
                       adapter.duplicateSelection();
-                      setContextMenu(null);
-                      setEditorPanel(null);
+                      closeMenu();
                     }}
                   >
-                    <DuplicateIcon />
-                    Duplicate
-                  </button>
-                  <button
-                    role="menuitem"
-                    disabled={!selection.count}
-                    onClick={() => {
-                      adapter.patchItems(
-                        adapter.selectedIds.map((id) => ({ id, patch: { locked: !locked } })),
-                      );
-                    }}
-                  >
-                    {locked ? <UnlockIcon /> : <LockIcon />}
-                    {locked ? 'Unlock' : 'Lock'}
-                  </button>
-                  <button
-                    role="menuitem"
-                    disabled={!selection.count || locked}
-                    onClick={() => {
-                      adapter.delete(adapter.selectedIds);
-                      setContextMenu(null);
-                      setEditorPanel(null);
-                    }}
-                  >
-                    <TrashIcon />
-                    Delete
+                    <DuplicateItemIcon />
+                    Duplicate<kbd>Ctrl+D</kbd>
                   </button>
                 </div>
+                {/* 2 · Arrange: stacking, grouping, locking */}
                 <div className="vs-context-actions">
                   <button
                     role="menuitem"
                     aria-haspopup="menu"
                     aria-expanded={!!layerFlyout}
-                    onMouseEnter={(event) => {
-                      const row = event.currentTarget.getBoundingClientRect();
-                      const menu = contextMenuRef.current!.getBoundingClientRect();
-                      setLayerFlyout({
-                        left:
-                          menu.right + 288 < adapter.ownerWindow.innerWidth
-                            ? menu.right + 6
-                            : Math.max(12, menu.left - 282),
-                        top: Math.min(row.top, adapter.ownerWindow.innerHeight - 224),
-                      });
-                    }}
-                    onClick={(event) => {
-                      const row = event.currentTarget.getBoundingClientRect();
-                      const menu = contextMenuRef.current!.getBoundingClientRect();
-                      setLayerFlyout({
-                        left:
-                          menu.right + 288 < adapter.ownerWindow.innerWidth
-                            ? menu.right + 6
-                            : Math.max(12, menu.left - 282),
-                        top: Math.min(row.top, adapter.ownerWindow.innerHeight - 224),
-                      });
-                    }}
+                    onMouseEnter={openLayerFlyout}
+                    onMouseLeave={scheduleLayerClose}
+                    onClick={openLayerFlyout}
                   >
                     <LayersIcon />
-                    {editorPanel === 'layers' ? 'Object settings' : 'Layer'}
-                    <ChevronDownIcon />
+                    Layer
+                    <ChevronRightIcon />
                   </button>
+                  {(canUngroup || selection.count > 1) && (
+                    <button
+                      role="menuitem"
+                      disabled={locked}
+                      onClick={() => {
+                        if (canUngroup) adapter.ungroupSelection();
+                        else adapter.groupSelection();
+                        closeMenu();
+                      }}
+                    >
+                      {canUngroup ? <UngroupIcon /> : <GroupIcon />}
+                      {canUngroup ? 'Ungroup' : 'Group'}
+                      <kbd>{canUngroup ? 'Ctrl+Shift+G' : 'Ctrl+G'}</kbd>
+                    </button>
+                  )}
                   <button
                     role="menuitem"
-                    disabled={locked || (!canUngroup && selection.count < 2)}
                     onClick={() => {
-                      if (canUngroup) adapter.ungroupSelection();
-                      else adapter.groupSelection();
-                      setContextMenu(null);
-                      setEditorPanel(null);
+                      adapter.patchItems(
+                        adapter.selectedIds.map((id) => ({ id, patch: { locked: !locked } })),
+                      );
+                      closeMenu();
                     }}
                   >
-                    <GroupIcon />
-                    {canUngroup ? 'Ungroup' : 'Group'}
+                    {locked ? <UnlockIcon /> : <LockIcon />}
+                    {locked ? 'Unlock' : 'Lock'}
+                  </button>
+                </div>
+                {/* 3 · Properties: variable length, type-specific first */}
+
+                {/* 4 · Destructive: always last, own block */}
+                <div className="vs-context-actions vs-context-danger">
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      adapter.delete(adapter.selectedIds);
+                      closeMenu();
+                    }}
+                  >
+                    <TrashIcon />
+                    Delete<kbd>Del</kbd>
                   </button>
                 </div>
               </>

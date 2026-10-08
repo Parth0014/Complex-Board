@@ -95,6 +95,15 @@ export function validateBoard(value: unknown): BoardDocument {
       item.opacity > 1
     )
       throw new Error('Invalid item geometry in backup.');
+    if (
+      item.contentSize &&
+      (![item.contentSize.width, item.contentSize.height].every(Number.isFinite) ||
+        item.contentSize.width <= 0 ||
+        item.contentSize.height <= 0 ||
+        item.contentSize.width > 10000 ||
+        item.contentSize.height > 10000)
+    )
+      throw new Error('Invalid content dimensions.');
     ids.add(item.id);
     if (
       item.textRuns &&
@@ -137,6 +146,7 @@ export function validateBoard(value: unknown): BoardDocument {
       'lineHeight',
       'radius',
       'borderWidth',
+      'stickerWidth',
       'brightness',
       'contrast',
       'saturation',

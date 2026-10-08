@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img" aria-labelledby="title desc" fill="none">
-  <title id="title">Soft noise</title><desc id="desc">Original subtle surface texture for layering behind board elements.</desc>
-  <rect width="200" height="160" fill="white"/><filter id="n"><feTurbulence baseFrequency=".8" numOctaves="2"/><feColorMatrix type="saturate" values="0"/></filter><rect width="200" height="160" filter="url(#n)" opacity=".07"/>
-</svg>

@@ -1,8 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-const manifest = JSON.parse(
-  readFileSync(new URL('../public/curated-v1/manifest.json', import.meta.url), 'utf8'),
-) as { categories: Array<{ id: string; label: string; count: number }> };
 test('curated artwork stays visible on the zoomed canvas and after reload', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
@@ -175,21 +172,9 @@ test('desktop panels and dock reserve space and inspector sections scroll withou
   }
 });
 
-test('replacement library shows its exact category counts and inserts a goal object', async ({
-  page,
-}) => {
+test('Elements library is empty', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
-  await expect(page.locator('.v1-asset-grid button')).toHaveCount(250);
-  for (const category of manifest.categories) {
-    await page.getByLabel('Category', { exact: true }).selectOption(category.id);
-    await expect(page.locator('.v1-asset-grid button')).toHaveCount(category.count);
-    await expect(
-      page.getByLabel('Category', { exact: true }).locator(`option[value="${category.id}"]`),
-    ).toHaveText(`${category.label} · ${category.count}`);
-  }
-  await page.getByLabel('Category', { exact: true }).selectOption('goal-objects');
-  await page.getByRole('button', { name: 'Focused desk', exact: true }).click();
-  await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
-  await page.screenshot({ path: 'test-results/replacement-library.png' });
+  await expect(page.getByText('No elements', { exact: true })).toBeVisible();
+  await expect(page.locator('.v1-asset-grid button')).toHaveCount(0);
 });

@@ -1,3 +1,4 @@
+import { ColorPicker } from './ColorPicker';
 import type { EditorAdapter } from '../vision/contracts';
 
 const COLORS = [
@@ -76,13 +77,7 @@ export function BackgroundPanel({
       <label className="background-color-label">
         <span>Custom color</span>
         <span className="background-color-value">
-          <input
-            className="vs-color"
-            type="color"
-            aria-label="Board color"
-            value={document.color}
-            onChange={(event) => setColor(event.target.value)}
-          />
+          <ColorPicker label="Board color" value={document.color} onChange={setColor} />
           <span>{document.color.toUpperCase()}</span>
         </span>
       </label>
@@ -90,13 +85,11 @@ export function BackgroundPanel({
         <section className="background-gradient-card">
           <label>
             <span>End color</span>
-            <input
-              className="vs-color"
-              type="color"
-              aria-label="Gradient end color"
+            <ColorPicker
+              label="Gradient end color"
               value={document.gradient}
-              onChange={(event) =>
-                adapter.commit({ ...document, gradient: event.target.value, background: undefined })
+              onChange={(value) =>
+                adapter.commit({ ...document, gradient: value, background: undefined })
               }
             />
           </label>

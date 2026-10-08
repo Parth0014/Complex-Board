@@ -1,4 +1,5 @@
 import { assistStroke } from '../strokeAssist';
+import { replaceSvgColors } from '../svgColors';
 import { resolveTemplateSticker } from '../templateStickers';
 import { curatedPackProvider } from '../../assets/curatedPack';
 import Konva from 'konva';
@@ -467,11 +468,59 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.items((items) => [...items, ...copies]);
     this.select(copies.map((item) => item.id));
   }
+  resizeObjectBounds(id: string, width: number, height: number) {
+    const item = this.history.document.items.find((item) => item.id === id);
+    if (
+      !item ||
+      item.locked ||
+      item.connector ||
+      !Number.isFinite(width) ||
+      !Number.isFinite(height)
+    )
+      return;
+    this.patchItems([
+      {
+        id,
+        patch: {
+          width: Math.max(10, Math.min(10000, width)),
+          height: Math.max(10, Math.min(10000, height)),
+          fixedBounds: true,
+          ...(item.kind !== 'text'
+            ? { contentSize: item.contentSize || { width: item.width, height: item.height } }
+            : {}),
+        },
+      },
+    ]);
+  }
+  fitObjectBounds(id: string) {
+    const item = this.history.document.items.find((item) => item.id === id);
+    if (!item || item.locked || item.connector) return;
+    if (item.kind === 'text') {
+      const text = new Konva.Text({
+        text: item.text || '',
+        fontSize: item.fontSize || 34,
+        fontFamily: fontFamily(item.fontFamily),
+        fontStyle: `${item.bold ? 'bold' : item.fontWeight || 'normal'}${item.italic ? ' italic' : ''}`,
+        lineHeight: item.lineHeight || 1,
+        padding: item.textPadding || 0,
+        letterSpacing: item.letterSpacing || 0,
+      });
+      const width = Math.max(10, Math.ceil(text.width()) + 2),
+        height = Math.max(10, Math.ceil(text.height()));
+      text.destroy();
+      this.patchItems([{ id, patch: { width, height, fixedBounds: true } }]);
+    } else
+      this.patchItems([
+        {
+          id,
+          patch: { ...(item.contentSize || {}), contentSize: undefined, fixedBounds: undefined },
+        },
+      ]);
+  }
   snapToEdges = true;
   setSnapToEdges(enabled: boolean) {
     this.snapToEdges = enabled;
-    if (enabled) this.commit(this.history.document);
-    else this.changed();
+    this.changed();
   }
   private listeners = new Set<() => void>();
   private serial = 0;
@@ -594,7 +643,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       }
     }
     const measured = document.items.map((item) => {
-      if (item.kind !== 'text' || item.curve) return item;
+      if (item.kind !== 'text' || item.curve || item.fixedBounds) return item;
       const text = new Konva.Text({
         text: item.text || '',
         width: Math.max(10, item.width),
@@ -609,11 +658,37 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       text.destroy();
       return height === item.height ? item : { ...item, height };
     });
-    const normalized = this.snapToEdges ? constrainItems(measured, document) : measured;
+    const previousItems = new Map(this.history.document.items.map((item) => [item.id, item]));
+    const changedGroups = new Set(
+      measured
+        .filter((item) => {
+          const old = previousItems.get(item.id);
+          return (
+            document.width !== previous.width ||
+            document.height !== previous.height ||
+            !old ||
+            ['x', 'y', 'width', 'height', 'rotation'].some(
+              (key) => item[key as keyof BoardItem] !== old[key as keyof BoardItem],
+            )
+          );
+        })
+        .map((item) => item.groupId || item.id),
+    );
+    const constrainChanged = (items: BoardItem[]) => {
+      if (!this.snapToEdges) return items;
+      const constrained = new Map(
+        constrainItems(
+          items.filter((item) => changedGroups.has(item.groupId || item.id)),
+          document,
+        ).map((item) => [item.id, item]),
+      );
+      return items.map((item) => constrained.get(item.id) || item);
+    };
+    const normalized = constrainChanged(measured);
     const connected = updateConnectors(normalized);
     const next = {
       ...document,
-      items: this.snapToEdges ? constrainItems(connected, document) : connected,
+      items: constrainChanged(connected),
     };
     if (next.pages && next.activePageId) {
       const { width, height, color, gradient, gradientType, background, items } = next;
@@ -711,15 +786,6 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.commit({ ...this.history.document, items: update(this.history.document.items) });
   }
   private reconcileHistory() {
-    const doc = this.history.document;
-    if (this.snapToEdges) {
-      const items = constrainItems(doc.items, doc);
-      this.history.document = {
-        ...doc,
-        items,
-        pages: doc.pages?.map((page) => (page.id === doc.activePageId ? { ...page, items } : page)),
-      };
-    }
     if (this.groupScope.length && !this.history.document.items.some((item) => this.inScope(item)))
       this.groupScope = [];
     this.cropDraft = undefined;
@@ -867,7 +933,24 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       await new Promise<void>((resolve, reject) => {
         image.onload = () => resolve();
         image.onerror = () => reject(new Error(`Unable to load ${asset.title}`));
-        image.src = local || asset.assetUrl;
+        let source = local || asset.assetUrl;
+        if (asset.provider === 'curated-v1' && asset.id.startsWith('vision-svg:')) {
+          // SVG remains the source; render a 4K surface rather than its tiny intrinsic size.
+          const svg = new this.ownerWindow.DOMParser().parseFromString(
+            decodeURIComponent(asset.assetUrl.split(',').slice(1).join(',')),
+            'image/svg+xml',
+          );
+          const scale = 4096 / Math.max(asset.width || 1, asset.height || 1);
+          svg.documentElement.setAttribute('width', String(Math.ceil((asset.width || 1) * scale)));
+          svg.documentElement.setAttribute(
+            'height',
+            String(Math.ceil((asset.height || 1) * scale)),
+          );
+          source =
+            'data:image/svg+xml;charset=utf-8,' +
+            encodeURIComponent(new this.ownerWindow.XMLSerializer().serializeToString(svg));
+        }
+        image.src = source;
       });
     } finally {
       if (local) this.ownerWindow.URL.revokeObjectURL(local);
@@ -1308,7 +1391,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   }
   async recolorAsset(from: string, to: string) {
     if (
-      (!/^#[\da-f]{6}$/i.test(from) && from.toLowerCase() !== 'currentcolor') ||
+      (!/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(from) && from.toLowerCase() !== 'currentcolor') ||
       !/^#[\da-f]{6}$/i.test(to)
     )
       throw new Error('Invalid graphic color.');
@@ -1324,11 +1407,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     const revision = this.history.revision,
       overrides = { ...item.colorOverrides, [from.toLowerCase()]: to },
       source = decodeURIComponent(asset.assetUrl.slice('data:image/svg+xml,'.length));
-    const svg = source.replace(
-      /(fill|stroke)="(#[\da-f]{6}|currentColor)"/gi,
-      (match, attribute: string, color: string) =>
-        overrides[color.toLowerCase()] ? `${attribute}="${overrides[color.toLowerCase()]}"` : match,
-    );
+    const svg = replaceSvgColors(source, overrides);
     const edited = { ...asset, assetUrl: `data:image/svg+xml,${encodeURIComponent(svg)}` };
     await this.decode(edited);
     const image = this.images.get(edited.assetUrl)!;
@@ -2281,7 +2360,16 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           groupId: path[0],
         };
       });
-    this.items((items) => [...items, ...copies]);
+    // Place copies directly above the topmost original, not above the whole board.
+    this.items((items) => {
+      let at = -1;
+      items.forEach((item, index) => {
+        if (this.selectedIds.includes(item.id)) at = index;
+      });
+      return at < 0
+        ? [...items, ...copies]
+        : [...items.slice(0, at + 1), ...copies, ...items.slice(at + 1)];
+    });
     this.select(copies.map((item) => item.id));
   }
   groupSelection() {

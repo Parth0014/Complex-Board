@@ -12,6 +12,51 @@ async function backup(page: Page): Promise<BoardDocument> {
   return result;
 }
 
+test('Elements contains no media library', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Elements', exact: true }).click();
+  await expect(page.getByText('No elements', { exact: true })).toBeVisible();
+  await expect(page.locator('.v1-asset-grid button')).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toHaveCount(0);
+});
+
+test('text sticker outline renders and persists in backup', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Text', exact: true }).click();
+  await page.locator('.text-panel button').first().click();
+  const initial = await backup(page);
+  const item = initial.items.find((entry) => entry.kind === 'text')!;
+  const canvas = page.locator('.v1-artboard canvas').last();
+  const before = await canvas.screenshot();
+  const point = await page.locator('.v1-artboard').evaluate((node, item) => {
+    const rect = node.querySelector('canvas')!.getBoundingClientRect();
+    const host = node as HTMLElement;
+    const scale = Number(host.dataset.scale);
+    return {
+      x: rect.left + Number(host.dataset.pageLeft) + (item.x + item.width / 2) * scale,
+      y: rect.top + Number(host.dataset.pageTop) + (item.y + item.height / 2) * scale,
+    };
+  }, item);
+  await page.mouse.click(point.x, point.y, { button: 'right' });
+  await page.locator('.vs-sec summary').filter({ hasText: 'Appearance' }).hover();
+  await page.getByRole('checkbox', { name: 'Sticker outline', exact: true }).check();
+  await page.getByRole('spinbutton', { name: 'Outline thickness', exact: true }).fill('12');
+  await page.keyboard.press('Tab');
+  await page.getByRole('button', { name: 'Outline color', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Outline color hex', exact: true }).fill('#ff0000');
+  await page.getByRole('button', { name: 'Close color picker', exact: true }).click();
+  await page.getByRole('spinbutton', { name: 'Border width', exact: true }).fill('3');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Escape');
+  const saved = await backup(page);
+  expect(saved.items.find((entry) => entry.id === item.id)?.stickerWidth).toBe(12);
+  expect(saved.items.find((entry) => entry.id === item.id)?.stickerColor).toBe('#ff0000');
+  expect(saved.items.find((entry) => entry.id === item.id)?.borderWidth).toBe(3);
+  await expect.poll(async () => (await canvas.screenshot()).equals(before)).toBe(false);
+  await page.reload();
+  expect((await backup(page)).items.find((entry) => entry.id === item.id)?.stickerWidth).toBe(12);
+});
+
 test('compact editing and full properties switch without losing text changes', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Text', exact: true }).click();
@@ -47,6 +92,10 @@ test('compact editing and full properties switch without losing text changes', a
   await expect(compact).toBeHidden();
   await expect(inspector).toBeVisible();
   const menu = page.getByRole('menu', { name: 'Canvas context menu' });
+  await expect(menu.getByRole('toolbar', { name: 'Quick styles' })).toBeVisible();
+  await expect(menu.getByRole('button', { name: 'Apply Soft violet style' })).toBeVisible();
+  await expect(menu.getByText('Position & size', { exact: true })).toHaveCount(0);
+  await expect(menu.getByText('Transform & style', { exact: true })).toHaveCount(0);
   const textRow = inspector
     .locator('summary')
     .filter({ has: page.getByText('Text', { exact: true }) })
@@ -63,15 +112,34 @@ test('compact editing and full properties switch without losing text changes', a
     panelBounds!.x + panelBounds!.width <= menuBounds!.x ||
       panelBounds!.x >= menuBounds!.x + menuBounds!.width,
   ).toBeTruthy();
+  const advanced = flyout.locator('summary').filter({ hasText: 'Advanced text' });
+  await advanced.hover();
+  await expect(flyout).toBeVisible();
+  await advanced.click();
+  await expect(flyout).toBeVisible();
+  await flyout.getByRole('button', { name: 'Text color', exact: true }).click();
+  const picker = page.getByRole('group', { name: 'Text color picker', exact: true });
+  await expect(picker).toBeVisible();
+  await picker.getByLabel('Text color hex', { exact: true }).fill('#5988b5');
+  await picker.getByRole('button', { name: 'Close color picker' }).click();
+  await expect(picker).toHaveCount(0);
+  await expect(flyout).toBeVisible();
   await expect(page.getByLabel('Styled text', { exact: true })).toHaveValue('Edited on canvas');
   await page.getByLabel('Styled text', { exact: true }).fill('Edited in full properties');
+  await inspector.locator('summary').filter({ hasText: 'Appearance' }).first().hover();
+  const appearance = menu.getByRole('group', { name: 'Appearance settings', exact: true });
+  await appearance.getByLabel('Opacity (%)', { exact: true }).fill('45');
   await menu.getByRole('menuitem', { name: 'Layer', exact: true }).hover();
   const layerMenu = menu.getByRole('menu', { name: 'Layer actions' });
   await expect(layerMenu).toBeVisible();
+  await expect(flyout).toHaveCount(0);
   await layerMenu.getByRole('menuitem', { name: /Bring to front/ }).click();
+  await page.mouse.move(5, 5);
+  await expect(layerMenu).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(inspector).toBeHidden();
   await expect(compact).toBeVisible();
+  await expect(compact.locator('input[aria-label="Opacity"]')).toHaveValue('45');
   await page.mouse.dblclick(point.x, point.y);
   await expect(editor).toHaveValue('Edited in full properties');
   await editor.fill('Canceled edit');

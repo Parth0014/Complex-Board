@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
 import { ColorPicker } from './ColorPicker';
+import { svgColors, svgColorValue } from '../vision/svgColors';
 import { useEffect, useState, useRef, type ReactNode } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
 import type { BoardItem } from '../vision/document';
@@ -9,7 +10,6 @@ import type { GratitudeAsset } from '../assets/contracts';
 import { formatRange, type TextStyle } from '../vision/text';
 import { useAIStatus } from './useAIStatus';
 import {
-  BackwardIcon,
   BringFrontIcon,
   BoldIcon,
   CheckIcon,
@@ -17,26 +17,20 @@ import {
   CloseIcon,
   CropIcon,
   DropletIcon,
-  DuplicateIcon,
   EyeIcon,
   EyeOffIcon,
-  ForwardIcon,
   ImageIcon,
   ItalicIcon,
   LayersIcon,
   LockIcon,
-  PasteIcon,
   PenIcon,
-  RotateIcon,
   ScissorsIcon,
-  SendBackIcon,
   SlidersIcon,
   TypeIcon,
   UnderlineIcon,
   UndoIcon,
   UnlockIcon,
   WandIcon,
-  ZapIcon,
 } from './icons';
 
 export type EditorPanel = 'style' | 'layers' | null;
@@ -54,17 +48,66 @@ function Sec({
   icon?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(open);
+  const sectionRef = useRef<HTMLDetailsElement>(null);
+  const flyoutRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => {
+      const doc = sectionRef.current?.ownerDocument;
+      const active = doc?.activeElement;
+      if (
+        doc?.querySelector('.studio-color-popover') ||
+        (active && flyoutRef.current?.contains(active))
+      )
+        return;
+      setExpanded(false);
+    }, 250);
+  };
+  useEffect(() => {
+    const doc = sectionRef.current?.ownerDocument;
+    const closeOther = (event: Event) => {
+      if (
+        sectionRef.current?.parentElement?.classList.contains('vs-inspector__body') &&
+        (event as CustomEvent).detail !== sectionRef.current
+      ) {
+        cancelClose();
+        setExpanded(false);
+      }
+    };
+    doc?.addEventListener('vs-submenu-open', closeOther);
+    return () => {
+      cancelClose();
+      doc?.removeEventListener('vs-submenu-open', closeOther);
+    };
+  }, []);
+
   const [flyout, setFlyout] = useState<{ host: HTMLElement; left: number; top: number } | null>(
     null,
   );
   return (
     <details
       className="vs-sec"
+      ref={sectionRef}
+      onMouseLeave={() => {
+        if (flyout) scheduleClose();
+      }}
       open={expanded}
       onToggle={(event) => setExpanded(event.currentTarget.open)}
       onMouseEnter={(event) => {
         const section = event.currentTarget;
-        if (!section.closest('.vs-object-context')) return;
+        if (
+          !section.closest('.vs-object-context') ||
+          !section.parentElement?.classList.contains('vs-inspector__body')
+        )
+          return;
+        cancelClose();
+        section.ownerDocument.dispatchEvent(
+          new CustomEvent('vs-submenu-open', { detail: section }),
+        );
         for (const sibling of section.parentElement?.children || []) {
           if (sibling !== section && sibling instanceof HTMLDetailsElement) sibling.open = false;
         }
@@ -74,14 +117,11 @@ function Sec({
           const menu = host.getBoundingClientRect();
           const row = section.getBoundingClientRect();
           const win = section.ownerDocument.defaultView!;
-          const dock = section.ownerDocument
-            .querySelector('.vs-bottom-dock')
-            ?.getBoundingClientRect();
           setFlyout({
             host,
             left:
               menu.right + 312 < win.innerWidth ? menu.right + 8 : Math.max(12, menu.left - 308),
-            top: Math.max(12, Math.min(row.top, (dock?.top ?? win.innerHeight) - 532)),
+            top: row.top,
           });
         }
       }}
@@ -100,6 +140,18 @@ function Sec({
         createPortal(
           <div
             className="vs-context-flyout"
+            ref={(node) => {
+              flyoutRef.current = node;
+              if (!node) return;
+              const doc = node.ownerDocument;
+              const bottom =
+                (doc.querySelector('.vs-bottom-dock')?.getBoundingClientRect().top ??
+                  doc.defaultView!.innerHeight) - 12;
+              node.style.top = `${Math.max(12, Math.min(flyout.top, bottom - node.offsetHeight))}px`;
+            }}
+            onMouseEnter={cancelClose}
+            onMouseLeave={scheduleClose}
+            onBlur={scheduleClose}
             role="group"
             aria-label={`${title} settings`}
             style={{ left: flyout.left, top: flyout.top }}
@@ -245,28 +297,34 @@ export function EditorFeatures({
             ? ''
             : Number(
                 item?.[key] ??
-                  (key === 'lineHeight'
+                  (key === 'opacity'
                     ? 1
-                    : key === 'fontWeight'
-                      ? 400
-                      : key === 'shadowOpacity'
-                        ? 0.25
-                        : key === 'shadowOffsetX'
-                          ? 3
-                          : key === 'shadowOffsetY'
-                            ? 5
-                            : key === 'shadowBlur'
-                              ? item?.shadow === 'soft'
-                                ? 20
-                                : item?.shadow === 'medium'
-                                  ? 10
-                                  : 0
-                              : 0),
-              )
+                    : key === 'lineHeight'
+                      ? 1
+                      : key === 'fontWeight'
+                        ? 400
+                        : key === 'shadowOpacity'
+                          ? 0.25
+                          : key === 'shadowOffsetX'
+                            ? 3
+                            : key === 'shadowOffsetY'
+                              ? 5
+                              : key === 'shadowBlur'
+                                ? item?.shadow === 'soft'
+                                  ? 20
+                                  : item?.shadow === 'medium'
+                                    ? 10
+                                    : 0
+                                : 0),
+              ) * (key === 'opacity' ? 100 : 1)
         }
         onChange={(event) => {
           if (event.target.value !== '')
-            patch({ [key]: Math.max(min, Math.min(max, Number(event.target.value))) });
+            patch({
+              [key]:
+                Math.max(min, Math.min(max, Number(event.target.value))) /
+                (key === 'opacity' ? 100 : 1),
+            });
         }}
       />
     </label>
@@ -275,7 +333,7 @@ export function EditorFeatures({
     <div className="vs-field">
       <span>
         {label}
-        {mixed(key) && ' · Mixed'}
+        {mixed(key) && ' Â· Mixed'}
       </span>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         <ColorPicker
@@ -431,6 +489,39 @@ export function EditorFeatures({
           </p>
         )}
 
+        {item && panel === 'style' && (
+          <div className="vs-context-swatches" role="toolbar" aria-label="Quick styles">
+            {(
+              [
+                ['Soft violet', '#573575', 'soft', 'none', 2],
+                ['Golden glow', '#c89640', 'none', 'glow', 3],
+                ['Ink', '#222222', 'hard', 'none', 2],
+              ] as const
+            ).map(([label, color, shadow, effect, borderWidth]) => (
+              <button
+                key={label}
+                type="button"
+                aria-label={`Apply ${label} style`}
+                data-tip={`Apply ${label} style`}
+                title={label}
+                disabled={adapter.history.document.items.some(
+                  (entry) => adapter.selectedIds.includes(entry.id) && entry.locked,
+                )}
+                style={{ backgroundColor: color }}
+                onClick={() =>
+                  patch({
+                    color,
+                    borderColor: color,
+                    borderWidth,
+                    shadow,
+                    effect,
+                    gradient: undefined,
+                  })
+                }
+              />
+            ))}
+          </div>
+        )}
         {(panel ?? 'style') === 'layers' && (
           <>
             <Sec title="Layer stack" icon={<LayersIcon />}>
@@ -488,6 +579,44 @@ export function EditorFeatures({
             </div>
           ) : (
             <>
+              {!item.connector && (
+                <Sec title="Object bounds" icon={<SlidersIcon />}>
+                  <p>
+                    Resize the frame without scaling the content. Smaller bounds can clip content.
+                  </p>
+                  <div className="vs-row-2">
+                    {(['width', 'height'] as const).map((key) => (
+                      <label className="vs-field" key={key}>
+                        <span>Bounds {key}</span>
+                        <input
+                          className="vs-input"
+                          aria-label={`Bounds ${key}`}
+                          type="number"
+                          min="10"
+                          max="10000"
+                          disabled={item.locked || selected.length !== 1}
+                          value={item[key]}
+                          onChange={(event) => {
+                            if (event.target.value !== '')
+                              adapter.resizeObjectBounds(
+                                item.id,
+                                key === 'width' ? Number(event.target.value) : item.width,
+                                key === 'height' ? Number(event.target.value) : item.height,
+                              );
+                          }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <button
+                    className="vs-btn vs-btn--light"
+                    disabled={item.locked || selected.length !== 1}
+                    onClick={() => adapter.fitObjectBounds(item.id)}
+                  >
+                    Fit bounds to content
+                  </button>
+                </Sec>
+              )}
               {item.kind === 'text' && (
                 <Sec title="Text" icon={<TypeIcon />}>
                   <label className="vs-field">
@@ -524,7 +653,7 @@ export function EditorFeatures({
                     </select>
                   </label>
                   <div className="vs-row-2">
-                    {number('Font size', 'fontSize', 6, 400)}
+                    {number('Text size', 'fontSize', 8, 240)}
                     {color('Text color', 'color', '#222222')}
                   </div>
                   <Sec title="Advanced text" open={false}>
@@ -646,7 +775,7 @@ export function EditorFeatures({
                   </Sec>
                 </Sec>
               )}
-              {item.kind === 'asset' && (
+              {item.kind === 'asset' && item.asset?.provider !== 'curated-v1' && (
                 <Sec title="Image" icon={<ImageIcon />}>
                   <label className="vs-field">
                     <span>Replace media</span>
@@ -842,7 +971,7 @@ export function EditorFeatures({
                     {(ai.error || !ai.status?.backgroundConfigured) && (
                       <div className="ai-status" role="status">
                         {ai.checking
-                          ? 'Checking image tools…'
+                          ? 'Checking image toolsâ€¦'
                           : ai.error ||
                             'Background removal needs rembg. Start rembg s, set REMBG_URL in .env, and restart the AI server.'}
                         <button
@@ -868,11 +997,11 @@ export function EditorFeatures({
                         <ScissorsIcon /> Remove bg
                       </button>
                       <button
-                        data-tip="Resample image at 2×"
+                        data-tip="Resample image at 2Ã—"
                         disabled={mediaBusy}
                         onClick={() => void runMedia(() => adapter.upscaleImage())}
                       >
-                        Resample 2×
+                        Resample 2Ã—
                       </button>
                       <button
                         data-tip="Add image detail using the configured AI upscaler"
@@ -884,7 +1013,7 @@ export function EditorFeatures({
                         disabled={mediaBusy || !ai.status?.upscaleConfigured}
                         onClick={() => void runMedia(() => adapter.upscaleAI())}
                       >
-                        <WandIcon /> AI upscale 2×
+                        <WandIcon /> AI upscale 2Ã—
                       </button>
                       <button
                         data-tip="Split into foreground and background layers"
@@ -911,7 +1040,7 @@ export function EditorFeatures({
                     </div>
                     {mediaBusy && (
                       <p role="status" style={{ margin: 0, fontSize: 12.5 }}>
-                        Processing image…
+                        Processing imageâ€¦
                       </p>
                     )}
                   </Sec>
@@ -919,25 +1048,14 @@ export function EditorFeatures({
                   {item.asset?.editable.colors &&
                     item.asset.assetUrl.startsWith('data:image/svg+xml,') && (
                       <Sec title="Graphic colors" icon={<DropletIcon />}>
-                        {[
-                          ...new Set(
-                            [
-                              ...decodeURIComponent(
-                                item.asset.assetUrl.slice('data:image/svg+xml,'.length),
-                              ).matchAll(/(?:fill|stroke)="(#[0-9a-f]{6}|currentColor)"/gi),
-                            ].map((match) => match[1].toLowerCase()),
-                          ),
-                        ].map((from) => (
+                        {svgColors(item.asset.assetUrl).map((from) => (
                           <div className="vs-field" key={from}>
                             <span>
                               Replace <code>{from}</code>
                             </span>
                             <ColorPicker
                               label={`Replace color ${from}`}
-                              value={
-                                item.colorOverrides?.[from] ||
-                                (from === 'currentcolor' ? '#000000' : from)
-                              }
+                              value={item.colorOverrides?.[from] || svgColorValue(from)}
                               onChange={(value) =>
                                 void runMedia(() => adapter.recolorAsset(from, value))
                               }
@@ -1067,13 +1185,33 @@ export function EditorFeatures({
                 </Sec>
               )}
               <Sec title="Appearance" icon={<SlidersIcon />}>
-                {color('Item color', 'color', '#573575')}
-                {number('Opacity', 'opacity', 0, 1, 0.05)}
+                <label className="vs-check">
+                  <input
+                    type="checkbox"
+                    aria-label="Sticker outline"
+                    checked={!!item.stickerWidth}
+                    onChange={(event) =>
+                      patch({
+                        stickerWidth: event.target.checked ? 8 : 0,
+                        stickerColor: item.stickerColor || '#ffffff',
+                      })
+                    }
+                  />
+                  Sticker outline
+                </label>
+                {!!item.stickerWidth && (
+                  <>
+                    {number('Outline thickness', 'stickerWidth', 1, 30)}
+                    {color('Outline color', 'stickerColor', '#ffffff')}
+                  </>
+                )}
+                {item.kind !== 'asset' && color('Item color', 'color', '#573575')}
+                {number('Opacity (%)', 'opacity', 0, 100)}
                 <div className="vs-row-2">
                   {number('Corner radius', 'radius', 0, 150)}
-                  {number('Stroke width', 'borderWidth', 0, 30)}
+                  {number('Border width', 'borderWidth', 0, 30)}
                 </div>
-                {color('Stroke color', 'borderColor', '#33272b')}
+                {color('Border color', 'borderColor', '#33272b')}
                 <div className="vs-row-2">
                   <label className="vs-field">
                     <span>Shadow preset</span>
@@ -1137,176 +1275,6 @@ export function EditorFeatures({
                     ))}
                   </select>
                 </label>
-              </Sec>
-              <Sec title="Position & size" icon={<BringFrontIcon />}>
-                {adapter.selectedIds.length === 1 && (
-                  <div className="vs-row-2">
-                    <label className="vs-field">
-                      <span>X</span>
-                      <input
-                        className="vs-input"
-                        aria-label="Item X"
-                        type="number"
-                        disabled={item.locked}
-                        value={Math.round(item.x)}
-                        onChange={(event) =>
-                          adapter.patchItems([
-                            { id: item.id, patch: { x: Number(event.target.value) } },
-                          ])
-                        }
-                      />
-                    </label>
-                    <label className="vs-field">
-                      <span>Y</span>
-                      <input
-                        className="vs-input"
-                        aria-label="Item Y"
-                        type="number"
-                        disabled={item.locked}
-                        value={Math.round(item.y)}
-                        onChange={(event) =>
-                          adapter.patchItems([
-                            { id: item.id, patch: { y: Number(event.target.value) } },
-                          ])
-                        }
-                      />
-                    </label>
-                  </div>
-                )}
-                <div className="vs-row-3">
-                  {number('Rotation°', 'rotation', -360, 360)}
-                  {number('Width', 'width', 10, 5000)}
-                  {number('Height', 'height', 10, 5000)}
-                </div>
-              </Sec>
-              <Sec title="Quick styles" open={false} icon={<ZapIcon />}>
-                <div className="vs-quickstyles">
-                  <button
-                    data-tip="Apply Soft violet style"
-                    onClick={() =>
-                      patch({
-                        color: '#573575',
-                        borderColor: '#573575',
-                        borderWidth: 2,
-                        shadow: 'soft',
-                        effect: 'none',
-                        gradient: undefined,
-                      })
-                    }
-                  >
-                    <span className="vs-qdot" style={{ background: '#573575' }} />
-                    Soft violet
-                  </button>
-                  <button
-                    data-tip="Apply Golden glow style"
-                    onClick={() =>
-                      patch({
-                        color: '#c89640',
-                        borderColor: '#c89640',
-                        borderWidth: 3,
-                        shadow: 'none',
-                        effect: 'glow',
-                        gradient: undefined,
-                      })
-                    }
-                  >
-                    <span className="vs-qdot" style={{ background: '#c89640' }} />
-                    Golden glow
-                  </button>
-                  <button
-                    data-tip="Apply Ink style"
-                    onClick={() =>
-                      patch({
-                        color: '#222222',
-                        borderColor: '#222222',
-                        borderWidth: 2,
-                        shadow: 'hard',
-                        effect: 'none',
-                        gradient: undefined,
-                      })
-                    }
-                  >
-                    <span className="vs-qdot" style={{ background: '#222222' }} />
-                    Ink
-                  </button>
-                </div>
-              </Sec>
-              <Sec title="Quick actions" open={false} icon={<ZapIcon />}>
-                <div className="vs-action-grid">
-                  <button
-                    className="vs-icon-btn"
-                    data-tip="Copy (Ctrl+C)"
-                    aria-label="Copy"
-                    onClick={() => void adapter.copyToSystem()}
-                  >
-                    <DuplicateIcon />
-                  </button>
-                  <button
-                    className="vs-icon-btn"
-                    data-tip="Paste (Ctrl+V)"
-                    aria-label="Paste"
-                    onClick={() => void adapter.pasteFromSystem()}
-                  >
-                    <PasteIcon />
-                  </button>
-                  <button
-                    className="vs-icon-btn"
-                    data-tip="Bring forward (])"
-                    aria-label="Forward"
-                    onClick={() => adapter.arrangeSelection('forward')}
-                  >
-                    <ForwardIcon />
-                  </button>
-                  <button
-                    className="vs-icon-btn"
-                    data-tip="Send backward ([)"
-                    aria-label="Backward"
-                    onClick={() => adapter.arrangeSelection('backward')}
-                  >
-                    <BackwardIcon />
-                  </button>
-                  <button
-                    className="vs-icon-btn"
-                    data-tip="Bring to front (Ctrl+])"
-                    aria-label="Front"
-                    onClick={() => adapter.arrangeSelection('front')}
-                  >
-                    <BringFrontIcon />
-                  </button>
-                  <button
-                    className="vs-icon-btn"
-                    data-tip="Send to back (Ctrl+[)"
-                    aria-label="Back"
-                    onClick={() => adapter.arrangeSelection('back')}
-                  >
-                    <SendBackIcon />
-                  </button>
-                  <button
-                    className="vs-icon-btn"
-                    data-tip="Rotate 15° clockwise"
-                    aria-label="Rotate 15°"
-                    onClick={() => adapter.rotateSelection(15)}
-                  >
-                    <RotateIcon />
-                  </button>
-                </div>
-                <div className="vs-row-2">
-                  <button
-                    className="vs-btn vs-btn--light"
-                    style={{ justifyContent: 'center' }}
-                    onClick={() => adapter.copyStyle()}
-                  >
-                    Copy style
-                  </button>
-                  <button
-                    className="vs-btn vs-btn--light"
-                    style={{ justifyContent: 'center' }}
-                    disabled={!adapter.canPasteStyle}
-                    onClick={() => adapter.pasteStyle()}
-                  >
-                    Apply style
-                  </button>
-                </div>
               </Sec>
               {item.connector && (
                 <Sec title="Connector" open={false} icon={<SlidersIcon />}>

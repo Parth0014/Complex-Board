@@ -24,6 +24,17 @@ const setup = () => {
   });
   return adapter;
 };
+it('border and silhouette settings remain independent', () => {
+  const adapter = setup();
+  adapter.patchItems([{ id: 'a', patch: { stickerWidth: 8, stickerColor: '#ffffff' } }]);
+  adapter.patchItems([{ id: 'a', patch: { borderColor: '#ff0000', borderWidth: 12 } }]);
+  expect(adapter.history.document.items[0]).toMatchObject({
+    borderColor: '#ff0000',
+    borderWidth: 12,
+    stickerColor: '#ffffff',
+    stickerWidth: 8,
+  });
+});
 it('copies a snapshot, remaps pasted groups and restores cut with undo', () => {
   const adapter = setup();
   adapter.select(['a', 'b']);
@@ -141,7 +152,13 @@ it('selects whole groups, duplicates with distinct group identity, and undoes gr
   adapter.select(['a']);
   expect(adapter.selectedIds).toEqual(['a', 'b']);
   adapter.duplicateSelection();
-  const copies = adapter.history.document.items.slice(3);
+  const copies = adapter.history.document.items.filter((value) =>
+    adapter.selectedIds.includes(value.id),
+  );
+  expect(copies).toHaveLength(2);
+  // copies sit directly above the topmost original, not on top of the whole board
+  const order = adapter.history.document.items.map((value) => value.id);
+  expect(order.indexOf(copies[0].id)).toBe(order.indexOf('b') + 1);
   expect(copies[0].groupId).toBe(copies[1].groupId);
   expect(copies[0].groupId).not.toBe(original);
   adapter.undo();
@@ -195,13 +212,63 @@ it('constrains numeric edits, nudges, duplicate and page-size changes at the doc
   );
   adapter.select(['a']);
   adapter.duplicateSelection();
-  expect(adapter.history.document.items[3].y).toBe(
-    adapter.history.document.height - adapter.history.document.items[3].height,
-  );
+  const copy = adapter.history.document.items.find((value) => value.id === adapter.selectedIds[0])!;
+  expect(copy.y).toBe(adapter.history.document.height - copy.height);
   adapter.commit({ ...adapter.history.document, width: 500, height: 500 });
   for (const value of adapter.history.document.items) {
     const box = boundsOf(value);
     expect(box.x + box.width).toBeLessThanOrEqual(500.001);
     expect(box.y + box.height).toBeLessThanOrEqual(500.001);
   }
+});
+
+it('enabling edge snapping preserves off-canvas artwork through unrelated edits and history', () => {
+  const adapter = setup();
+  adapter.setSnapToEdges(false);
+  adapter.patchItems([{ id: 'a', patch: { x: -40 } }]);
+  const before = adapter.history.document;
+  const revision = adapter.history.revision;
+  adapter.setSnapToEdges(true);
+  expect(adapter.history.document).toBe(before);
+  expect(adapter.history.revision).toBe(revision);
+  adapter.patchItems([{ id: 'b', patch: { color: '#ff0000' } }]);
+  expect(adapter.history.document.items[0].x).toBe(-40);
+  adapter.undo();
+  expect(adapter.history.document.items[0].x).toBe(-40);
+  adapter.redo();
+  expect(adapter.history.document.items[0].x).toBe(-40);
+});
+it('resizes text bounds without scaling its font or forcing the old height back', () => {
+  const adapter = setup();
+  adapter.patchItems([{ id: 'a', patch: { fontSize: 20 } }]);
+  adapter.resizeObjectBounds('a', 160, 12);
+  expect(adapter.history.document.items[0]).toMatchObject({
+    width: 160,
+    height: 12,
+    fontSize: 20,
+    fixedBounds: true,
+  });
+  adapter.patchItems([{ id: 'b', patch: { color: '#ff0000' } }]);
+  expect(adapter.history.document.items[0].height).toBe(12);
+  adapter.fitObjectBounds('a');
+  expect(adapter.history.document.items[0].height).toBeGreaterThan(12);
+  expect(adapter.history.document.items[0].fontSize).toBe(20);
+});
+it('resizes an artwork frame independently and restores it with fit bounds', () => {
+  const adapter = setup();
+  adapter.patchItems([{ id: 'a', patch: { kind: 'shape', shape: 'rectangle' } }]);
+  adapter.resizeObjectBounds('a', 50, 40);
+  expect(adapter.history.document.items[0]).toMatchObject({
+    width: 50,
+    height: 40,
+    contentSize: { width: 100, height: 80 },
+  });
+  adapter.resizeObjectBounds('a', 200, 160);
+  expect(adapter.history.document.items[0].contentSize).toEqual({ width: 100, height: 80 });
+  adapter.fitObjectBounds('a');
+  expect(adapter.history.document.items[0]).toMatchObject({
+    width: 100,
+    height: 80,
+    contentSize: undefined,
+  });
 });

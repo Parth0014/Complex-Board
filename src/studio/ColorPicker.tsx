@@ -158,6 +158,7 @@ export function ColorPicker({
         style={{ background: value }}
         aria-label={label}
         aria-expanded={open}
+        title={`${label}: ${value.toUpperCase()}`}
         onClick={(event) => {
           event.stopPropagation();
           if (!open) setTone(fromHex(value));
@@ -172,6 +173,33 @@ export function ColorPicker({
             role="group"
             aria-label={`${label} picker`}
           >
+            <div className="studio-color-heading">
+              <span>{label}</span>
+              <button
+                type="button"
+                aria-label="Close color picker"
+                onClick={() => {
+                  setOpen(false);
+                  trigger.current?.focus();
+                }}
+              >
+                <span aria-hidden="true">&#215;</span>
+              </button>
+            </div>
+            <div className="studio-color-swatches">
+              {SWATCHES.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  style={{ background: color }}
+                  aria-label={`Use ${color}`}
+                  onClick={() => {
+                    setTone(fromHex(color));
+                    onChange(color);
+                  }}
+                />
+              ))}
+            </div>
             <div
               className="studio-color-plane"
               style={{ backgroundColor: hsv(tone.h, 1, 1) }}
@@ -197,7 +225,6 @@ export function ColorPicker({
               <span style={{ left: `${tone.s * 100}%`, top: `${(1 - tone.v) * 100}%` }} />
             </div>
             <label className="vs-field">
-              <span>Hue</span>
               <input
                 aria-label={`${label} hue`}
                 type="range"
@@ -207,46 +234,8 @@ export function ColorPicker({
                 onChange={(event) => change({ ...tone, h: Number(event.target.value) })}
               />
             </label>
-            <div className="vs-row-2">
-              <label className="vs-field">
-                <span>Saturation</span>
-                <input
-                  aria-label={`${label} saturation`}
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={tone.s * 100}
-                  onChange={(event) => change({ ...tone, s: Number(event.target.value) / 100 })}
-                />
-              </label>
-              <label className="vs-field">
-                <span>Brightness</span>
-                <input
-                  aria-label={`${label} brightness`}
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={tone.v * 100}
-                  onChange={(event) => change({ ...tone, v: Number(event.target.value) / 100 })}
-                />
-              </label>
-            </div>
-            <div className="studio-color-swatches">
-              {SWATCHES.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  style={{ background: color }}
-                  aria-label={`Use ${color}`}
-                  onClick={() => {
-                    setTone(fromHex(color));
-                    onChange(color);
-                  }}
-                />
-              ))}
-            </div>
-            <label className="vs-field">
-              <span>Hex color</span>
+            <label className="studio-color-hex">
+              <span className="studio-color-current" style={{ backgroundColor: value }} />
               <input
                 className="vs-input"
                 aria-label={`${label} hex`}
@@ -263,16 +252,6 @@ export function ColorPicker({
                 onBlur={() => setHex(value)}
               />
             </label>
-            <button
-              type="button"
-              className="panel-secondary-action"
-              onClick={() => {
-                setOpen(false);
-                trigger.current?.focus();
-              }}
-            >
-              Done
-            </button>
           </div>,
           document.body,
         )}

@@ -1,0 +1,1 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"><defs><pattern id="patterns-dots-green-p" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="8" fill="#9BCB8A"/></pattern></defs><rect width="800" height="600" fill="#EDF5E8"/><rect width="800" height="600" fill="url(#patterns-dots-green-p)"/></svg>

@@ -1,90 +1,85 @@
-import manifest from '../../public/curated-v1/manifest.json';
 import type { AssetProvider, GratitudeAsset } from './contracts';
-
-let loaded: Promise<GratitudeAsset[]> | undefined;
-function getAssets(): Promise<GratitudeAsset[]> {
-  if (!loaded)
-    loaded = loadAssets().catch((error) => {
-      loaded = undefined;
-      throw error;
-    });
-  return loaded;
+export const bundledSvgSources = import.meta.glob<string>(
+  '../../public/vision-board-assets/svg/**/*.svg',
+  { eager: true, query: '?raw', import: 'default' },
+);
+const bundledFonts = import.meta.glob<string>('../../public/vision-board-assets/fonts/*.woff2', {
+  eager: true,
+  query: '?inline',
+  import: 'default',
+});
+function withEmbeddedFonts(svg: string) {
+  const rules = Object.entries(bundledFonts).flatMap(([path, url]) => {
+    const match = path.match(/(fraunces|caveat-brush|dm-sans)-latin-(\d+)-(normal|italic)/);
+    if (!match) return [];
+    const family = { fraunces: 'Fraunces', 'caveat-brush': 'Caveat Brush', 'dm-sans': 'DM Sans' }[
+      match[1]
+    ];
+    if (!family || !svg.includes(family)) return [];
+    return [
+      `@font-face{font-family:'${family}';font-weight:${match[2]};font-style:${match[3]};src:url('${url}') format('woff2')}`,
+    ];
+  });
+  return svg.replace(/(<svg[^>]*>)/, '$1<style>' + rules.join('') + '</style>');
 }
-async function loadAssets(): Promise<GratitudeAsset[]> {
-  const { files } = await import('./curatedSources');
-  return manifest.assets.map((entry) => {
-    const source = files[`../../public/curated-v1/${entry.file}`];
-    if (!source) throw new Error(`Missing curated asset: ${entry.file}`);
-    const viewBox = source
-      .match(/viewBox\s*=\s*["']([^"']+)["']/i)?.[1]
-      .trim()
-      .split(/[\s,]+/)
+export const curatedAssets: GratitudeAsset[] = Object.entries(bundledSvgSources).map(
+  ([path, svg]) => {
+    const parts = path.split('/'),
+      category = parts.at(-2)!,
+      name = parts.at(-1)!.replace(/\.svg$/, '');
+    const dimensions = svg
+      .match(/viewBox="([^"]+)"/)![1]
+      .split(/\s+/)
       .map(Number);
-    if (
-      !viewBox ||
-      viewBox.length !== 4 ||
-      !viewBox.every(Number.isFinite) ||
-      viewBox[2] <= 0 ||
-      viewBox[3] <= 0
-    ) {
-      throw new Error(`Invalid curated SVG dimensions: ${entry.file}`);
-    }
-    // Canvas needs intrinsic SVG dimensions; a viewBox alone can render blank
-    // when drawImage crops the artwork under the board's zoom transform.
-    const sizedSource = source.replace(/<svg\b([^>]*)>/i, (_, attributes: string) => {
-      const withoutSize = attributes.replace(/\s(?:width|height)\s*=\s*["'][^"']*["']/gi, '');
-      return `<svg${withoutSize} width="${viewBox[2]}" height="${viewBox[3]}">`;
-    });
-    const url = `data:image/svg+xml,${encodeURIComponent(sizedSource)}`;
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(withEmbeddedFonts(svg));
     return {
-      ...entry,
-      width: viewBox[2],
-      height: viewBox[3],
+      id: 'vision-svg:' + category + '/' + name,
+      provider: 'curated-v1',
+      type: 'decoration',
+      category,
+      title: name.replace(/-/g, ' '),
+      tags: [category, name.replace(/-/g, ' ')],
       previewUrl: url,
       assetUrl: url,
-    } as GratitudeAsset;
-  });
-}
-
+      mimeType: 'image/svg+xml',
+      width: dimensions[2],
+      height: dimensions[3],
+      editable: { colors: false, stroke: false, crop: false, filters: false },
+      license: {
+        tier: 'A',
+        id: 'user-supplied',
+        label: 'User-supplied asset pack',
+        attributionRequired: false,
+      },
+    };
+  },
+);
 export const curatedPackProvider: AssetProvider = {
   id: 'curated-v1',
   capabilities: { search: true, categories: true, pagination: true },
   async search(query) {
-    const assets = await getAssets();
-    const term = query.search?.trim().toLowerCase() || '';
-    const matches = assets.filter(
+    const matches = curatedAssets.filter(
       (asset) =>
         (!query.type || asset.type === query.type) &&
-        (!term || `${asset.title} ${asset.tags.join(' ')}`.toLowerCase().includes(term)) &&
-        (!query.license ||
-          (query.license === 'credit-required') === asset.license.attributionRequired) &&
-        (!query.orientation ||
-          (() => {
-            const ratio = (asset.width || 1) / (asset.height || 1);
-            return (
-              query.orientation ===
-              (ratio > 1.12 ? 'landscape' : ratio < 0.88 ? 'portrait' : 'square')
-            );
-          })()),
+        (!query.search ||
+          [asset.title, ...asset.tags].join(' ').includes(query.search.toLowerCase())),
     );
-    const offset = Number(query.cursor || 0);
-    if (!Number.isSafeInteger(offset) || offset < 0) throw new Error('Invalid curated cursor');
-    const limit = Math.max(1, Math.min(250, query.limit || 40));
+    const start = Number(query.cursor || 0),
+      end = start + (query.limit || matches.length);
     return {
-      items: matches.slice(offset, offset + limit),
-      nextCursor: offset + limit < matches.length ? String(offset + limit) : undefined,
+      items: matches.slice(start, end),
+      nextCursor: end < matches.length ? String(end) : undefined,
     };
   },
-  async resolve(assetId) {
-    const assets = await getAssets();
-    const asset = assets.find((item) => item.id === assetId);
-    if (!asset) throw new Error('Asset is not in the uploaded curated pack');
+  async resolve(id) {
+    const asset = curatedAssets.find((asset) => asset.id === id);
+    if (!asset) throw new Error('Unknown vector asset: ' + id);
     return asset;
   },
   async fetchAsset(asset, ownerWindow) {
-    const approved = await this.resolve(asset.id, ownerWindow);
-    const response = await ownerWindow.fetch(approved.assetUrl);
-    if (!response.ok) throw new Error('Curated asset could not be loaded');
-    return response.blob();
+    const canonical = await this.resolve(asset.id, ownerWindow);
+    return new Blob([decodeURIComponent(canonical.assetUrl.split(',').slice(1).join(','))], {
+      type: 'image/svg+xml',
+    });
   },
 };

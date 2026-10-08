@@ -1171,3 +1171,362 @@
   text-transform: none;
   letter-spacing: normal;
 }
+
+/* Destructive action: last block, separated, red */
+.vs-object-context .vs-context-actions {
+  border-top: 1px solid #ececf3;
+}
+.vs-object-context > .vs-context-actions:first-child,
+.vs-object-context > .vs-context-flyout + .vs-context-actions {
+  border-top: none;
+}
+.vs-context-danger button,
+.vs-context-danger button svg {
+  color: #c4261d;
+}
+.vs-context-danger button:hover:not(:disabled) {
+  background: #fdecea;
+}
+
+/* Context rows have no accordion underline or residual panel border. */
+.vs-object-context .vs-sec[open] > summary {
+  border-bottom: 0;
+}
+.vs-object-context .vs-sec::details-content {
+  border: 0;
+  padding: 0;
+}
+.vs-object-context .vs-inspector {
+  border-radius: 0;
+  border-bottom: 0;
+}
+.vs-object-context .vs-sec__chev svg {
+  transform: rotate(-90deg) !important;
+}
+.vs-context-flyout {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.vs-context-flyout :is(button, input, select, textarea) {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+}
+.vs-context-flyout .vs-quickstyles,
+.vs-context-flyout .vs-action-grid,
+.vs-context-flyout > .vs-row-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vs-context-flyout .vs-quickstyles button,
+.vs-context-flyout .vs-action-grid button,
+.vs-context-flyout > .vs-row-2 button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start !important;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  gap: 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: left;
+}
+.vs-context-flyout .vs-quickstyles button:hover,
+.vs-context-flyout .vs-action-grid button:hover,
+.vs-context-flyout > .vs-row-2 button:hover {
+  background: #eeeef2;
+}
+.vs-context-flyout .vs-qdot {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.vs-context-flyout .vs-action-grid svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vs-context-swatches {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e7e7ec;
+}
+.vs-context-swatches button {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  padding: 0;
+  border: 1px solid #00000014;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.vs-context-swatches button:hover {
+  box-shadow: 0 0 0 3px #e8e5ee;
+}
+.vs-context-swatches button:focus-visible {
+  outline: 2px solid #7048e8;
+  outline-offset: 3px;
+}
+.vs-context-swatches button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.vs-context-flyout:not(.vs-context-layer) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+.vs-context-flyout .vs-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.vs-context-flyout .vs-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.vs-context-flyout .vs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+}
+.vs-context-flyout .vs-field > span {
+  font-size: 12px;
+  font-weight: 500;
+}
+.vs-context-flyout :is(.vs-input, .vs-select) {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 6px 9px;
+}
+.vs-context-flyout .studio-color-trigger {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+}
+.vs-context-flyout .vs-sec > summary {
+  border: 0;
+  background: #f5f5f7;
+  border-radius: 6px;
+}
+.vs-context-flyout .vs-sec__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0 0;
+}
+
+/* A single preview size across the toolbar, panels, and menu. */
+.vs .studio-color-picker .studio-color-trigger {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid #00000024;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #ffffff80;
+}
+.studio-color-popover {
+  font-family: inherit;
+  width: 248px;
+  padding: 12px;
+  gap: 12px;
+  border-radius: 12px;
+}
+.studio-color-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 500;
+}
+.studio-color-heading button {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: #f4f4f7;
+  font-size: 18px;
+  cursor: pointer;
+}
+.studio-color-popover .studio-color-plane {
+  height: 140px;
+  border-radius: 8px;
+}
+.studio-color-popover .vs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+.studio-color-popover .vs-input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #e5e5eb;
+  border-radius: 7px;
+  font:
+    13px ui-monospace,
+    monospace;
+  padding: 6px 9px;
+}
+.studio-color-popover .vs-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.studio-color-advanced summary {
+  font-size: 12px;
+  color: #666976;
+  cursor: pointer;
+}
+.studio-color-advanced[open] > div {
+  margin-top: 10px;
+}
+.studio-color-popover .studio-color-swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.studio-color-popover .studio-color-swatches button {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid #00000024;
+}
+.studio-color-popover .panel-secondary-action {
+  min-height: 32px;
+  font-size: 13px;
+  border-radius: 7px;
+}
+
+/* Visual picker: palette, color surface, spectrum, and one hex field. */
+.studio-color-popover {
+  width: 300px;
+  padding: 16px;
+  gap: 14px;
+  border-radius: 16px;
+}
+.studio-color-popover .studio-color-plane {
+  height: 140px;
+  border-radius: 12px;
+}
+.studio-color-popover .studio-color-plane span {
+  width: 18px;
+  height: 18px;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #00000040;
+}
+.studio-color-popover .studio-color-swatches {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.studio-color-popover .studio-color-swatches button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+.studio-color-spectrum {
+  display: block;
+}
+.studio-color-popover .studio-color-spectrum input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: linear-gradient(to right, red, #ff0, #0f0, #0ff, #00f, #f0f, red);
+  cursor: pointer;
+}
+.studio-color-spectrum input::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #00000040;
+}
+.studio-color-spectrum input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: 3px solid white;
+  border-radius: 50%;
+}
+.studio-color-hex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border: 1px solid #dcdce5;
+  border-radius: 12px;
+}
+.studio-color-current {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #00000020;
+  flex-shrink: 0;
+}
+.studio-color-popover .studio-color-hex .vs-input {
+  border: 0;
+  padding: 0;
+  height: 28px;
+  outline: none;
+  background: transparent;
+  font: 13px inherit;
+}
+.studio-color-hex:focus-within {
+  border-color: #7048e8;
+  box-shadow: 0 0 0 2px #7048e820;
+}
+
+/* Shared controls in toolbar popovers and context flyouts. */
+.vs-sel .vs-menu__pop,
+.vs-context-flyout {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.vs-sel .vs-menu__pop label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.vs-sel .vs-menu__pop :is(input[type='number'], select),
+.vs-context-flyout :is(input[type='number'], select) {
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid #e5e5eb;
+  border-radius: 7px;
+  background: white;
+  color: #24262b;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+}
