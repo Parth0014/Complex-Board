@@ -884,21 +884,17 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     };
   }
   patchItems(patches: Array<{ id: string; patch: Partial<BoardItem> }>) {
-    const locked = this.history.document.items.some(
-      (item) => item.locked && patches.some((patch) => patch.id === item.id),
-    );
     this.items((items) =>
       items.map((item) => {
         const patch = { ...patches.find((patch) => patch.id === item.id)?.patch };
         if (patch.text !== undefined && patch.text !== item.text && !('textRuns' in patch))
           patch.textRuns = undefined;
-        if (locked) {
-          delete patch.x;
-          delete patch.y;
-          delete patch.width;
-          delete patch.height;
-          delete patch.rotation;
-        }
+        if (item.locked)
+          return {
+            ...item,
+            ...('locked' in patch ? { locked: patch.locked } : {}),
+            ...('hidden' in patch ? { hidden: patch.hidden } : {}),
+          };
         return { ...item, ...patch };
       }),
     );
@@ -1991,7 +1987,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     );
   }
   delete(ids: string[]) {
-    this.items((items) => items.filter((item) => !ids.includes(item.id)));
+    this.items((items) => items.filter((item) => item.locked || !ids.includes(item.id)));
     this.select([]);
   }
   clearBoard() {

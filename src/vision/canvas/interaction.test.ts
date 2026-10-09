@@ -272,3 +272,20 @@ it('resizes an artwork frame independently and restores it with fit bounds', () 
     contentSize: undefined,
   });
 });
+
+it('locked patches do not block other items and locked artwork cannot be deleted', () => {
+  const adapter = setup();
+  adapter.patchItems([{ id: 'a', patch: { locked: true } }]);
+  adapter.patchItems([
+    { id: 'a', patch: { x: 500, color: '#ff0000' } },
+    { id: 'b', patch: { x: 400 } },
+  ]);
+  expect(adapter.history.document.items[0]).toMatchObject({ x: 100, locked: true });
+  expect(adapter.history.document.items[0].color).not.toBe('#ff0000');
+  expect(adapter.history.document.items[1].x).toBe(400);
+  adapter.delete(['a', 'b']);
+  expect(adapter.history.document.items.map((item) => item.id)).toEqual(['a', 'c']);
+  adapter.patchItems([{ id: 'a', patch: { locked: false } }]);
+  adapter.delete(['a']);
+  expect(adapter.history.document.items.map((item) => item.id)).toEqual(['c']);
+});

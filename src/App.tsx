@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { KonvaCanvasAdapter } from './vision/canvas/KonvaCanvasAdapter';
-import { boundsOf, unionBounds } from './vision/canvas/geometry';
 import { KonvaStage } from './vision/canvas/KonvaStage';
 import { StudioShell } from './studio/StudioShell';
 import { ColorPicker } from './studio/ColorPicker';
@@ -148,27 +147,8 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
       const start = Math.max(12, (canvas?.top ?? 0) + 12);
       const maxHeight = Math.max(100, bottom - start);
       const height = Math.min(menu.scrollHeight, maxHeight);
-      const selected = adapter.history.document.items.filter((item) =>
-        adapter.selectedIds.includes(item.id),
-      );
-      let anchorX = contextMenu.x;
-      let anchorY = contextMenu.y;
-      if (selected.length) {
-        const board = adapter.ownerWindow.document.querySelector<HTMLElement>('.v1-artboard');
-        const stage = board?.querySelector('canvas')?.getBoundingClientRect();
-        if (board && stage) {
-          const box = unionBounds(selected.map(boundsOf));
-          const scale = Number(board.dataset.scale);
-          const x = stage.left + Number(board.dataset.pageLeft) + box.x * scale;
-          const y = stage.top + Number(board.dataset.pageTop) + box.y * scale;
-          const right = x + box.width * scale;
-          anchorX =
-            right + menu.offsetWidth + 12 < adapter.ownerWindow.innerWidth
-              ? right + 12
-              : x - menu.offsetWidth - 12;
-          anchorY = y;
-        }
-      }
+      const anchorX = Number.isFinite(contextMenu.x) ? contextMenu.x : 12;
+      const anchorY = Number.isFinite(contextMenu.y) ? contextMenu.y : start;
       const next = {
         left: Math.max(
           12,
@@ -993,7 +973,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
       {contextMenu &&
         createPortal(
           <div
-            className={`vs vs-object-context${contextMenu.x > 620 ? ' opens-left' : ''}`}
+            className="vs vs-object-context"
             ref={contextMenuRef}
             onMouseOver={(event) => {
               if ((event.target as HTMLElement).closest('summary')) setLayerFlyout(null);
@@ -1145,6 +1125,7 @@ function Editor({ adapter }: { adapter: KonvaCanvasAdapter }) {
                 <div className="vs-context-actions vs-context-danger">
                   <button
                     role="menuitem"
+                    disabled={locked}
                     onClick={() => {
                       adapter.delete(adapter.selectedIds);
                       closeMenu();

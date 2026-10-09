@@ -973,29 +973,6 @@
   .vs-object-context .vs-sec {
     position: static;
   }
-  .vs-object-context .vs-sec > .vs-sec__body {
-    position: absolute;
-    left: calc(100% + 6px);
-    top: 0;
-    width: 300px;
-    max-height: min(520px, calc(100vh - 24px));
-    overflow: auto;
-    padding: 14px;
-    background: white;
-    border: 1px solid #e5e5ed;
-    border-radius: 12px;
-    box-shadow: 0 12px 40px #20203826;
-    z-index: 1;
-  }
-  .vs-object-context.opens-left .vs-sec > .vs-sec__body {
-    left: auto;
-    right: calc(100% + 6px);
-  }
-  .vs-object-context .vs-sec .vs-sec > .vs-sec__body {
-    position: static;
-    width: auto;
-    box-shadow: none;
-  }
 }
 
 .vs-object-context {
@@ -1051,29 +1028,6 @@
 }
 .vs-object-context .vs-sec__chev svg {
   transform: rotate(-90deg);
-}
-@media (min-width: 720px) {
-  .vs-object-context .vs-sec {
-    position: relative;
-  }
-  .vs-object-context .vs-sec > .vs-sec__body {
-    left: calc(100% + 20px);
-  }
-  .vs-object-context.opens-left .vs-sec > .vs-sec__body {
-    right: calc(100% + 20px);
-  }
-  .vs-object-context .vs-sec > .vs-sec__body::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -24px;
-    width: 24px;
-  }
-  .vs-object-context.opens-left .vs-sec > .vs-sec__body::before {
-    left: auto;
-    right: -24px;
-  }
 }
 
 .vs-context-flyout {

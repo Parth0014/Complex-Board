@@ -35,7 +35,7 @@ import {
 
 export type EditorPanel = 'style' | 'layers' | null;
 
-/** Collapsible inspector section. */
+/** Inspector sections use one measured portal in the context menu. */
 function Sec({
   title,
   children,
@@ -50,30 +50,43 @@ function Sec({
   const [expanded, setExpanded] = useState(open);
   const sectionRef = useRef<HTMLDetailsElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pinned = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [host, setHost] = useState<HTMLElement | null>(null);
   const cancelClose = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
+    if (timer.current) clearTimeout(timer.current);
   };
   const scheduleClose = () => {
     cancelClose();
-    closeTimer.current = setTimeout(() => {
-      const doc = sectionRef.current?.ownerDocument;
-      const active = doc?.activeElement;
+    timer.current = setTimeout(() => {
+      const section = sectionRef.current,
+        flyout = flyoutRef.current;
+      if (pinned.current || section?.matches(':hover') || flyout?.matches(':hover')) return;
       if (
-        doc?.querySelector('.studio-color-popover') ||
-        (active && flyoutRef.current?.contains(active))
-      )
+        section?.ownerDocument.querySelector('.studio-color-popover') ||
+        flyout?.contains(section?.ownerDocument.activeElement || null)
+      ) {
+        scheduleClose();
         return;
+      }
       setExpanded(false);
     }, 250);
+  };
+  const show = () => {
+    const section = sectionRef.current;
+    if (!section?.parentElement?.classList.contains('vs-inspector__body')) return;
+    const menu = section.closest<HTMLElement>('.vs-object-context');
+    if (!menu) return;
+    cancelClose();
+    section.ownerDocument.dispatchEvent(new CustomEvent('vs-submenu-open', { detail: section }));
+    setHost(menu);
+    setExpanded(true);
   };
   useEffect(() => {
     const doc = sectionRef.current?.ownerDocument;
     const closeOther = (event: Event) => {
-      if (
-        sectionRef.current?.parentElement?.classList.contains('vs-inspector__body') &&
-        (event as CustomEvent).detail !== sectionRef.current
-      ) {
+      if ((event as CustomEvent).detail !== sectionRef.current) {
+        pinned.current = false;
         cancelClose();
         setExpanded(false);
       }
@@ -84,49 +97,69 @@ function Sec({
       doc?.removeEventListener('vs-submenu-open', closeOther);
     };
   }, []);
-
-  const [flyout, setFlyout] = useState<{ host: HTMLElement; left: number; top: number } | null>(
-    null,
-  );
+  useEffect(() => {
+    if (!host || !expanded) return;
+    const section = sectionRef.current!,
+      doc = host.ownerDocument,
+      win = doc.defaultView!;
+    const place = () => {
+      const node = flyoutRef.current;
+      if (!node) return;
+      const menu = host.getBoundingClientRect(),
+        row = section.getBoundingClientRect();
+      const width = node.offsetWidth,
+        height = node.offsetHeight;
+      const bottom =
+        Math.min(
+          win.innerHeight,
+          doc.querySelector('.vs-bottom-dock')?.getBoundingClientRect().top ?? win.innerHeight,
+        ) - 12;
+      node.style.left =
+        Math.max(
+          12,
+          Math.min(
+            win.innerWidth - width - 12,
+            menu.right + width + 8 <= win.innerWidth ? menu.right + 8 : menu.left - width - 8,
+          ),
+        ) + 'px';
+      node.style.top = Math.max(12, Math.min(row.top, bottom - height)) + 'px';
+    };
+    place();
+    const observer = new win.ResizeObserver(place);
+    observer.observe(host);
+    if (flyoutRef.current) observer.observe(flyoutRef.current);
+    win.addEventListener('resize', place);
+    doc.addEventListener('scroll', place, true);
+    return () => {
+      observer.disconnect();
+      win.removeEventListener('resize', place);
+      doc.removeEventListener('scroll', place, true);
+    };
+  }, [host, expanded, children]);
   return (
     <details
       className="vs-sec"
       ref={sectionRef}
-      onMouseLeave={() => {
-        if (flyout) scheduleClose();
-      }}
       open={expanded}
       onToggle={(event) => setExpanded(event.currentTarget.open)}
-      onMouseEnter={(event) => {
-        const section = event.currentTarget;
-        if (
-          !section.closest('.vs-object-context') ||
-          !section.parentElement?.classList.contains('vs-inspector__body')
-        )
-          return;
-        cancelClose();
-        section.ownerDocument.dispatchEvent(
-          new CustomEvent('vs-submenu-open', { detail: section }),
-        );
-        for (const sibling of section.parentElement?.children || []) {
-          if (sibling !== section && sibling instanceof HTMLDetailsElement) sibling.open = false;
-        }
-        setExpanded(true);
-        const host = section.closest<HTMLElement>('.vs-object-context');
-        if (host && section.parentElement?.classList.contains('vs-inspector__body')) {
-          const menu = host.getBoundingClientRect();
-          const row = section.getBoundingClientRect();
-          const win = section.ownerDocument.defaultView!;
-          setFlyout({
-            host,
-            left:
-              menu.right + 312 < win.innerWidth ? menu.right + 8 : Math.max(12, menu.left - 308),
-            top: row.top,
-          });
-        }
+      onMouseEnter={show}
+      onMouseLeave={() => {
+        if (host) scheduleClose();
       }}
     >
-      <summary data-tip={`${title} settings`}>
+      <summary
+        data-tip={title + ' settings'}
+        onClick={(event) => {
+          if (
+            sectionRef.current?.closest('.vs-object-context') &&
+            sectionRef.current.parentElement?.classList.contains('vs-inspector__body')
+          ) {
+            event.preventDefault();
+            pinned.current = true;
+            show();
+          }
+        }}
+      >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           {icon}
           {title}
@@ -135,35 +168,89 @@ function Sec({
           <ChevronDownIcon />
         </span>
       </summary>
-      {flyout ? (
+      {host ? (
         expanded &&
         createPortal(
           <div
             className="vs-context-flyout"
-            ref={(node) => {
-              flyoutRef.current = node;
-              if (!node) return;
-              const doc = node.ownerDocument;
-              const bottom =
-                (doc.querySelector('.vs-bottom-dock')?.getBoundingClientRect().top ??
-                  doc.defaultView!.innerHeight) - 12;
-              node.style.top = `${Math.max(12, Math.min(flyout.top, bottom - node.offsetHeight))}px`;
-            }}
+            ref={flyoutRef}
             onMouseEnter={cancelClose}
             onMouseLeave={scheduleClose}
             onBlur={scheduleClose}
             role="group"
-            aria-label={`${title} settings`}
-            style={{ left: flyout.left, top: flyout.top }}
+            aria-label={title + ' settings'}
           >
             {children}
           </div>,
-          flyout.host,
+          host,
         )
       ) : (
         <div className="vs-sec__body">{children}</div>
       )}
     </details>
+  );
+}
+
+function BoundsInput({
+  value,
+  label,
+  disabled,
+  onCommit,
+}: {
+  value: number;
+  label: string;
+  disabled: boolean;
+  onCommit(value: number): void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  const focused = useRef(false);
+  const cancelled = useRef(false);
+  useEffect(() => {
+    if (!focused.current) setDraft(String(value));
+  }, [value]);
+  const commit = () => {
+    if (cancelled.current) {
+      cancelled.current = false;
+      setDraft(String(value));
+      return;
+    }
+    const next = Number(draft);
+    if (draft.trim() && Number.isFinite(next)) {
+      const clamped = Math.max(10, Math.min(10000, next));
+      onCommit(clamped);
+      setDraft(String(clamped));
+    } else setDraft(String(value));
+  };
+  return (
+    <input
+      className="vs-input"
+      aria-label={label}
+      type="number"
+      min="10"
+      max="10000"
+      disabled={disabled}
+      value={draft}
+      onFocus={() => {
+        focused.current = true;
+      }}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => {
+        focused.current = false;
+        commit();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+        if (event.key === 'Escape') {
+          cancelled.current = true;
+          setDraft(String(value));
+          focused.current = false;
+          event.currentTarget.blur();
+        }
+      }}
+    />
   );
 }
 
@@ -205,8 +292,25 @@ export function EditorFeatures({
       ].map((asset) => [asset.id, asset]),
     ).values(),
   ];
-  const patch = (patch: Partial<BoardItem>) =>
-    adapter.patchItems(adapter.selectedIds.map((id) => ({ id, patch })));
+  const patch = (patch: Partial<BoardItem>) => {
+    const shadowDetail = Object.keys(patch).some(
+      (key) => key.startsWith('shadow') && key !== 'shadow',
+    );
+    adapter.patchItems(
+      adapter.selectedIds.map((id) => {
+        const target = adapter.history.document.items.find((item) => item.id === id);
+        return {
+          id,
+          patch: {
+            ...(shadowDetail && (!target?.shadow || target.shadow === 'none')
+              ? { shadow: 'soft' as const }
+              : {}),
+            ...patch,
+          },
+        };
+      }),
+    );
+  };
   const crop = adapter.cropDraft?.id === item?.id ? adapter.cropDraft?.crop : null;
   const [textRange, setTextRange] = useState({ start: 0, end: 0 });
   const textEditor = useRef<HTMLTextAreaElement>(null);
@@ -588,29 +692,29 @@ export function EditorFeatures({
                     {(['width', 'height'] as const).map((key) => (
                       <label className="vs-field" key={key}>
                         <span>Bounds {key}</span>
-                        <input
-                          className="vs-input"
-                          aria-label={`Bounds ${key}`}
-                          type="number"
-                          min="10"
-                          max="10000"
-                          disabled={item.locked || selected.length !== 1}
+                        <BoundsInput
+                          key={item.id + key}
+                          label={`Bounds ${key}`}
+                          disabled={!!item.locked || selected.length !== 1}
                           value={item[key]}
-                          onChange={(event) => {
-                            if (event.target.value !== '')
-                              adapter.resizeObjectBounds(
-                                item.id,
-                                key === 'width' ? Number(event.target.value) : item.width,
-                                key === 'height' ? Number(event.target.value) : item.height,
-                              );
-                          }}
+                          onCommit={(value) =>
+                            adapter.resizeObjectBounds(
+                              item.id,
+                              key === 'width' ? value : item.width,
+                              key === 'height' ? value : item.height,
+                            )
+                          }
                         />
                       </label>
                     ))}
                   </div>
                   <button
                     className="vs-btn vs-btn--light"
-                    disabled={item.locked || selected.length !== 1}
+                    disabled={
+                      item.locked ||
+                      selected.length !== 1 ||
+                      (item.kind !== 'text' && !item.contentSize)
+                    }
                     onClick={() => adapter.fitObjectBounds(item.id)}
                   >
                     Fit bounds to content
@@ -1111,9 +1215,7 @@ export function EditorFeatures({
                       <ColorPicker
                         label="Item gradient"
                         value={item.gradient || '#fff3bd'}
-                        onChange={(value) =>
-                          patch({ gradient: value, fill: item.color || '#b48ce3' })
-                        }
+                        onChange={(value) => patch({ gradient: value, noFill: false })}
                       />
                     </div>
                     <label className="vs-field">
@@ -1121,6 +1223,7 @@ export function EditorFeatures({
                       <select
                         className="vs-select"
                         aria-label="Item gradient type"
+                        disabled={!item.gradient || item.locked}
                         value={item.gradientType || 'linear'}
                         onChange={(event) =>
                           patch({ gradientType: event.target.value as 'linear' | 'radial' })
@@ -1134,6 +1237,7 @@ export function EditorFeatures({
                   <button
                     className="vs-btn vs-btn--light"
                     style={{ justifyContent: 'center' }}
+                    disabled={!item.gradient || item.locked}
                     onClick={() => patch({ gradient: undefined })}
                   >
                     Remove gradient
@@ -1205,10 +1309,13 @@ export function EditorFeatures({
                     {color('Outline color', 'stickerColor', '#ffffff')}
                   </>
                 )}
-                {item.kind !== 'asset' && color('Item color', 'color', '#573575')}
+                {item.kind === 'drawing' && color('Stroke color', 'color', '#573575')}
                 {number('Opacity (%)', 'opacity', 0, 100)}
                 <div className="vs-row-2">
-                  {number('Corner radius', 'radius', 0, 150)}
+                  {(item.kind === 'asset' ||
+                    (item.kind === 'shape' && item.shape === 'rectangle') ||
+                    (item.kind === 'text' && item.textBackground)) &&
+                    number('Corner radius', 'radius', 0, 150)}
                   {number('Border width', 'borderWidth', 0, 30)}
                 </div>
                 {color('Border color', 'borderColor', '#33272b')}
@@ -1220,7 +1327,14 @@ export function EditorFeatures({
                       aria-label="Shadow preset"
                       value={item.shadow || 'none'}
                       onChange={(event) =>
-                        patch({ shadow: event.target.value as BoardItem['shadow'] })
+                        patch({
+                          shadow: event.target.value as BoardItem['shadow'],
+                          shadowColor: undefined,
+                          shadowOpacity: undefined,
+                          shadowBlur: undefined,
+                          shadowOffsetX: undefined,
+                          shadowOffsetY: undefined,
+                        })
                       }
                     >
                       {['none', 'soft', 'medium', 'hard'].map((id) => (
