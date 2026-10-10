@@ -3,11 +3,6 @@ import type { VisionLayout } from './layouts';
 import type { VisionTemplate } from './templates';
 import type { BoardDocument, BoardItem, DocumentHistory } from './document';
 
-export type GeneratedBoardVisuals = {
-  images: { image: string; prompt: string }[];
-  palette?: { background: string; text: string; card: string };
-};
-
 export type VisionTheme = 'light' | 'dark';
 export type VisionFontFamily =
   | 'fraunces'
@@ -184,10 +179,6 @@ export interface StudioAdapter extends CanvasAdapter {
   redo(): void;
 }
 export interface EditorAdapter extends StudioAdapter {
-  applyReferenceTemplate(
-    layout: import('./referenceTemplate').ReferenceLayout,
-    revision: number,
-  ): Promise<void>;
   replaceAsset(id: string): Promise<string | null>;
   shapeAssist: boolean;
   cleanSelectedDrawings(): void;
@@ -212,17 +203,6 @@ export interface EditorAdapter extends StudioAdapter {
   applyCrop(): void;
   cancelCrop(): void;
   insertGeneratedImage(url: string, prompt: string, background?: boolean): Promise<void>;
-  composeBoard(
-    title: string,
-    goals: string[],
-    theme?: string,
-    visuals?: GeneratedBoardVisuals,
-  ): Promise<void>;
-  composeGeneratedBoard(
-    title: string,
-    goals: string[],
-    visuals: GeneratedBoardVisuals,
-  ): Promise<void>;
   groupScope: string[];
   path(item: BoardItem): string[];
   unitKey(item: BoardItem): string;

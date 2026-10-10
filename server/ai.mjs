@@ -1,8 +1,7 @@
 export async function generateAI({ prompt, mode = 'image' }, env = process.env, fetcher = fetch) {
   if (typeof prompt !== 'string' || !prompt.trim() || prompt.length > 2000)
     throw new Error('Enter a prompt between 1 and 2000 characters.');
-  if (!['image', 'quote', 'board', 'search'].includes(mode))
-    throw new Error('Unsupported generation mode.');
+  if (!['image', 'quote', 'search'].includes(mode)) throw new Error('Unsupported generation mode.');
   if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_API_TOKEN)
     throw new Error(
       'AI is not configured. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN on the server.',
@@ -18,63 +17,29 @@ export async function generateAI({ prompt, mode = 'image' }, env = process.env, 
             content:
               mode === 'search'
                 ? 'Return only valid JSON: {"keywords":[string]}. Give 3 to 6 concise searchable vision-board asset tags for the user description. No URLs or code.'
-                : mode === 'quote'
-                  ? 'Write one short, encouraging vision-board affirmation. Return only the affirmation, no quotation marks.'
-                  : `You are a vision-board art director. Return only valid JSON: {"title":string,"goals":[string],"imagePrompts":[string],"palette":{"background":string,"text":string,"card":string}}. Create 4 to 6 short personal goal captions. For each goal give one detailed image prompt in the same order: concrete subject, setting, lighting and a coherent visual style matching the user's wishes. Each image must represent its goal uniquely, with no text or watermarks. Use consistent art direction across images. Palette values must be six-digit hex colors with readable text contrast. The current year is ${new Date().getUTCFullYear()}; use it for "this year". Prefer a timeless title unless requested. No media URLs or code.`,
+                : 'Write one short, encouraging vision-board affirmation. Return only the affirmation, no quotation marks.',
           },
           { role: 'user', content: prompt },
         ],
-        max_tokens: mode === 'board' ? 1800 : 500,
-        ...(mode === 'board' || mode === 'search'
+        max_tokens: 500,
+        ...(mode === 'search'
           ? {
               temperature: 0.2,
               response_format: {
                 type: 'json_schema',
-                json_schema:
-                  mode === 'board'
-                    ? {
-                        type: 'object',
-                        properties: {
-                          title: { type: 'string' },
-                          goals: {
-                            type: 'array',
-                            items: { type: 'string' },
-                            minItems: 4,
-                            maxItems: 6,
-                          },
-                          imagePrompts: {
-                            type: 'array',
-                            items: { type: 'string' },
-                            minItems: 4,
-                            maxItems: 6,
-                          },
-                          palette: {
-                            type: 'object',
-                            properties: {
-                              background: { type: 'string' },
-                              text: { type: 'string' },
-                              card: { type: 'string' },
-                            },
-                            required: ['background', 'text', 'card'],
-                            additionalProperties: false,
-                          },
-                        },
-                        required: ['title', 'goals', 'imagePrompts', 'palette'],
-                        additionalProperties: false,
-                      }
-                    : {
-                        type: 'object',
-                        properties: {
-                          keywords: {
-                            type: 'array',
-                            items: { type: 'string' },
-                            minItems: 3,
-                            maxItems: 6,
-                          },
-                        },
-                        required: ['keywords'],
-                        additionalProperties: false,
-                      },
+                json_schema: {
+                  type: 'object',
+                  properties: {
+                    keywords: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      minItems: 3,
+                      maxItems: 6,
+                    },
+                  },
+                  required: ['keywords'],
+                  additionalProperties: false,
+                },
               },
             }
           : {}),
@@ -127,7 +92,7 @@ export async function generateAI({ prompt, mode = 'image' }, env = process.env, 
     if (!board || typeof board !== 'object' || Array.isArray(board))
       throw new Error('Invalid structured response.');
   } catch {
-    throw new Error('The AI returned an invalid board. Please regenerate.');
+    throw new Error('The AI returned an invalid search response. Please regenerate.');
   }
   if (mode === 'search') {
     if (
@@ -139,32 +104,4 @@ export async function generateAI({ prompt, mode = 'image' }, env = process.env, 
       throw new Error('Invalid search response.');
     return { keywords: board.keywords, model };
   }
-  if (
-    typeof board.title !== 'string' ||
-    !board.title.trim() ||
-    !Array.isArray(board.goals) ||
-    board.goals.length < 1 ||
-    board.goals.length > 12 ||
-    !board.goals.every((goal) => typeof goal === 'string' && goal.trim() && goal.length < 500)
-  )
-    throw new Error('The AI returned an invalid board. Please regenerate.');
-  return {
-    title: board.title.trim().slice(0, 80),
-    goals: board.goals.map((goal) => goal.trim()),
-    imagePrompts: board.goals.map((goal, index) => {
-      const detail = board.imagePrompts?.[index];
-      return typeof detail === 'string' && detail.trim()
-        ? detail.trim().slice(0, 1800)
-        : `Inspiring vision-board photography representing ${goal}. Natural lighting, harmonious composition, no text or watermarks.`;
-    }),
-    palette: Object.fromEntries(
-      ['background', 'text', 'card'].map((key) => [
-        key,
-        /^#[0-9a-f]{6}$/i.test(board.palette?.[key] || '')
-          ? board.palette[key]
-          : { background: '#f4effb', text: '#49375e', card: '#ffffff' }[key],
-      ]),
-    ),
-    model,
-  };
 }

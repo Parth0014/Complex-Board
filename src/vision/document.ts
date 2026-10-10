@@ -103,6 +103,8 @@ export interface BoardPage {
   items: BoardItem[];
 }
 export interface BoardDocument {
+  boardTheme?: string;
+  updatedAt?: number;
   version: 2;
   title: string;
   width: number;

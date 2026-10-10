@@ -1,4 +1,4 @@
-# Gratitude Studio
+# VisBo
 
 A local-first vision board editor built with React, TypeScript and Konva. Elements is empty; its bundled asset library has been removed. Boards save locally in IndexedDB.
 

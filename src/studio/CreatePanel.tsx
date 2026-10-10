@@ -17,9 +17,6 @@ const SHAPES = [
 
 export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
   const [card, setCard] = useState('Plan my next adventure');
-  const [affirmation, setAffirmation] = useState(
-    'I trust my journey and take one small step each day.',
-  );
   const [error, setError] = useState('');
 
   return (
@@ -68,59 +65,36 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
 
       <section className="create-panel__section">
         <div className="panel-section-heading">
-          <h3>Drawing cleanup</h3>
-        </div>
-        <button
-          className="panel-secondary-action"
-          disabled={
-            !adapter.history.document.items.some(
-              (item) =>
-                adapter.selectedIds.includes(item.id) && item.kind === 'drawing' && !item.locked,
-            )
-          }
-          onClick={() => adapter.cleanSelectedDrawings()}
-        >
-          Clean up selected drawing
-        </button>
-      </section>
-
-      <section className="create-panel__section">
-        <div className="panel-section-heading">
-          <h3>Goal cards</h3>
+          <h3>Goals & affirmations</h3>
         </div>
         <textarea
           className="create-card-copy vs-textarea"
-          aria-label="Card text"
+          aria-label="Goal or affirmation text"
+          placeholder="Write a goal or affirmation…"
           value={card}
           onChange={(event) => setCard(event.target.value)}
         />
-        <div className="create-card-actions">
+        <div
+          className="create-card-actions"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}
+        >
           <button
             className="panel-action"
+            style={{ height: 42, margin: 0 }}
             disabled={!card.trim()}
             onClick={() => adapter.createCard(card.trim())}
           >
             Add goal card
           </button>
+          <button
+            className="panel-secondary-action"
+            style={{ height: 42, margin: 0 }}
+            disabled={!card.trim()}
+            onClick={() => adapter.createCard(card.trim(), 'affirmation')}
+          >
+            Add affirmation
+          </button>
         </div>
-      </section>
-      <section className="create-panel__section">
-        <div className="panel-section-heading">
-          <h3>Affirmations</h3>
-        </div>
-        <textarea
-          className="create-card-copy vs-textarea"
-          aria-label="Affirmation text"
-          value={affirmation}
-          onChange={(event) => setAffirmation(event.target.value)}
-        />
-        <button
-          className="panel-secondary-action"
-          disabled={!affirmation.trim()}
-          onClick={() => adapter.createCard(affirmation.trim(), 'affirmation')}
-        >
-          Add affirmation
-        </button>
       </section>
     </div>
   );

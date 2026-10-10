@@ -1,4 +1,4 @@
-# Deploy Gratitude Studio
+# Deploy VisBo
 
 The editor can run as a static site. Use Node.js 22.15 or later (asset verification
 uses Node's TypeScript stripping API).

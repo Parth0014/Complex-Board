@@ -1,6 +1,6 @@
-# Gratitude Studio — V5 UI/UX Redesign Plan
+# VisBo — V5 UI/UX Redesign Plan
 
-Fresh identity: **Gratitude Studio** (consistent name, new visual system — no carry-over from the
+Fresh identity: **VisBo** (consistent name, new visual system — no carry-over from the
 previous warm/plum aesthetic). Cool graphite + paper + cobalt accent. Every glyph in the
 chrome is a Lucide icon; every interactive control carries a tooltip.
 
@@ -66,7 +66,7 @@ canvas-floating controls, light cards for panels.
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ HEADER (56px, graphite)                                      │
-│ [mark Gratitude Studio] [board title · saved]  [undo|redo][New] │
+│ [mark VisBo] [board title · saved]  [undo|redo][New] │
 │                                         [Export][···]        │
 ├──────────┬───────────────────────────────────────┬───────────┤
 │ LIBRARY  │  [tool pill: select·pan‖pen·…·eraser] │ INSPECTOR │

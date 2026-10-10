@@ -2,7 +2,7 @@
 
 ## Release order
 
-1. Licensing/provenance, accurate font labels and consistent Gratitude Studio naming.
+1. Licensing/provenance, accurate font labels and consistent VisBo naming.
 2. Separate tooling/formatting changes, CI and deployment/privacy groundwork.
 3. Shared immutable media storage, photo uploads and portable backups. Media cleanup must preserve undo/redo and snapshot references.
 4. Editor design, keyboard/mobile accessibility and photo-heavy performance.
@@ -14,7 +14,7 @@ Advanced snapshots/recaps, public AI, offline service workers and asset replacem
 
 Foundation work has started. Complete upstream font notices are included; misleading font IDs remain compatibility aliases and the UI presents the real font families. Owner confirmation is pending for the original-code license/holder. Existing third-party copyrights are retained.
 
-The production build emits complete bundled-font, retained-code and runtime dependency licenses. The package name is `gratitude-studio`; AI setup uses the project root. GitHub CI now runs build, unit/server/asset checks and Chromium browser tests; local tests retain Edge. Architecture checks reject Excalidraw imports throughout the runtime and direct Konva imports outside the canvas implementation.
+The production build emits complete bundled-font, retained-code and runtime dependency licenses. The package name is `visbo`; AI setup uses the project root. GitHub CI now runs build, unit/server/asset checks and Chromium browser tests; local tests retain Edge. Architecture checks reject Excalidraw imports throughout the runtime and direct Konva imports outside the canvas implementation.
 
 Photo storage and uploads are implemented: file picker and board drops, immutable originals, 2560-pixel working images, SHA-256 deduplication, original downloads, frame/crop/edit integration and portable backups with photos from all pages. Existing IndexedDB version-one boards migrate without deletion. Unsupported/oversized files, malformed photo references, corrupt media identities, quota failures and stale asynchronous insertions are rejected. Automatic media deletion is disabled to preserve history references.
 

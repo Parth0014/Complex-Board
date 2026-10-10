@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { ColorPicker } from './ColorPicker';
 import { svgColors, svgColorValue } from '../vision/svgColors';
 import { useEffect, useState, useRef, type ReactNode } from 'react';
@@ -34,7 +35,7 @@ import {
 
 export type EditorPanel = 'style' | 'layers' | null;
 
-/** A disclosure only opens when clicked or activated with the keyboard. */
+/** Inspector sections use one measured portal in the context menu. */
 function Sec({
   title,
   children,
@@ -46,9 +47,119 @@ function Sec({
   open?: boolean;
   icon?: ReactNode;
 }) {
+  const [expanded, setExpanded] = useState(open);
+  const sectionRef = useRef<HTMLDetailsElement>(null);
+  const flyoutRef = useRef<HTMLDivElement>(null);
+  const pinned = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const cancelClose = () => {
+    if (timer.current) clearTimeout(timer.current);
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    timer.current = setTimeout(() => {
+      const section = sectionRef.current,
+        flyout = flyoutRef.current;
+      if (pinned.current || section?.matches(':hover') || flyout?.matches(':hover')) return;
+      if (
+        section?.ownerDocument.querySelector('.studio-color-popover') ||
+        flyout?.contains(section?.ownerDocument.activeElement || null)
+      ) {
+        scheduleClose();
+        return;
+      }
+      setExpanded(false);
+    }, 250);
+  };
+  const show = () => {
+    const section = sectionRef.current;
+    if (!section?.parentElement?.classList.contains('vs-inspector__body')) return;
+    const menu = section.closest<HTMLElement>('.vs-object-context');
+    if (!menu) return;
+    cancelClose();
+    section.ownerDocument.dispatchEvent(new CustomEvent('vs-submenu-open', { detail: section }));
+    setHost(menu);
+    setExpanded(true);
+  };
+  useEffect(() => {
+    const doc = sectionRef.current?.ownerDocument;
+    const closeOther = (event: Event) => {
+      if ((event as CustomEvent).detail !== sectionRef.current) {
+        pinned.current = false;
+        cancelClose();
+        setExpanded(false);
+      }
+    };
+    doc?.addEventListener('vs-submenu-open', closeOther);
+    return () => {
+      cancelClose();
+      doc?.removeEventListener('vs-submenu-open', closeOther);
+    };
+  }, []);
+  useEffect(() => {
+    if (!host || !expanded) return;
+    const section = sectionRef.current!,
+      doc = host.ownerDocument,
+      win = doc.defaultView!;
+    const place = () => {
+      const node = flyoutRef.current;
+      if (!node) return;
+      const menu = host.getBoundingClientRect(),
+        row = section.getBoundingClientRect();
+      const width = node.offsetWidth,
+        height = node.offsetHeight;
+      const bottom =
+        Math.min(
+          win.innerHeight,
+          doc.querySelector('.vs-bottom-dock')?.getBoundingClientRect().top ?? win.innerHeight,
+        ) - 12;
+      node.style.left =
+        Math.max(
+          12,
+          Math.min(
+            win.innerWidth - width - 12,
+            menu.right + width + 8 <= win.innerWidth ? menu.right + 8 : menu.left - width - 8,
+          ),
+        ) + 'px';
+      node.style.top = Math.max(12, Math.min(row.top, bottom - height)) + 'px';
+    };
+    place();
+    const observer = new win.ResizeObserver(place);
+    observer.observe(host);
+    if (flyoutRef.current) observer.observe(flyoutRef.current);
+    win.addEventListener('resize', place);
+    doc.addEventListener('scroll', place, true);
+    return () => {
+      observer.disconnect();
+      win.removeEventListener('resize', place);
+      doc.removeEventListener('scroll', place, true);
+    };
+  }, [host, expanded, children]);
   return (
-    <details className="vs-sec" open={open}>
-      <summary>
+    <details
+      className="vs-sec"
+      ref={sectionRef}
+      open={expanded}
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+      onMouseEnter={show}
+      onMouseLeave={() => {
+        if (host) scheduleClose();
+      }}
+    >
+      <summary
+        data-tip={title + ' settings'}
+        onClick={(event) => {
+          if (
+            sectionRef.current?.closest('.vs-object-context') &&
+            sectionRef.current.parentElement?.classList.contains('vs-inspector__body')
+          ) {
+            event.preventDefault();
+            pinned.current = true;
+            show();
+          }
+        }}
+      >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           {icon}
           {title}
@@ -57,10 +168,29 @@ function Sec({
           <ChevronDownIcon />
         </span>
       </summary>
-      <div className="vs-sec__body">{children}</div>
+      {host ? (
+        expanded &&
+        createPortal(
+          <div
+            className="vs-context-flyout"
+            ref={flyoutRef}
+            onMouseEnter={cancelClose}
+            onMouseLeave={scheduleClose}
+            onBlur={scheduleClose}
+            role="group"
+            aria-label={title + ' settings'}
+          >
+            {children}
+          </div>,
+          host,
+        )
+      ) : (
+        <div className="vs-sec__body">{children}</div>
+      )}
     </details>
   );
 }
+
 function BoundsInput({
   value,
   label,
@@ -124,86 +254,13 @@ function BoundsInput({
   );
 }
 
-/** Numeric properties commit once on blur/Enter; temporary empty values do not change the canvas. */
-function CommitNumber({
-  label,
-  value,
-  min,
-  max,
-  step,
-  disabled,
-  placeholder,
-  onCommit,
-}: {
-  label: string;
-  value: number | undefined;
-  min: number;
-  max: number;
-  step: number;
-  disabled?: boolean;
-  placeholder?: string;
-  onCommit: (value: number) => void;
-}) {
-  const [draft, setDraft] = useState(value === undefined ? '' : String(value));
-  const editing = useRef(false);
-  const cancelled = useRef(false);
-  useEffect(() => {
-    if (!editing.current) setDraft(value === undefined ? '' : String(value));
-  }, [value]);
-  const commit = () => {
-    if (cancelled.current) {
-      cancelled.current = false;
-      setDraft(value === undefined ? '' : String(value));
-      return;
-    }
-    if (draft.trim() === '' || !Number.isFinite(Number(draft))) {
-      setDraft(value === undefined ? '' : String(value));
-      return;
-    }
-    const clamped = Math.min(max, Math.max(min, Number(draft)));
-    if (value === undefined || clamped !== value) onCommit(clamped);
-    setDraft(String(clamped));
-  };
-  return (
-    <input
-      className="vs-input"
-      aria-label={label}
-      type="number"
-      min={min}
-      max={max}
-      step={step}
-      placeholder={placeholder}
-      disabled={disabled}
-      value={draft}
-      onFocus={() => {
-        editing.current = true;
-      }}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={() => {
-        editing.current = false;
-        commit();
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') event.currentTarget.blur();
-        if (event.key === 'Escape') {
-          cancelled.current = true;
-          setDraft(value === undefined ? '' : String(value));
-          event.stopPropagation();
-          event.currentTarget.blur();
-        }
-      }}
-    />
-  );
-}
 export function EditorFeatures({
   adapter,
   panel,
   setPanel,
-  inline = false,
 }: {
   adapter: EditorAdapter;
   panel: EditorPanel;
-  inline?: boolean;
   setPanel: (panel: EditorPanel) => void;
 }) {
   const [assets, setAssets] = useState<GratitudeAsset[]>([]),
@@ -324,54 +381,63 @@ export function EditorFeatures({
         ? item.text || item.asset?.title || item.shape || 'Selected object'
         : 'Select an object on the board to see its properties.';
   const mixed = (key: keyof BoardItem) => selected.some((other) => other[key] !== item?.[key]);
-  const number = (label: string, key: keyof BoardItem, min: number, max: number, step = 1) => {
-    const fallback =
-      key === 'opacity'
-        ? 1
-        : key === 'lineHeight'
-          ? 1
-          : key === 'fontWeight'
-            ? 400
-            : key === 'shadowOpacity'
-              ? 0.25
-              : key === 'shadowOffsetX'
-                ? 3
-                : key === 'shadowOffsetY'
-                  ? 5
-                  : key === 'shadowBlur'
-                    ? item?.shadow === 'soft'
-                      ? 20
-                      : item?.shadow === 'medium'
-                        ? 10
-                        : 0
-                    : 0;
-    const value = mixed(key)
-      ? undefined
-      : Number(item?.[key] ?? fallback) * (key === 'opacity' ? 100 : 1);
-    return (
-      <label className="vs-field">
-        <span>{label}</span>
-        <CommitNumber
-          label={label}
-          value={value}
-          min={min}
-          max={max}
-          step={step}
-          placeholder={mixed(key) ? 'Mixed' : undefined}
-          disabled={
-            ['rotation', 'width', 'height'].includes(key) &&
-            selected.some((entry) => entry.locked || entry.connector)
-          }
-          onCommit={(next) => patch({ [key]: next / (key === 'opacity' ? 100 : 1) })}
-        />
-      </label>
-    );
-  };
+  const number = (label: string, key: keyof BoardItem, min: number, max: number, step = 1) => (
+    <label className="vs-field">
+      <span>{label}</span>
+      <input
+        className="vs-input"
+        aria-label={label}
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        placeholder={mixed(key) ? 'Mixed' : undefined}
+        disabled={
+          ['rotation', 'width', 'height'].includes(key) &&
+          selected.some((item) => item.locked || item.connector)
+        }
+        value={
+          mixed(key)
+            ? ''
+            : Number(
+                item?.[key] ??
+                  (key === 'opacity'
+                    ? 1
+                    : key === 'lineHeight'
+                      ? 1
+                      : key === 'fontWeight'
+                        ? 400
+                        : key === 'shadowOpacity'
+                          ? 0.25
+                          : key === 'shadowOffsetX'
+                            ? 3
+                            : key === 'shadowOffsetY'
+                              ? 5
+                              : key === 'shadowBlur'
+                                ? item?.shadow === 'soft'
+                                  ? 20
+                                  : item?.shadow === 'medium'
+                                    ? 10
+                                    : 0
+                                : 0),
+              ) * (key === 'opacity' ? 100 : 1)
+        }
+        onChange={(event) => {
+          if (event.target.value !== '')
+            patch({
+              [key]:
+                Math.max(min, Math.min(max, Number(event.target.value))) /
+                (key === 'opacity' ? 100 : 1),
+            });
+        }}
+      />
+    </label>
+  );
   const color = (label: string, key: keyof BoardItem, fallback: string) => (
     <div className="vs-field">
       <span>
         {label}
-        {mixed(key) && ' · Mixed'}
+        {mixed(key) && ' Â· Mixed'}
       </span>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         <ColorPicker
@@ -477,7 +543,7 @@ export function EditorFeatures({
 
   return (
     <aside
-      className={`vs-inspector${inline ? ' vs-inspector--inline' : ''}${panel ? '' : ' is-collapsed'}`}
+      className={`vs-inspector${panel ? '' : ' is-collapsed'}`}
       aria-label="Object inspector"
       hidden={!panel}
     >
@@ -527,18 +593,42 @@ export function EditorFeatures({
           </p>
         )}
 
-        {panel === 'style' && (
-          <p
-            className={`vs-style-tip${selected.some((entry) => entry.locked) ? ' vs-style-locked' : ''}`}
-          >
-            {selected.some((entry) => entry.locked)
-              ? 'One or more selected objects are locked. Unlock them before editing.'
-              : `Edit individual properties below. Changes apply to ${selected.length} selected ${selected.length === 1 ? 'object' : 'objects'}.`}
-          </p>
+        {item && panel === 'style' && (
+          <div className="vs-context-swatches" role="toolbar" aria-label="Quick styles">
+            {(
+              [
+                ['Soft violet', '#573575', 'soft', 'none', 2],
+                ['Golden glow', '#c89640', 'none', 'glow', 3],
+                ['Ink', '#222222', 'hard', 'none', 2],
+              ] as const
+            ).map(([label, color, shadow, effect, borderWidth]) => (
+              <button
+                key={label}
+                type="button"
+                aria-label={`Apply ${label} style`}
+                data-tip={`Apply ${label} style`}
+                title={label}
+                disabled={adapter.history.document.items.some(
+                  (entry) => adapter.selectedIds.includes(entry.id) && entry.locked,
+                )}
+                style={{ backgroundColor: color }}
+                onClick={() =>
+                  patch({
+                    color,
+                    borderColor: color,
+                    borderWidth,
+                    shadow,
+                    effect,
+                    gradient: undefined,
+                  })
+                }
+              />
+            ))}
+          </div>
         )}
         {(panel ?? 'style') === 'layers' && (
           <>
-            <Sec title="Layer stack" open icon={<LayersIcon />}>
+            <Sec title="Layer stack" icon={<LayersIcon />}>
               <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-ink-2)' }}>
                 Top layers appear first. Expand a group to edit its members. Drag a member or group
                 to reorder among its siblings.
@@ -632,7 +722,7 @@ export function EditorFeatures({
                 </Sec>
               )}
               {item.kind === 'text' && (
-                <Sec title="Text" open icon={<TypeIcon />}>
+                <Sec title="Text" icon={<TypeIcon />}>
                   <label className="vs-field">
                     <span>Content</span>
                     <textarea
@@ -790,7 +880,7 @@ export function EditorFeatures({
                 </Sec>
               )}
               {item.kind === 'asset' && item.asset?.provider !== 'curated-v1' && (
-                <Sec title="Image" open icon={<ImageIcon />}>
+                <Sec title="Image" icon={<ImageIcon />}>
                   <label className="vs-field">
                     <span>Replace media</span>
                     <select
@@ -1117,16 +1207,8 @@ export function EditorFeatures({
                 </Sec>
               )}{' '}
               {(item.kind === 'shape' || item.kind === 'text') && (
-                <Sec
-                  title={item.kind === 'text' ? 'Text fill & gradient' : 'Shape fill & gradient'}
-                  open
-                  icon={<DropletIcon />}
-                >
-                  {color(
-                    item.kind === 'text' ? 'Text color' : 'Shape fill color',
-                    'color',
-                    '#b48ce3',
-                  )}
+                <Sec title="Fill & gradient" icon={<DropletIcon />}>
+                  {color('Fill', 'color', '#b48ce3')}
                   <div className="vs-row-2">
                     <div className="vs-field">
                       <span>Gradient</span>
@@ -1206,7 +1288,7 @@ export function EditorFeatures({
                   {number('Pen width', 'strokeWidth', 1, 50)}
                 </Sec>
               )}
-              <Sec title="Appearance" open icon={<SlidersIcon />}>
+              <Sec title="Appearance" icon={<SlidersIcon />}>
                 <label className="vs-check">
                   <input
                     type="checkbox"

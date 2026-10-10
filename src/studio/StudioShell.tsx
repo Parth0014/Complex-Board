@@ -6,7 +6,6 @@ import { TooltipLayer } from './TooltipLayer';
 import { TextPanel } from './TextPanel';
 import {
   CloseIcon,
-  DotsIcon,
   DownloadIcon,
   ExportIcon,
   FileTextIcon,
@@ -44,22 +43,22 @@ export function StudioShell({
   tab,
   setTab,
   drawingTools,
+  onHome,
 }: {
   adapter: EditorAdapter;
   children: ReactNode;
   tab: StudioTab | null;
   setTab: (tab: StudioTab | null) => void;
   drawingTools?: ReactNode;
+  onHome: () => void;
 }) {
   const [share, setShare] = useState(false);
-  const [confirmClear, setConfirmClear] = useState(false);
   const [error, setError] = useState('');
-  const [elementCategory, setElementCategory] = useState('all');
+  const [elementCategory] = useState(adapter.history.document.boardTheme || 'all');
   const { status: aiStatus } = useAIStatus(adapter.ownerWindow);
   const document = adapter.history.document;
-  useDialogFocus(adapter.ownerWindow, share || confirmClear, () => {
+  useDialogFocus(adapter.ownerWindow, share, () => {
     setShare(false);
-    setConfirmClear(false);
   });
   const hasContent = Boolean(
     document.items.length ||
@@ -70,12 +69,12 @@ export function StudioShell({
     <div className="vs">
       <TooltipLayer ownerWindow={adapter.ownerWindow} />
       <header className="vs-header vs-dark">
-        <div className="vs-brand">
+        <button type="button" className="vs-brand" aria-label="Back to home" onClick={onHome}>
           <VisionMark />
           <span className="vs-brand__name">
-            Gratitude <strong>Studio</strong>
+            <strong>VisBo</strong>
           </span>
-        </div>
+        </button>
 
         <div className="vs-title">
           <input
@@ -120,8 +119,7 @@ export function StudioShell({
           className="vs-btn vs-btn--ghost"
           data-tip="Start a new board"
           data-tip-pos="below"
-          disabled={!document.items.length}
-          onClick={() => setConfirmClear(true)}
+          onClick={onHome}
         >
           <PlusIcon />
           <span>New</span>
@@ -239,7 +237,6 @@ export function StudioShell({
                 aria-label={STUDIO_TAB_LABELS[id]}
                 aria-pressed={tab === id}
                 onClick={() => {
-                  if (id === 'elements') setElementCategory('all');
                   setTab(tab === id ? null : id);
                 }}
               >
@@ -301,15 +298,13 @@ export function StudioShell({
                     <AIPanel adapter={adapter} />
                   </Suspense>
                 ) : tab === 'background' ? (
-                  <BackgroundPanel
-                    adapter={adapter}
-                    onBrowseSurfaces={() => {
-                      setElementCategory('textures');
-                      setTab('elements');
-                    }}
-                  />
+                  <BackgroundPanel adapter={adapter} />
                 ) : (
-                  <CuratedPanel key={elementCategory} adapter={adapter} />
+                  <CuratedPanel
+                    key={elementCategory}
+                    adapter={adapter}
+                    initialTheme={elementCategory}
+                  />
                 )}
               </div>
             </section>
@@ -320,56 +315,13 @@ export function StudioShell({
           {children}
         </main>
       </div>
-
-      {confirmClear && (
-        <div className="vs-veil">
-          <div
-            className="vs-dialog vs-confirm"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Clear board"
-          >
-            <span className="vs-confirm__icon" aria-hidden="true">
-              <DotsIcon />
-            </span>
-            <h2>Start fresh?</h2>
-            <p>This clears the items on your board. You can undo the change right after.</p>
-            <div className="vs-dialog__actions">
-              <button className="vs-btn vs-btn--light" onClick={() => setConfirmClear(false)}>
-                Keep board
-              </button>
-              <button
-                className="vs-btn vs-btn--primary"
-                style={{ background: 'var(--vs-danger)' }}
-                onClick={() => {
-                  adapter.clearBoard();
-                  setConfirmClear(false);
-                }}
-              >
-                Clear board
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {share && (
-        <div
-          className="vs-veil"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setShare(false);
-          }}
-        >
+        <div className="vs-veil">
           <div className="vs-dialog" role="dialog" aria-modal="true" aria-label="Export board">
             <div className="vs-dialog__head">
-              <div>
-                <span className="vs-eyebrow">Take your vision with you</span>
-                <h2>Export your board</h2>
-                <p>{document.title || 'My vision board'}</p>
-              </div>
+              <h2>Export your board</h2>
               <button
                 className="vs-icon-btn"
-                data-tip="Close export"
                 aria-label="Close export"
                 onClick={() => setShare(false)}
               >
@@ -377,15 +329,13 @@ export function StudioShell({
               </button>
             </div>
             {error && (
-              <p className="vs-alert vs-alert--error" role="alert" style={{ marginTop: 10 }}>
-                <InfoIcon />
-                <span>{error}</span>
+              <p role="alert" className="panel-inline-error">
+                {error}
               </p>
             )}
-
-            <section className="vs-export__group" aria-labelledby="export-recommended">
+            <section className="vs-export__group">
               <div className="vs-export__label">
-                <h3 id="export-recommended">Recommended</h3>
+                <h3>Recommended</h3>
                 <span>Best for sharing</span>
               </div>
               <div className="vs-export__featured">
@@ -400,9 +350,7 @@ export function StudioShell({
                     }
                   }}
                 >
-                  <span className="vs-export__badge" aria-hidden="true">
-                    PNG
-                  </span>
+                  <span className="vs-export__badge">PNG</span>
                   <span>
                     <strong>Download PNG</strong>
                     <small>
@@ -420,9 +368,7 @@ export function StudioShell({
                       .catch((error) => setError(String(error)));
                   }}
                 >
-                  <span className="vs-export__badge" aria-hidden="true">
-                    2×
-                  </span>
+                  <span className="vs-export__badge">2×</span>
                   <span>
                     <strong>Download 2× PNG</strong>
                     <small>Extra detail for print and large screens</small>
@@ -431,18 +377,16 @@ export function StudioShell({
                 </button>
               </div>
             </section>
-
-            <section className="vs-export__group" aria-labelledby="export-more">
+            <section className="vs-export__group">
               <div className="vs-export__label">
-                <h3 id="export-more">More formats</h3>
-                <span>Choose what fits your next step</span>
+                <h3>More formats</h3>
               </div>
               <div className="vs-export__grid">
-                {(['jpeg', 'transparent', 'pdf', '4k', 'pdf-all'] as const).map((format) => (
+                {(['jpeg', 'transparent', 'pdf', '4k'] as const).map((format) => (
                   <button
                     className="vs-export__mini"
                     key={format}
-                    aria-label={`Download ${format.toUpperCase()}`}
+                    aria-label={'Download ' + format.toUpperCase()}
                     onClick={() => {
                       void adapter.exportFormat(format).catch((error) => setError(String(error)));
                     }}
@@ -453,8 +397,7 @@ export function StudioShell({
                 ))}
               </div>
             </section>
-
-            <section className="vs-export__group" aria-label="Export utilities">
+            <section className="vs-export__group">
               <div className="vs-export__utils">
                 <button
                   className="vs-export__util"
@@ -477,13 +420,12 @@ export function StudioShell({
                 >
                   <PrinterIcon />
                   <span>
-                    <strong>Print current page</strong>
+                    <strong>Print board</strong>
                     <small>Open your device print dialog</small>
                   </span>
                 </button>
               </div>
             </section>
-
             <p className="vs-export__privacy">
               <InfoIcon />
               <span>

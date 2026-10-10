@@ -1,0 +1,600 @@
+/* Interaction v2: predictable selection controls and a persistent, click-only inspector. */
+.vs-sel:has(.vs-actionbar) {
+  width: max-content;
+  max-width: min(1110px, calc(100vw - 104px)) !important;
+  padding: 6px !important;
+  border: 1px solid #e9e7ec;
+  border-radius: 13px;
+  background: #fff;
+  overflow: visible !important;
+  box-shadow:
+    0 8px 25px #2d25401a,
+    0 2px 6px #2d254008;
+  transform: translateX(-50%);
+}
+.vs-actionbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-width: 0;
+  gap: 3px;
+  color: #29252f;
+  font-size: 12.5px;
+}
+.vs-actionbar button,
+.vs-actionbar input {
+  font: inherit;
+}
+.vs-actionbar__identity {
+  padding: 8px 11px;
+  white-space: nowrap;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: #746b7a;
+  font-weight: 750;
+}
+.vs-actionbar__separator {
+  height: 25px;
+  width: 1px;
+  margin: 0 5px;
+  background: #eae7ed;
+  flex-shrink: 0;
+}
+.vs-actionbar__button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #342c3b;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.vs-actionbar__button svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.vs-actionbar__button:hover:not(:disabled),
+.vs-actionbar__grid button:hover:not(:disabled),
+.vs-actionbar__full:hover:not(:disabled) {
+  background: #f3f0f8;
+}
+.vs-actionbar__button:focus-visible,
+.vs-actionbar__grid button:focus-visible,
+.vs-actionbar__full:focus-visible {
+  outline: 2px solid #8461cb;
+  outline-offset: 2px;
+}
+.vs-actionbar__button:disabled,
+.vs-actionbar__grid button:disabled,
+.vs-actionbar__full:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+.vs-actionbar__button--primary {
+  background: #f0ebfa;
+  color: #664b95;
+  padding: 7px 11px;
+}
+.vs-actionbar__button--primary:hover:not(:disabled) {
+  background: #e7ddf7;
+}
+.vs-actionbar__button--danger {
+  color: #b13e40;
+}
+.vs-actionbar__button--danger:hover:not(:disabled) {
+  background: #fff0ee;
+}
+.vs-actionbar__size,
+.vs-actionbar__color {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  color: #6b6370;
+  font-size: 12px;
+}
+.vs-actionbar__size input {
+  width: 54px;
+  min-height: 32px;
+  padding: 5px 3px;
+  text-align: center;
+  border: 1px solid #e1dce7;
+  border-radius: 7px;
+  background: #fff;
+  color: #302c35;
+  font-variant-numeric: tabular-nums;
+}
+.vs-actionbar__menu {
+  position: relative;
+  flex-shrink: 0;
+}
+.vs-actionbar__popover {
+  position: absolute;
+  z-index: 1500;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  padding: 12px;
+  border: 1px solid #ebe8ef;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 16px 42px #2b1f442a;
+  color: #342c3b;
+}
+.vs-actionbar__popover--small {
+  width: 270px;
+}
+.vs-actionbar__popover p {
+  margin: 4px 4px 9px;
+  font-size: 11.5px;
+  color: #726978;
+  font-weight: 650;
+}
+.vs-actionbar__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.vs-actionbar__grid button {
+  min-height: 38px;
+  padding: 5px;
+  font-size: 11.5px;
+  background: #faf9fc;
+  border: 1px solid #edeaf1;
+  border-radius: 8px;
+  color: #4e4458;
+  cursor: pointer;
+}
+.vs-actionbar__full {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 35px;
+  padding: 8px 9px;
+  text-align: left;
+  color: inherit;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+.vs-actionbar__full svg {
+  width: 16px;
+  height: 16px;
+}
+.vs-actionbar__range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+}
+.vs-actionbar__range input {
+  min-width: 0;
+  flex: 1;
+  accent-color: #7956ba;
+}
+.vs-actionbar__range output {
+  font-size: 12px;
+  min-width: 45px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.vs-floating-inspector {
+  position: fixed;
+  right: 20px;
+  bottom: 83px;
+  z-index: 950;
+  width: min(348px, calc(100vw - 38px));
+  display: flex;
+  min-height: 180px;
+  max-height: calc(100dvh - 225px);
+}
+.vs-floating-inspector > .vs-inspector {
+  position: relative !important;
+  inset: auto !important;
+  height: 100% !important;
+  width: 100% !important;
+  min-height: 0;
+  max-height: none;
+  display: flex !important;
+  flex-direction: column;
+  border: 1px solid #e8e4ee;
+  background: #fff;
+  box-shadow: 0 12px 40px #28223b24;
+  border-radius: 15px;
+  overflow: hidden;
+  transform: none !important;
+  opacity: 1 !important;
+}
+.vs-floating-inspector .vs-inspector__body {
+  overscroll-behavior: contain;
+}
+.vs-floating-inspector .vs-inspector__tabs {
+  padding-top: 11px;
+}
+.vs-floating-inspector .vs-sec > summary {
+  cursor: pointer;
+}
+.vs-floating-inspector .vs-sec > summary:hover {
+  background: #f7f4fb;
+}
+.vs-style-tip {
+  font-size: 11.5px;
+  margin: 3px 0 8px;
+  line-height: 1.55;
+  color: #62556e;
+  background: #f8f6fc;
+  border: 1px solid #eae4f4;
+  padding: 9px 10px;
+  border-radius: 8px;
+}
+.vs-style-locked {
+  background: #fff7ec;
+  color: #7f5125;
+  border-color: #f5dfbd;
+}
+
+.vs-object-context.vs-context-v2 {
+  width: min(284px, calc(100vw - 24px));
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: var(--context-height, min(540px, calc(100dvh - 36px)));
+  padding: 5px;
+  border: 1px solid #e7e4eb;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 16px 40px #29203b26;
+}
+.vs-context-v2__heading {
+  padding: 9px 12px 8px;
+  color: #786d7d;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 800;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions {
+  border-top: 1px solid #efecf2;
+  padding: 5px 0;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions:first-of-type {
+  border-top: none;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions button,
+.vs-context-v2__sub summary {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: #302b34;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 500;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions button:hover:not(:disabled),
+.vs-context-v2__sub summary:hover {
+  background: #f3f0f7;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions button:focus-visible,
+.vs-context-v2__sub summary:focus-visible {
+  outline: 2px solid #8461cb;
+  outline-offset: -2px;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions button:disabled {
+  color: #aaa5ae;
+  cursor: not-allowed;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions svg,
+.vs-context-v2__sub svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #6b6075;
+}
+.vs-object-context.vs-context-v2 .vs-context-actions kbd {
+  margin-left: auto;
+  background: #f6f5f8;
+  padding: 3px 5px;
+  color: #756e7d;
+  border-radius: 5px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.vs-context-v2__sub {
+  width: 100%;
+}
+.vs-context-v2__sub summary {
+  list-style: none;
+}
+.vs-context-v2__sub summary::-webkit-details-marker {
+  display: none;
+}
+.vs-context-v2__chevron {
+  margin-left: auto;
+  color: #71667a;
+  transition: transform 0.16s;
+}
+.vs-context-v2__sub[open] .vs-context-v2__chevron {
+  transform: rotate(180deg);
+}
+.vs-context-v2__subbody {
+  margin: 2px 0 5px 20px;
+  padding-left: 8px;
+  border-left: 1px solid #eae5ed;
+}
+.vs-object-context.vs-context-v2 .vs-context-danger button {
+  color: #ba393d;
+}
+.vs-object-context.vs-context-v2 .vs-context-danger button svg {
+  color: inherit;
+}
+
+@media (max-width: 1170px) {
+  .vs-actionbar__button--compact span {
+    display: none;
+  }
+  .vs-actionbar__identity {
+    padding-inline: 6px;
+  }
+}
+@media (max-width: 800px) {
+  .vs-sel:has(.vs-actionbar) {
+    max-width: calc(100vw - 30px) !important;
+    width: auto;
+  }
+  .vs-actionbar {
+    overflow-x: auto;
+    max-width: calc(100vw - 48px);
+    scrollbar-width: thin;
+  }
+  .vs-floating-inspector {
+    right: 10px;
+    left: 10px;
+    width: auto;
+    bottom: 75px;
+    max-height: 62dvh;
+  }
+  .vs-actionbar__identity {
+    display: none;
+  }
+}
+
+.vs-actionbar__format {
+  padding-inline: 7px;
+  min-width: 30px;
+}
+.vs-actionbar__format.is-active {
+  background: #e9e1f7;
+  color: #644391;
+}
+
+/* V5 reconciliation: the legacy chrome must not clip this toolbar or its popovers. */
+.vs .vs-sel:has(.vs-actionbar) {
+  overflow: visible !important;
+  padding: 6px !important;
+  border-radius: 13px !important;
+  background: #fff;
+  width: max-content;
+  max-width: min(1110px, calc(100vw - 30px)) !important;
+  transition: none;
+}
+.vs-floating-inspector {
+  pointer-events: auto;
+}
+.vs-floating-inspector .vs-inspector__body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.vs-context-v2__subbody button {
+  padding-left: 8px !important;
+}
+@media (max-width: 1230px) {
+  .vs-actionbar__button--compact span,
+  .vs-actionbar__identity {
+    display: none;
+  }
+  .vs-actionbar__button--compact {
+    padding-inline: 7px;
+  }
+}
+@media (max-width: 800px) {
+  .vs .vs-sel:has(.vs-actionbar) {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px) !important;
+  }
+  .vs-actionbar {
+    max-width: 100%;
+    overflow: visible;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .vs-actionbar__separator {
+    display: none;
+  }
+  .vs-actionbar__popover {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+  .vs-floating-inspector {
+    max-height: min(64dvh, 650px);
+  }
+}
+
+/* Formatting and layers are part of the workspace's top editing bar. */
+.vs-top-editing-bar {
+  flex-shrink: 0;
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #e0e2e9;
+  z-index: 20;
+}
+.vs-top-editing-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  min-height: 44px;
+  overflow-x: auto;
+}
+.vs-top-editing-bar__row > .vs-actionbar {
+  flex: 1;
+  min-width: max-content;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.vs-top-editing-bar__row > button {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.vs .vs-inspector--inline {
+  position: static;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: auto;
+  max-height: 280px;
+  background: #fafafd;
+  border: 0;
+  border-top: 1px solid #e0e2e9;
+  border-radius: 0;
+  box-shadow: none;
+  overflow-y: auto;
+}
+.vs-inspector--inline .vs-inspector__tabs {
+  display: none;
+}
+.vs-inspector--inline .vs-inspector__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  overflow: visible;
+}
+.vs-inspector--inline .vs-insp-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+}
+.vs-inspector--inline .vs-insp-head :is(.vs-eyebrow, p),
+.vs-inspector--inline .vs-style-tip {
+  display: none;
+}
+.vs-inspector--inline .vs-insp-head h3 {
+  font-size: 13px;
+  margin: 0;
+}
+.vs-inspector--inline .vs-inspector__body > .vs-sec {
+  width: 260px;
+  flex: 0 0 260px;
+  margin: 0;
+  background: #fff;
+  border: 1px solid #e3e4eb;
+  border-radius: 8px;
+}
+.vs-inspector--inline .vs-inspector__body > .vs-sec:first-of-type:has(.vs-layers) {
+  width: min(520px, 100%);
+  flex-basis: 520px;
+}
+.vs-inspector--inline .vs-layers {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.vs .vs-contextual-editing-bar {
+  width: max-content;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #e1deef;
+  border-radius: 16px;
+  box-shadow: 0 3px 9px #32234d14;
+  z-index: 40;
+}
+.vs-contextual-editing-bar .vs-top-editing-bar__row {
+  padding: 6px 8px;
+  min-height: 46px;
+  overflow: visible;
+  flex-wrap: wrap;
+}
+.vs-contextual-editing-bar .vs-actionbar {
+  min-width: 0;
+  flex-wrap: wrap;
+  padding: 0;
+  gap: 4px;
+}
+.vs-contextual-editing-bar .vs-actionbar__identity {
+  display: none;
+}
+.vs-actionbar__font {
+  max-width: 145px;
+  height: 34px;
+  border: 1px solid #dedce7;
+  border-radius: 7px;
+  padding: 0 8px;
+  background: white;
+  font: inherit;
+  color: #36323e;
+}
+.vs-contextual-editing-bar .vs-inspector--inline {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(700px, calc(100vw - 32px));
+  border: 1px solid #dedce7;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px #32234d1a;
+}
+
+/* Compact toolbar dropdowns use normal document flow, not inspector layout. */
+.vs .vs-contextual-editing-bar .vs-inspector--inline {
+  display: block;
+  inset: auto 0 auto auto;
+  top: calc(100% + 8px);
+  width: min(340px, calc(100vw - 32px));
+  height: auto;
+  max-height: min(480px, calc(100vh - 180px));
+  overflow: auto;
+  backdrop-filter: none;
+}
+.vs .vs-contextual-editing-bar .vs-inspector--inline .vs-inspector__body {
+  display: block;
+  height: auto;
+  max-height: none;
+  padding: 12px;
+  overflow: visible;
+}
+.vs .vs-contextual-editing-bar .vs-inspector--inline .vs-insp-head { width: auto; margin-bottom: 10px; }
+.vs .vs-contextual-editing-bar .vs-inspector--inline .vs-inspector__body > .vs-sec { width: auto; margin-bottom: 8px; }
+.vs .vs-contextual-editing-bar .vs-inspector--inline .vs-sec > summary { font-size: 12px; letter-spacing: 0; text-transform: none; padding: 10px 12px; }
+.vs .vs-contextual-editing-bar .vs-inspector--inline .vs-sec__body { padding: 12px; }
+.vs .vs-contextual-editing-bar .vs-actionbar__button { padding: 6px 8px; min-height: 32px; font-size: 12px; }
+.vs .vs-contextual-editing-bar .vs-actionbar__font { max-width: 120px; height: 32px; font-size: 12px; }
+.vs .vs-contextual-editing-bar .vs-actionbar__size input { width: 54px; }
+.vs .vs-contextual-editing-bar .vs-top-editing-bar__row { min-height: 40px; }
+
+.vs-context-v2__sub--hover { position: relative; }
+.vs-context-v2__sub--hover > .vs-context-v2__subbody { position: absolute; left: 100%; top: 0; width: 190px; padding: 6px; background: #fff; border: 1px solid #e4e1ec; border-radius: 12px; box-shadow: 0 6px 22px #32234d20; z-index: 100; }
+.vs-context-v2:has(.vs-context-v2__sub--hover[open]) { overflow: visible; }
+.vs-context-v2__sub--hover > summary { cursor: default; }

@@ -20,15 +20,6 @@ test('sends credentials only upstream and requests a four-step image', async () 
   assert.equal(result.image, 'data:image/jpeg;base64,abcd');
   assert.equal('token' in result, false);
 });
-test('validates AI board JSON rather than executing arbitrary output', async () => {
-  const bad = async () => Response.json({ success: true, result: { response: 'not JSON' } });
-  await assert.rejects(generateAI({ prompt: 'Dream', mode: 'board' }, env, bad), /invalid board/);
-  const good = async () =>
-    Response.json({ success: true, result: { response: '{"title":"Dream","goals":["Grow"]}' } });
-  assert.deepEqual((await generateAI({ prompt: 'Dream', mode: 'board' }, env, good)).goals, [
-    'Grow',
-  ]);
-});
 test('limits semantic search to validated keywords', async () => {
   const result = await generateAI({ prompt: 'I want to explore', mode: 'search' }, env, async () =>
     Response.json({ success: true, result: { response: '{"keywords":["travel","adventure"]}' } }),
@@ -42,70 +33,17 @@ test('limits semantic search to validated keywords', async () => {
   );
 });
 
-test('board generation requests a schema and accepts structured provider objects', async () => {
-  const result = await generateAI(
-    { prompt: 'Travel to Japan and grow my career', mode: 'board' },
-    env,
-    async (_url, options) => {
-      const body = JSON.parse(options.body);
-      assert.equal(body.response_format.type, 'json_schema');
-      assert.deepEqual(body.response_format.json_schema.required, [
-        'title',
-        'goals',
-        'imagePrompts',
-        'palette',
-      ]);
-      return Response.json({
-        success: true,
-        result: {
-          response: { title: ' My year ', goals: [' Explore Japan ', 'Develop my career'] },
-        },
-      });
-    },
-  );
-  assert.equal(result.title, 'My year');
-  assert.deepEqual(result.goals, ['Explore Japan', 'Develop my career']);
-});
-
-test('board art direction preserves prompts and validates palette colors', async () => {
-  const result = await generateAI({ prompt: 'Japan', mode: 'board' }, env, async () =>
-    Response.json({
-      success: true,
-      result: {
-        response: {
-          title: 'Explore',
-          goals: ['Visit Kyoto'],
-          imagePrompts: ['Kyoto at sunrise, cinematic photography'],
-          palette: { background: '#faf0e0', text: 'invalid', card: '#ffffff' },
-        },
-      },
+test('rejects retired board generation before calling the provider', async () => {
+  await assert.rejects(
+    generateAI({ prompt: 'Dream', mode: 'board' }, env, async () => {
+      throw new Error('Provider must not be called');
     }),
+    /Unsupported generation mode/,
   );
-  assert.deepEqual(result.imagePrompts, ['Kyoto at sunrise, cinematic photography']);
-  assert.deepEqual(result.palette, { background: '#faf0e0', text: '#49375e', card: '#ffffff' });
 });
-
-test('board parsing accepts fenced and explained JSON but rejects malformed or empty plans', async () => {
-  for (const response of [
-    '```json\n{"title":"Dream","goals":["Grow"]}\n```',
-    'Here is your board:\n{"title":"Dream","goals":["Grow"]}\nEnjoy!',
-  ]) {
-    const result = await generateAI({ prompt: 'Dream', mode: 'board' }, env, async () =>
-      Response.json({ success: true, result: { response } }),
-    );
-    assert.deepEqual(result.goals, ['Grow']);
-  }
-  for (const response of [
-    null,
-    'null',
-    '[]',
-    '{"title":"","goals":[" "]}',
-    '{"title":"Dream","goals":[{"text":"Grow"}]}',
-  ])
-    await assert.rejects(
-      generateAI({ prompt: 'Dream', mode: 'board' }, env, async () =>
-        Response.json({ success: true, result: { response } }),
-      ),
-      /invalid board/,
-    );
+test('generates an affirmation as plain text', async () => {
+  const result = await generateAI({ prompt: 'Confidence', mode: 'quote' }, env, async () =>
+    Response.json({ success: true, result: { response: 'I grow at my own pace.' } }),
+  );
+  assert.equal(result.text, 'I grow at my own pace.');
 });

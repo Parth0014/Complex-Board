@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { EditorAdapter, GeneratedBoardVisuals } from '../vision/contracts';
+import type { EditorAdapter } from '../vision/contracts';
 import { requestAI } from '../vision/aiClient';
-import { ReferenceTemplatePanel } from './ReferenceTemplatePanel';
-import { CloseIcon, ImageIcon } from './icons';
-import { useDialogFocus } from './useDialogFocus';
 
 const modeHelp = {
   image: {
@@ -16,32 +13,17 @@ const modeHelp = {
     example: 'An encouraging affirmation about building confidence, in a warm and grounded voice',
     action: 'Write affirmation',
   },
-  board: {
-    description: 'Describe your goals and style. Generation may take a few minutes.',
-    example:
-      'This year I want to travel to Japan, develop my career, and build healthy daily habits',
-    action: 'Create my vision board',
-  },
 };
 type Result = {
   image?: string;
   text?: string;
-  title?: string;
-  goals?: string[];
-  imagePrompts?: string[];
-  images?: GeneratedBoardVisuals['images'];
-  palette?: GeneratedBoardVisuals['palette'];
 };
 export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
-  const [prompt, setPrompt] = useState(modeHelp.board.example),
-    [mode, setMode] = useState<'image' | 'quote' | 'board'>('board');
-  const [boardStyle, setBoardStyle] = useState<'scrapbook' | 'editorial' | 'gallery'>('scrapbook');
+  const [prompt, setPrompt] = useState(''),
+    [mode, setMode] = useState<'image' | 'quote'>('image');
   const [result, setResult] = useState<Result | null>(null),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState(''),
-    [confirm, setConfirm] = useState(false);
-  const [referenceOpen, setReferenceOpen] = useState(false);
-  useDialogFocus(adapter.ownerWindow, referenceOpen, () => setReferenceOpen(false));
+    [error, setError] = useState('');
   const [progress, setProgress] = useState('');
   const help = modeHelp[mode];
   const controller = useRef<AbortController | null>(null);
@@ -52,9 +34,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
     setBusy(true);
     setError('');
     setResult(null);
-    setProgress(
-      mode === 'board' ? 'Planning your goals and visual direction…' : 'Creating your preview…',
-    );
+    setProgress('Creating your preview…');
     controller.current = new adapter.ownerWindow.AbortController();
     try {
       const value = await requestAI(adapter.ownerWindow, '/api/ai/generate', {
@@ -63,29 +43,6 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         body: JSON.stringify({ prompt, mode }),
         signal: controller.current.signal,
       });
-      if (mode === 'board') {
-        if (!Array.isArray(value.goals) || value.goals.length < 1 || value.goals.length > 6)
-          throw new Error('The board plan needs 1 to 6 goals. Please regenerate.');
-        const images: GeneratedBoardVisuals['images'] = [];
-        for (let index = 0; index < value.goals.length; index++) {
-          setProgress(
-            `Creating image ${index + 1} of ${value.goals.length}: ${value.goals[index]}`,
-          );
-          const imagePrompt =
-            value.imagePrompts?.[index] ||
-            `Inspiring photography of ${value.goals[index]}, natural lighting, no text or watermarks`;
-          const generated = await requestAI(adapter.ownerWindow, '/api/ai/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: 'image', prompt: imagePrompt }),
-            signal: controller.current.signal,
-          });
-          if (!generated.image)
-            throw new Error(`Image ${index + 1} could not be generated. Please try again.`);
-          images.push({ image: generated.image, prompt: imagePrompt });
-        }
-        value.images = images;
-      }
       setResult(value);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError')
@@ -117,17 +74,6 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           fontSize: 34,
           color: '#49375e',
         });
-      else if (result.title && result.goals) {
-        if (!result.images?.length || result.images.length !== result.goals.length)
-          throw new Error(
-            'The generated board images are missing. Regenerate the preview before applying.',
-          );
-        await adapter.composeBoard(result.title, result.goals, boardStyle, {
-          images: result.images,
-          palette: result.palette,
-        });
-      }
-      setConfirm(false);
       setResult(null);
     } catch (error) {
       setError(String(error));
@@ -146,33 +92,15 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           value={mode}
           onChange={(event) => {
             setMode(event.target.value as typeof mode);
-            setPrompt(modeHelp[event.target.value as typeof mode].example);
+            setPrompt('');
             setResult(null);
             setError('');
-            setConfirm(false);
           }}
         >
           <option value="image">Image</option>
           <option value="quote">Affirmation</option>
-          <option value="board">Complete vision board</option>
         </select>
       </label>
-      {mode === 'board' && (
-        <label>
-          Style
-          <select
-            className="vs-select"
-            aria-label="Board layout style"
-            disabled={busy}
-            value={boardStyle}
-            onChange={(event) => setBoardStyle(event.target.value as typeof boardStyle)}
-          >
-            <option value="scrapbook">Scrapbook & Polaroids (Layered, tape & notes)</option>
-            <option value="editorial">Editorial Story (Magazine layout & serif titles)</option>
-            <option value="gallery">Modern Gallery (Clean cards & sleek frames)</option>
-          </select>
-        </label>
-      )}
       <p className="ai-tool-help" id="ai-mode-help">
         {help.description}
       </p>
@@ -185,13 +113,6 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         value={prompt}
         onChange={(event) => setPrompt(event.target.value)}
       />
-      <button
-        className="panel-secondary-action"
-        disabled={busy}
-        onClick={() => setPrompt(help.example)}
-      >
-        Use example prompt
-      </button>
       <button
         className="panel-action"
         aria-label="Generate"
@@ -217,43 +138,21 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         </div>
       )}
       {result && (
-        <div className="ai-result">
-          <p className="ai-tool-help">Preview only. Use the button below to apply this result.</p>
+        <section className="ai-result" aria-label="AI result">
+          <header className="ai-result__heading">
+            <h4>{result.image ? 'Your image' : 'Your affirmation'}</h4>
+            <span className="ai-result__badge">Preview</span>
+          </header>
           {result.image && <img src={result.image} alt="Generated preview" />}
-          {result.text && <p>{result.text}</p>}
-          {result.goals && (
-            <>
-              <h4>{result.title}</h4>
-              {result.images && (
-                <div
-                  className="ai-board-preview"
-                  style={{ background: result.palette?.background, color: result.palette?.text }}
-                >
-                  {result.images.map((visual, index) => (
-                    <figure key={index} style={{ background: result.palette?.card }}>
-                      <img src={visual.image} alt={result.goals![index]} />
-                      <figcaption>{result.goals![index]}</figcaption>
-                    </figure>
-                  ))}
-                </div>
-              )}
-              <ul>
-                {result.goals.map((goal) => (
-                  <li key={goal}>{goal}</li>
-                ))}
-              </ul>
-            </>
-          )}
+          {result.text && <blockquote className="ai-result__quote">{result.text}</blockquote>}
+          <p className="ai-result__hint">
+            {result.image
+              ? 'Add this image to your board or use it as a background.'
+              : 'Add to your board as editable text.'}
+          </p>
           <div className="ai-result__actions">
-            <button
-              className="panel-action"
-              disabled={busy}
-              onClick={() => {
-                if (result.goals && adapter.history.document.items.length) setConfirm(true);
-                else void insert();
-              }}
-            >
-              {result.goals ? 'Use this board' : 'Add to board'}
+            <button className="panel-action" disabled={busy} onClick={() => void insert()}>
+              Add to board
             </button>
             {result.image && (
               <button
@@ -265,48 +164,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
               </button>
             )}
           </div>
-          {confirm && (
-            <>
-              <p>Replace the current composition? You can undo this.</p>
-              <button onClick={() => void insert()}>Replace composition</button>
-              <button onClick={() => setConfirm(false)}>Keep current board</button>
-            </>
-          )}
-        </div>
-      )}
-      <button
-        className="panel-secondary-action ai-reference-trigger"
-        disabled={busy}
-        onClick={() => setReferenceOpen(true)}
-      >
-        <ImageIcon /> Use an image reference
-      </button>
-      {referenceOpen && (
-        <div
-          className="vs-veil"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setReferenceOpen(false);
-          }}
-        >
-          <div
-            className="vs-dialog ai-reference-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Image reference"
-          >
-            <div className="vs-dialog__head">
-              <h2>Image reference</h2>
-              <button
-                className="vs-icon-btn"
-                aria-label="Close image reference"
-                onClick={() => setReferenceOpen(false)}
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            <ReferenceTemplatePanel adapter={adapter} />
-          </div>
-        </div>
+        </section>
       )}
     </div>
   );

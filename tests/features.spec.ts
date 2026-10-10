@@ -96,33 +96,6 @@ test('nested groups allow member edits without losing parent identity', async ({
   await expect(page.getByText(`Board items (${count * 2})`, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /Exit group/ })).toContainText('(1)');
 });
-test('AI preview creates editable content and surfaces server failures', async ({ page }) => {
-  await page.route('**/api/ai/status', (route) => route.fulfill({ json: { configured: true } }));
-  await page.route('**/api/ai/generate', (route) =>
-    route.fulfill({
-      json:
-        route.request().postDataJSON().mode === 'board'
-          ? { title: 'My dream year', goals: ['Travel to Japan', 'Build my career'] }
-          : {
-              image:
-                'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
-            },
-    }),
-  );
-  await page.goto('/');
-  await page.getByRole('button', { name: 'AI', exact: true }).click();
-  await page.getByLabel('AI generation type', { exact: true }).selectOption('board');
-  await page.getByLabel('Board layout style', { exact: true }).selectOption('gallery');
-  await page.getByRole('button', { name: 'Generate', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'My dream year', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Use this board', exact: true }).click();
-  await expect(page.getByText('Board items (12)', { exact: true })).toBeVisible();
-  await page.route('**/api/ai/generate', (route) =>
-    route.fulfill({ status: 429, json: { error: 'Generation quota reached' } }),
-  );
-  await page.getByRole('button', { name: 'Generate', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('quota');
-});
 test('page switching, graphic recolor and backups preserve independent content', async ({
   page,
 }) => {

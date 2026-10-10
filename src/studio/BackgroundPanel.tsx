@@ -12,13 +12,7 @@ const COLORS = [
   ['#25263a', 'Midnight'],
 ] as const;
 
-export function BackgroundPanel({
-  adapter,
-  onBrowseSurfaces,
-}: {
-  adapter: EditorAdapter;
-  onBrowseSurfaces: () => void;
-}) {
+export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
   const document = adapter.history.document;
   const setColor = (color: string) => adapter.commit({ ...document, color, background: undefined });
   return (
@@ -112,12 +106,6 @@ export function BackgroundPanel({
           </label>
         </section>
       )}
-      <details className="create-extra background-textures">
-        <summary>Paper &amp; textures</summary>
-        <button className="panel-secondary-action" onClick={onBrowseSurfaces}>
-          Browse surfaces
-        </button>
-      </details>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { VISION_LAYOUTS } from './layouts';
 
 import type { VisionLayout } from './layouts';
-import { COLLAGE_TEMPLATES, COMPLEX_TEMPLATES, type TemplateElement } from './collageTemplates';
+import type { TemplateElement } from './collageTemplates';
 
 export interface VisionTemplate {
   canvas?: { width: number; height: number };
@@ -112,4 +112,4 @@ export const LEGACY_VISION_TEMPLATES: VisionTemplate[] = [
     layout: layout('nine-grid'),
   },
 ];
-export const VISION_TEMPLATES: VisionTemplate[] = [...COLLAGE_TEMPLATES, ...COMPLEX_TEMPLATES];
+export const VISION_TEMPLATES: VisionTemplate[] = [];

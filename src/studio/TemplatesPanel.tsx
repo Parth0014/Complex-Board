@@ -120,6 +120,7 @@ export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
           {error}
         </p>
       )}
+      {VISION_TEMPLATES.length === 0 && <p>No templates available.</p>}
       <ul className="templates-panel__list">
         {[
           ...VISION_TEMPLATES.filter((t) => t.elements),

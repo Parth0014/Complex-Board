@@ -60,7 +60,7 @@
   border-color: var(--gs-line);
 }
 .vs .vs-lib:not(.is-collapsed) {
-  width: 328px;
+  width: 387.04px;
 }
 .vs .vs-lib.is-collapsed {
   width: 56px;
@@ -92,7 +92,7 @@
   color: var(--gs-accent);
 }
 .vs .vs-lib__panel {
-  width: 272px;
+  width: 331.04px;
 }
 .vs .vs-lib__head {
   padding: 14px 16px;
@@ -209,7 +209,7 @@
 }
 @media (max-width: 719px) {
   .vs .vs-lib:not(.is-collapsed) {
-    width: min(328px, 100vw);
+    width: min(387.04px, 100vw);
   }
   .vs .vs-bottom-dock {
     flex-wrap: wrap;
@@ -266,4 +266,52 @@
 }
 .vs .create-shape-grid button span {
   font-size: 11px;
+}
+
+/* Keep the artwork prominent and the workspace controls quiet. */
+.vs {
+  --gs-workspace: #f0f1f5;
+}
+.vs .vs-canvas,
+.vs .vs-stage-fill,
+.vs .vs-rail,
+.vs .vs-bottom-dock {
+  background: var(--gs-workspace);
+}
+.vs .vs-lib.is-collapsed {
+  background: var(--gs-workspace);
+  border-color: transparent;
+}
+.vs .vs-rail {
+  border-right: 0;
+}
+.vs .vs-rail__tab {
+  color: #626570;
+}
+.vs .vs-rail__tab:hover:not(:disabled) {
+  background: #e5e7ee;
+  color: #30333c;
+}
+.vs .vs-rail__tab.is-active {
+  background: #e4e5f7;
+  color: #5846d6;
+}
+.vs .vs-bottom-dock {
+  border-top-color: transparent;
+  box-shadow: none;
+}
+.vs .vs-bottom-dock :is(.vs-page-select, .vs-select, .vs-menu > summary) {
+  background: transparent;
+  border-color: #d3d5dd;
+  box-shadow: none;
+}
+.vs .vs-bottom-dock :is(button, summary, label) {
+  color: #626570;
+}
+.vs .vs-header {
+  background: #fafafd;
+}
+.vs .vs-title__input:not(:focus) {
+  background: transparent;
+  border-color: transparent;
 }

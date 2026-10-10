@@ -792,18 +792,6 @@ export function KonvaStage({
       {snappingContainer &&
         createPortal(
           <div className="canvas-tools" aria-label="Canvas snapping options">
-            <label className="snap-toggle" title="Clean up freehand geometry while drawing">
-              <input
-                type="checkbox"
-                aria-label="Shape assist"
-                defaultChecked={adapter.shapeAssist}
-                onChange={(event) => {
-                  adapter.shapeAssist = event.target.checked;
-                }}
-              />
-              <span className="vs-switch__track" aria-hidden="true" />
-              Shape assist
-            </label>
             <label className="snap-toggle">
               <input
                 type="checkbox"
@@ -917,10 +905,12 @@ export function KonvaStage({
             width={document.width * scale}
             height={document.height * scale}
             fill="white"
-            shadowColor="#29223b"
-            shadowBlur={18}
-            shadowOpacity={0.1}
-            shadowOffsetY={5}
+            stroke="#dfe2e9"
+            strokeWidth={1}
+            shadowColor="#222638"
+            shadowBlur={24}
+            shadowOpacity={0.14}
+            shadowOffsetY={8}
             listening={false}
           />
           <Group

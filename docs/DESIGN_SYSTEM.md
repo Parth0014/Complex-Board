@@ -1,4 +1,4 @@
-# Gratitude Studio design system
+# VisBo design system
 
 Status: Microsoft Fluent 2 foundations are active. The official `@fluentui/tokens` light theme drives shared editor controls, menus, pickers, and chrome through `fluentTheme.ts` and `fluent.css`. Existing React controls retain their behavior; this is a token integration, not a wholesale replacement with Fluent React components. Component consolidation and remaining panel migration are still pending.
 

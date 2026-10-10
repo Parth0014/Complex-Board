@@ -1,4 +1,4 @@
-/* ==========================================================================\n   Gratitude Studio — layout v4\n   Structural UI pass: insertion library left, uninterrupted canvas center,\n   contextual properties right, navigation at the bottom. Loads last.\n   ========================================================================== */
+/* ==========================================================================\n   VisBo — layout v4\n   Structural UI pass: insertion library left, uninterrupted canvas center,\n   contextual properties right, navigation at the bottom. Loads last.\n   ========================================================================== */
 
 .studio {
   --shell-header-h: 64px;

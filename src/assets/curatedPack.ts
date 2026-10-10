@@ -1,3 +1,5 @@
+import { matchesElementSearch } from './elementSearch';
+import { describeElement, ELEMENT_THEMES } from './elementThemes';
 import type { AssetProvider, GratitudeAsset } from './contracts';
 export const bundledSvgSources = import.meta.glob<string>(
   '../../public/vision-board-assets/svg/**/*.svg',
@@ -27,6 +29,7 @@ export const curatedAssets: GratitudeAsset[] = Object.entries(bundledSvgSources)
     const parts = path.split('/'),
       category = parts.at(-2)!,
       name = parts.at(-1)!.replace(/\.svg$/, '');
+    const { title, topics } = describeElement(category, name, svg);
     const dimensions = svg
       .match(/viewBox="([^"]+)"/)![1]
       .split(/\s+/)
@@ -36,9 +39,13 @@ export const curatedAssets: GratitudeAsset[] = Object.entries(bundledSvgSources)
       id: 'vision-svg:' + category + '/' + name,
       provider: 'curated-v1',
       type: 'decoration',
-      category,
-      title: name.replace(/-/g, ' '),
-      tags: [category, name.replace(/-/g, ' ')],
+      category: topics[0],
+      topics,
+      title,
+      tags: [
+        ...topics,
+        ...ELEMENT_THEMES.filter((theme) => topics.includes(theme.id)).map((theme) => theme.label),
+      ],
       previewUrl: url,
       assetUrl: url,
       mimeType: 'image/svg+xml',
@@ -62,7 +69,7 @@ export const curatedPackProvider: AssetProvider = {
       (asset) =>
         (!query.type || asset.type === query.type) &&
         (!query.search ||
-          [asset.title, ...asset.tags].join(' ').includes(query.search.toLowerCase())),
+          matchesElementSearch(asset, query.search)),
     );
     const start = Number(query.cursor || 0),
       end = start + (query.limit || matches.length);

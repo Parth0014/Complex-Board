@@ -1,5 +1,5 @@
 /* ========================================================================== 
-   Gratitude Studio — refined product UI
+   VisBo — refined product UI
    This file intentionally sits after the legacy CSS. It makes the active
    React shell use the warm semantic tokens already defined in tokens.scss,
    without touching the canvas engine or document model.

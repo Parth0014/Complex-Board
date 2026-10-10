@@ -1,5 +1,3 @@
-import complexTemplates from './complexTemplates.json';
-import { resolveTemplateSticker } from './templateStickers';
 import type { BoardItem } from './document';
 import type { GratitudeAsset } from '../assets/contracts';
 import type { VisionTemplate } from './templates';
@@ -451,15 +449,5 @@ export function fitCollageElements(
   }));
 }
 
-export const COMPLEX_TEMPLATES: VisionTemplate[] = complexTemplates.map((template) => ({
-  ...template,
-  elements: template.elements.map((element) => {
-    if (element.kind !== 'asset') return element;
-    if (element.asset?.provider === 'template-sticker')
-      return { ...element, asset: resolveTemplateSticker(element.asset as GratitudeAsset) };
-    const name = element.asset?.id.replace('template-photo:', '');
-    const asset = name ? TEMPLATE_PHOTOS[name] : undefined;
-    if (!asset) throw new Error(`Unknown template photograph: ${name}`);
-    return { ...element, asset };
-  }),
-})) as unknown as VisionTemplate[];
+// Ready-to-use templates have been retired; do not resolve their removed artwork at startup.
+export const COMPLEX_TEMPLATES: VisionTemplate[] = [];

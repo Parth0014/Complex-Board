@@ -1,11 +1,11 @@
-# Gratitude Studio — V5 Redesign Notes
+# VisBo — V5 Redesign Notes
 
 A from-scratch UI/UX rebuild ("Graphite" system). Consistent name, new visual language, new
 layout. No references carried over from earlier designs.
 
 ## What changed
 
-**Identity.** The app uses the **Gratitude Studio** name consistently. Cool graphite +
+**Identity.** The app uses the **VisBo** name consistently. Cool graphite +
 paper + cobalt accent. Inter throughout.
 
 **Layout — one zone per job, ordered by frequency.**

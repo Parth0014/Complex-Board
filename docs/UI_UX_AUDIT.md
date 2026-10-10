@@ -1,4 +1,4 @@
-# Gratitude Studio UI/UX Audit and Refactor
+# VisBo UI/UX Audit and Refactor
 
 This document summarizes the UI/UX review performed on the active React editor shell and the changes implemented in this branch/worktree.
 

@@ -1,10 +1,10 @@
-# Gratitude Studio UI component map — v4
+# VisBo UI component map — v4
 
 This document records the editor's UI inventory and the placement decision used for the v4 layout refactor.
 
 ## 1. Global/document actions — top bar
 
-- Gratitude Studio identity
+- VisBo identity
 - Editable board name
 - Save/autosave status
 - Undo / redo
