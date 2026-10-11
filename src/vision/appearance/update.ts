@@ -13,6 +13,7 @@ import type {
 import { color, normalizeAppearance } from './validation';
 
 export type AppearanceChange =
+  | { property: 'style'; value: Appearance }
   | { property: 'opacity'; value: number }
   | { property: 'fill'; value: Fill }
   | { property: 'stroke'; value: Partial<Stroke> }
@@ -26,19 +27,26 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/** The sole future appearance write pathway. Pure; existing adapter will commit its result in C. */
+/** Sole appearance write pathway. The adapter commits the resulting snapshot to existing history. */
 export function updateAppearance(
   document: CanonicalDocument,
   selectedIds: readonly string[],
   id: string,
   change: AppearanceChange,
 ): CanonicalDocument {
-  if (selectedIds.length !== 1 || selectedIds[0] !== id) return document;
+  if (!selectedIds.includes(id)) return document;
   const item = document.items.find((item) => item.id === id);
   if (!item || item.kind === 'asset' || item.locked) return document;
   const cap = capabilities(item)!;
   const next = structuredClone(item.appearance);
   switch (change.property) {
+    case 'style': {
+      const style = normalizeAppearance(change.value);
+      if (style.kind !== next.kind)
+        throw new Error('Style requires matching appearance semantics.');
+      Object.assign(next, style, { stroke: { ...style.stroke, scaling: next.stroke.scaling } });
+      break;
+    }
     case 'opacity':
       next.opacity = clamp(change.value, 0, 1);
       break;
@@ -59,11 +67,13 @@ export function updateAppearance(
       next.stroke = { ...next.stroke, ...change.value };
       if ('width' in change.value)
         next.stroke.width = clamp(change.value.width!, cap.strokeRange[0], cap.strokeRange[1]);
+      if (next.effect === 'outline') next.effect = 'none';
       break;
     }
     case 'shadow':
       if (!cap.shadow) throw new Error('Shadow is unsupported for line/arrow.');
       next.shadow = { ...next.shadow, ...change.value };
+      if (next.effect === 'glow') next.effect = 'none';
       break;
     case 'background':
       if (next.kind !== 'text') throw new Error('Background applies to text only.');
@@ -72,6 +82,8 @@ export function updateAppearance(
     case 'effect':
       if (!cap.effects.includes(change.value))
         throw new Error('Effect unsupported for this object.');
+      if (change.value !== 'glow' && next.effect === 'glow') next.shadow.enabled = false;
+      if (change.value !== 'outline' && next.effect === 'outline') next.stroke.width = 0;
       next.effect = change.value;
       // Presets materialize real values; rendering will not resolve competing fallbacks.
       if (change.value === 'outline') next.stroke.width = Math.max(2, next.stroke.width);

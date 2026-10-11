@@ -1,4 +1,4 @@
-import type { BoardItem } from './document';
+import type { BoardItem } from './appearance/legacy';
 import type { GratitudeAsset } from '../assets/contracts';
 import type { VisionTemplate } from './templates';
 

@@ -1,3 +1,4 @@
+import { itemOpacity, primaryColor } from '../../vision/appearance/capabilities';
 import type { BoardDocument } from '../../vision/document';
 export function BoardPreview({
   document,
@@ -17,13 +18,13 @@ export function BoardPreview({
         <g
           key={item.id}
           transform={'translate(' + item.x + ' ' + item.y + ') rotate(' + item.rotation + ')'}
-          opacity={item.opacity}
+          opacity={itemOpacity(item)}
         >
           {item.kind === 'text' ? (
             <text
               y={item.fontSize || 34}
               fontSize={item.fontSize || 34}
-              fill={item.color || '#49375e'}
+              fill={primaryColor(item.appearance)}
             >
               {item.text?.slice(0, 100)}
             </text>
@@ -38,7 +39,13 @@ export function BoardPreview({
             <rect
               width={item.width}
               height={item.height}
-              fill={item.color || '#d9d3e8'}
+              fill={
+                item.kind === 'asset'
+                  ? item.color || '#d9d3e8'
+                  : 'fill' in item.appearance && !item.appearance.fill.enabled
+                    ? 'transparent'
+                    : primaryColor(item.appearance)
+              }
               rx={item.radius || 0}
             />
           )}

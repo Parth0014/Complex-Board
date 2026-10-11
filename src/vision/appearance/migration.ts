@@ -1,5 +1,5 @@
-import type { BoardItem } from '../document';
-import { validateBoard } from '../storage';
+import type { BoardItem } from './legacy';
+import { validateBoard } from './legacyValidation';
 import { shapeGeometry } from '../shapeGeometry';
 import {
   LEGACY_APPEARANCE_FIELDS,
@@ -141,7 +141,7 @@ export function validateCanonicalDocument(value: unknown): CanonicalDocument {
   return { ...structuredClone(document), items, ...(pages ? { pages } : {}) } as CanonicalDocument;
 }
 
-/** One-way, deterministic and idempotent. Deliberately not imported by live loading code in B. */
+/** Deterministic and idempotent import boundary for legacy and canonical documents. */
 export function migrateDocument(value: unknown): CanonicalDocument {
   const raw = record(value);
   if (raw.version === 3) return validateCanonicalDocument(raw);

@@ -1,3 +1,5 @@
+import { itemOpacity } from '../vision/appearance/capabilities';
+import { primaryColor } from '../vision/appearance/capabilities';
 import { Popover } from './ui/Popover';
 import { Button, IconButton } from './ui/Button';
 import { editorFonts } from '../vision/fonts';
@@ -90,8 +92,10 @@ export function SelectionToolbar({
   );
   const item = selected.length === 1 ? selected[0] : undefined;
   const anyLocked = selected.some((entry) => !!entry.locked);
-  const mixedOpacity = selected.some((entry) => entry.opacity !== selected[0]?.opacity);
-  const opacity = Math.round((selected[0]?.opacity ?? 1) * 100);
+  const mixedOpacity = selected.some(
+    (entry) => itemOpacity(entry) !== (selected[0] ? itemOpacity(selected[0]) : 1),
+  );
+  const opacity = Math.round((selected[0] ? itemOpacity(selected[0]) : 1) * 100);
   const [menu, setMenu] = useState<'opacity' | null>(null);
   const opacityTrigger = useRef<HTMLButtonElement>(null);
   if (!selected.length) return null;
@@ -144,25 +148,8 @@ export function SelectionToolbar({
             <div className="vs-actionbar__color" data-tip="Change only the selected text color">
               <ColorPicker
                 label="Text color"
-                value={item.color || '#33272b'}
-                onChange={(value) =>
-                  adapter.patchItems([
-                    {
-                      id: item.id,
-                      patch: {
-                        color: value,
-                        ...(item.textRuns?.length
-                          ? {
-                              textRuns: item.textRuns.map((r) => ({
-                                ...r,
-                                color: undefined,
-                              })),
-                            }
-                          : {}),
-                      },
-                    },
-                  ])
-                }
+                value={primaryColor(item.appearance)}
+                onChange={(value) => adapter.setAppearanceField('fill.color', value)}
               />
             </div>
           )}
@@ -179,14 +166,6 @@ export function SelectionToolbar({
                   id: item.id,
                   patch: {
                     bold: nextBold,
-                    ...(item.textRuns?.length
-                      ? {
-                          textRuns: item.textRuns.map((r) => ({
-                            ...r,
-                            bold: nextBold,
-                          })),
-                        }
-                      : {}),
                   },
                 },
               ]);
@@ -207,14 +186,6 @@ export function SelectionToolbar({
                   id: item.id,
                   patch: {
                     italic: nextItalic,
-                    ...(item.textRuns?.length
-                      ? {
-                          textRuns: item.textRuns.map((r) => ({
-                            ...r,
-                            italic: nextItalic,
-                          })),
-                        }
-                      : {}),
                   },
                 },
               ]);
@@ -235,14 +206,6 @@ export function SelectionToolbar({
                   id: item.id,
                   patch: {
                     underline: nextUnderline,
-                    ...(item.textRuns?.length
-                      ? {
-                          textRuns: item.textRuns.map((r) => ({
-                            ...r,
-                            underline: nextUnderline,
-                          })),
-                        }
-                      : {}),
                   },
                 },
               ]);
@@ -263,14 +226,6 @@ export function SelectionToolbar({
                   id: item.id,
                   patch: {
                     strike: nextStrike,
-                    ...(item.textRuns?.length
-                      ? {
-                          textRuns: item.textRuns.map((r) => ({
-                            ...r,
-                            strike: nextStrike,
-                          })),
-                        }
-                      : {}),
                   },
                 },
               ]);
@@ -304,8 +259,8 @@ export function SelectionToolbar({
           <span>Stroke</span>
           <ColorPicker
             label="Drawing color"
-            value={item.color || '#49375e'}
-            onChange={(color) => adapter.patchItems([{ id: item.id, patch: { color } }])}
+            value={primaryColor(item.appearance)}
+            onChange={(color) => adapter.changeAppearance({ property: 'stroke', value: { color } })}
           />
         </div>
       )}
@@ -332,14 +287,19 @@ export function SelectionToolbar({
           className="vs-actionbar__color"
           data-tip="Set a solid fill color. Replaces any gradient fill."
         >
-          <span>Solid fill</span>
+          <span>{item.appearance.kind === 'open-shape' ? 'Stroke' : 'Solid fill'}</span>
           <ColorPicker
-            label="Shape solid fill"
-            value={item.color || item.fill || '#b48ce3'}
+            label={
+              item.appearance.kind === 'open-shape' ? 'Shape stroke color' : 'Shape solid fill'
+            }
+            value={primaryColor(item.appearance)}
             onChange={(color) =>
-              adapter.patchItems([
-                { id: item.id, patch: { color, gradient: undefined, noFill: false } },
-              ])
+              'fill' in item.appearance
+                ? adapter.changeAppearance({
+                    property: 'fill',
+                    value: { enabled: true, paint: { kind: 'solid', color } },
+                  })
+                : adapter.changeAppearance({ property: 'stroke', value: { color } })
             }
           />
         </div>

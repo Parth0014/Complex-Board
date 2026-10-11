@@ -1,3 +1,4 @@
+import { createAppearance } from '../appearance/defaults';
 import { it, expect } from 'vitest';
 import { boundsOf, snapMovement, constrainItems, unionBounds } from './geometry';
 import { KonvaCanvasAdapter } from './KonvaCanvasAdapter';
@@ -11,7 +12,7 @@ const item = (id: string, x: number, y: number): BoardItem => ({
   width: 100,
   height: 80,
   rotation: 0,
-  opacity: 1,
+  appearance: createAppearance('text'),
 });
 const setup = () => {
   let serial = 0;
@@ -26,13 +27,14 @@ const setup = () => {
 };
 it('border and silhouette settings remain independent', () => {
   const adapter = setup();
-  adapter.patchItems([{ id: 'a', patch: { stickerWidth: 8, stickerColor: '#ffffff' } }]);
-  adapter.patchItems([{ id: 'a', patch: { borderColor: '#ff0000', borderWidth: 12 } }]);
+  adapter.select(['a']);
+  adapter.changeAppearance({ property: 'silhouette', value: { width: 8, color: '#ffffff' } });
+  adapter.changeAppearance({ property: 'stroke', value: { color: '#ff0000', width: 12 } });
   expect(adapter.history.document.items[0]).toMatchObject({
-    borderColor: '#ff0000',
-    borderWidth: 12,
-    stickerColor: '#ffffff',
-    stickerWidth: 8,
+    appearance: {
+      stroke: { color: '#ff0000', width: 12 },
+      silhouette: { color: '#ffffff', width: 8 },
+    },
   });
 });
 it('copies a snapshot, remaps pasted groups and restores cut with undo', () => {
@@ -71,14 +73,15 @@ it('moves layers one step while preserving selected order and whole groups', () 
 it('copies compatible styles without changing text, geometry or group identity', () => {
   const adapter = setup();
   adapter.select(['a']);
-  adapter.patchItems([{ id: 'a', patch: { bold: true, fontSize: 60, opacity: 0.4 } }]);
+  adapter.patchItems([{ id: 'a', patch: { bold: true, fontSize: 60 } }]);
+  adapter.changeAppearance({ property: 'opacity', value: 0.4 });
   adapter.copyStyle();
   adapter.select(['b']);
   adapter.pasteStyle();
   const target = adapter.history.document.items[1];
   expect(target.bold).toBe(true);
   expect(target.fontSize).toBe(60);
-  expect(target.opacity).toBe(0.4);
+  expect(target.kind !== 'asset' && target.appearance.opacity).toBe(0.4);
   expect(target.text).toBe('b');
   expect(target.x).toBe(300);
   expect(target.id).toBe('b');
@@ -231,7 +234,8 @@ it('enabling edge snapping preserves off-canvas artwork through unrelated edits 
   adapter.setSnapToEdges(true);
   expect(adapter.history.document).toBe(before);
   expect(adapter.history.revision).toBe(revision);
-  adapter.patchItems([{ id: 'b', patch: { color: '#ff0000' } }]);
+  adapter.select(['b']);
+  adapter.setAppearanceField('fill.color', '#ff0000');
   expect(adapter.history.document.items[0].x).toBe(-40);
   adapter.undo();
   expect(adapter.history.document.items[0].x).toBe(-40);
@@ -248,7 +252,8 @@ it('resizes text bounds without scaling its font or forcing the old height back'
     fontSize: 20,
     fixedBounds: true,
   });
-  adapter.patchItems([{ id: 'b', patch: { color: '#ff0000' } }]);
+  adapter.select(['b']);
+  adapter.setAppearanceField('fill.color', '#ff0000');
   expect(adapter.history.document.items[0].height).toBe(12);
   adapter.fitObjectBounds('a');
   expect(adapter.history.document.items[0].height).toBeGreaterThan(12);
@@ -256,7 +261,19 @@ it('resizes text bounds without scaling its font or forcing the old height back'
 });
 it('resizes an artwork frame independently and restores it with fit bounds', () => {
   const adapter = setup();
-  adapter.patchItems([{ id: 'a', patch: { kind: 'shape', shape: 'rectangle' } }]);
+  adapter.commit({
+    ...adapter.history.document,
+    items: adapter.history.document.items.map((entry) =>
+      entry.id === 'a' && entry.kind === 'text'
+        ? {
+            ...entry,
+            kind: 'shape',
+            shape: 'rectangle',
+            appearance: createAppearance('closed-shape'),
+          }
+        : entry,
+    ),
+  });
   adapter.resizeObjectBounds('a', 50, 40);
   expect(adapter.history.document.items[0]).toMatchObject({
     width: 50,
@@ -277,11 +294,16 @@ it('locked patches do not block other items and locked artwork cannot be deleted
   const adapter = setup();
   adapter.patchItems([{ id: 'a', patch: { locked: true } }]);
   adapter.patchItems([
-    { id: 'a', patch: { x: 500, color: '#ff0000' } },
+    { id: 'a', patch: { x: 500 } },
     { id: 'b', patch: { x: 400 } },
   ]);
   expect(adapter.history.document.items[0]).toMatchObject({ x: 100, locked: true });
-  expect(adapter.history.document.items[0].color).not.toBe('#ff0000');
+  adapter.select(['a']);
+  adapter.setAppearanceField('fill.color', '#ff0000');
+  expect(
+    adapter.history.document.items[0].kind !== 'asset' &&
+      adapter.history.document.items[0].appearance,
+  ).not.toMatchObject({ color: '#ff0000' });
   expect(adapter.history.document.items[1].x).toBe(400);
   adapter.delete(['a', 'b']);
   expect(adapter.history.document.items.map((item) => item.id)).toEqual(['a', 'c']);

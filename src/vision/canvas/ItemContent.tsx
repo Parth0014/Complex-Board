@@ -1,3 +1,4 @@
+import { appearanceToKonva } from './appearance';
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Group, Rect, Image, Ellipse, Line, Arrow, Star, Path, Text, TextPath } from 'react-konva';
@@ -36,22 +37,23 @@ function Content({
   previewToken?: object | boolean;
 }) {
   const input = raw.contentSize ? { ...raw, ...raw.contentSize } : raw;
-  const item = adapter.originalPreview
-    ? {
-        ...input,
-        crop: undefined,
-        brightness: 0,
-        contrast: 0,
-        saturation: 0,
-        blur: 0,
-        warmth: 0,
-        tint: 0,
-        filter: 'original' as const,
-        effect: 'none' as const,
-      }
-    : adapter.cropDraft?.id === input.id
-      ? { ...input, crop: adapter.cropDraft.crop }
-      : input;
+  const item =
+    adapter.originalPreview && input.kind === 'asset'
+      ? {
+          ...input,
+          crop: undefined,
+          brightness: 0,
+          contrast: 0,
+          saturation: 0,
+          blur: 0,
+          warmth: 0,
+          tint: 0,
+          filter: 'original' as const,
+          effect: 'none' as const,
+        }
+      : adapter.cropDraft?.id === input.id
+        ? { ...input, crop: adapter.cropDraft.crop }
+        : input;
   const imageRef = useRef<Konva.Image>(null);
   const image = adapter.images.get(
     (!adapter.originalPreview && item.rendition) ||
@@ -92,65 +94,74 @@ function Content({
     item.tint,
     filtered,
   ]);
-  const dash =
-    item.borderStyle === 'dashed' ? [12, 8] : item.borderStyle === 'dotted' ? [2, 6] : undefined;
-  const common = {
-    fillEnabled: !item.noFill,
-    fill: item.color || item.fill || '#b48ce3',
-    stroke: item.borderColor || '#33272b',
-    strokeWidth:
-      item.effect === 'outline' ? Math.max(2, item.borderWidth || 0) : item.borderWidth || 0,
-    dash,
-    shadowEnabled: (!!item.shadow && item.shadow !== 'none') || item.effect === 'glow',
-    shadowColor: item.shadowColor || (item.effect === 'glow' ? item.color || '#b48ce3' : '#000'),
-    shadowOpacity: item.shadowOpacity ?? (item.effect === 'glow' ? 0.8 : 0.25),
-    shadowBlur:
-      item.shadowBlur ??
-      (item.effect === 'glow'
-        ? 20
-        : item.shadow === 'soft'
-          ? 20
-          : item.shadow === 'medium'
-            ? 10
-            : 0),
-    shadowOffsetX:
-      item.shadowOffsetX ?? (item.shadow === 'hard' ? 6 : item.effect === 'glow' ? 0 : 3),
-    shadowOffsetY:
-      item.shadowOffsetY ?? (item.shadow === 'hard' ? 6 : item.effect === 'glow' ? 0 : 5),
-    fillPriority: item.gradient
-      ? item.gradientType === 'radial'
-        ? 'radial-gradient'
-        : 'linear-gradient'
-      : 'color',
-    fillLinearGradientStartPoint: { x: 0, y: 0 },
-    fillLinearGradientEndPoint: { x: item.width, y: item.height },
-    fillLinearGradientColorStops: [
-      0,
-      item.color || item.fill || '#b48ce3',
-      1,
-      item.gradient || '#fff',
-    ],
-    fillRadialGradientStartPoint: { x: item.width / 2, y: item.height / 2 },
-    fillRadialGradientEndPoint: { x: item.width / 2, y: item.height / 2 },
-    fillRadialGradientStartRadius: 0,
-    fillRadialGradientEndRadius: Math.max(item.width, item.height) / 2,
-    fillRadialGradientColorStops: [
-      0,
-      item.color || item.fill || '#b48ce3',
-      1,
-      item.gradient || '#fff',
-    ],
-  };
+  const effect = item.kind === 'asset' ? item.effect : item.appearance.effect;
+  const background = item.kind === 'text' ? item.appearance.background : null;
+  const common =
+    item.kind !== 'asset'
+      ? appearanceToKonva(item)
+      : {
+          fillEnabled: !item.noFill,
+          fill: item.color || item.fill || '#b48ce3',
+          stroke: item.borderColor || '#33272b',
+          strokeWidth:
+            item.effect === 'outline' ? Math.max(2, item.borderWidth || 0) : item.borderWidth || 0,
+          dash:
+            item.borderStyle === 'dashed'
+              ? [12, 8]
+              : item.borderStyle === 'dotted'
+                ? [2, 6]
+                : undefined,
+          shadowEnabled: (!!item.shadow && item.shadow !== 'none') || item.effect === 'glow',
+          shadowColor:
+            item.shadowColor || (item.effect === 'glow' ? item.color || '#b48ce3' : '#000'),
+          shadowOpacity: item.shadowOpacity ?? (item.effect === 'glow' ? 0.8 : 0.25),
+          shadowBlur:
+            item.shadowBlur ??
+            (item.effect === 'glow'
+              ? 20
+              : item.shadow === 'soft'
+                ? 20
+                : item.shadow === 'medium'
+                  ? 10
+                  : 0),
+          shadowOffsetX:
+            item.shadowOffsetX ?? (item.shadow === 'hard' ? 6 : item.effect === 'glow' ? 0 : 3),
+          shadowOffsetY:
+            item.shadowOffsetY ?? (item.shadow === 'hard' ? 6 : item.effect === 'glow' ? 0 : 5),
+          fillPriority: item.gradient
+            ? item.gradientType === 'radial'
+              ? 'radial-gradient'
+              : 'linear-gradient'
+            : 'color',
+          fillLinearGradientStartPoint: { x: 0, y: 0 },
+          fillLinearGradientEndPoint: { x: item.width, y: item.height },
+          fillLinearGradientColorStops: [
+            0,
+            item.color || item.fill || '#b48ce3',
+            1,
+            item.gradient || '#fff',
+          ],
+          fillRadialGradientStartPoint: { x: item.width / 2, y: item.height / 2 },
+          fillRadialGradientEndPoint: { x: item.width / 2, y: item.height / 2 },
+          fillRadialGradientStartRadius: 0,
+          fillRadialGradientEndRadius: Math.max(item.width, item.height) / 2,
+          fillRadialGradientColorStops: [
+            0,
+            item.color || item.fill || '#b48ce3',
+            1,
+            item.gradient || '#fff',
+          ],
+        };
   if (item.kind === 'text') {
     if (item.textRuns?.length || item.kerning === false || item.ligatures === false)
       return (
         <Group clipWidth={item.width} clipHeight={item.height}>
           <Rect width={item.width} height={item.height} fill="transparent" listening={false} />
-          {item.textBackground && (
+          {background && (
             <Rect
               width={item.width}
               height={item.height}
-              fill={item.textBackground}
+              fill={background}
               cornerRadius={item.radius || 0}
             />
           )}
@@ -175,10 +186,8 @@ function Content({
         .join(' '),
       letterSpacing: item.letterSpacing || 0,
       ...common,
-      strokeWidth: item.borderWidth || (item.effect === 'outline' ? 2 : 0),
       fillAfterStrokeEnabled: true,
       lineJoin: 'round' as const,
-      stroke: item.borderColor || '#33272b',
     };
     return (
       <Group
@@ -186,18 +195,18 @@ function Content({
         clipHeight={item.curve ? undefined : item.height}
       >
         <Rect width={item.width} height={item.height} fill="transparent" listening={false} />
-        {item.textBackground && (
+        {background && (
           <Rect
             width={item.width}
             height={item.height}
-            fill={item.textBackground}
+            fill={background}
             cornerRadius={item.radius || 0}
           />
         )}
-        {item.effect === 'echo' && (
+        {effect === 'echo' && (
           <Text {...textProps} x={5} y={5} opacity={0.25} width={item.width} height={item.height} />
         )}
-        {item.effect === 'glitch' && (
+        {effect === 'glitch' && (
           <>
             <Text
               {...textProps}
@@ -245,10 +254,6 @@ function Content({
       <Line
         {...common}
         points={(item.points || []).map((n, i) => n * (i % 2 ? item.height / h : item.width / w))}
-        stroke={item.color || '#33272b'}
-        strokeWidth={item.strokeWidth || 4}
-        lineCap="round"
-        lineJoin="round"
         tension={item.strokeTension ?? 0.35}
         hitStrokeWidth={20}
       />
@@ -277,7 +282,6 @@ function Content({
         <Path
           {...common}
           data={item.vectorPath}
-          strokeScaleEnabled={false}
           fillLinearGradientStartPoint={{ x: box.x, y: box.y }}
           fillLinearGradientEndPoint={{ x: box.x + box.width, y: box.y + box.height }}
           fillRadialGradientStartPoint={{ x: box.x + box.width / 2, y: box.y + box.height / 2 }}
@@ -298,7 +302,6 @@ function Content({
           y={(-geometry.y * item.height) / geometry.height}
           scaleX={item.width / geometry.width}
           scaleY={item.height / geometry.height}
-          strokeScaleEnabled={false}
         />
       );
     if (item.shape === 'circle')
@@ -332,14 +335,11 @@ function Content({
       );
     if (item.shape === 'line' || item.shape === 'arrow') {
       const props = {
+        ...common,
         points: [0, item.height / 2, item.width, item.height / 2],
-        stroke: item.color || '#33272b',
-        fill: item.color || '#33272b',
-        strokeWidth: item.borderWidth || item.strokeWidth || 4,
-        hitStrokeWidth: Math.max(24, item.borderWidth || item.strokeWidth || 4),
-        lineCap: 'round' as const,
-        lineJoin: 'round' as const,
-        dash,
+        fillEnabled: item.shape === 'arrow',
+        fill: item.appearance.stroke.color,
+        hitStrokeWidth: Math.max(24, item.appearance.stroke.width),
       };
       return (
         <Group>
@@ -518,7 +518,13 @@ function StickerContent(props: Parameters<typeof Content>[0]) {
   const { item, adapter, imageToken, previewToken } = props;
   const artwork = useRef<Konva.Group>(null);
   const [outline, setOutline] = useState<HTMLCanvasElement>();
-  const radius = Math.max(0, Math.min(30, item.stickerWidth || 0));
+  const radius = Math.max(
+    0,
+    Math.min(
+      30,
+      (item.kind === 'asset' ? item.stickerWidth : item.appearance.silhouette.width) || 0,
+    ),
+  );
   useLayoutEffect(() => {
     if (!radius || !artwork.current) {
       setOutline(undefined);
@@ -553,7 +559,8 @@ function StickerContent(props: Parameters<typeof Content>[0]) {
         );
       }
       context.globalCompositeOperation = 'source-in';
-      context.fillStyle = item.stickerColor || '#ffffff';
+      context.fillStyle =
+        (item.kind === 'asset' ? item.stickerColor : item.appearance.silhouette.color) || '#ffffff';
       context.fillRect(0, 0, canvas.width, canvas.height);
       setOutline(canvas);
     } finally {

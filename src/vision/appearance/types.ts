@@ -1,4 +1,4 @@
-import type { BoardDocument, BoardItem, BoardPage } from '../document';
+import type { BoardDocument, BoardItem, BoardPage } from './legacy';
 
 export const APPEARANCE_VERSION = 1 as const;
 export const CANONICAL_DOCUMENT_VERSION = 3 as const;
@@ -81,12 +81,13 @@ export const LEGACY_APPEARANCE_FIELDS = [
   'stickerColor',
 ] as const satisfies readonly (keyof BoardItem)[];
 type LegacyAppearanceField = (typeof LEGACY_APPEARANCE_FIELDS)[number];
-type ObjectData = Omit<BoardItem, LegacyAppearanceField | 'kind'>;
+type ObjectData = Omit<BoardItem, LegacyAppearanceField | 'kind'> &
+  Partial<Record<LegacyAppearanceField, never>>;
 export type EditableItem =
   | (ObjectData & { kind: 'text'; appearance: TextAppearance })
   | (ObjectData & { kind: 'shape'; appearance: ClosedShapeAppearance | OpenShapeAppearance })
   | (ObjectData & { kind: 'drawing'; appearance: DrawingAppearance });
-export type CanonicalItem = EditableItem | (BoardItem & { kind: 'asset' });
+export type CanonicalItem = EditableItem | (BoardItem & { kind: 'asset'; appearance?: never });
 export type CanonicalPage = Omit<BoardPage, 'items'> & { items: CanonicalItem[] };
 export type CanonicalDocument = Omit<BoardDocument, 'version' | 'items' | 'pages'> & {
   version: typeof CANONICAL_DOCUMENT_VERSION;

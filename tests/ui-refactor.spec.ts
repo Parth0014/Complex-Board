@@ -123,13 +123,17 @@ test('formatting and nested color popovers edit the board, dismiss, and persist'
   await expect(opacity).toHaveCount(0);
   const doc = await backup(page);
   expect(doc.items[0].text).toBe('My healthy future');
-  expect(doc.items[0].color).toBe('#5988b5');
-  expect(doc.items[0].opacity).toBeCloseTo(0.6);
+  expect(
+    doc.items[0].appearance?.kind === 'text' && doc.items[0].appearance.fill.paint,
+  ).toMatchObject({ kind: 'solid', color: '#5988b5' });
+  expect(doc.items[0].appearance?.opacity).toBeCloseTo(0.6);
   await page.reload();
   await expect(page.getByLabel('Editable vision board', { exact: true })).toBeVisible();
   const saved = await backup(page);
   expect(saved.items[0].text).toBe('My healthy future');
-  expect(saved.items[0].color).toBe('#5988b5');
+  expect(
+    saved.items[0].appearance?.kind === 'text' && saved.items[0].appearance.fill.paint,
+  ).toMatchObject({ kind: 'solid', color: '#5988b5' });
 });
 
 test('right-click submenus open on hover, flip at the edge, and support keyboard navigation', async ({

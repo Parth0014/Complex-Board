@@ -5,13 +5,7 @@ export function capabilities(item: CanonicalItem) {
   const a = item.appearance;
   return {
     fill: a.kind === 'text' || a.kind === 'closed-shape',
-    gradient:
-      a.kind === 'closed-shape' ||
-      (a.kind === 'text' &&
-        !item.curve &&
-        !item.textRuns?.length &&
-        item.kerning !== false &&
-        item.ligatures !== false),
+    gradient: a.kind === 'closed-shape' || a.kind === 'text',
     background: a.kind === 'text',
     strokeMeaning:
       a.kind === 'text'
@@ -40,3 +34,6 @@ export function primaryColor(a: Appearance): string {
     return a.fill.paint.kind === 'solid' ? a.fill.paint.color : a.fill.paint.stops[0];
   return a.stroke.color;
 }
+
+export const itemOpacity = (item: CanonicalItem) =>
+  item.kind === 'asset' ? item.opacity : item.appearance.opacity;

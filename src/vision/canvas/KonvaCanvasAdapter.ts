@@ -1,3 +1,12 @@
+import { createAppearance } from '../appearance/defaults';
+import { appearancePersistenceEnabled } from '../appearance/activation';
+import { shapeGeometry } from '../shapeGeometry';
+import { migrateItem, migrateClipboard } from '../appearance/migration';
+import { updateAppearance, type AppearanceChange } from '../appearance/update';
+import { LEGACY_APPEARANCE_FIELDS } from '../appearance/types';
+import { appearanceChange, type AppearanceField } from '../appearance/controls';
+import { primaryColor, capabilities } from '../appearance/capabilities';
+import { itemOpacity } from '../appearance/capabilities';
 import { assistStroke } from '../strokeAssist';
 import { replaceSvgColors } from '../svgColors';
 import { resolveTemplateSticker } from '../templateStickers';
@@ -45,8 +54,8 @@ const isTemplatePlaceholder = (item: BoardItem) =>
   (item.templatePlaceholder ||
     (item.shape === 'rectangle' &&
       !!item.slotId &&
-      /^#[0-9a-f]{6}20$/i.test(item.color || '') &&
-      item.borderWidth === 1));
+      /^#[0-9a-f]{6}20$/i.test(primaryColor(item.appearance)) &&
+      item.appearance.stroke.width === 1));
 
 export class KonvaCanvasAdapter implements CanvasAdapter {
   readonly history = new DocumentHistory();
@@ -94,7 +103,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         if (revision === this.history.revision) this.history.document = board;
       }
       this.storageReady = true;
-      this.saveStatus = 'Saved';
+      this.saveStatus = appearancePersistenceEnabled() ? 'Saved' : 'Preview (not saved)';
       this.changed();
       if (this.history.revision !== revision) this.persist();
     } catch (error) {
@@ -105,6 +114,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   }
   private persist() {
     if (!this.storageReady) return;
+    if (!appearancePersistenceEnabled()) {
+      this.saveStatus = 'Preview (not saved)';
+      return;
+    }
     const document = structuredClone(this.history.document),
       serial = ++this.saveSerial;
     this.saveStatus = 'Saving';
@@ -192,7 +205,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       const pages = [];
       for (const page of board.pages) {
         const prepared = await this.prepareBoard(
-          { ...page, version: 2, title: board.title, pages: undefined },
+          { ...page, version: board.version, title: board.title, pages: undefined },
           mediaRecords,
         );
         pages.push({ ...page, ...prepared, pages: undefined });
@@ -265,7 +278,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       await this.ownerWindow.navigator.clipboard.writeText(
         JSON.stringify({
           type: 'gratitude-board-selection',
-          version: 1,
+          version: 2,
           depth: this.clipboardDepth,
           items: this.clipboard,
         }),
@@ -293,7 +306,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       }
       if (value?.type === 'gratitude-board-selection') {
         if (
-          value.version !== 1 ||
+          ![1, 2].includes(value.version) ||
           !Number.isInteger(value.depth) ||
           value.depth < 0 ||
           value.depth > 20
@@ -302,7 +315,9 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         const prepared = await this.prepareBoard({
           ...this.history.document,
           pages: undefined,
-          items: value.items,
+          version: 3,
+          activePageId: undefined,
+          items: migrateClipboard(value, this.history.document).items,
         });
         if (revision !== this.history.revision)
           throw new Error('Board changed while pasting. Try again.');
@@ -345,78 +360,40 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.pasteSelection();
     this.changed();
   }
-  private copiedStyle?: { kind: BoardItem['kind']; patch: Partial<BoardItem> };
+  private copiedStyle?: {
+    kind: BoardItem['kind'];
+    patch: Partial<BoardItem>;
+    appearance?: import('../appearance/types').Appearance;
+    assetStyle?: Partial<BoardItem>;
+  };
   copyStyle() {
     const item = this.history.document.items.find((item) => this.selectedIds.includes(item.id));
     if (!item) return;
-    const {
-      opacity,
-      fontFamily,
-      fontSize,
-      color,
-      align,
-      bold,
-      italic,
-      underline,
-      letterSpacing,
-      lineHeight,
-      borderWidth,
-      borderColor,
-      shadow,
-      radius,
-      borderStyle,
-      effect,
-      gradient,
-      textBackground,
-      strike,
-      curve,
-      fill,
-      fontWeight,
-      gradientType,
-      noFill,
-      kerning,
-      ligatures,
-      shadowColor,
-      shadowOpacity,
-      shadowBlur,
-      shadowOffsetX,
-      shadowOffsetY,
-    } = item;
+    const typography = [
+      'fontFamily',
+      'fontSize',
+      'align',
+      'bold',
+      'italic',
+      'underline',
+      'letterSpacing',
+      'lineHeight',
+      'radius',
+      'strike',
+      'curve',
+      'fontWeight',
+      'kerning',
+      'ligatures',
+      'textPadding',
+    ] as const;
     this.copiedStyle = {
       kind: item.kind,
-      patch: {
-        opacity,
-        fontFamily,
-        fontSize,
-        color,
-        align,
-        bold,
-        italic,
-        underline,
-        letterSpacing,
-        lineHeight,
-        borderWidth,
-        borderColor,
-        shadow,
-        radius,
-        borderStyle,
-        effect,
-        gradient,
-        textBackground,
-        strike,
-        curve,
-        fill,
-        fontWeight,
-        gradientType,
-        noFill,
-        kerning,
-        ligatures,
-        shadowColor,
-        shadowOpacity,
-        shadowBlur,
-        shadowOffsetX,
-        shadowOffsetY,
-      },
+      patch: Object.fromEntries(typography.map((key) => [key, item[key]])),
+      appearance: item.kind !== 'asset' ? structuredClone(item.appearance) : undefined,
+      assetStyle:
+        item.kind === 'asset'
+          ? Object.fromEntries(LEGACY_APPEARANCE_FIELDS.map((key) => [key, item[key]]))
+          : undefined,
     };
     this.changed();
   }
@@ -426,11 +403,38 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   pasteStyle() {
     const style = this.copiedStyle;
     if (!style) return;
-    const patches = this.history.document.items
-      .filter((item) => this.selectedIds.includes(item.id) && item.kind === style.kind)
-      .map((item) => ({ id: item.id, patch: { ...style.patch } }));
-    if (patches.length) this.patchItems(patches);
+    const targets = this.history.document.items.filter(
+      (item) =>
+        this.selectedIds.includes(item.id) &&
+        item.kind === style.kind &&
+        !item.locked &&
+        !(item.kind === 'asset' && item.asset?.provider === 'curated-v1'),
+    );
+    const ownGesture = !this.history.gestureActive;
+    if (ownGesture) this.beginGesture();
+    try {
+      for (const item of targets) {
+        if (
+          style.appearance &&
+          item.kind !== 'asset' &&
+          item.appearance.kind === style.appearance.kind
+        )
+          this.changeAppearance({ property: 'style', value: style.appearance }, [item.id]);
+        this.patchItems([
+          {
+            id: item.id,
+            patch: {
+              ...style.patch,
+              ...(item.kind === 'asset' ? style.assetStyle : {}),
+            } as Partial<BoardItem>,
+          },
+        ]);
+      }
+    } finally {
+      if (ownGesture) this.endGesture();
+    }
   }
+
   copySelection() {
     this.clipboard = this.history.document.items
       .filter((item) => this.selectedIds.includes(item.id))
@@ -666,6 +670,26 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     }
     const measured = document.items.map((item) => {
       if (item.kind !== 'text' || item.curve || item.fixedBounds) return item;
+      const old = previous.items.find((entry) => entry.id === item.id);
+      if (
+        old &&
+        [
+          'text',
+          'width',
+          'fontSize',
+          'fontFamily',
+          'bold',
+          'italic',
+          'fontWeight',
+          'lineHeight',
+          'textPadding',
+          'letterSpacing',
+          'textRuns',
+          'kerning',
+          'ligatures',
+        ].every((key) => old[key as keyof BoardItem] === item[key as keyof BoardItem])
+      )
+        return item;
       const text = new Konva.Text({
         text: item.text || '',
         width: Math.max(10, item.width),
@@ -877,51 +901,130 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         ? {
             width: item.width,
             height: item.height,
-            opacity: item.opacity * 100,
+            opacity: itemOpacity(item) * 100,
             fontSize: item.fontSize,
             fontFamily: item.fontFamily,
-            strokeColor: item.color,
+            strokeColor: item.kind === 'asset' ? item.color : primaryColor(item.appearance),
             textAlign: item.align,
           }
         : {},
     };
   }
   patchItems(patches: Array<{ id: string; patch: Partial<BoardItem> }>) {
-    this.items((items) =>
-      items.map((item) => {
-        const patch = { ...patches.find((patch) => patch.id === item.id)?.patch };
-        if (patch.text !== undefined && patch.text !== item.text && !('textRuns' in patch)) {
-          patch.textRuns = item.textRuns
-            ? shiftRuns(item.textRuns, item.text || '', patch.text)
-            : undefined;
-        }
-        if (item.locked)
-          return {
-            ...item,
-            ...('locked' in patch ? { locked: patch.locked } : {}),
-            ...('hidden' in patch ? { hidden: patch.hidden } : {}),
-          };
-        return { ...item, ...patch };
-      }),
-    );
+    if (!patches.length) return;
+    const current = this.history.document.items;
+    const next = current.map((item) => {
+      const patch: Partial<BoardItem> = { ...patches.find((patch) => patch.id === item.id)?.patch };
+      if (
+        item.kind !== 'asset' &&
+        patch.kind !== 'asset' &&
+        (LEGACY_APPEARANCE_FIELDS.some((key) => key in patch) || 'appearance' in patch)
+      )
+        throw new Error('Appearance writes must use changeAppearance.');
+      if (
+        !Object.keys(patch).some(
+          (key) => patch[key as keyof BoardItem] !== item[key as keyof BoardItem],
+        )
+      )
+        return item;
+      if (patch.text !== undefined && patch.text !== item.text && !('textRuns' in patch)) {
+        patch.textRuns = item.textRuns
+          ? shiftRuns(item.textRuns, item.text || '', patch.text)
+          : undefined;
+      }
+      if (item.locked && !('locked' in patch) && !('hidden' in patch)) return item;
+      if (item.locked)
+        return {
+          ...item,
+          ...('locked' in patch ? { locked: patch.locked } : {}),
+          ...('hidden' in patch ? { hidden: patch.hidden } : {}),
+        };
+      if (item.kind !== 'asset' && patch.kind === 'asset') {
+        const { appearance, ...data } = item;
+        return {
+          ...data,
+          opacity: appearance.opacity,
+          borderWidth: appearance.stroke.width,
+          borderColor: appearance.stroke.color,
+          borderStyle: appearance.stroke.style,
+          effect: appearance.effect,
+          shadow: appearance.shadow.enabled ? 'soft' : 'none',
+          shadowColor: appearance.shadow.color,
+          shadowOpacity: appearance.shadow.opacity,
+          shadowBlur: appearance.shadow.blur,
+          shadowOffsetX: appearance.shadow.offsetX,
+          shadowOffsetY: appearance.shadow.offsetY,
+          stickerWidth: appearance.silhouette.width,
+          stickerColor: appearance.silhouette.color,
+          ...patch,
+        } as BoardItem;
+      }
+      return { ...item, ...patch } as BoardItem;
+    });
+    if (next.some((item, index) => item !== current[index]))
+      this.commit({ ...this.history.document, items: next });
+  }
+  changeAppearance(change: AppearanceChange, ids = this.selectedIds) {
+    let next = this.history.document;
+    for (const id of ids) {
+      if (!this.selectedIds.includes(id)) continue;
+      next = updateAppearance(next, this.selectedIds, id, change);
+    }
+    if (next !== this.history.document) this.commit(next);
+  }
+  setAppearanceField(field: AppearanceField, value: unknown) {
+    let next = this.history.document;
+    for (const id of this.selectedIds) {
+      const item = next.items.find((entry) => entry.id === id);
+      if (!item || item.kind === 'asset' || item.locked) continue;
+      const cap = capabilities(item)!;
+      if (
+        (field === 'background' && !cap.background) ||
+        (field.startsWith('fill.') && field !== 'fill.color' && !cap.fill) ||
+        (field.startsWith('shadow.') && !cap.shadow) ||
+        (field === 'effect' && !cap.effects.includes(value as import('../appearance/types').Effect))
+      )
+        continue;
+      next = updateAppearance(
+        next,
+        this.selectedIds,
+        id,
+        appearanceChange(item.appearance, field, value),
+      );
+    }
+    if (next !== this.history.document) this.commit(next);
   }
   updateSelection(patch: VisionSelectionPatch) {
-    this.patchItems(
-      this.selectedIds.map((id) => ({
-        id,
-        patch: {
-          ...(patch.width !== undefined ? { width: Math.max(10, patch.width) } : {}),
-          ...(patch.height !== undefined ? { height: Math.max(10, patch.height) } : {}),
-          ...(patch.opacity !== undefined
-            ? { opacity: Math.max(0, Math.min(100, patch.opacity)) / 100 }
-            : {}),
-          ...(patch.fontSize !== undefined ? { fontSize: patch.fontSize } : {}),
-          ...(patch.fontFamily !== undefined ? { fontFamily: patch.fontFamily } : {}),
-          ...(patch.strokeColor !== undefined ? { color: patch.strokeColor } : {}),
-          ...(patch.textAlign !== undefined ? { align: patch.textAlign } : {}),
-        },
-      })),
-    );
+    const ownGesture = !this.history.gestureActive;
+    if (ownGesture) this.beginGesture();
+    try {
+      if (patch.opacity !== undefined) {
+        this.changeAppearance({ property: 'opacity', value: patch.opacity / 100 });
+        this.patchItems(
+          this.history.document.items
+            .filter((item) => this.selectedIds.includes(item.id) && item.kind === 'asset')
+            .map((item) => ({
+              id: item.id,
+              patch: { opacity: Math.max(0, Math.min(100, patch.opacity!)) / 100 },
+            })),
+        );
+      }
+      if (patch.strokeColor !== undefined) this.setAppearanceField('fill.color', patch.strokeColor);
+      this.patchItems(
+        this.selectedIds.map((id) => ({
+          id,
+          patch: {
+            ...(patch.width !== undefined ? { width: Math.max(10, patch.width) } : {}),
+            ...(patch.height !== undefined ? { height: Math.max(10, patch.height) } : {}),
+            ...(patch.fontSize !== undefined ? { fontSize: patch.fontSize } : {}),
+            ...(patch.fontFamily !== undefined ? { fontFamily: patch.fontFamily } : {}),
+            ...(patch.textAlign !== undefined ? { align: patch.textAlign } : {}),
+          },
+        })),
+      );
+    } finally {
+      if (ownGesture) this.endGesture();
+    }
   }
   private async decode(asset: GratitudeAsset, record?: MediaRecord) {
     if (this.images.has(asset.assetUrl)) return;
@@ -1599,10 +1702,20 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         y: (document.height - height) / 2,
         width,
         height,
-        color: '#b48ce3',
-        fill: '#b48ce3',
+        appearance:
+          shape === 'line' || shape === 'arrow'
+            ? {
+                ...createAppearance('open-shape'),
+                stroke: { ...createAppearance('open-shape').stroke, color: '#b48ce3' },
+              }
+            : {
+                ...createAppearance('closed-shape'),
+                stroke: {
+                  ...createAppearance('closed-shape').stroke,
+                  scaling: shapeGeometry[shape] && shape !== 'rectangle' ? 'fixed' : 'transform',
+                },
+              },
         rotation: 0,
-        opacity: 1,
         groupPath: [...this.groupScope],
         groupId: this.groupScope[0],
       },
@@ -1626,10 +1739,11 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         y: 0,
         width: 100,
         height: 10,
-        color: '#573575',
-        borderWidth: 3,
+        appearance: {
+          ...createAppearance('open-shape'),
+          stroke: { ...createAppearance('open-shape').stroke, color: '#573575', width: 3 },
+        },
         rotation: 0,
-        opacity: 1,
         groupPath: [...this.groupScope],
         groupId: this.groupScope[0],
       },
@@ -1658,13 +1772,13 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         width: w,
         height: h,
         points: assisted.points.map((n, i) => n - (i % 2 ? y : x)),
-        color,
-        strokeWidth: width,
-
-        borderColor: color,
+        appearance: {
+          ...createAppearance('drawing'),
+          opacity,
+          stroke: { ...createAppearance('drawing').stroke, color, width },
+        },
 
         rotation: 0,
-        opacity,
         groupPath: [...this.groupScope],
         groupId: this.groupScope[0],
       },
@@ -1962,7 +2076,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         text: preset.sample,
         fontFamily: preset.fontFamily,
         fontSize: preset.fontSize,
-        color: preset.color,
+        appearance: {
+          ...createAppearance('text'),
+          fill: { enabled: true, paint: { kind: 'solid', color: preset.color } },
+        },
         align: preset.align || 'center',
         textPadding: 8,
         lineHeight: 1.2,
@@ -1970,7 +2087,6 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         y: (document.height - height) / 2,
         width,
         height,
-        opacity: 1,
         rotation: 0,
         groupPath: [...this.groupScope],
         groupId: this.groupScope[0],
@@ -2040,11 +2156,11 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         width: bounds.width,
         height: bounds.height,
         rotation: slot.rotation || 0,
-        opacity: 1,
-        fill: `${template.accent}20`,
-        color: `${template.accent}20`,
-        borderColor: template.accent,
-        borderWidth: 1,
+        appearance: {
+          ...createAppearance('closed-shape'),
+          fill: { enabled: true, paint: { kind: 'solid', color: `${template.accent}20` } },
+          stroke: { ...createAppearance('closed-shape').stroke, color: template.accent, width: 1 },
+        },
       });
     }
     items.push({
@@ -2055,14 +2171,16 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       text: template.heading,
       fontFamily: 'helvetica',
       fontSize: 48,
-      color: template.accent,
+      appearance: {
+        ...createAppearance('text'),
+        fill: { enabled: true, paint: { kind: 'solid', color: template.accent } },
+      },
       align: 'center',
       x: 30,
       y: 30,
       width: document.width - 60,
       height: 95,
       rotation: 0,
-      opacity: 1,
     });
     this.commit({
       ...document,
@@ -2104,7 +2222,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       color: template.backgroundColor,
       background: undefined,
       gradient: undefined,
-      items: [...pieces, ...existing],
+      items: [...pieces.map(migrateItem), ...existing],
     });
     this.select([]);
     this.fitBoard();

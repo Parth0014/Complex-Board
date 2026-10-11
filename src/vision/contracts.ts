@@ -173,6 +173,10 @@ export interface StudioAdapter extends CanvasAdapter {
   subscribe(listener: () => void): () => void;
   getSnapshot(): number;
   commit(document: BoardDocument): void;
+  beginGesture(): void;
+  endGesture(): void;
+  changeAppearance(change: import('./appearance/update').AppearanceChange, ids?: string[]): void;
+  setAppearanceField(field: import('./appearance/controls').AppearanceField, value: unknown): void;
   patchItems(patches: Array<{ id: string; patch: Partial<BoardItem> }>): void;
   insertAsset(asset: GratitudeAsset): Promise<string>;
   undo(): void;

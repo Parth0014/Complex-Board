@@ -1,3 +1,5 @@
+import { resolveTextStyle, resolveTextPaint } from '../appearance/update';
+import { paintToKonva } from './appearance';
 import { Text } from 'react-konva';
 import Konva from 'konva';
 import type { SceneContext } from 'konva/lib/Context';
@@ -8,7 +10,9 @@ import { fontFamily } from '../fonts';
 let sharedCanvas: HTMLCanvasElement | null = null;
 let sharedContext: CanvasRenderingContext2D | null = null;
 
-function getMeasurementContext(ownerWindow: Window & typeof globalThis): CanvasRenderingContext2D | null {
+function getMeasurementContext(
+  ownerWindow: Window & typeof globalThis,
+): CanvasRenderingContext2D | null {
   if (sharedContext) return sharedContext;
   if (!ownerWindow?.document) return null;
   sharedCanvas = ownerWindow.document.createElement('canvas');
@@ -21,7 +25,7 @@ export function RichText({
   ownerWindow,
   common,
 }: {
-  item: BoardItem;
+  item: Extract<BoardItem, { kind: 'text' }>;
   ownerWindow: Window & typeof globalThis;
   common: Record<string, unknown>;
 }) {
@@ -39,14 +43,12 @@ export function RichText({
       style: TextStyle;
       size: number;
       line: number;
+      index: number;
     }> = [];
   let x = 0,
     line = 0;
   const text = item.text || '';
-  const styleAt = (index: number): TextStyle => ({
-    ...item,
-    ...item.textRuns?.find((run) => index >= run.start && index < run.end),
-  });
+  const styleAt = (index: number): TextStyle => resolveTextStyle(item, index);
   const measure = (value: string, style: TextStyle, size: number) => {
     context.font = `${style.italic ? 'italic ' : ''}${style.bold ? 'bold' : item.fontWeight || 400} ${size}px ${fontFamily(item.fontFamily)}`;
     context.fontKerning = item.kerning === false ? 'none' : 'normal';
@@ -71,7 +73,9 @@ export function RichText({
       index < text.length &&
       text[index] !== '\n' &&
       /\s/.test(text[index]) === space &&
-      isSameStyle(styleAt(index), style)
+      isSameStyle(styleAt(index), style) &&
+      JSON.stringify(resolveTextPaint(item, index)) ===
+        JSON.stringify(resolveTextPaint(item, start))
     )
       index++;
     const token = text.slice(start, index),
@@ -81,17 +85,28 @@ export function RichText({
       x = 0;
     }
     if (width > contentWidth) {
+      let offset = 0;
       for (const character of token) {
         const width = measure(character, style, size);
         if (x + width > contentWidth && x > 0) {
           line++;
           x = 0;
         }
-        nodes.push({ text: character, x, y: line * lineHeight, width, style, size, line });
+        nodes.push({
+          text: character,
+          x,
+          y: line * lineHeight,
+          width,
+          style,
+          size,
+          line,
+          index: start + offset,
+        });
+        offset += character.length;
         x += width;
       }
     } else {
-      nodes.push({ text: token, x, y: line * lineHeight, width, style, size, line });
+      nodes.push({ text: token, x, y: line * lineHeight, width, style, size, line, index: start });
       x += width;
     }
   }
@@ -135,8 +150,7 @@ export function RichText({
               node.style.bold ? 'bold' : String(item.fontWeight || 400),
               node.style.italic ? 'italic' : '',
             ].join(' ')}
-            fill={node.style.color || item.color || '#33272b'}
-            strokeWidth={item.borderWidth || (item.effect === 'outline' ? 2 : 0)}
+            {...paintToKonva(resolveTextPaint(item, node.index), item.width, item.height)}
             fillAfterStrokeEnabled
             lineJoin="round"
             textDecoration={[

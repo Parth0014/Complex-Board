@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import fixture from '../../../tests/fixtures/appearance-v2.json';
 import multipage from '../../../tests/fixtures/appearance-multipage-v2.json';
 import cards from '../../../tests/fixtures/legacy-cards.json';
-import { newBoard, DocumentHistory, type BoardItem } from '../document';
-import { validateBoard } from '../storage';
+import { newBoard, DocumentHistory } from '../document';
+import type { BoardItem } from './legacy';
+import { validateBoard } from './legacyValidation';
 import { capabilities } from './capabilities';
 import { createAppearance } from './defaults';
 import {
@@ -332,9 +333,9 @@ describe('one validated update pathway', () => {
       updateAppearance(document, ['solid'], 'solid', { property: 'opacity', value: NaN }),
     ).toThrow();
   });
-  it('rejects stale/multiple/locked/asset/missing selections without creating a change', () => {
+  it('rejects stale/locked/asset/missing selections without creating a change', () => {
     const document = migrateDocument(legacy);
-    for (const ids of [[], ['solid', 'text'], ['text']])
+    for (const ids of [[], ['text']])
       expect(updateAppearance(document, ids, 'solid', { property: 'opacity', value: 0.2 })).toBe(
         document,
       );
@@ -388,13 +389,6 @@ describe('one validated update pathway', () => {
       ['radial', { property: 'stroke', value: { scaling: 'transform' } }],
       ['arrow', { property: 'shadow', value: { enabled: true } }],
       ['rich', { property: 'effect', value: 'echo' }],
-      [
-        'curved',
-        {
-          property: 'fill',
-          value: { enabled: true, paint: { kind: 'linear', stops: ['#000', '#fff'] } },
-        },
-      ],
     ];
     for (const [id, change] of invalid)
       expect(() => updateAppearance(document, [id], id, change)).toThrow();
@@ -468,26 +462,24 @@ describe('staged loading boundaries and existing history', () => {
       migrateClipboard({ ...input, items: [{ ...fixture.items[0], width: -1 }] }, fixture),
     ).toThrow();
   });
-  it('does not activate version 3 in live validation/new documents or serialize two schemas', () => {
-    expect(newBoard().version).toBe(2);
-    expect(validateBoard(fixture).version).toBe(2);
-    expect(() => validateBoard(migrateDocument(fixture))).toThrow();
+  it('activates version 3 without serializing legacy appearance fields', () => {
+    expect(newBoard().version).toBe(3);
     const serialized = JSON.stringify(migrateDocument(fixture));
     expect(serialized).not.toContain('borderWidth');
     expect(serialized).not.toContain('shadowOpacity');
   });
   it('retains migration equivalence across existing coalesced history undo/redo snapshots', () => {
     const history = new DocumentHistory();
-    history.document = validateBoard(fixture);
+    history.document = migrateDocument(fixture);
     const original = migrateDocument(history.document);
     history.beginGesture();
     for (const opacity of [0.9, 0.6, 0.3])
-      history.commit({
-        ...history.document,
-        items: history.document.items.map((item) =>
-          item.id === 'solid' ? { ...item, opacity } : item,
-        ),
-      });
+      history.commit(
+        updateAppearance(history.document, ['solid'], 'solid', {
+          property: 'opacity',
+          value: opacity,
+        }),
+      );
     history.endGesture();
     const final = migrateDocument(history.document);
     expect(editable(final, 'solid').appearance.opacity).toBe(0.3);

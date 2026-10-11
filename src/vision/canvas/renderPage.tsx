@@ -1,3 +1,4 @@
+import { itemOpacity } from '../appearance/capabilities';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import Konva from 'konva';
@@ -62,7 +63,7 @@ export async function renderPage(adapter: KonvaCanvasAdapter, page: BoardPage) {
                     x={item.x}
                     y={item.y}
                     rotation={item.rotation}
-                    opacity={item.opacity}
+                    opacity={itemOpacity(item)}
                   >
                     <ItemContent item={item} adapter={adapter} />
                   </Group>

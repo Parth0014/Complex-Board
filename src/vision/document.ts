@@ -1,124 +1,9 @@
-import type { GratitudeAsset } from '../assets/contracts';
-import type { VisionFontFamily } from './contracts';
-import type { FrameShape } from './frames';
-import type { TextRun } from './text';
-
-export interface BoardItem {
-  id: string;
-  kind: 'asset' | 'text' | 'shape' | 'drawing';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  opacity: number;
-  fixedBounds?: boolean;
-  contentSize?: { width: number; height: number };
-  text?: string;
-  fontFamily?: VisionFontFamily;
-  fontSize?: number;
-  color?: string;
-  align?: 'left' | 'center' | 'right' | 'justify';
-  bold?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  letterSpacing?: number;
-  lineHeight?: number;
-  flipX?: boolean;
-  flipY?: boolean;
-  borderWidth?: number;
-  borderColor?: string;
-  stickerWidth?: number;
-  stickerColor?: string;
-  shadow?: 'none' | 'soft' | 'medium' | 'hard';
-  borderStyle?: 'solid' | 'dashed' | 'dotted';
-  radius?: number;
-  shadowColor?: string;
-  shadowOpacity?: number;
-  shadowBlur?: number;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
-  fill?: string;
-  gradient?: string;
-  gradientType?: 'linear' | 'radial';
-  effect?: 'none' | 'glow' | 'echo' | 'outline' | 'glitch';
-  fontWeight?: number;
-  noFill?: boolean;
-  textBackground?: string;
-  textPadding?: number;
-  strike?: boolean;
-  curve?: number;
-  textRuns?: TextRun[];
-  kerning?: boolean;
-  ligatures?: boolean;
-  vectorPath?: string;
-  vectorClip?: number[];
-  vectorBox?: { x: number; y: number; width: number; height: number };
-  shape?:
-    | 'rectangle'
-    | 'circle'
-    | 'triangle'
-    | 'star'
-    | 'heart'
-    | 'cloud'
-    | 'blob'
-    | 'burst'
-    | 'line'
-    | 'arrow';
-  connector?: { from: string; to: string };
-  points?: number[];
-  strokeTension?: number;
-  strokeWidth?: number;
-  crop?: { x: number; y: number; width: number; height: number };
-  imageFit?: 'fit' | 'fill';
-  rendition?: string;
-  colorOverrides?: Record<string, string>;
-  brightness?: number;
-  contrast?: number;
-  saturation?: number;
-  blur?: number;
-  warmth?: number;
-  tint?: number;
-  filter?: 'original' | 'mono' | 'film' | 'dreamy' | 'warm' | 'vintage';
-  contentAsset?: GratitudeAsset;
-  frameShape?: FrameShape;
-  groupPath?: string[];
-  hidden?: boolean;
-  asset?: GratitudeAsset;
-  slotId?: string;
-  templateId?: string;
-  templatePlaceholder?: boolean;
-  goalId?: string;
-  groupId?: string;
-  locked?: boolean;
-}
-export interface BoardPage {
-  id: string;
-  width: number;
-  height: number;
-  color: string;
-  gradient?: string;
-  gradientType?: 'linear' | 'radial';
-  background?: GratitudeAsset;
-  items: BoardItem[];
-}
-export interface BoardDocument {
-  boardTheme?: string;
-  updatedAt?: number;
-  version: 2;
-  title: string;
-  width: number;
-  height: number;
-  color: string;
-  background?: GratitudeAsset;
-  gradient?: string;
-  gradientType?: 'linear' | 'radial';
-  items: BoardItem[];
-  pages?: BoardPage[];
-  activePageId?: string;
-}
+import type { CanonicalItem, CanonicalDocument, CanonicalPage } from './appearance/types';
+export type BoardItem = CanonicalItem;
+export type BoardDocument = CanonicalDocument;
+export type BoardPage = CanonicalPage;
 export const newBoard = (): BoardDocument => ({
-  version: 2,
+  version: 3,
   title: 'My beautiful life',
   width: 1080,
   height: 1080,
@@ -133,6 +18,9 @@ export class DocumentHistory {
   private past: BoardDocument[] = [];
   private future: BoardDocument[] = [];
   private gestureStart?: BoardDocument;
+  get gestureActive() {
+    return !!this.gestureStart;
+  }
   beginGesture() {
     if (!this.gestureStart) this.gestureStart = this.document;
   }

@@ -1,3 +1,5 @@
+import { appearanceValue, type AppearanceField } from '../vision/appearance/controls';
+import { capabilities } from '../vision/appearance/capabilities';
 import { Button, IconButton } from './ui/Button';
 import { ColorPicker } from './ColorPicker';
 import { svgColors, svgColorValue } from '../vision/svgColors';
@@ -236,25 +238,8 @@ export function EditorFeatures({
       ].map((asset) => [asset.id, asset]),
     ).values(),
   ];
-  const patch = (patch: Partial<BoardItem>) => {
-    const shadowDetail = Object.keys(patch).some(
-      (key) => key.startsWith('shadow') && key !== 'shadow',
-    );
-    adapter.patchItems(
-      adapter.selectedIds.map((id) => {
-        const target = adapter.history.document.items.find((item) => item.id === id);
-        return {
-          id,
-          patch: {
-            ...(shadowDetail && (!target?.shadow || target.shadow === 'none')
-              ? { shadow: 'soft' as const }
-              : {}),
-            ...patch,
-          },
-        };
-      }),
-    );
-  };
+  const patch = (patch: Partial<BoardItem>) =>
+    adapter.patchItems(adapter.selectedIds.map((id) => ({ id, patch })));
   const crop = adapter.cropDraft?.id === item?.id ? adapter.cropDraft?.crop : null;
   const [textRange, setTextRange] = useState({ start: 0, end: 0 });
   const textEditor = useRef<HTMLTextAreaElement>(null);
@@ -338,31 +323,83 @@ export function EditorFeatures({
       : item
         ? item.text || item.asset?.title || item.shape || 'Selected object'
         : 'Select an object on the board to see its properties.';
-  const mixed = (key: keyof BoardItem) => selected.some((other) => other[key] !== item?.[key]);
-  const number = (label: string, key: keyof BoardItem, min: number, max: number, step = 1) => {
-    const fallback =
-      key === 'opacity'
-        ? 1
-        : key === 'lineHeight'
-          ? 1
-          : key === 'fontWeight'
-            ? 400
-            : key === 'shadowOpacity'
-              ? 0.25
-              : key === 'shadowOffsetX'
-                ? 3
-                : key === 'shadowOffsetY'
-                  ? 5
-                  : key === 'shadowBlur'
-                    ? item?.shadow === 'soft'
-                      ? 20
-                      : item?.shadow === 'medium'
-                        ? 10
-                        : 0
-                    : 0;
+  type Field = keyof BoardItem | AppearanceField;
+  const assetFields: Partial<Record<AppearanceField, keyof BoardItem>> = {
+    'stroke.width': 'borderWidth',
+    'stroke.color': 'borderColor',
+    'stroke.style': 'borderStyle',
+    'shadow.preset': 'shadow',
+    'shadow.color': 'shadowColor',
+    'shadow.opacity': 'shadowOpacity',
+    'shadow.blur': 'shadowBlur',
+    'shadow.offsetX': 'shadowOffsetX',
+    'shadow.offsetY': 'shadowOffsetY',
+    'silhouette.width': 'stickerWidth',
+    'silhouette.color': 'stickerColor',
+    opacity: 'opacity',
+    effect: 'effect',
+  };
+  const isAppearance = (key: Field): key is AppearanceField =>
+    key.includes('.') || ['opacity', 'effect', 'background'].includes(key);
+  const read = (entry: BoardItem | undefined, key: Field): unknown => {
+    if (!entry) return undefined;
+    if (!isAppearance(key)) return entry[key];
+    if (entry.kind !== 'asset') return appearanceValue(entry, key);
+    const field = assetFields[key];
+    if (!field) return undefined;
+    if (entry[field] !== undefined) return entry[field];
+    if (key === 'shadow.opacity') return 0.25;
+    if (key === 'shadow.offsetX') return 3;
+    if (key === 'shadow.offsetY') return 5;
+    if (key === 'shadow.blur')
+      return entry.shadow === 'soft' ? 20 : entry.shadow === 'medium' ? 10 : 0;
+    return undefined;
+  };
+  const set = (key: Field, value: unknown) => {
+    if (!isAppearance(key)) {
+      patch({ [key]: value });
+      return;
+    }
+    const ownGesture = !adapter.history.gestureActive;
+    if (ownGesture) adapter.beginGesture();
+    try {
+      adapter.setAppearanceField(key, value);
+      const assetField = assetFields[key];
+      if (assetField)
+        adapter.patchItems(
+          selected
+            .filter((entry) => entry.kind === 'asset')
+            .map((entry) => ({
+              id: entry.id,
+              patch: {
+                ...(key.startsWith('shadow.') &&
+                key !== 'shadow.preset' &&
+                (!entry.shadow || entry.shadow === 'none')
+                  ? { shadow: 'soft' as const }
+                  : {}),
+                ...(key === 'shadow.preset'
+                  ? {
+                      shadowColor: undefined,
+                      shadowOpacity: undefined,
+                      shadowBlur: undefined,
+                      shadowOffsetX: undefined,
+                      shadowOffsetY: undefined,
+                    }
+                  : {}),
+                [assetField]: value,
+              },
+            })),
+        );
+    } finally {
+      if (ownGesture) adapter.endGesture();
+    }
+  };
+  const mixed = (key: Field) => selected.some((other) => read(other, key) !== read(item, key));
+  const number = (label: string, key: Field, min: number, max: number, step = 1) => {
+    const fallback = key === 'opacity' || key === 'lineHeight' ? 1 : key === 'fontWeight' ? 400 : 0;
     const value = mixed(key)
       ? undefined
-      : Number(item?.[key] ?? fallback) * (key === 'opacity' ? 100 : 1);
+      : Number(read(item, key) ?? fallback) * (key === 'opacity' ? 100 : 1);
     return (
       <label className="vs-field">
         <span>{label}</span>
@@ -377,12 +414,12 @@ export function EditorFeatures({
             ['rotation', 'width', 'height'].includes(key) &&
             selected.some((entry) => entry.locked || entry.connector)
           }
-          onCommit={(next) => patch({ [key]: next / (key === 'opacity' ? 100 : 1) })}
+          onCommit={(next) => set(key, next / (key === 'opacity' ? 100 : 1))}
         />
       </label>
     );
   };
-  const color = (label: string, key: keyof BoardItem, fallback: string) => (
+  const color = (label: string, key: Field, fallback: string) => (
     <div className="vs-field">
       <span>
         {label}
@@ -391,11 +428,11 @@ export function EditorFeatures({
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         <ColorPicker
           label={label}
-          value={String(item?.[key] || fallback)}
-          onChange={(value) => patch({ [key]: value })}
+          value={String(read(item, key) || fallback)}
+          onChange={(value) => set(key, value)}
         />
         <code style={{ fontSize: 'var(--gs-text-13)', color: 'var(--gs-text-secondary)' }}>
-          {String(item?.[key] || fallback).toUpperCase()}
+          {String(read(item, key) || fallback).toUpperCase()}
         </code>
       </span>
     </div>
@@ -689,7 +726,7 @@ export function EditorFeatures({
                   </label>
                   <div className="vs-row-2">
                     {number('Text size', 'fontSize', 8, 240)}
-                    {color('Text color', 'color', '#222222')}
+                    {color('Text color', 'fill.color', '#222222')}
                   </div>
                   <Sec title="Advanced text" open={false}>
                     <p
@@ -777,12 +814,12 @@ export function EditorFeatures({
                         Ligatures
                       </label>
                     </div>
-                    {color('Text background', 'textBackground', '#fff3bd')}
+                    {color('Text background', 'background', '#fff3bd')}
                     <div className="vs-row-2">
                       <Button
                         className="vs-btn vs-btn--light"
                         style={{ justifyContent: 'center' }}
-                        onClick={() => patch({ textBackground: undefined })}
+                        onClick={() => set('background', null)}
                       >
                         Clear background
                       </Button>
@@ -1145,7 +1182,7 @@ export function EditorFeatures({
                   )}
                 </Sec>
               )}{' '}
-              {(item.kind === 'shape' || item.kind === 'text') && (
+              {item.kind !== 'asset' && capabilities(item)?.fill && (
                 <Sec
                   title={item.kind === 'text' ? 'Text fill & gradient' : 'Shape fill & gradient'}
                   open
@@ -1153,7 +1190,7 @@ export function EditorFeatures({
                 >
                   {color(
                     item.kind === 'text' ? 'Text color' : 'Shape fill color',
-                    'color',
+                    'fill.color',
                     '#b48ce3',
                   )}
                   <div className="vs-row-2">
@@ -1161,8 +1198,8 @@ export function EditorFeatures({
                       <span>Gradient</span>
                       <ColorPicker
                         label="Item gradient"
-                        value={item.gradient || '#fff3bd'}
-                        onChange={(value) => patch({ gradient: value, noFill: false })}
+                        value={String(read(item, 'fill.endColor') || '#fff3bd')}
+                        onChange={(value) => set('fill.endColor', value)}
                       />
                     </div>
                     <label className="vs-field">
@@ -1170,11 +1207,9 @@ export function EditorFeatures({
                       <select
                         className="vs-select"
                         aria-label="Item gradient type"
-                        disabled={!item.gradient || item.locked}
-                        value={item.gradientType || 'linear'}
-                        onChange={(event) =>
-                          patch({ gradientType: event.target.value as 'linear' | 'radial' })
-                        }
+                        disabled={!read(item, 'fill.endColor') || item.locked}
+                        value={String(read(item, 'fill.kind') || 'linear')}
+                        onChange={(event) => set('fill.kind', event.target.value)}
                       >
                         <option>linear</option>
                         <option>radial</option>
@@ -1184,8 +1219,8 @@ export function EditorFeatures({
                   <Button
                     className="vs-btn vs-btn--light"
                     style={{ justifyContent: 'center' }}
-                    disabled={!item.gradient || item.locked}
-                    onClick={() => patch({ gradient: undefined })}
+                    disabled={!read(item, 'fill.endColor') || item.locked}
+                    onClick={() => set('fill.endColor', undefined)}
                   >
                     Remove gradient
                   </Button>
@@ -1194,8 +1229,8 @@ export function EditorFeatures({
                       <label className="vs-check">
                         <input
                           type="checkbox"
-                          checked={!!item.noFill}
-                          onChange={(event) => patch({ noFill: event.target.checked })}
+                          checked={!!read(item, 'fill.disabled')}
+                          onChange={(event) => set('fill.disabled', event.target.checked)}
                         />
                         No fill (outline only)
                       </label>
@@ -1232,7 +1267,7 @@ export function EditorFeatures({
               )}
               {item.kind === 'drawing' && (
                 <Sec title="Pen" icon={<PenIcon />}>
-                  {number('Pen width', 'strokeWidth', 1, 50)}
+                  {number('Pen width', 'stroke.width', 1, 50)}
                 </Sec>
               )}
               <Sec title="Appearance" open icon={<SlidersIcon />}>
@@ -1240,52 +1275,60 @@ export function EditorFeatures({
                   <input
                     type="checkbox"
                     aria-label="Sticker outline"
-                    checked={!!item.stickerWidth}
-                    onChange={(event) =>
-                      patch({
-                        stickerWidth: event.target.checked ? 8 : 0,
-                        stickerColor: item.stickerColor || '#ffffff',
-                      })
-                    }
+                    checked={!!read(item, 'silhouette.width')}
+                    onChange={(event) => set('silhouette.width', event.target.checked ? 8 : 0)}
                   />
                   Sticker outline
                 </label>
-                {!!item.stickerWidth && (
+                {!!read(item, 'silhouette.width') && (
                   <>
-                    {number('Outline thickness', 'stickerWidth', 1, 30)}
-                    {color('Outline color', 'stickerColor', '#ffffff')}
+                    {number('Outline thickness', 'silhouette.width', 1, 30)}
+                    {color('Outline color', 'silhouette.color', '#ffffff')}
                   </>
                 )}
-                {item.kind === 'drawing' && color('Stroke color', 'color', '#573575')}
+                {item.kind === 'drawing' && color('Stroke color', 'stroke.color', '#573575')}
                 {number('Opacity (%)', 'opacity', 0, 100)}
                 <div className="vs-row-2">
                   {(item.kind === 'asset' ||
                     (item.kind === 'shape' && item.shape === 'rectangle') ||
-                    (item.kind === 'text' && item.textBackground)) &&
+                    (item.kind === 'text' && !!read(item, 'background'))) &&
                     number('Corner radius', 'radius', 0, 150)}
-                  {number('Border width', 'borderWidth', 0, 30)}
+                  {item.kind !== 'drawing' &&
+                    number(
+                      item.kind === 'text'
+                        ? 'Text outline width'
+                        : item.kind === 'shape' && item.appearance.kind === 'open-shape'
+                          ? 'Stroke width'
+                          : 'Border width',
+                      'stroke.width',
+                      0,
+                      30,
+                    )}
                 </div>
-                {color('Border color', 'borderColor', '#33272b')}
+                {item.kind !== 'drawing' &&
+                  color(
+                    item.kind === 'text'
+                      ? 'Text outline color'
+                      : item.kind === 'shape' && item.appearance.kind === 'open-shape'
+                        ? 'Stroke color'
+                        : 'Border color',
+                    'stroke.color',
+                    '#33272b',
+                  )}
                 <div className="vs-row-2">
                   <label className="vs-field">
                     <span>Shadow preset</span>
                     <select
                       className="vs-select"
                       aria-label="Shadow preset"
-                      value={item.shadow || 'none'}
-                      onChange={(event) =>
-                        patch({
-                          shadow: event.target.value as BoardItem['shadow'],
-                          shadowColor: undefined,
-                          shadowOpacity: undefined,
-                          shadowBlur: undefined,
-                          shadowOffsetX: undefined,
-                          shadowOffsetY: undefined,
-                        })
-                      }
+                      disabled={item.kind !== 'asset' && !capabilities(item)?.shadow}
+                      value={String(read(item, 'shadow.preset') || 'none')}
+                      onChange={(event) => set('shadow.preset', event.target.value)}
                     >
-                      {['none', 'soft', 'medium', 'hard'].map((id) => (
-                        <option key={id}>{id}</option>
+                      {['none', 'soft', 'medium', 'hard', 'custom'].map((id) => (
+                        <option key={id} disabled={id === 'custom'}>
+                          {id}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -1294,10 +1337,8 @@ export function EditorFeatures({
                     <select
                       className="vs-select"
                       aria-label="Stroke style"
-                      value={item.borderStyle || 'solid'}
-                      onChange={(event) =>
-                        patch({ borderStyle: event.target.value as BoardItem['borderStyle'] })
-                      }
+                      value={String(read(item, 'stroke.style') || 'solid')}
+                      onChange={(event) => set('stroke.style', event.target.value)}
                     >
                       {['solid', 'dashed', 'dotted'].map((id) => (
                         <option key={id}>{id}</option>
@@ -1305,32 +1346,30 @@ export function EditorFeatures({
                     </select>
                   </label>
                 </div>
-                <Sec title="Shadow details" open={false}>
-                  <div className="vs-row-2">
-                    {color('Shadow color', 'shadowColor', '#000000')}
-                    {number('Shadow opacity', 'shadowOpacity', 0, 1, 0.05)}
-                  </div>
-                  <div className="vs-row-3">
-                    {number('Shadow blur', 'shadowBlur', 0, 100)}
-                    {number('Shadow X', 'shadowOffsetX', -100, 100)}
-                    {number('Shadow Y', 'shadowOffsetY', -100, 100)}
-                  </div>
-                </Sec>
+                {(item.kind === 'asset' || capabilities(item)?.shadow) && (
+                  <Sec title="Shadow details" open={false}>
+                    <div className="vs-row-2">
+                      {color('Shadow color', 'shadow.color', '#000000')}
+                      {number('Shadow opacity', 'shadow.opacity', 0, 1, 0.05)}
+                    </div>
+                    <div className="vs-row-3">
+                      {number('Shadow blur', 'shadow.blur', 0, 100)}
+                      {number('Shadow X', 'shadow.offsetX', -100, 100)}
+                      {number('Shadow Y', 'shadow.offsetY', -100, 100)}
+                    </div>
+                  </Sec>
+                )}
                 <label className="vs-field">
                   <span>Effect</span>
                   <select
                     className="vs-select"
                     aria-label="Effect"
-                    value={item.effect || 'none'}
-                    onChange={(event) =>
-                      patch({ effect: event.target.value as BoardItem['effect'] })
-                    }
+                    value={String(read(item, 'effect') || 'none')}
+                    onChange={(event) => set('effect', event.target.value)}
                   >
-                    {(item.kind === 'text'
-                      ? ['none', 'glow', 'echo', 'outline', 'glitch']
-                      : item.kind === 'asset'
-                        ? ['none', 'glow', 'glitch']
-                        : ['none', 'glow', 'outline']
+                    {(item.kind !== 'asset'
+                      ? capabilities(item)!.effects
+                      : ['none', 'glow', 'glitch']
                     ).map((id) => (
                       <option key={id}>{id}</option>
                     ))}

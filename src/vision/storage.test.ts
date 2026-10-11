@@ -1,9 +1,10 @@
+import { createAppearance } from './appearance/defaults';
 import { it, expect } from 'vitest';
 import { validateBoard } from './storage';
 import { newBoard } from './document';
 it('migrates version 1 backups without mutating the original', () => {
   const legacy = { ...newBoard(), version: 1 };
-  expect(validateBoard(legacy).version).toBe(2);
+  expect(validateBoard(legacy).version).toBe(3);
   expect(legacy.version).toBe(1);
   expect(() => validateBoard({ ...legacy, version: 99 })).toThrow('Invalid');
 });
@@ -24,7 +25,7 @@ it('rejects invalid backups before mutation and clones accepted documents', () =
           width: 100,
           height: 100,
           rotation: 0,
-          opacity: 1,
+          appearance: createAppearance('text'),
           crop: { x: 0.8, y: 0, width: 0.8, height: 1 },
         },
       ],
@@ -40,7 +41,7 @@ it('validates nested group parent identity and page references', () => {
     width: 100,
     height: 100,
     rotation: 0,
-    opacity: 1,
+    appearance: createAppearance('text'),
   };
   expect(() =>
     validateBoard({

@@ -1,3 +1,4 @@
+import { createAppearance } from './appearance/defaults';
 import { it, expect } from 'vitest';
 import { updateConnectors } from './connectors';
 import type { BoardItem } from './document';
@@ -11,7 +12,7 @@ it('keeps arrow endpoints attached through movement and releases deleted binding
       width: 100,
       height: 100,
       rotation: 0,
-      opacity: 1,
+      appearance: createAppearance('closed-shape'),
     },
     b = { ...a, id: 'b', x: 400 },
     arrow: BoardItem = { ...a, id: 'link', shape: 'arrow', connector: { from: 'a', to: 'b' } };

@@ -2,7 +2,9 @@ import type { Appearance } from './types';
 import { normalizeAppearance } from './validation';
 
 /** New canonical objects use this factory, not the legacy migration boundary. */
-export function createAppearance(kind: Appearance['kind']): Appearance {
+export function createAppearance<K extends Appearance['kind']>(
+  kind: K,
+): Extract<Appearance, { kind: K }> {
   const open = kind === 'open-shape' || kind === 'drawing';
   return normalizeAppearance({
     version: 1,
@@ -21,5 +23,5 @@ export function createAppearance(kind: Appearance['kind']): Appearance {
     },
     ...(!open ? { fill: { enabled: true, paint: { kind: 'solid', color: '#b48ce3' } } } : {}),
     ...(kind === 'text' ? { background: null } : {}),
-  });
+  }) as Extract<Appearance, { kind: K }>;
 }

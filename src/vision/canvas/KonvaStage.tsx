@@ -1,3 +1,5 @@
+import { itemOpacity } from '../appearance/capabilities';
+import { primaryColor } from '../appearance/capabilities';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import Konva from 'konva';
@@ -593,7 +595,7 @@ export function KonvaStage({
     width: item.width,
     height: item.height,
     rotation: item.rotation,
-    opacity: item.opacity,
+    opacity: itemOpacity(item),
     draggable:
       !adapter.cropDraft &&
       drawMode === 'select' &&
@@ -1203,7 +1205,10 @@ export function KonvaStage({
             resize: 'none',
             overflow: 'hidden',
             background: 'transparent',
-            color: editingItem.color,
+            color:
+              editingItem.kind === 'asset'
+                ? editingItem.color
+                : primaryColor(editingItem.appearance),
             fontFamily: fontFamily(editingItem.fontFamily),
             fontSize: editingItem.fontSize,
             fontWeight: editingItem.bold ? 'bold' : editingItem.fontWeight || 'normal',
@@ -1211,7 +1216,7 @@ export function KonvaStage({
             lineHeight: editingItem.lineHeight || 1,
             letterSpacing: editingItem.letterSpacing || 0,
             textAlign: editingItem.align || 'left',
-            opacity: editingItem.opacity,
+            opacity: itemOpacity(editingItem),
           }}
         />
       )}

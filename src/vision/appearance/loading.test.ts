@@ -28,12 +28,12 @@ function adapter(clipboard = '') {
 }
 beforeEach(() => vi.clearAllMocks());
 
-it('normal adapter initialization still reads and saves version 2, with lossless staged migration', async () => {
+it('normal adapter initialization still reads and saves version 3, with lossless staged migration', async () => {
   vi.mocked(loadBoard).mockResolvedValue(structuredClone(fixture));
   const a = adapter();
   await a.initialize();
   expect(a.saveStatus).toBe('Saved');
-  expect(a.history.document.version).toBe(2);
+  expect(a.history.document.version).toBe(3);
   expect(migrateDocument(a.history.document)).toMatchObject({
     version: 3,
     items: migrateDocument(fixture).items.map((item) => ({
@@ -42,20 +42,21 @@ it('normal adapter initialization still reads and saves version 2, with lossless
       groupId: undefined,
     })),
   });
-  a.patchItems([{ id: 'solid', patch: { opacity: 0.7 } }]);
+  a.select(['solid']);
+  a.changeAppearance({ property: 'opacity', value: 0.7 });
   await a.flushSave();
-  expect(vi.mocked(saveBoard).mock.calls.at(-1)![1].version).toBe(2);
-  expect('appearance' in a.history.document.items[0]).toBe(false);
+  expect(vi.mocked(saveBoard).mock.calls.at(-1)![1].version).toBe(3);
+  expect('appearance' in a.history.document.items[0]).toBe(true);
 });
 
-it('backup restoration remains version 2 and preserves the canonical meaning of all styles', async () => {
+it('backup restoration remains version 3 and preserves the canonical meaning of all styles', async () => {
   const a = adapter();
   await a.restore(JSON.stringify(fixture));
   const restored = migrateDocument(a.history.document);
   expect(restored.items.map((item) => (item.kind === 'asset' ? item : item.appearance))).toEqual(
     migrateDocument(fixture).items.map((item) => (item.kind === 'asset' ? item : item.appearance)),
   );
-  expect(a.history.document.version).toBe(2);
+  expect(a.history.document.version).toBe(3);
   a.undo();
   expect(a.history.document.items).toHaveLength(0);
   a.redo();
@@ -69,7 +70,7 @@ it('multipage restore preserves archived styles through the existing page extrac
     fixture.items.map((item) => item.id),
   );
   const archived = vi.mocked(saveBoard).mock.calls[0][1];
-  expect(archived.version).toBe(2);
+  expect(archived.version).toBe(3);
   expect(archived.items[0].id).toBe('archived');
   expect(migrateDocument(archived).items).toMatchObject(migrateDocument(multipage).pages![1].items);
 });
@@ -85,7 +86,7 @@ it('system clipboard import retains appearance through validation and identity r
   );
   await a.pasteFromSystem();
   expect(a.clipboardStatus).toBe('');
-  expect(a.history.document.version).toBe(2);
+  expect(a.history.document.version).toBe(3);
   const canonical = migrateDocument(a.history.document);
   expect(canonical.items.map((item) => (item.kind === 'asset' ? item : item.appearance))).toEqual(
     migrateDocument(fixture).items.map((item) => (item.kind === 'asset' ? item : item.appearance)),
@@ -99,7 +100,7 @@ it('plain-text clipboard import retains the existing textbox creation and migrat
   expect(a.history.document.items[0]).toMatchObject({
     kind: 'text',
     text: 'A pasted dream',
-    color: '#49375e',
+    appearance: { fill: { paint: { kind: 'solid', color: '#49375e' } } },
   });
   expect(migrateDocument(a.history.document).items[0]).toMatchObject({
     kind: 'text',
@@ -127,7 +128,7 @@ it('internal clipboard and duplication preserve appearance and rich-text data wi
   expect(a.history.document.items).toHaveLength(fixture.items.length + 1);
 });
 
-it('home library loading keeps version 2 and preserves every extracted multipage style', async () => {
+it('home library loading keeps version 3 and preserves every extracted multipage style', async () => {
   const written: unknown[] = [];
   const entries = [fixture, multipage];
   const request: { result?: unknown; onsuccess?: () => void; onerror?: () => void } = {};
@@ -159,6 +160,11 @@ it('home library loading keeps version 2 and preserves every extracted multipage
             next();
             return request;
           },
+          get() {
+            const lookup: { result: unknown; onsuccess?: () => void } = { result: undefined };
+            queueMicrotask(() => lookup.onsuccess?.());
+            return lookup;
+          },
           put(value: unknown) {
             written.push(value);
           },
@@ -178,10 +184,11 @@ it('home library loading keeps version 2 and preserves every extracted multipage
   } as unknown as Window & typeof globalThis;
   const listed = await listBoards(owner);
   expect(listed).toHaveLength(1);
-  expect(listed[0].document.version).toBe(2);
+  expect(listed[0].document.version).toBe(3);
   expect(migrateDocument(listed[0].document)).toEqual(migrateDocument(fixture));
-  expect(written).toHaveLength(2);
-  for (const [pageIndex, document] of written.entries())
+  expect(written).toHaveLength(3);
+  expect(written[2]).toEqual(multipage);
+  for (const [pageIndex, document] of written.slice(0, 2).entries())
     expect(migrateDocument(document).items).toEqual(
       migrateDocument(multipage).pages![pageIndex].items,
     );
