@@ -61,3 +61,79 @@ test('closed and open shapes share a bounded inspector and canonical bindings', 
   await expect(page.getByRole('tab', { name: 'Effects', exact: true })).toHaveCount(0);
   await frames(page);
 });
+
+test('text fill outline background and rich character defaults retain canonical semantics', async ({
+  page,
+}) => {
+  const h = await open(page, 'rich');
+  await h.evaluate(({ adapter }) =>
+    adapter.patchItems([
+      {
+        id: 'rich',
+        patch: {
+          bold: true,
+          textRuns: [{ start: 5, end: 8, color: '#ff0000', bold: false, italic: false }],
+        },
+      },
+    ]),
+  );
+  const originalRuns = await h.evaluate(
+    ({ adapter }) => adapter.history.document.items.find((i) => i.id === 'rich')!.textRuns,
+  );
+  await color(page, 'Text fill color', '#aabbcc');
+  await page.getByRole('button', { name: 'Linear', exact: true }).click();
+  await color(page, 'Second color', '#cc8844');
+  await page.getByRole('button', { name: 'Add text background', exact: true }).click();
+  await color(page, 'Text background', '#eeeeaa');
+  await number(page, 'Opacity (%)', 70);
+  await page.getByRole('tab', { name: 'Outline', exact: true }).click();
+  await number(page, 'Text outline width', 3.5);
+  await color(page, 'Text outline color', '#332244');
+  const edited = await h.evaluate(({ adapter }) =>
+    adapter.history.document.items.find((i) => i.id === 'rich')!,
+  );
+  expect(edited.textRuns).toEqual(originalRuns);
+  expect(edited.appearance).toMatchObject({
+    kind: 'text',
+    opacity: 0.7,
+    background: '#eeeeaa',
+    stroke: { width: 3.5, color: '#332244' },
+  });
+  const nodes = await h.evaluate(({ stage }) =>
+    stage
+      .findOne('#rich')!
+      .find('Text')
+      .map((node) => ({
+        text: node.getAttr('text'),
+        priority: node.getAttr('fillPriority'),
+        fill: node.getAttr('fill'),
+      })),
+  );
+  expect(nodes.some((node) => node.priority === 'linear-gradient')).toBe(true);
+  expect(nodes.some((node) => node.fill === '#ff0000' && node.priority === 'color')).toBe(true);
+  await page.getByRole('tab', { name: 'Text', exact: true }).click();
+  await page.getByText('Character formatting', { exact: false }).first().click();
+  const content = page.getByLabel('Styled text', { exact: true });
+  await content.click();
+  await content.press('Control+Home');
+  for (let i = 0; i < 4; i++) await content.press('Shift+ArrowRight');
+  await page.getByRole('button', { name: 'Bold text range', exact: true }).click();
+  expect(
+    await h.evaluate(({ adapter }) =>
+      adapter.history.document.items
+        .find((i) => i.id === 'rich')!
+        .textRuns?.some((run) => run.start === 0 && run.end === 4 && run.bold),
+    ),
+  ).toBe(true);
+  await h.evaluate(({ adapter }) => adapter.select(['curved']));
+  await page.getByRole('button', { name: 'Radial', exact: true }).click();
+  await color(page, 'Second color', '#aabbdd');
+  expect(
+    await h.evaluate(({ stage }) =>
+      stage
+        .findOne('#curved')!
+        .find('TextPath')
+        .some((node) => node.getAttr('fillPriority') === 'radial-gradient'),
+    ),
+  ).toBe(true);
+});

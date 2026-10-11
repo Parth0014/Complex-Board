@@ -130,6 +130,66 @@
 .gs-appearance-body .gs-tweakpane {
   margin-inline: calc(-1 * var(--gs-space-2));
 }
+.gs-text-properties {
+  display: grid;
+  gap: var(--gs-space-3);
+}
+.gs-text-properties label,
+.gs-committed-number {
+  display: grid;
+  gap: var(--gs-space-1);
+  color: var(--gs-text-secondary);
+}
+.gs-text-properties :is(input, select, textarea),
+.gs-committed-number input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--gs-line);
+  border-radius: var(--gs-radius-control);
+  background: var(--gs-surface-muted);
+  color: var(--gs-text);
+  font: inherit;
+  min-height: var(--gs-control-height);
+  padding: var(--gs-space-2);
+}
+.gs-text-properties textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+.gs-text-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gs-space-2);
+}
+.gs-text-formatting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gs-space-1);
+}
+.gs-text-advanced {
+  padding-block: var(--gs-space-3);
+  border-top: 1px solid var(--gs-line);
+}
+.gs-text-advanced summary {
+  cursor: pointer;
+  font-weight: var(--gs-weight-strong);
+}
+.gs-text-advanced summary span {
+  font-size: var(--gs-text-11);
+  color: var(--gs-text-secondary);
+  font-weight: var(--gs-weight-regular);
+}
+.gs-text-advanced > :not(summary) {
+  margin-top: var(--gs-space-3);
+}
+.gs-text-properties .gs-text-toggle {
+  display: flex;
+  align-items: center;
+  text-transform: capitalize;
+}
+.gs-text-toggle input {
+  width: auto;
+}
 @media (max-width: 700px) {
   .gs-appearance-sheet :is(button, select, input) {
     min-height: var(--gs-touch-target);

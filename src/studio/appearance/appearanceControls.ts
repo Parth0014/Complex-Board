@@ -102,7 +102,8 @@ export function technicalControls(item: EditableItem, area: InspectorArea): Bind
       if ('fill' in a && a.fill.paint.kind !== 'solid')
         list.push(control('fill.endColor', 'Second color', colorBinding));
     } else list.push(control('stroke.color', 'Stroke color', colorBinding));
-    if (cap.background) list.push(control('background', 'Text background', colorBinding));
+    if (cap.background && a.kind === 'text' && a.background !== null)
+      list.push(control('background', 'Text background', colorBinding));
     list.push(control('opacity', 'Opacity (%)', { min: 0, max: 100, step: 1 }));
   }
   if (area === 'stroke') {

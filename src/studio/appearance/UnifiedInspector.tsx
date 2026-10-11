@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { applyControl, type InspectorArea } from './appearanceControls';
 import { TechnicalControls } from './TechnicalControls';
 import { CreativePalette } from './CreativePalette';
+import { TextProperties } from './TextProperties';
 import { selectedAppearance } from './feature';
 import { AppearanceSurface } from './AppearanceSurface';
 
@@ -48,6 +49,7 @@ function InspectorBody({ adapter, item }: { adapter: StudioAdapter; item: Editab
     { id: 'color', label: cap.fill ? 'Fill & color' : 'Color' },
     { id: 'stroke', label: a.kind === 'text' ? 'Outline' : cap.fill ? 'Border' : 'Stroke' },
     ...(cap.shadow || cap.effects.length > 1 ? [{ id: 'effects' as const, label: 'Effects' }] : []),
+    ...(item.kind === 'text' ? [{ id: 'text' as const, label: 'Text' }] : []),
   ];
   const paint = 'fill' in a ? a.fill.paint : undefined;
   return (
@@ -112,6 +114,11 @@ function InspectorBody({ adapter, item }: { adapter: StudioAdapter; item: Editab
                   Character formatting stays in place. These colors set the object's defaults.
                 </p>
               )}
+              {a.kind === 'text' && a.background === null && (
+                <Button onClick={() => applyControl(adapter, item.id, 'background', '#fff3bd')}>
+                  Add text background
+                </Button>
+              )}
               {a.kind === 'text' && a.background !== null && (
                 <Button
                   className="gs-clear-background"
@@ -145,12 +152,17 @@ function InspectorBody({ adapter, item }: { adapter: StudioAdapter; item: Editab
               </p>
             </>
           )}
-          <TechnicalControls
-            key={`${area}:${paint?.kind ?? ''}`}
-            adapter={adapter}
-            id={item.id}
-            area={area}
-          />
+          {area === 'text' && item.kind === 'text' && (
+            <TextProperties adapter={adapter} item={item} />
+          )}
+          {area !== 'text' && (
+            <TechnicalControls
+              key={`${area}:${paint?.kind ?? ''}:${a.kind === 'text' && a.background !== null}`}
+              adapter={adapter}
+              id={item.id}
+              area={area}
+            />
+          )}
         </fieldset>
       </div>
     </>
