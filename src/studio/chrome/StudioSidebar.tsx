@@ -1,6 +1,6 @@
 import { Skeleton } from '../ui/Skeleton';
 import { Button, IconButton } from '../ui/Button';
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { TemplatesPanel } from '../TemplatesPanel';
 import { BackgroundPanel } from '../BackgroundPanel';
 import { TextPanel } from '../TextPanel';
@@ -39,6 +39,22 @@ export function StudioSidebar({
   onError: (message: string) => void;
 }) {
   const elementCategory = initialTheme;
+  const [retainedTab, setRetainedTab] = useState(tab);
+  const [keyboard, setKeyboard] = useState(false);
+  useEffect(() => {
+    if (tab) {
+      setRetainedTab(tab);
+      return;
+    }
+    const timer = setTimeout(
+      () => setRetainedTab(null),
+      keyboard || adapter.ownerWindow.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 0
+        : 120,
+    );
+    return () => clearTimeout(timer);
+  }, [tab, keyboard, adapter.ownerWindow]);
+  const panelTab = tab ?? retainedTab;
   return (
     <div className={`vs-lib${tab ? '' : ' is-collapsed'}`}>
       <nav className="vs-rail" aria-label="Studio tools">
@@ -50,7 +66,8 @@ export function StudioSidebar({
             data-tip-pos="right"
             aria-label={STUDIO_TAB_LABELS[id]}
             aria-pressed={tab === id}
-            onClick={() => {
+            onClick={(event) => {
+              setKeyboard(event.detail === 0);
               setTab(tab === id ? null : id);
             }}
           >
@@ -76,34 +93,42 @@ export function StudioSidebar({
         )}
       </nav>
 
-      {tab && (
-        <section className="vs-lib__panel" aria-label={`${STUDIO_TAB_LABELS[tab]} panel`}>
+      {panelTab && (
+        <section
+          className="vs-lib__panel"
+          data-motion={keyboard ? 'keyboard' : tab ? 'enter' : 'exit'}
+          inert={!tab}
+          aria-label={`${STUDIO_TAB_LABELS[panelTab]} panel`}
+        >
           <div className="vs-lib__head">
-            <h2 className="vs-lib__title">{STUDIO_TAB_LABELS[tab]}</h2>
+            <h2 className="vs-lib__title">{STUDIO_TAB_LABELS[panelTab]}</h2>
             <IconButton
               type="button"
               className="vs-icon-btn"
               data-tip="Close panel"
               aria-label="Close panel"
-              onClick={() => setTab(null)}
+              onClick={(event) => {
+                setKeyboard(event.detail === 0);
+                setTab(null);
+              }}
             >
               <CloseIcon />
             </IconButton>
           </div>
           <div className="vs-lib__body">
-            {tab === 'templates' ? (
+            {panelTab === 'templates' ? (
               <TemplatesPanel onApplyTemplate={(template) => adapter.applyTemplate(template)} />
-            ) : tab === 'text' ? (
+            ) : panelTab === 'text' ? (
               <TextPanel onInsertText={(preset) => adapter.createTextPreset(preset)} />
-            ) : tab === 'uploads' ? (
+            ) : panelTab === 'uploads' ? (
               <UploadsPanel adapter={adapter} onError={onError} />
-            ) : tab === 'create' ? (
+            ) : panelTab === 'create' ? (
               <CreatePanel adapter={adapter} />
-            ) : tab === 'ai' ? (
+            ) : panelTab === 'ai' ? (
               <Suspense fallback={<Skeleton label="Opening AI tools" />}>
                 <AIPanel adapter={adapter} />
               </Suspense>
-            ) : tab === 'background' ? (
+            ) : panelTab === 'background' ? (
               <BackgroundPanel adapter={adapter} />
             ) : (
               <CuratedPanel

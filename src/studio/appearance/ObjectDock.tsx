@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
+import { useSurfaceMotion } from '../ui/useSurfaceMotion';
 
 /**
  * Right-hand docked column for the object formatting panel.
@@ -21,21 +22,30 @@ export function ObjectDock({
   children: ReactNode;
 }) {
   const dock = useRef<HTMLElement>(null);
+  const { dismiss, motion } = useSurfaceMotion(onClose);
+  const close = useRef(dismiss);
+  useLayoutEffect(() => {
+    close.current = dismiss;
+  });
   useLayoutEffect(() => {
     const returnFocus = trigger.current;
-    dock.current?.querySelector<HTMLElement>('button:not(:disabled)')?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (
+        event.key !== 'Escape' ||
+        event.defaultPrevented ||
+        (event.target as Element).closest('.gs-popover, .vs-color-picker')
+      )
+        return;
+      event.preventDefault();
+      close.current(true);
+    };
+    ownerWindow.document.addEventListener('keydown', key);
     return () => {
+      ownerWindow.document.removeEventListener('keydown', key);
       queueMicrotask(() => returnFocus?.isConnected && returnFocus.focus());
     };
-  }, [trigger]);
+  }, [trigger, ownerWindow]);
   const root = ownerWindow.document.querySelector('.vs-body') ?? ownerWindow.document.body;
-  const keys = (event: KeyboardEvent) => {
-    if (event.key !== 'Escape') return;
-    if (/INPUT|TEXTAREA|SELECT/.test((event.target as Element).tagName)) return;
-    event.stopPropagation();
-    onClose();
-    trigger.current?.focus();
-  };
   return createPortal(
     <aside
       ref={dock}
@@ -43,7 +53,17 @@ export function ObjectDock({
       className="gs-object-dock gs-formatting-popover"
       role="complementary"
       aria-label={label}
-      onKeyDown={keys}
+      data-motion={motion}
+      onClickCapture={(event) => {
+        if (
+          (event.target as Element).closest(
+            'button[aria-label="Close editor panel"], button[aria-label="Close shape inspector"]',
+          )
+        ) {
+          event.stopPropagation();
+          dismiss(event.detail === 0);
+        }
+      }}
     >
       {children}
     </aside>,

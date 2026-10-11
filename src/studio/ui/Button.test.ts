@@ -13,7 +13,9 @@ describe('shared button semantics', () => {
     expect(markup).toContain('gs-button__spinner');
   });
   it('uses one accessible tooltip rather than a native title', () => {
-    const markup = renderToStaticMarkup(createElement(IconButton, { 'aria-label': 'Undo', title: 'Undo last change' }));
+    const markup = renderToStaticMarkup(
+      createElement(IconButton, { 'aria-label': 'Undo', title: 'Undo last change' }),
+    );
     expect(markup).toContain('aria-label="Undo"');
     expect(markup).toContain('data-tip="Undo"');
     expect(markup).not.toContain(' title=');

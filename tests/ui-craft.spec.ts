@@ -13,6 +13,7 @@ for (const [width, height] of [
     const folder = `exports/craft/${phase}/${width}x${height}`;
     mkdirSync(folder, { recursive: true });
     const capture = async (name: string) => {
+      await page.mouse.move(0, 0);
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({ path: `${folder}/${name}.png`, animations: 'disabled' });
     };
@@ -24,6 +25,17 @@ for (const [width, height] of [
     await page.getByRole('button', { name: 'Close panel', exact: true }).click();
     await expect(page.getByLabel('Editable vision board', { exact: true })).toBeVisible();
     await capture('editor');
+    if (['g4', 'g5', 'g6'].includes(phase)) {
+      const layout = await page.evaluate(() => {
+        const dock = document.querySelector('.vs-bottom-dock')!.getBoundingClientRect();
+        const viewport = document.querySelector('.gs-artboard') as HTMLElement;
+        const box = viewport.getBoundingClientRect();
+        return { dockTop: dock.top, viewportBottom: box.bottom, labels: [...document.querySelectorAll('.vs-rail__tab > span:not([class])')].map(el => ({ text: el.textContent, width: el.clientWidth, scroll: el.scrollWidth })) };
+      });
+      expect(layout.dockTop).toBeGreaterThanOrEqual(layout.viewportBottom);
+      for (const label of layout.labels) expect(label.scroll, label.text ?? '').toBeLessThanOrEqual(label.width);
+      writeFileSync(`${folder}/shell-layout.json`, JSON.stringify(layout, null, 2));
+    }
     for (const name of ['Templates', 'Elements', 'Uploads', 'Text', 'Create', 'Background', 'AI']) {
       await page.getByRole('button', { name, exact: true }).click();
       await capture(`panel-${name.toLowerCase()}`);

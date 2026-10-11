@@ -46,7 +46,7 @@ test('unconfigured cutout tool explains setup without sending doomed requests', 
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
-  await page.locator('.v1-asset-grid button').first().click();
+  await page.locator('.gs-asset-grid button').first().click();
   await page.getByRole('button', { name: 'Open properties', exact: true }).click();
   await openSection(page, 'AI tools');
   await expect(page.getByRole('button', { name: 'Remove bg', exact: true })).toBeDisabled();

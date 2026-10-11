@@ -352,9 +352,6 @@ input[type='color'].vs-color::-moz-color-swatch {
   .vs-rail .vs-rail__tab--ai.is-active {
     color: var(--gs-accent);
   }
-  .vs-rail .vs-rail__tab--ai.is-active::before {
-    background: var(--gs-accent);
-  }
   .vs-lib__head .vs-icon-btn {
     width: 32px;
     height: 32px;
@@ -370,7 +367,7 @@ input[type='color'].vs-color::-moz-color-swatch {
   .vs-lib__foot svg {
     color: var(--gs-accent);
   }
-  .v1-artboard {
+  .gs-artboard {
     background: transparent;
     position: relative;
     overflow: auto;
@@ -903,14 +900,14 @@ input[type='color'].vs-color::-moz-color-swatch {
     }
   }
   @media (hover: hover) and (pointer: fine) {
-    .v1-asset-grid > button:hover:not(:disabled) {
+    .gs-asset-grid > button:hover:not(:disabled) {
       border-color: var(--gs-accent);
       box-shadow: none;
       transform: translateY(-2px);
     }
   }
   @media (hover: hover) and (pointer: fine) {
-    .v1-asset-grid > button:hover:not(:disabled) .asset-thumb img {
+    .gs-asset-grid > button:hover:not(:disabled) .asset-thumb img {
       transform: scale(1.05);
     }
   }
@@ -1389,7 +1386,7 @@ input[type='color'].vs-color::-moz-color-swatch {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
-  .vs-stage-fill > .v1-artboard {
+  .vs-stage-fill > .gs-artboard {
     width: 100%;
     z-index: var(--gs-z-canvas);
     position: absolute;
@@ -3253,11 +3250,11 @@ input[type='color'].vs-color::-moz-color-swatch {
     display: inline-flex;
     align-items: center;
     gap: var(--gs-space-2);
-    padding: var(--gs-space-1) var(--gs-space-2);
     border: 0;
     background: transparent;
     color: var(--gs-text);
     border-radius: var(--gs-radius-control);
+    padding: 0 var(--gs-space-2);
   }
   @media (hover: hover) and (pointer: fine) {
     .vs-brand:hover {
@@ -3429,17 +3426,16 @@ input[type='color'].vs-color::-moz-color-swatch {
     border-radius: var(--gs-radius-control);
     background: transparent;
     color: var(--gs-text);
-    text-overflow: ellipsis;
     font-family: var(--gs-font-display);
-    font-size: var(--gs-text-18);
     font-weight: var(--gs-weight-regular);
+    font-size: var(--gs-text-18);
+    text-overflow: ellipsis;
   }
   .vs-lib {
     -webkit-backdrop-filter: blur(20px);
     transition:
       opacity var(--gs-duration-enter) var(--gs-ease),
       transform var(--gs-duration-enter) var(--gs-ease);
-    position: relative;
     inset: auto;
     flex: 0 0 auto;
     width: auto;
@@ -3453,6 +3449,7 @@ input[type='color'].vs-color::-moz-color-swatch {
     backdrop-filter: none;
     overflow: hidden;
     z-index: var(--gs-z-panel);
+    position: relative;
   }
   .vs-lib.is-collapsed {
     border-color: transparent;
@@ -3522,9 +3519,9 @@ input[type='color'].vs-color::-moz-color-swatch {
   }
   .vs-rail .vs-rail__tab > span:last-child {
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
   .vs-rail .vs-rail__tab svg {
     width: 20px;
@@ -3541,15 +3538,6 @@ input[type='color'].vs-color::-moz-color-swatch {
 .vs-rail .vs-rail__tab[aria-expanded='true'] {
     background: var(--gs-accent-soft);
     color: var(--gs-accent);
-  }
-  .vs-rail .vs-rail__tab::before {
-    content: '';
-    left: -8px;
-    top: 50%;
-    transform: translateY(-50%) scaleY(0);
-    height: 24px;
-    transition: transform var(--gs-duration-overlay) var(--gs-ease);
-    display: none; /* the old edge indicator; active state is now the filled pill */
   }
   .vs-rail__divider {
     width: auto;
@@ -3576,9 +3564,17 @@ input[type='color'].vs-color::-moz-color-swatch {
     flex-direction: column;
     min-width: 0;
     background: var(--gs-surface);
+    animation: gs-panel-in var(--gs-duration-enter) var(--gs-ease-out);
   }
   .vs-lib.is-collapsed .vs-lib__panel {
-    display: none;
+    display: flex;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    animation: gs-panel-in var(--gs-duration-exit) var(--gs-ease-out) reverse both;
+    z-index: var(--gs-z-panel);
   }
   .vs-lib__head {
     gap: var(--gs-space-3);
@@ -3618,17 +3614,6 @@ input[type='color'].vs-color::-moz-color-swatch {
     white-space: nowrap;
     overflow: visible;
     text-overflow: clip;
-  }
-  .vs-rail .vs-rail__tab.is-active::before {
-    transform: translateY(-50%) scaleY(1);
-    transition: transform var(--gs-duration-overlay) cubic-bezier(0.1, 0, 0.2, 1);
-    content: '';
-    display: block;
-    position: absolute;
-    inset: var(--gs-space-2) 0 var(--gs-space-2) auto;
-    width: 3px;
-    background: var(--gs-accent);
-    border-radius: var(--gs-radius-control);
   }
   .vs-body {
     flex: 1;
@@ -3771,11 +3756,11 @@ input[type='color'].vs-color::-moz-color-swatch {
   .vs-zoom__pct {
     font-size: var(--gs-text-13);
     font-weight: var(--gs-weight-medium);
-    min-width: 40px;
-    text-align: right;
     font-variant-numeric: tabular-nums;
     color: var(--gs-text);
     padding: 0 var(--gs-space-1);
+    min-width: calc(var(--gs-space-5) * 2);
+    text-align: center;
   }
   .vs-bottom-dock {
     min-width: 0;
@@ -3797,7 +3782,6 @@ input[type='color'].vs-color::-moz-color-swatch {
     max-width: calc(100% - 24px);
     position: absolute;
     left: 50%;
-    bottom: var(--gs-space-4);
     transform: translateX(-50%);
     z-index: var(--gs-z-float);
     display: inline-flex;
@@ -3811,6 +3795,7 @@ input[type='color'].vs-color::-moz-color-swatch {
     color: var(--gs-text-secondary);
     font-size: var(--gs-text-11);
     min-height: var(--gs-control-height-lg);
+    bottom: var(--gs-dock-offset);
   }
   .vs-top-editing-bar {
     flex-shrink: 0;
@@ -4542,9 +4527,6 @@ input[type='color'].vs-color::-moz-color-swatch {
     }
   }
   @media (max-width: 719px) {
-    .vs-rail .vs-rail__tab.is-active::before {
-      height: 3px;
-    }
   }
   @media (prefers-reduced-motion: reduce) {
     .vs select,
@@ -4565,6 +4547,7 @@ input[type='color'].vs-color::-moz-color-swatch {
   @media (max-width: 1100px) {
     .vs-bottom-dock {
       justify-content: center;
+      bottom: var(--gs-dock-offset);
     }
     .gs-appearance-dock,
 .gs-object-dock.gs-formatting-popover {
@@ -4696,8 +4679,9 @@ input[type='color'].vs-color::-moz-color-swatch {
     }
     .vs-bottom-dock {
       flex-wrap: wrap;
+      bottom: var(--gs-dock-offset);
     }
-    .vs-stage-fill > .v1-artboard {
+    .vs-stage-fill > .gs-artboard {
       bottom: 96px;
     }
   }
@@ -4748,7 +4732,7 @@ input[type='color'].vs-color::-moz-color-swatch {
       flex-direction: column-reverse; /* rail becomes a bottom tab bar */
     }
     .vs-bottom-dock {
-      bottom: var(--gs-space-3);
+      bottom: var(--gs-dock-offset);
     }
     .vs-bottom-dock .vs-range {
       display: none;

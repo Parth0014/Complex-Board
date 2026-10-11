@@ -561,3 +561,13 @@
     }
   }
 }
+
+@layer components {
+ @keyframes gs-panel-in { from { opacity: 0; transform: translateX(var(--gs-space-2)); } to { opacity: 1; transform: translateX(0); } }
+ .vs-lib__panel[data-motion='keyboard'], .gs-object-dock[data-motion='keyboard'] { animation: none; }
+ .gs-object-dock[data-motion='exit'] { animation: gs-panel-in var(--gs-duration-exit) var(--gs-ease-out) reverse both; }
+ .gs-artboard, .vs-lib__body, .gs-object-dock { scrollbar-width: thin; scrollbar-color: var(--gs-control-line) transparent; }
+ .gs-artboard::-webkit-scrollbar, .vs-lib__body::-webkit-scrollbar, .gs-object-dock::-webkit-scrollbar { width: var(--gs-scrollbar-size); height: var(--gs-scrollbar-size); }
+ .gs-artboard::-webkit-scrollbar-thumb, .vs-lib__body::-webkit-scrollbar-thumb, .gs-object-dock::-webkit-scrollbar-thumb { background: var(--gs-control-line); border-radius: var(--gs-radius-xs); }
+ @media (prefers-reduced-motion: reduce) { .vs-lib .vs-lib__panel[data-motion], .gs-object-dock[data-motion] { animation: none; } }
+}

@@ -91,7 +91,7 @@ test('asset selection changes redraw only the overlay, not the image artwork', a
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
-  await page.locator('.v1-asset-grid button').first().click();
+  await page.locator('.gs-asset-grid button').first().click();
   await page.waitForTimeout(400);
   await page.evaluate(() => ((window as Window & { imageDraws: number }).imageDraws = 0));
   const board = page.getByLabel('Editable vision board', { exact: true });

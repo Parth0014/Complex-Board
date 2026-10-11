@@ -81,7 +81,7 @@ test('resizing and zooming paint the current artboard geometry in every frame', 
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.getByLabel('Board size', { exact: true }).selectOption('1920x1080');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
-  await page.locator('.v1-asset-grid button').first().click();
+  await page.locator('.gs-asset-grid button').first().click();
   await page.getByRole('button', { name: 'Open properties', exact: true }).click();
   await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
   await page.getByRole('button', { name: 'Elements', exact: true }).click();

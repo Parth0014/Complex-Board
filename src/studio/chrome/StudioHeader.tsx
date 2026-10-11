@@ -10,6 +10,7 @@ import {
   RestoreIcon,
 } from '../icons';
 import type { EditorAdapter } from '../../vision/contracts';
+const MAX_BACKUP_BYTES = 180 * 1024 * 1024;
 
 /**
  * Three zones, one job each:
@@ -66,6 +67,7 @@ export function StudioHeader({
           <input
             className="vs-title__input"
             aria-label="Board name"
+            data-tip={document.title}
             value={document.title}
             maxLength={80}
             onChange={(event) => adapter.commit({ ...document, title: event.target.value })}
@@ -77,9 +79,9 @@ export function StudioHeader({
         </div>
       </div>
 
-      <div className="vs-header__center vs-history" role="group" aria-label="History">
+      <div className="vs-header__center vs-history gs-segmented" role="group" aria-label="History">
         <IconButton
-          className="vs-icon-btn"
+          className="vs-icon-btn gs-segmented__item"
           data-tip="Undo (Ctrl+Z)"
           data-tip-pos="below"
           aria-label="Undo"
@@ -89,7 +91,7 @@ export function StudioHeader({
           <UndoIcon />
         </IconButton>
         <IconButton
-          className="vs-icon-btn"
+          className="vs-icon-btn gs-segmented__item"
           data-tip="Redo (Ctrl+Shift+Z)"
           data-tip-pos="below"
           aria-label="Redo"
@@ -152,7 +154,7 @@ export function StudioHeader({
                   const file = event.target.files?.[0];
                   if (file)
                     try {
-                      if (file.size > 180 * 1024 * 1024)
+                      if (file.size > MAX_BACKUP_BYTES)
                         throw new Error('Backup is too large (maximum 180 MB).');
                       await adapter.restore(await file.text());
                       onError('');

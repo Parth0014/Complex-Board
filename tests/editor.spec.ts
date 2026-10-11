@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 test('curated artwork stays visible on the zoomed canvas and after reload', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
-  await page.locator('.v1-asset-grid button').filter({ hasText: 'Briefcase' }).click();
+  await page.locator('.gs-asset-grid button').filter({ hasText: 'Briefcase' }).click();
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
   const artworkPixels = () =>
     page.getByLabel('Editable vision board', { exact: true }).evaluate((board) => {
@@ -42,8 +42,8 @@ test('curated insertion, text, history and export', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Elements', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
   await page.getByLabel('Category', { exact: true }).selectOption('doodles');
-  await expect(page.locator('.v1-asset-grid button')).toHaveCount(25);
-  await page.locator('.v1-asset-grid button').first().click();
+  await expect(page.locator('.gs-asset-grid button')).toHaveCount(25);
+  await page.locator('.gs-asset-grid button').first().click();
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Duplicate', exact: true }).click();
   await expect(page.getByText('Board items (2)', { exact: true })).toBeVisible();
@@ -176,5 +176,5 @@ test('Elements library is empty', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
   await expect(page.getByText('No elements', { exact: true })).toBeVisible();
-  await expect(page.locator('.v1-asset-grid button')).toHaveCount(0);
+  await expect(page.locator('.gs-asset-grid button')).toHaveCount(0);
 });

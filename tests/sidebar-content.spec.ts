@@ -16,7 +16,7 @@ test('Elements contains no media library', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
   await expect(page.getByText('No elements', { exact: true })).toBeVisible();
-  await expect(page.locator('.v1-asset-grid button')).toHaveCount(0);
+  await expect(page.locator('.gs-asset-grid button')).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toHaveCount(0);
 });
 
@@ -26,9 +26,9 @@ test('text sticker outline renders and persists in backup', async ({ page }) => 
   await page.locator('.text-panel button').first().click();
   const initial = await backup(page);
   const item = initial.items.find((entry) => entry.kind === 'text')!;
-  const canvas = page.locator('.v1-artboard canvas').last();
+  const canvas = page.locator('.gs-artboard canvas').last();
   const before = await canvas.screenshot();
-  const point = await page.locator('.v1-artboard').evaluate((node, item) => {
+  const point = await page.locator('.gs-artboard').evaluate((node, item) => {
     const rect = node.querySelector('canvas')!.getBoundingClientRect();
     const host = node as HTMLElement;
     const scale = Number(host.dataset.scale);
@@ -71,7 +71,7 @@ test('compact editing and full properties switch without losing text changes', a
   expect(inserted.x + inserted.width / 2).toBeCloseTo(initial.width / 2);
   expect(inserted.y + inserted.height / 2).toBeCloseTo(initial.height / 2);
   await expect(compact.getByLabel('Text', { exact: true })).toHaveCount(0);
-  const point = await page.locator('.v1-artboard').evaluate((node, item) => {
+  const point = await page.locator('.gs-artboard').evaluate((node, item) => {
     const canvas = node.querySelector('canvas')!.getBoundingClientRect();
     const host = node as HTMLElement;
     const scale = Number(host.dataset.scale);
