@@ -48,6 +48,7 @@ const DRAW_MODES = [
 
 const QuickShapeInspector = lazy(() => import('../studio/appearance/QuickShapeInspector'));
 const UnifiedInspector = lazy(() => import('../studio/appearance/UnifiedInspector'));
+const HybridQuickBar = lazy(() => import('../studio/appearance/HybridQuickBar'));
 
 export function Editor({
   adapter,
@@ -219,7 +220,13 @@ export function Editor({
     };
     const key = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (event.defaultPrevented || target.closest('[role="dialog"], [role="menu"]')) return;
+      if (
+        event.defaultPrevented ||
+        target.closest(
+          '[role="dialog"], [role="menu"], [data-appearance-surface], .gs-hybrid-quickbar',
+        )
+      )
+        return;
       if (event.key === 'Escape' && /INPUT|TEXTAREA/.test(target.tagName)) {
         adapter.cancelGesture();
         target.blur();
@@ -408,24 +415,36 @@ export function Editor({
             }}
           >
             <div className="vs-top-editing-bar__row">
-              <SelectionToolbar
-                adapter={adapter}
-                formattingTrigger={formattingTrigger}
-                formattingOpen={editorPanel === 'style'}
-                appearanceInspector={!!quickShape}
-                replacingImage={replacingImage}
-                onReplaceImage={() => {
-                  const selected = adapter.history.document.items.find((entry) =>
-                    adapter.selectedIds.includes(entry.id),
-                  );
-                  if (!selected) return;
-                  replacementId.current = selected.id;
-                  replacementInput.current?.click();
-                }}
-                onEditStyle={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
-              />
+              {editable ? (
+                <Suspense fallback={<p role="status">Loading formatting tools…</p>}>
+                  <HybridQuickBar
+                    key={editable.id}
+                    adapter={adapter}
+                    trigger={formattingTrigger}
+                    open={editorPanel === 'style'}
+                    onAppearance={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
+                  />
+                </Suspense>
+              ) : (
+                <SelectionToolbar
+                  adapter={adapter}
+                  formattingTrigger={formattingTrigger}
+                  formattingOpen={editorPanel === 'style'}
+                  appearanceInspector={!!quickShape}
+                  replacingImage={replacingImage}
+                  onReplaceImage={() => {
+                    const selected = adapter.history.document.items.find((entry) =>
+                      adapter.selectedIds.includes(entry.id),
+                    );
+                    if (!selected) return;
+                    replacementId.current = selected.id;
+                    replacementInput.current?.click();
+                  }}
+                  onEditStyle={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
+                />
+              )}
             </div>
-            {editorPanel && !editable && (
+            {editorPanel && !editable && !(tweakpaneD2Enabled && selection.count > 1) && (
               <Popover
                 anchor={formattingTrigger}
                 onDismiss={() => setEditorPanel(null)}

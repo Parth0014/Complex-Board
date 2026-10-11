@@ -18,12 +18,14 @@ export function CreativePalette({
   target,
   value,
   label,
+  disabled = false,
 }: {
   adapter: StudioAdapter;
   id: string;
   target: ColorTarget;
   value: string;
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="gs-creative-palette" role="group" aria-label={`${label} palette`}>
@@ -34,6 +36,7 @@ export function CreativePalette({
           style={{ background: color }}
           aria-label={`${label}: ${color}`}
           aria-pressed={value.toLowerCase() === color}
+          disabled={disabled}
           onClick={() => applyControl(adapter, id, target, color)}
         />
       ))}

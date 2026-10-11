@@ -35,6 +35,11 @@ export default function UnifiedInspector({
       ownerWindow={adapter.ownerWindow}
       onClose={onClose}
       trigger={trigger}
+      onUndo={(redo) => {
+        adapter.endGesture();
+        redo ? adapter.redo() : adapter.undo();
+      }}
+      onCancel={() => adapter.cancelGesture()}
     >
       <InspectorBody key={item.id} adapter={adapter} item={item} />
     </AppearanceSurface>
@@ -108,6 +113,7 @@ function InspectorBody({ adapter, item }: { adapter: StudioAdapter; item: Editab
                 target={cap.fill ? 'fill.color' : 'stroke.color'}
                 value={primaryColor(a)}
                 label={cap.fill ? 'Fill' : 'Stroke'}
+                disabled={'fill' in a && !a.fill.enabled}
               />
               {a.kind === 'text' && (
                 <p className="gs-appearance-note">

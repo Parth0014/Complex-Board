@@ -5,6 +5,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
   type RefObject,
+  type KeyboardEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { Dialog } from '../ui/Dialog';
@@ -19,12 +20,16 @@ export function AppearanceSurface({
   onClose,
   trigger,
   ownerWindow,
+  onUndo,
+  onCancel,
 }: {
   children: ReactNode;
   title: string;
   onClose(): void;
   trigger: RefObject<HTMLButtonElement | null>;
   ownerWindow: Window;
+  onUndo(redo: boolean): void;
+  onCancel(): void;
 }) {
   const query = useRef(ownerWindow.matchMedia('(max-width: 700px)')).current;
   const mobile = useSyncExternalStore(
@@ -36,10 +41,6 @@ export function AppearanceSurface({
   );
   const [viewport, setViewport] = useState({ height: ownerWindow.innerHeight, offset: 0 });
   const surface = useRef<HTMLElement>(null);
-  const dismiss = useRef(onClose);
-  useLayoutEffect(() => {
-    dismiss.current = onClose;
-  });
   useLayoutEffect(() => {
     const visual = ownerWindow.visualViewport;
     const update = () =>
@@ -61,16 +62,8 @@ export function AppearanceSurface({
     if (mobile) return;
     const node = surface.current!;
     node.querySelector<HTMLButtonElement>('button')?.focus();
-    const key = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !(event.target as Element).closest('[data-gesture-owner]')) {
-        event.preventDefault();
-        dismiss.current();
-      }
-    };
-    node.addEventListener('keydown', key);
     const previous = trigger.current;
     return () => {
-      node.removeEventListener('keydown', key);
       previous?.isConnected && previous.focus();
     };
   }, [mobile, trigger]);
@@ -89,6 +82,21 @@ export function AppearanceSurface({
     </>
   );
   const root = ownerWindow.document.querySelector('.vs')!;
+  const keys = (event: KeyboardEvent) => {
+    if ((event.target as Element).closest('[data-gesture-owner]')) return;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+      event.preventDefault();
+      event.stopPropagation();
+      onUndo(event.shiftKey);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      if (/INPUT|TEXTAREA|SELECT/.test((event.target as Element).tagName)) {
+        onCancel();
+        (event.target as HTMLElement).blur();
+      } else onClose();
+    }
+  };
   return createPortal(
     mobile ? (
       <div
@@ -98,7 +106,13 @@ export function AppearanceSurface({
           if (event.target === event.currentTarget) onClose();
         }}
       >
-        <Dialog className="gs-appearance-sheet" aria-label="Appearance inspector" onClose={onClose}>
+        <Dialog
+          className="gs-appearance-sheet"
+          aria-label="Appearance inspector"
+          onClose={onClose}
+          data-appearance-surface
+          onKeyDownCapture={keys}
+        >
           <div className="gs-sheet-grip" aria-hidden="true" />
           {content}
         </Dialog>
@@ -109,6 +123,8 @@ export function AppearanceSurface({
         className="gs-appearance-dock"
         role="complementary"
         aria-label="Appearance inspector"
+        data-appearance-surface
+        onKeyDownCapture={keys}
       >
         {content}
       </section>
