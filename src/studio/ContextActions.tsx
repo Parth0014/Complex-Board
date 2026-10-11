@@ -22,7 +22,14 @@ type Props = {
   onClose: () => void;
 };
 
+function isMac(navigator: Navigator) {
+  return /Mac|iPhone|iPad|iPod/i.test(`${navigator.platform} ${navigator.userAgent}`);
+}
+
 export function ContextActions({ adapter, onClose }: Props) {
+  const mac = isMac(adapter.ownerWindow.navigator);
+  const formatShortcut = (value: string) =>
+    mac ? value.replace('Ctrl+', '\u2318').replace('Del', '\u232b') : value;
   const selected = adapter.history.document.items.filter((entry) =>
     adapter.selectedIds.includes(entry.id),
   );
@@ -59,7 +66,7 @@ export function ContextActions({ adapter, onClose }: Props) {
                 void adapter.copyToSystem();
               })}
             >
-              <DuplicateIcon /> Copy <kbd>Ctrl+C</kbd>
+              <DuplicateIcon /> Copy <kbd>{formatShortcut('Ctrl+C')}</kbd>
             </Button>
             <Button
               role="menuitem"
@@ -68,7 +75,7 @@ export function ContextActions({ adapter, onClose }: Props) {
                 void adapter.copyToSystem(true);
               })}
             >
-              <ScissorsIcon /> Cut <kbd>Ctrl+X</kbd>
+              <ScissorsIcon /> Cut <kbd>{formatShortcut('Ctrl+X')}</kbd>
             </Button>
           </>
         )}
@@ -79,7 +86,7 @@ export function ContextActions({ adapter, onClose }: Props) {
             void adapter.pasteFromSystem();
           })}
         >
-          <PasteIcon /> Paste <kbd>Ctrl+V</kbd>
+          <PasteIcon /> Paste <kbd>{formatShortcut('Ctrl+V')}</kbd>
         </Button>
         {!!selected.length && (
           <Button
@@ -87,7 +94,7 @@ export function ContextActions({ adapter, onClose }: Props) {
             disabled={anyLocked}
             onClick={run(() => adapter.duplicateSelection())}
           >
-            <DuplicateItemIcon /> Duplicate <kbd>Ctrl+D</kbd>
+            <DuplicateItemIcon /> Duplicate <kbd>{formatShortcut('Ctrl+D')}</kbd>
           </Button>
         )}
       </div>
@@ -110,7 +117,7 @@ export function ContextActions({ adapter, onClose }: Props) {
                   onClick={run(() => adapter.arrangeSelection(position))}
                 >
                   {label}
-                  <kbd>{shortcut}</kbd>
+                  <kbd>{formatShortcut(shortcut)}</kbd>
                 </Button>
               ))}
             </Submenu>
@@ -167,7 +174,7 @@ export function ContextActions({ adapter, onClose }: Props) {
               >
                 {canUngroup ? <UngroupIcon /> : <GroupIcon />}
                 {canUngroup ? 'Ungroup objects' : 'Group objects'}
-                <kbd>{canUngroup ? 'Ctrl+Shift+G' : 'Ctrl+G'}</kbd>
+                <kbd>{formatShortcut(canUngroup ? 'Ctrl+Shift+G' : 'Ctrl+G')}</kbd>
               </Button>
             )}
             <Button role="menuitem" onClick={run(() => adapter.toggleLock())}>
@@ -181,7 +188,7 @@ export function ContextActions({ adapter, onClose }: Props) {
               disabled={anyLocked}
               onClick={run(() => adapter.delete(adapter.selectedIds))}
             >
-              <TrashIcon /> Delete <kbd>Del</kbd>
+              <TrashIcon /> Delete <kbd>{formatShortcut('Del')}</kbd>
             </Button>
           </div>
         </>
@@ -198,7 +205,7 @@ export function ContextActions({ adapter, onClose }: Props) {
               ),
             )}
           >
-            <SelectIcon /> Select all <kbd>Ctrl+A</kbd>
+            <SelectIcon /> Select all <kbd>{formatShortcut('Ctrl+A')}</kbd>
           </Button>
           <Button role="menuitem" onClick={run(() => adapter.fitBoard())}>
             <FitIcon /> Fit board to view
