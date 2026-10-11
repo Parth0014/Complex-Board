@@ -1,3 +1,4 @@
+> **SUPERSEDED by visbo-design-system.** See `src/studio/design-system/foundations.css` for the current direction.
 # VisBo — V5 UI/UX Redesign Plan
 
 Fresh identity: **VisBo** (consistent name, new visual system — no carry-over from the

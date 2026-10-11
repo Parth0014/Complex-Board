@@ -1,3 +1,4 @@
+> **SUPERSEDED by visbo-design-system.** See `src/studio/design-system/foundations.css` for the current direction.
 # VisBo — V5 Redesign Notes
 
 A from-scratch UI/UX rebuild ("Graphite" system). Consistent name, new visual language, new

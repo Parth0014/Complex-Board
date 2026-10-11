@@ -1,94 +1,165 @@
-/* Fluent supplies the palette. App components consume only --gs-* tokens. */
+/* Atelier tokens. The only file where raw color, font-size or shadow literals live. */
 @layer tokens {
   :root {
-    --gs-picker-black: #000;
-    --gs-picker-white: #fff;
-    --gs-picker-spectrum: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
-    --gs-z-canvas: 0;
-    --gs-z-panel: 10;
-    --gs-z-float: 20;
-    --gs-z-popover: 30;
-    --gs-z-picker: 35;
-    --gs-z-tooltip: 50;
-    --gs-z-modal: 40;
-    --gs-text: var(--fluent-colorNeutralForeground1);
-    --gs-text-secondary: var(--fluent-colorNeutralForeground2);
-    --gs-text-disabled: var(--fluent-colorNeutralForegroundDisabled);
-    --gs-control-line: var(--fluent-colorNeutralStroke1);
-    --gs-line: var(--fluent-colorNeutralStroke2);
-    --gs-surface: var(--fluent-colorNeutralBackground1);
-    --gs-surface-muted: var(--fluent-colorNeutralBackground2);
-    --gs-workspace: var(--fluent-colorNeutralBackground3);
-    --gs-accent: var(--fluent-colorBrandBackground);
-    --gs-accent-hover: var(--fluent-colorBrandBackgroundHover);
-    --gs-accent-soft: var(--fluent-colorBrandBackground2);
-    --gs-on-accent: #ffffff;
-    --gs-danger: var(--fluent-colorPaletteRedForeground1);
-    --gs-danger-soft: var(--fluent-colorPaletteRedBackground1);
-    --gs-warning: var(--fluent-colorPaletteDarkOrangeForeground1);
-    --gs-radius-control: var(--fluent-borderRadiusMedium);
-    --gs-radius-menu: var(--fluent-borderRadiusXLarge);
-    --gs-radius-dialog: var(--fluent-borderRadiusXLarge);
-    --gs-radius-pill: 999px;
-    --gs-shadow-popup: var(--fluent-shadow8);
-    --gs-shadow-dialog: var(--fluent-shadow28);
-    --gs-font: var(--fluent-fontFamilyBase);
-    --gs-header-height: 48px;
-    --gs-ease: var(--fluent-curveEasyEase);
-    --gs-shadow-utility: var(--gs-shadow-popup);
-    --gs-hover: var(--fluent-colorNeutralBackground1Hover);
-    --gs-success: var(--fluent-colorPaletteGreenForeground1);
-    --gs-duration-feedback: var(--fluent-durationFaster);
-    --gs-duration-overlay: var(--fluent-durationFast);
-    --gs-focus: 0 0 0 2px var(--gs-surface), 0 0 0 4px var(--gs-accent);
+    /* ── Palette (raw) ───────────────────────────── */
+    --gs-ink-900: #1e1a36;
+    --gs-ink-700: #5f5a7a;
+    --gs-ink-500: #8f8aa8;
+    --gs-paper: #f3f0fa;
+    --gs-sheet: #fffdfc;
+    --gs-sheet-2: #f8f6fd;
+    --gs-line-200: #dcd6ec;
+    --gs-line-300: #c4bcdc;
+    --gs-line-400: #a79fc8;
+    --gs-violet-100: #ebe8fb;
+    --gs-violet-600: #4a3fd8;
+    --gs-violet-700: #30289a;
+    --gs-violet-800: #251f7a;
+    --gs-coral-100: #ffe9e3;
+    --gs-coral-500: #ff7b5c;
+    --gs-coral-700: #c8412a;
+    --gs-saffron-100: #fdf3d6;
+    --gs-saffron-500: #f6c453;
+    --gs-saffron-800: #8a5d00;
+    --gs-mint-100: #e3f5ef;
+    --gs-mint-500: #83d3bb;
+    --gs-mint-700: #2a7f68;
+    --gs-white: #ffffff;
+    --gs-ink-rgb: 30, 26, 54; /* for rgba(var(--gs-ink-rgb), a) in shadows/overlays */
+
+    /* ── Semantic (what components use) ─────────── */
+    --gs-text: var(--gs-ink-900);
+    --gs-text-secondary: var(--gs-ink-700);
+    --gs-text-disabled: var(--gs-ink-500);
+    --gs-line: var(--gs-line-200);
+    --gs-control-line: var(--gs-line-300);
+    --gs-control-line-hover: var(--gs-line-400);
+    --gs-surface: var(--gs-sheet);
+    --gs-surface-muted: var(--gs-sheet-2);
+    --gs-workspace: var(--gs-paper);
+    --gs-hover: var(--gs-violet-100);
+    --gs-accent: var(--gs-violet-600);
+    --gs-accent-hover: var(--gs-violet-700);
+    --gs-accent-pressed: var(--gs-violet-800);
+    --gs-accent-soft: var(--gs-violet-100);
+    --gs-on-accent: var(--gs-white);
+    --gs-danger: var(--gs-coral-700);
+    --gs-danger-soft: var(--gs-coral-100);
+    --gs-warning: var(--gs-saffron-800);
+    --gs-warning-soft: var(--gs-saffron-100);
+    --gs-success: var(--gs-mint-700);
+    --gs-success-soft: var(--gs-mint-100);
+    --gs-focus-color: var(--gs-violet-600);
+    --gs-focus: 0 0 0 2px var(--gs-surface), 0 0 0 4px var(--gs-focus-color);
+
+    /* ── Typography ─────────────────────────────── */
+    --gs-font: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --gs-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --gs-text-11: 11px;
+    --gs-text-13: 13px;
+    --gs-text-15: 15px;
+    --gs-text-18: 18px;
+    --gs-text-24: 24px;
+    --gs-text-32: 32px;
+    --gs-text-hero: clamp(2.8rem, 6vw, 5rem);
+    --gs-weight-regular: 400;
+    --gs-weight-medium: 500;
+    --gs-weight-strong: 700;
+    --gs-line-height-body: 1.45;
+    --gs-line-height-tight: 1.2;
+    --gs-tracking-kicker: 0.06em;
+
+    /* ── Space, size, radius ────────────────────── */
     --gs-space-1: 4px;
     --gs-space-2: 8px;
     --gs-space-3: 12px;
     --gs-space-4: 16px;
     --gs-space-5: 24px;
     --gs-space-6: 32px;
+    --gs-space-7: 40px;
+    --gs-control-height-sm: 28px;
     --gs-control-height: 32px;
+    --gs-control-height-lg: 40px;
     --gs-touch-target: 44px;
     --gs-icon-size: 16px;
     --gs-icon-stroke: 1.5;
-    --gs-rail-width: 56px;
-    --gs-library-width: 331.04px;
-    --gs-footer-height: 40px;
-    --gs-text-11: 11px;
-    --gs-text-13: 13px;
-    --gs-text-15: 15px;
-    --gs-text-18: 18px;
-    --gs-text-24: 24px;
-    --gs-font-display: Georgia, 'Times New Roman', serif;
-    --gs-success-soft: var(--fluent-colorPaletteGreenBackground1);
-    --gs-warning-soft: var(--fluent-colorPaletteDarkOrangeBackground1);
-    --gs-space-7: 40px;
-    --gs-line-height-body: var(--fluent-lineHeightBase300);
-    --gs-control-line-hover: var(--fluent-colorNeutralStroke1Hover);
-    --gs-accent-pressed: var(--fluent-colorBrandBackgroundPressed);
-    --gs-weight-regular: var(--fluent-fontWeightRegular);
-    --gs-weight-medium: var(--fluent-fontWeightMedium);
-    --gs-weight-strong: var(--fluent-fontWeightSemibold);
-    --gs-focus-color: var(--fluent-colorStrokeFocus2);
-  }
-}
+    --gs-radius-control: 8px;
+    --gs-radius-card: 12px;
+    --gs-radius-menu: 12px;
+    --gs-radius-dialog: 16px;
+    --gs-radius-pill: 999px;
 
-/* Homepage palette and display scale from the supplied redesign. */
-@layer tokens {
+    /* ── Elevation ──────────────────────────────── */
+    --gs-shadow-float: 0 1px 2px rgba(var(--gs-ink-rgb), 0.08), 0 6px 20px rgba(var(--gs-ink-rgb), 0.1);
+    --gs-shadow-popup: 0 1px 2px rgba(var(--gs-ink-rgb), 0.08), 0 8px 24px rgba(var(--gs-ink-rgb), 0.12);
+    --gs-shadow-dialog: 0 24px 48px -12px rgba(var(--gs-ink-rgb), 0.28);
+    --gs-shadow-artboard: 0 12px 32px -12px rgba(var(--gs-ink-rgb), 0.35);
+    --gs-shadow-brand: 4px 4px 0 var(--gs-ink-900);
+    --gs-shadow-utility: var(--gs-shadow-popup);
+
+    /* ── Motion ─────────────────────────────────── */
+    --gs-duration-feedback: 120ms;
+    --gs-duration-overlay: 200ms;
+    --gs-duration-slow: 320ms;
+    --gs-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    /* ── Layout ─────────────────────────────────── */
+    --gs-header-height: 56px;
+    --gs-footer-height: 40px;
+    --gs-rail-width: 72px;
+    --gs-panel-width: clamp(264px, 22vw, 320px);
+    --gs-dock-width: clamp(272px, 22vw, 320px);
+
+    /* ── Canvas (Konva reads these via src/vision/canvas/colors.ts) ── */
+    --gs-canvas-selection: var(--gs-violet-600);
+    --gs-canvas-guide: var(--gs-coral-500);
+    --gs-canvas-marquee-fill: rgba(74, 63, 216, 0.12);
+    --gs-canvas-marquee-stroke: var(--gs-violet-600);
+    --gs-canvas-highlighter: var(--gs-saffron-500);
+    --gs-canvas-pen: var(--gs-ink-900);
+    --gs-canvas-dots: rgba(var(--gs-ink-rgb), 0.07);
+
+    /* ── Z-index (unchanged) ────────────────────── */
+    --gs-z-canvas: 0;
+    --gs-z-panel: 10;
+    --gs-z-float: 20;
+    --gs-z-popover: 30;
+    --gs-z-modal: 40;
+    --gs-z-picker: 35;
+    --gs-z-tooltip: 50;
+
+    /* ── Color picker constants (unchanged) ─────── */
+    --gs-picker-black: #000;
+    --gs-picker-white: #fff;
+    --gs-picker-spectrum: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  }
+
+  /* Reduced motion: collapse the duration tokens (no priority overrides needed). */
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --gs-duration-feedback: 0.01ms;
+      --gs-duration-overlay: 0.01ms;
+      --gs-duration-slow: 0.01ms;
+    }
+  }
+
+  /* Homepage aliases. Thin pass-through so home.css keeps working; migrate it
+     to --gs-* then delete this block. */
   .home-page {
-    --hp-paper: #f3f0fa;
-    --hp-sheet: #fffdfc;
-    --hp-ink: #1e1a36;
-    --hp-ink-soft: #5f5a7a;
-    --hp-line: #dcd6ec;
-    --hp-violet: #4a3fd8;
-    --hp-violet-deep: #30289a;
-    --hp-coral: #ff7b5c;
-    --hp-coral-deep: #c8412a;
-    --hp-saffron: #f6c453;
-    --hp-mint: #83d3bb;
-    --hp-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-    --hp-body: 'DM Sans', var(--gs-font, system-ui), sans-serif;
+    --hp-paper: var(--gs-paper);
+    --hp-sheet: var(--gs-sheet);
+    --hp-ink: var(--gs-ink-900);
+    --hp-ink-soft: var(--gs-ink-700);
+    --hp-line: var(--gs-line-200);
+    --hp-violet: var(--gs-violet-600);
+    --hp-violet-deep: var(--gs-violet-700);
+    --hp-coral: var(--gs-coral-500);
+    --hp-coral-deep: var(--gs-coral-700);
+    --hp-saffron: var(--gs-saffron-500);
+    --hp-mint: var(--gs-mint-500);
+    --hp-display: var(--gs-font-display);
+    --hp-body: var(--gs-font);
+    /* Keep the existing --hp-palette-* and --hp-type-* lines exactly as they are. */
     --hp-palette-1: rgba(30, 26, 54, 0.07);
     --hp-palette-2: #fff;
     --hp-palette-3: rgba(30, 26, 54, 0.5);
