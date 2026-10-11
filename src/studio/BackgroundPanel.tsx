@@ -1,3 +1,4 @@
+import { Button } from './ui/Button';
 import { ColorPicker } from './ColorPicker';
 import type { EditorAdapter } from '../vision/contracts';
 
@@ -29,7 +30,7 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
         <span>Background preview</span>
       </div>
       <div className="vs-segmented background-modes" aria-label="Background style">
-        <button
+        <Button
           className={!document.gradient ? 'is-active' : ''}
           aria-pressed={!document.gradient}
           onClick={() =>
@@ -37,8 +38,8 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
           }
         >
           Solid color
-        </button>
-        <button
+        </Button>
+        <Button
           className={document.gradient ? 'is-active' : ''}
           aria-pressed={!!document.gradient}
           onClick={() =>
@@ -50,14 +51,14 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
           }
         >
           Gradient
-        </button>
+        </Button>
       </div>
       <div className="panel-section-heading">
         <h3>{document.gradient ? 'Start color' : 'Choose a color'}</h3>
       </div>
       <div className="background-color-grid">
         {COLORS.map(([color, name]) => (
-          <button
+          <Button
             key={color}
             aria-label={`Set background ${color}`}
             aria-pressed={document.color.toLowerCase() === color}
@@ -65,7 +66,7 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
           >
             <span style={{ background: color }} />
             <span>{name}</span>
-          </button>
+          </Button>
         ))}
       </div>
       <label className="background-color-label">

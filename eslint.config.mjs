@@ -27,4 +27,23 @@ export default tseslint.config(
     plugins: { 'react-hooks': hooks },
     rules: { 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'warn' },
   },
+  {
+    files: ['src/studio/**/*.tsx', 'src/App.tsx'],
+    ignores: ['src/studio/ui/Button.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXOpeningElement[name.name='button'], JSXSelfClosingElement[name.name='button']",
+          message: 'Use the shared Button or IconButton primitive.',
+        },
+        {
+          selector:
+            "JSXOpeningElement[name.name=/^[a-z]/] > JSXAttribute[name.name='title'], JSXSelfClosingElement[name.name=/^[a-z]/] > JSXAttribute[name.name='title']",
+          message: 'Use data-tip with TooltipProvider instead of a native title tooltip.',
+        },
+      ],
+    },
+  },
 );

@@ -121,7 +121,7 @@ export function KonvaStage({
   const editingItem = document.items.find((item) => item.id === editing?.id);
   const finishTextEditing = (save: boolean) => {
     if (save && editing && editingItem && editing.text !== editingItem.text) {
-      adapter.patchItems([{ id: editing.id, patch: { text: editing.text, textRuns: undefined } }]);
+      adapter.patchItems([{ id: editing.id, patch: { text: editing.text } }]);
     }
     setEditing(null);
   };
@@ -500,6 +500,28 @@ export function KonvaStage({
       height: Math.abs(start.y - point.y),
     });
   };
+  // Preview and release use the same hit test and scoped selection units.
+  const marqueeItems = (box: Bounds, previous: string[] = []) => {
+    const keys = new Set(
+      document.items
+        .filter((item) => {
+          if (item.hidden || !adapter.inScope(item)) return false;
+          const node = stageRef.current?.findOne(`#${item.id}`);
+          return (
+            previous.includes(item.id) ||
+            (node && Konva.Util.haveIntersection(box, node.getClientRect()))
+          );
+        })
+        .map((item) => adapter.unitKey(item)),
+    );
+    return document.items.filter(
+      (item) => !item.hidden && adapter.inScope(item) && keys.has(adapter.unitKey(item)),
+    );
+  };
+  const marqueePreview =
+    selectionRect && (selectionRect.width > 3 || selectionRect.height > 3)
+      ? marqueeItems(selectionRect, marquee.current?.previous)
+      : [];
   const finishMarquee = () => {
     if (cropDrag.current) {
       cropDrag.current = null;
@@ -531,12 +553,7 @@ export function KonvaStage({
         width: Math.abs(start.x - point.x),
         height: Math.abs(start.y - point.y),
       };
-      const ids = document.items
-        .filter((item) => {
-          const node = stageRef.current?.findOne(`#${item.id}`);
-          return node && Konva.Util.haveIntersection(box, node.getClientRect());
-        })
-        .map((item) => item.id);
+      const ids = marqueeItems(box).map((item) => item.id);
       adapter.select([...start.previous, ...ids]);
     }
     marquee.current = null;
@@ -744,6 +761,7 @@ export function KonvaStage({
       data-page-left={left}
       data-page-top={top}
       data-scale={scale}
+      data-selection-preview-count={marqueePreview.length}
       onDragOver={(event) => {
         if (
           event.dataTransfer.types.includes(GRATITUDE_ASSET_DRAG_TYPE) ||
@@ -913,13 +931,7 @@ export function KonvaStage({
             shadowOffsetY={8}
             listening={false}
           />
-          <Group
-            id="artboard"
-            x={left}
-            y={top}
-            scaleX={scale}
-            scaleY={scale}
-          >
+          <Group id="artboard" x={left} y={top} scaleX={scale} scaleY={scale}>
             <Rect
               id="page-background"
               width={document.width}
@@ -1042,6 +1054,20 @@ export function KonvaStage({
               listening={false}
             />
           )}
+          {marqueePreview.map((item) => (
+            <Rect
+              key={`marquee-preview-${item.id}`}
+              x={left + item.x * scale}
+              y={top + item.y * scale}
+              width={item.width * scale}
+              height={item.height * scale}
+              rotation={item.rotation}
+              stroke="#8b3dff"
+              strokeWidth={2}
+              fill="#8943e420"
+              listening={false}
+            />
+          ))}
           <Transformer
             ref={transformer}
             rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}

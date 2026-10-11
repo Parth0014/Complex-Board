@@ -25,6 +25,7 @@ import { imagePdf, imagesPdf } from '../pdf';
 import { renderPage } from './renderPage';
 import { updateConnectors } from '../connectors';
 import { loadEditorFonts, fontFamily } from '../fonts';
+import { shiftRuns } from '../text';
 import {
   loadMedia,
   saveMedia,
@@ -889,8 +890,9 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.items((items) =>
       items.map((item) => {
         const patch = { ...patches.find((patch) => patch.id === item.id)?.patch };
-        if (patch.text !== undefined && patch.text !== item.text && !('textRuns' in patch))
-          patch.textRuns = undefined;
+        if (patch.text !== undefined && patch.text !== item.text && !('textRuns' in patch)) {
+          patch.textRuns = item.textRuns ? shiftRuns(item.textRuns, item.text || '', patch.text) : undefined;
+        }
         if (item.locked)
           return {
             ...item,

@@ -20,6 +20,8 @@ export function fontFamily(id?: string): string {
   return editorFonts[canonicalFontId(id)];
 }
 export async function loadEditorFonts(ownerWindow: Window & typeof globalThis) {
+  const fontLoads: Promise<void>[] = [];
+
   for (const [assetPath, url] of Object.entries(
     import.meta.glob<string>('../../public/vision-board-assets/fonts/*.woff2', {
       eager: true,
@@ -40,16 +42,25 @@ export async function loadEditorFonts(ownerWindow: Window & typeof globalThis) {
       weight: match[2],
       style: match[3],
     });
-    await font.load();
-    ownerWindow.document.fonts.add(font);
+    fontLoads.push(
+      font.load().then((loaded) => {
+        ownerWindow.document.fonts.add(loaded);
+      }),
+    );
   }
+
   for (const [family, url] of [
     ['Assistant', assistant],
     ['Virgil', virgil],
     ['Cascadia Code', mono],
   ]) {
     const font = new ownerWindow.FontFace(family, `url(${url})`);
-    await font.load();
-    ownerWindow.document.fonts.add(font);
+    fontLoads.push(
+      font.load().then((loaded) => {
+        ownerWindow.document.fonts.add(loaded);
+      }),
+    );
   }
+
+  await Promise.all(fontLoads);
 }

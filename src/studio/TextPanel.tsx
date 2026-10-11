@@ -1,3 +1,4 @@
+import { Button } from './ui/Button';
 import { VISION_TEXT_PRESETS } from '../vision/typography';
 import type { VisionTextPreset } from '../vision/contracts';
 import { fontFamily } from '../vision/fonts';
@@ -13,11 +14,11 @@ export const TextPanel = ({ onInsertText }: TextPanelProps) => (
     <ul className="text-panel__list">
       {VISION_TEXT_PRESETS.map((preset) => (
         <li key={preset.id}>
-          <button
+          <Button
             type="button"
             className="text-panel__item"
             onClick={() => onInsertText(preset)}
-            title={`Add ${preset.label}`}
+            data-tip={`Add ${preset.label}`}
           >
             <span className="text-panel__label">{preset.label}</span>
             <span
@@ -30,7 +31,7 @@ export const TextPanel = ({ onInsertText }: TextPanelProps) => (
             <span className="text-panel__add" aria-hidden="true">
               <PlusIcon />
             </span>
-          </button>
+          </Button>
         </li>
       ))}
     </ul>

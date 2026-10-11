@@ -1,0 +1,140 @@
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+  body {
+    font-family: var(--gs-font);
+    font-size: var(--gs-text-13);
+    color: var(--gs-text);
+    background: var(--gs-workspace);
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  .gs-button {
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    min-height: var(--gs-control-height);
+    padding: var(--gs-space-1) var(--gs-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+  }
+  .gs-button:disabled {
+    cursor: not-allowed;
+  }
+  .gs-button--primary,
+  .gs-button--secondary,
+  .gs-button--danger {
+    min-height: var(--gs-control-height);
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-control);
+    padding: var(--gs-space-2) var(--gs-space-3);
+  }
+  .gs-button--primary {
+    background: var(--gs-accent);
+    color: var(--gs-on-accent);
+    border-color: transparent;
+  }
+  .gs-button--primary:hover:not(:disabled) {
+    background: var(--gs-accent-hover);
+  }
+  .gs-button--secondary {
+    background: var(--gs-surface);
+  }
+  .gs-button--danger {
+    color: var(--gs-danger);
+    background: var(--gs-danger-soft);
+  }
+  .gs-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--gs-control-height);
+    min-height: var(--gs-control-height);
+  }
+  :where(button, summary, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--gs-accent);
+    outline-offset: 2px;
+  }
+}
+@layer components {
+  .gs-popover {
+    position: fixed;
+    z-index: var(--gs-z-popover);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    overflow: auto;
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    font: var(--gs-text-13)/1.5 var(--gs-font);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu);
+    box-shadow: var(--gs-shadow-popup);
+    padding: var(--gs-space-2);
+  }
+  .gs-popover.vs-actionbar__popover {
+    transform: none;
+  }
+  .gs-submenu-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: var(--gs-space-2);
+    text-align: left;
+  }
+  .gs-submenu-trigger[aria-expanded='true'] {
+    background: var(--gs-hover);
+  }
+  .gs-submenu {
+    width: 220px;
+  }
+  .gs-submenu button {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    width: 100%;
+    padding: var(--gs-space-2);
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    text-align: left;
+  }
+  .gs-submenu button:hover:not(:disabled) {
+    background: var(--gs-hover);
+  }
+  .gs-submenu button:disabled {
+    color: var(--gs-text-disabled);
+  }
+  .gs-submenu kbd {
+    margin-left: auto;
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
+}
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0s;
+      transition-duration: 0s;
+      scroll-behavior: auto;
+    }
+  }
+}

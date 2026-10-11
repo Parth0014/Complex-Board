@@ -1,3 +1,4 @@
+import { Button } from './ui/Button';
 import React, { useState } from 'react';
 
 import { ArrowRightIcon } from './icons';
@@ -80,7 +81,7 @@ const TemplatePreview = ({ template }: { template: VisionTemplate }) =>
         height="78"
         rx="6"
         fill={template.backgroundColor}
-        stroke="var(--vs-line)"
+        stroke="var(--gs-line)"
         strokeWidth="1.5"
       />
       {template.layout.slots.map((slot) => (
@@ -132,7 +133,7 @@ export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
             </div>
             <div className="templates-panel__meta">
               <h3>{template.title}</h3>
-              <button
+              <Button
                 type="button"
                 className="templates-panel__apply"
                 disabled={busy}
@@ -150,7 +151,7 @@ export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
                 }}
               >
                 Use template <ArrowRightIcon />
-              </button>
+              </Button>
             </div>
           </li>
         ))}

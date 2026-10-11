@@ -1,11 +1,14 @@
+import { Popover } from './ui/Popover';
+import { Button, IconButton } from './ui/Button';
 import { editorFonts } from '../vision/fonts';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
 import { ColorPicker } from './ColorPicker';
 import {
   BoldIcon,
   ItalicIcon,
   UnderlineIcon,
+  StrikeIcon,
   ChevronDownIcon,
   ContrastIcon,
   SlidersIcon,
@@ -14,6 +17,8 @@ import {
 type Props = {
   adapter: KonvaCanvasAdapter;
   onEditStyle: () => void;
+  formattingTrigger: RefObject<HTMLButtonElement | null>;
+  formattingOpen: boolean;
   onReplaceImage: () => void;
   replacingImage: boolean;
 };
@@ -47,11 +52,10 @@ function TextSize({
   };
   return (
     <label className="vs-actionbar__size">
-      
       <input
         type="number"
         aria-label="Text size in points"
-        title="Text size in points. Press Enter to apply."
+        data-tip="Text size in points. Press Enter to apply."
         min={8}
         max={240}
         step={1}
@@ -72,7 +76,14 @@ function TextSize({
   );
 }
 
-export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replacingImage }: Props) {
+export function SelectionToolbar({
+  adapter,
+  onEditStyle,
+  formattingTrigger,
+  formattingOpen,
+  onReplaceImage,
+  replacingImage,
+}: Props) {
   const selection = adapter.getSelection();
   const selected = adapter.history.document.items.filter((entry) =>
     selection.ids.includes(entry.id),
@@ -82,27 +93,7 @@ export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replaci
   const mixedOpacity = selected.some((entry) => entry.opacity !== selected[0]?.opacity);
   const opacity = Math.round((selected[0]?.opacity ?? 1) * 100);
   const [menu, setMenu] = useState<'opacity' | null>(null);
-  const root = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const doc = adapter.ownerWindow.document;
-    const outside = (event: PointerEvent) => {
-      if (
-        !root.current?.contains(event.target as Node) &&
-        !(event.target as HTMLElement)?.closest?.('.studio-color-popover')
-      )
-        setMenu(null);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenu(null);
-    };
-    doc.addEventListener('pointerdown', outside);
-    doc.addEventListener('keydown', escape);
-    return () => {
-      doc.removeEventListener('pointerdown', outside);
-      doc.removeEventListener('keydown', escape);
-    };
-  }, [adapter]);
+  const opacityTrigger = useRef<HTMLButtonElement>(null);
   if (!selected.length) return null;
   const type =
     selected.length > 1
@@ -116,7 +107,7 @@ export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replaci
             : 'Drawing';
 
   return (
-    <div className="vs-actionbar" ref={root}>
+    <div className="vs-actionbar">
       <span className="vs-actionbar__identity" aria-label={`Selected: ${type}`}>
         {type}
       </span>
@@ -150,47 +141,143 @@ export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replaci
             onCommit={(fontSize) => adapter.updateSelection({ fontSize })}
           />
           {!anyLocked && (
-            <div className="vs-actionbar__color" title="Change only the selected text color">
-              
+            <div className="vs-actionbar__color" data-tip="Change only the selected text color">
               <ColorPicker
                 label="Text color"
                 value={item.color || '#33272b'}
-                onChange={(value) => adapter.patchItems([{ id: item.id, patch: { color: value } }])}
+                onChange={(value) =>
+                  adapter.patchItems([
+                    {
+                      id: item.id,
+                      patch: {
+                        color: value,
+                        ...(item.textRuns?.length
+                          ? {
+                              textRuns: item.textRuns.map((r) => ({
+                                ...r,
+                                color: undefined,
+                              })),
+                            }
+                          : {}),
+                      },
+                    },
+                  ])
+                }
               />
             </div>
           )}
-          <button
+          <IconButton
             className={`vs-actionbar__button vs-actionbar__format${item.bold ? ' is-active' : ''}`}
             aria-label="Bold"
-            title="Bold selected text"
+            data-tip="Bold selected text"
             aria-pressed={!!item.bold}
             disabled={anyLocked}
-            onClick={() => adapter.patchItems([{ id: item.id, patch: { bold: !item.bold } }])}
+            onClick={() => {
+              const nextBold = !item.bold;
+              adapter.patchItems([
+                {
+                  id: item.id,
+                  patch: {
+                    bold: nextBold,
+                    ...(item.textRuns?.length
+                      ? {
+                          textRuns: item.textRuns.map((r) => ({
+                            ...r,
+                            bold: nextBold,
+                          })),
+                        }
+                      : {}),
+                  },
+                },
+              ]);
+            }}
           >
             <BoldIcon />
-          </button>
-          <button
+          </IconButton>
+          <IconButton
             className={`vs-actionbar__button vs-actionbar__format${item.italic ? ' is-active' : ''}`}
             aria-label="Italic"
-            title="Italicize selected text"
+            data-tip="Italicize selected text"
             aria-pressed={!!item.italic}
             disabled={anyLocked}
-            onClick={() => adapter.patchItems([{ id: item.id, patch: { italic: !item.italic } }])}
+            onClick={() => {
+              const nextItalic = !item.italic;
+              adapter.patchItems([
+                {
+                  id: item.id,
+                  patch: {
+                    italic: nextItalic,
+                    ...(item.textRuns?.length
+                      ? {
+                          textRuns: item.textRuns.map((r) => ({
+                            ...r,
+                            italic: nextItalic,
+                          })),
+                        }
+                      : {}),
+                  },
+                },
+              ]);
+            }}
           >
             <ItalicIcon />
-          </button>
-          <button
+          </IconButton>
+          <IconButton
             className={`vs-actionbar__button vs-actionbar__format${item.underline ? ' is-active' : ''}`}
             aria-label="Underline"
-            title="Underline selected text"
+            data-tip="Underline selected text"
             aria-pressed={!!item.underline}
             disabled={anyLocked}
-            onClick={() =>
-              adapter.patchItems([{ id: item.id, patch: { underline: !item.underline } }])
-            }
+            onClick={() => {
+              const nextUnderline = !item.underline;
+              adapter.patchItems([
+                {
+                  id: item.id,
+                  patch: {
+                    underline: nextUnderline,
+                    ...(item.textRuns?.length
+                      ? {
+                          textRuns: item.textRuns.map((r) => ({
+                            ...r,
+                            underline: nextUnderline,
+                          })),
+                        }
+                      : {}),
+                  },
+                },
+              ]);
+            }}
           >
             <UnderlineIcon />
-          </button>
+          </IconButton>
+          <IconButton
+            className={`vs-actionbar__button vs-actionbar__format${item.strike ? ' is-active' : ''}`}
+            aria-label="Strikethrough"
+            data-tip="Strikethrough selected text"
+            aria-pressed={!!item.strike}
+            disabled={anyLocked}
+            onClick={() => {
+              const nextStrike = !item.strike;
+              adapter.patchItems([
+                {
+                  id: item.id,
+                  patch: {
+                    strike: nextStrike,
+                    ...(item.textRuns?.length
+                      ? {
+                          textRuns: item.textRuns.map((r) => ({
+                            ...r,
+                            strike: nextStrike,
+                          })),
+                        }
+                      : {}),
+                  },
+                },
+              ]);
+            }}
+          >
+            <StrikeIcon />
+          </IconButton>
           <span className="vs-actionbar__separator" aria-hidden="true" />
         </>
       )}
@@ -223,27 +310,27 @@ export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replaci
         </div>
       )}
       {item?.kind === 'asset' && item.asset?.provider !== 'curated-v1' && (
-        <button
+        <Button
           className="vs-actionbar__button"
           disabled={anyLocked}
           onClick={() => adapter.startImageCrop()}
         >
           Crop
-        </button>
+        </Button>
       )}
       {item && (
-        <button
+        <Button
           className="vs-actionbar__button"
           disabled={anyLocked}
           onClick={() => adapter.patchItems([{ id: item.id, patch: { flipX: !item.flipX } }])}
         >
           Flip
-        </button>
+        </Button>
       )}
       {item?.kind === 'shape' && !anyLocked && (
         <div
           className="vs-actionbar__color"
-          title="Set a solid fill color. Replaces any gradient fill."
+          data-tip="Set a solid fill color. Replaces any gradient fill."
         >
           <span>Solid fill</span>
           <ColorPicker
@@ -258,19 +345,22 @@ export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replaci
         </div>
       )}
       {item?.kind === 'asset' && item.asset?.provider !== 'curated-v1' && (
-        <button
+        <Button
           className="vs-actionbar__button"
           disabled={anyLocked || replacingImage || !!adapter.cropDraft || !!adapter.originalPreview}
           onClick={onReplaceImage}
         >
           {replacingImage ? 'Replacing…' : 'Replace image'}
-        </button>
+        </Button>
       )}
       {item && (
-        <button
+        <Button
+          ref={formattingTrigger}
+          aria-expanded={formattingOpen}
+          aria-haspopup="dialog"
           className="vs-actionbar__button vs-actionbar__button--primary"
           disabled={anyLocked}
-          title={
+          data-tip={
             anyLocked
               ? 'Unlock the selection to edit its appearance'
               : 'Open detailed properties; each control edits only its named property'
@@ -283,20 +373,23 @@ export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replaci
             : item.kind === 'asset'
               ? 'Image effects'
               : 'Appearance'}
-        </button>
+        </Button>
       )}
       <div className="vs-actionbar__menu">
-        <button
+        <Button
           className="vs-actionbar__button"
           aria-haspopup="true"
+          aria-label="Object opacity"
+          ref={opacityTrigger}
           aria-expanded={menu === 'opacity'}
           onClick={() => setMenu((current) => (current === 'opacity' ? null : 'opacity'))}
         >
-          <ContrastIcon /> {mixedOpacity ? 'Mixed' : `${opacity}%`}{' '}
-          <ChevronDownIcon />
-        </button>
+          <ContrastIcon /> {mixedOpacity ? 'Mixed' : `${opacity}%`} <ChevronDownIcon />
+        </Button>
         {menu === 'opacity' && (
-          <div
+          <Popover
+            anchor={opacityTrigger}
+            onDismiss={() => setMenu(null)}
             className="vs-actionbar__popover vs-actionbar__popover--small"
             role="group"
             aria-label="Opacity"
@@ -323,7 +416,7 @@ export function SelectionToolbar({ adapter, onEditStyle, onReplaceImage, replaci
               />
               <output>{mixedOpacity ? 'Mixed' : `${opacity}%`}</output>
             </div>
-          </div>
+          </Popover>
         )}
       </div>
     </div>

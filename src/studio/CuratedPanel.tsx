@@ -1,3 +1,4 @@
+import { Button } from './ui/Button';
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { matchesElementSearch } from '../assets/elementSearch';
@@ -36,9 +37,9 @@ export function CuratedPanel({
           }}
         />
         {search && (
-          <button type="button" aria-label="Clear element search" onClick={() => setSearch('')}>
+          <Button type="button" aria-label="Clear element search" onClick={() => setSearch('')}>
             <X size={16} aria-hidden="true" />
-          </button>
+          </Button>
         )}
       </div>
       <label className="elements-theme-label" htmlFor="elements-theme">
@@ -75,18 +76,13 @@ export function CuratedPanel({
         return (
           <section key={theme.id} aria-label={theme.label}>
             <h3>{theme.label}</h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                gap: 8,
-              }}
-            >
+            <div className="elements-grid">
               {themeAssets.map((asset) => (
-                <button
+                <Button
                   key={asset.id}
                   type="button"
-                  title={asset.title}
+                  className="elements-card"
+                  data-tip={asset.title}
                   draggable
                   onDragStart={(event) =>
                     event.dataTransfer.setData(GRATITUDE_ASSET_DRAG_TYPE, JSON.stringify(asset))
@@ -95,22 +91,10 @@ export function CuratedPanel({
                     setError('');
                     void adapter.insertAsset(asset).catch((error) => setError(String(error)));
                   }}
-                  style={{
-                    padding: 8,
-                    background: 'var(--vs-surface, #fff)',
-                    border: '1px solid var(--vs-border, #ddd)',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                  }}
                 >
-                  <img
-                    src={asset.previewUrl}
-                    alt={asset.title}
-                    loading="lazy"
-                    style={{ width: '100%', height: 100, objectFit: 'contain' }}
-                  />
+                  <img src={asset.previewUrl} alt={asset.title} loading="lazy" />
                   <span>{asset.title}</span>
-                </button>
+                </Button>
               ))}
             </div>
           </section>

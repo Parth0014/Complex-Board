@@ -28,7 +28,11 @@ it('keeps the new runtime independent of Excalidraw and Studio independent of Ko
         relative(root, path),
       ).toBe(false);
     }
+    // Type-only adapter contracts do not load the renderer into the UI bundle.
+    const runtimeSource = source.replace(/\bimport\s+type\s+[^;]+;/g, '');
     if (relative(root, path).startsWith('studio'))
-      expect(source, relative(root, path)).not.toMatch(/from\s*['"][^'"]*(?:konva|canvas\/)/i);
+      expect(runtimeSource, relative(root, path)).not.toMatch(
+        /from\s*['"][^'"]*(?:konva|canvas\/)/i,
+      );
   }
 });

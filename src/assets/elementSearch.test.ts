@@ -9,7 +9,9 @@ describe('element search', () => {
       expect(matchesElementSearch(love, 'love')).toBe(true);
     }
   });
-  const asset = curatedAssets.find((item) => item.id === 'vision-svg:affirmations/health-love-calm-01')!;
+  const asset = curatedAssets.find(
+    (item) => item.id === 'vision-svg:affirmations/health-love-calm-01',
+  )!;
   it('matches words in any order and ignores case and punctuation', () => {
     expect(matchesElementSearch(asset, 'GENTLY body')).toBe(true);
     expect(matchesElementSearch(asset, 'Health-Wellness')).toBe(true);

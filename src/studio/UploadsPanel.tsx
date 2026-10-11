@@ -1,3 +1,4 @@
+import { Button } from './ui/Button';
 import { useState } from 'react';
 import type { StudioAdapter } from '../vision/contracts';
 import { UploadIcon } from './icons';
@@ -66,7 +67,7 @@ export function UploadsPanel({
 
       {hasOriginal && (
         <div className="uploads-panel__actions">
-          <button
+          <Button
             className="panel-secondary-action"
             disabled={busy}
             onClick={() => {
@@ -74,7 +75,7 @@ export function UploadsPanel({
             }}
           >
             Download original
-          </button>
+          </Button>
         </div>
       )}
     </div>

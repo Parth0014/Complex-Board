@@ -2,8 +2,19 @@ import { Text } from 'react-konva';
 import Konva from 'konva';
 import type { SceneContext } from 'konva/lib/Context';
 import type { BoardItem } from '../document';
-import type { TextStyle } from '../text';
+import { isSameStyle, type TextStyle } from '../text';
 import { fontFamily } from '../fonts';
+
+let sharedCanvas: HTMLCanvasElement | null = null;
+let sharedContext: CanvasRenderingContext2D | null = null;
+
+function getMeasurementContext(ownerWindow: Window & typeof globalThis): CanvasRenderingContext2D | null {
+  if (sharedContext) return sharedContext;
+  if (!ownerWindow?.document) return null;
+  sharedCanvas = ownerWindow.document.createElement('canvas');
+  sharedContext = sharedCanvas.getContext('2d');
+  return sharedContext;
+}
 
 export function RichText({
   item,
@@ -14,7 +25,7 @@ export function RichText({
   ownerWindow: Window & typeof globalThis;
   common: Record<string, unknown>;
 }) {
-  const context = ownerWindow.document.createElement('canvas').getContext('2d');
+  const context = getMeasurementContext(ownerWindow);
   if (!context) return null;
   const font = item.fontSize || 34,
     padding = item.textPadding || 0,
@@ -60,7 +71,7 @@ export function RichText({
       index < text.length &&
       text[index] !== '\n' &&
       /\s/.test(text[index]) === space &&
-      JSON.stringify(styleAt(index)) === JSON.stringify(style)
+      isSameStyle(styleAt(index), style)
     )
       index++;
     const token = text.slice(start, index),

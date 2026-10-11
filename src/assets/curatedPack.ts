@@ -68,8 +68,7 @@ export const curatedPackProvider: AssetProvider = {
     const matches = curatedAssets.filter(
       (asset) =>
         (!query.type || asset.type === query.type) &&
-        (!query.search ||
-          matchesElementSearch(asset, query.search)),
+        (!query.search || matchesElementSearch(asset, query.search)),
     );
     const start = Number(query.cursor || 0),
       end = start + (query.limit || matches.length);

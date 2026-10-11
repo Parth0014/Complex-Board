@@ -1,3 +1,4 @@
+import { Button, IconButton } from './ui/Button';
 import { ColorPicker } from './ColorPicker';
 import { svgColors, svgColorValue } from '../vision/svgColors';
 import { useEffect, useState, useRef, type ReactNode } from 'react';
@@ -6,7 +7,7 @@ import type { BoardItem } from '../vision/document';
 import { canonicalFontId, editorFonts } from '../vision/fonts';
 import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
-import { formatRange, type TextStyle } from '../vision/text';
+import { formatRange, isRangeActive, type TextStyle } from '../vision/text';
 import { useAIStatus } from './useAIStatus';
 import {
   BringFrontIcon,
@@ -260,16 +261,30 @@ export function EditorFeatures({
   const formatText = (style: TextStyle) => {
     const start = textEditor.current?.selectionStart ?? textRange.start,
       end = textEditor.current?.selectionEnd ?? textRange.end;
-    if (item?.kind === 'text' && end > start)
+    if (item?.kind === 'text' && end > start) {
+      const runs = item.textRuns || [];
+      const patchStyle: TextStyle = { ...style };
+      for (const [key, val] of Object.entries(style) as Array<[keyof TextStyle, unknown]>) {
+        if (key === 'script') {
+          if (isRangeActive(runs, start, end, 'script', val)) {
+            patchStyle.script = 'normal';
+          }
+        } else if (typeof val === 'boolean') {
+          if (isRangeActive(runs, start, end, key, true)) {
+            (patchStyle as Record<string, unknown>)[key] = false;
+          }
+        }
+      }
       adapter.patchItems([
         {
           id: item.id,
           patch: {
-            textRuns: formatRange(item.text || '', item.textRuns || [], start, end, style),
+            textRuns: formatRange(item.text || '', runs, start, end, patchStyle),
             curve: 0,
           },
         },
       ]);
+    }
   };
   const layerDrag = (event: React.DragEvent, key: string, path: string[]) => {
     event.stopPropagation();
@@ -379,7 +394,7 @@ export function EditorFeatures({
           value={String(item?.[key] || fallback)}
           onChange={(value) => patch({ [key]: value })}
         />
-        <code style={{ fontSize: 11.5, color: 'var(--vs-mute)' }}>
+        <code style={{ fontSize: 'var(--gs-text-13)', color: 'var(--gs-text-secondary)' }}>
           {String(item?.[key] || fallback).toUpperCase()}
         </code>
       </span>
@@ -443,7 +458,7 @@ export function EditorFeatures({
           onDrop={(event) => layerDrop(event, key, path)}
         >
           {layerIcon(entry)}
-          <button
+          <Button
             className="vs-layer__name"
             data-tip={`Select ${label}`}
             aria-pressed={adapter.selectedIds.includes(key)}
@@ -453,23 +468,23 @@ export function EditorFeatures({
             }}
           >
             {label}
-          </button>
-          <button
+          </Button>
+          <Button
             className={`vs-icon-btn${entry.hidden ? ' is-off' : ''}`}
             data-tip={entry.hidden ? `Show ${label}` : `Hide ${label}`}
             aria-label={`${entry.hidden ? 'Show' : 'Hide'} ${label}`}
             onClick={() => adapter.patchItems([{ id: key, patch: { hidden: !entry.hidden } }])}
           >
             {entry.hidden ? <EyeOffIcon /> : <EyeIcon />}
-          </button>
-          <button
+          </Button>
+          <Button
             className={`vs-icon-btn${entry.locked ? '' : ' is-off'}`}
             data-tip={entry.locked ? 'Unlock layer' : 'Lock layer'}
             aria-label={`${entry.locked ? 'Unlock' : 'Lock'} layer`}
             onClick={() => adapter.patchItems([{ id: key, patch: { locked: !entry.locked } }])}
           >
             {entry.locked ? <LockIcon /> : <UnlockIcon />}
-          </button>
+          </Button>
         </div>
       );
     });
@@ -484,7 +499,7 @@ export function EditorFeatures({
       <div className="vs-inspector__tabs">
         <div className="vs-segmented" role="toolbar" aria-label="Editor panels">
           {(['style', 'layers'] as const).map((id) => (
-            <button
+            <Button
               key={id}
               data-tip={id === 'style' ? 'Style the selected object' : 'Arrange layers'}
               aria-pressed={(panel ?? 'style') === id}
@@ -493,7 +508,7 @@ export function EditorFeatures({
             >
               {id === 'style' ? <SlidersIcon /> : <LayersIcon />}
               {id[0].toUpperCase() + id.slice(1)}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -511,14 +526,14 @@ export function EditorFeatures({
                 : 'Organize what is in front, behind, grouped or locked.'}
             </p>
           </div>
-          <button
+          <IconButton
             className="vs-icon-btn"
             data-tip="Close panel"
             aria-label="Close editor panel"
             onClick={() => setPanel(null)}
           >
             <CloseIcon />
-          </button>
+          </IconButton>
         </div>
 
         {error && (
@@ -539,18 +554,24 @@ export function EditorFeatures({
         {(panel ?? 'style') === 'layers' && (
           <>
             <Sec title="Layer stack" open icon={<LayersIcon />}>
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-ink-2)' }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 'var(--gs-text-13)',
+                  color: 'var(--gs-text-secondary)',
+                }}
+              >
                 Top layers appear first. Expand a group to edit its members. Drag a member or group
                 to reorder among its siblings.
               </p>
               <div className="vs-layers">{groups([])}</div>
               <div
                 style={{
-                  fontSize: 12,
+                  fontSize: 'var(--gs-text-13)',
                   fontWeight: 600,
-                  color: 'var(--vs-mute)',
+                  color: 'var(--gs-text-secondary)',
                   padding: '8px 10px',
-                  background: 'var(--vs-panel-2)',
+                  background: 'var(--gs-surface-muted)',
                   borderRadius: 10,
                 }}
               >
@@ -560,24 +581,24 @@ export function EditorFeatures({
             <Sec title="Arrange" icon={<BringFrontIcon />}>
               <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
                 {(['forward', 'backward', 'front', 'back'] as const).map((position) => (
-                  <button
+                  <Button
                     key={position}
                     disabled={!adapter.selectedIds.length}
                     onClick={() => adapter.arrangeSelection(position)}
                   >
                     {position[0].toUpperCase() + position.slice(1)}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </Sec>
             {adapter.groupScope.length > 0 && (
-              <button
+              <Button
                 className="vs-btn vs-btn--light"
                 style={{ justifyContent: 'center' }}
                 onClick={() => adapter.exitGroup()}
               >
                 <UndoIcon /> Exit group ({adapter.groupScope.length})
-              </button>
+              </Button>
             )}
           </>
         )}
@@ -618,7 +639,7 @@ export function EditorFeatures({
                       </label>
                     ))}
                   </div>
-                  <button
+                  <Button
                     className="vs-btn vs-btn--light"
                     disabled={
                       item.locked ||
@@ -628,7 +649,7 @@ export function EditorFeatures({
                     onClick={() => adapter.fitObjectBounds(item.id)}
                   >
                     Fit bounds to content
-                  </button>
+                  </Button>
                 </Sec>
               )}
               {item.kind === 'text' && (
@@ -640,7 +661,7 @@ export function EditorFeatures({
                       ref={textEditor}
                       aria-label="Styled text"
                       value={item.text || ''}
-                      onChange={(event) => patch({ text: event.target.value, textRuns: undefined })}
+                      onChange={(event) => patch({ text: event.target.value })}
                       onSelect={(event) =>
                         setTextRange({
                           start: event.currentTarget.selectionStart,
@@ -671,46 +692,52 @@ export function EditorFeatures({
                     {color('Text color', 'color', '#222222')}
                   </div>
                   <Sec title="Advanced text" open={false}>
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-mute)' }}>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: 'var(--gs-text-13)',
+                        color: 'var(--gs-text-secondary)',
+                      }}
+                    >
                       Select a range above, then apply formatting.
                     </p>
                     <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                      <button
+                      <Button
                         data-tip="Bold range"
                         aria-label="Bold text range"
                         onClick={() => formatText({ bold: true })}
                       >
                         <BoldIcon /> Bold
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Italic range"
                         aria-label="Italic text range"
                         onClick={() => formatText({ italic: true })}
                       >
                         <ItalicIcon /> Italic
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Underline range"
                         aria-label="Underline text range"
                         onClick={() => formatText({ underline: true })}
                       >
                         <UnderlineIcon /> Under
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Superscript"
                         aria-label="Superscript"
                         onClick={() => formatText({ script: 'super' })}
                       >
                         Super
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Subscript"
                         aria-label="Subscript"
                         onClick={() => formatText({ script: 'sub' })}
                       >
                         Sub
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Clear range formatting"
                         onClick={() =>
                           formatText({
@@ -723,15 +750,15 @@ export function EditorFeatures({
                         }
                       >
                         Normal
-                      </button>
+                      </Button>
                     </div>
-                    <button
+                    <Button
                       className="vs-btn vs-btn--light"
                       style={{ justifyContent: 'center' }}
                       onClick={() => patch({ textRuns: undefined })}
                     >
                       Clear range formatting
-                    </button>
+                    </Button>
                     <div className="vs-row-2">
                       <label className="vs-check">
                         <input
@@ -752,35 +779,35 @@ export function EditorFeatures({
                     </div>
                     {color('Text background', 'textBackground', '#fff3bd')}
                     <div className="vs-row-2">
-                      <button
+                      <Button
                         className="vs-btn vs-btn--light"
                         style={{ justifyContent: 'center' }}
                         onClick={() => patch({ textBackground: undefined })}
                       >
                         Clear background
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         className="vs-btn vs-btn--light"
                         style={{ justifyContent: 'center' }}
                         aria-pressed={!!item.strike}
                         onClick={() => patch({ strike: !item.strike })}
                       >
                         Strikethrough
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         className="vs-btn vs-btn--light"
                         style={{ justifyContent: 'center' }}
                         onClick={() => patch({ text: item.text?.toUpperCase() })}
                       >
                         UPPERCASE
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         className="vs-btn vs-btn--light"
                         style={{ justifyContent: 'center' }}
                         onClick={() => patch({ text: item.text?.toLowerCase() })}
                       >
                         lowercase
-                      </button>
+                      </Button>
                     </div>
                     <div className="vs-row-2">
                       {number('Font weight', 'fontWeight', 100, 900, 100)}
@@ -832,38 +859,44 @@ export function EditorFeatures({
 
                   <Sec title="Fit & crop" icon={<CropIcon />}>
                     <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                      <button
+                      <Button
                         data-tip="Fit image inside frame"
                         onClick={() => adapter.setImageFit('fit')}
                       >
                         Fit image
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Fill frame with image"
                         onClick={() => adapter.setImageFit('fill')}
                       >
                         Fill image
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Hold to preview the original"
                         onMouseDown={() => adapter.previewOriginalImage(true)}
                         onMouseUp={() => adapter.previewOriginalImage(false)}
                         onMouseLeave={() => adapter.previewOriginalImage(false)}
                       >
                         Hold for original
-                      </button>
+                      </Button>
                     </div>
                     {!crop ? (
-                      <button
+                      <Button
                         className="vs-btn vs-btn--light"
                         style={{ justifyContent: 'center' }}
                         onClick={() => adapter.startImageCrop()}
                       >
                         <CropIcon /> Edit crop
-                      </button>
+                      </Button>
                     ) : (
                       <>
-                        <p style={{ margin: 0, fontSize: 12, color: 'var(--vs-mute)' }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 'var(--gs-text-13)',
+                            color: 'var(--gs-text-secondary)',
+                          }}
+                        >
                           Drag the selected content to reposition it. Source coordinates are
                           percentages. Apply commits one edit.
                         </p>
@@ -890,30 +923,30 @@ export function EditorFeatures({
                           ))}
                         </div>
                         <div className="vs-row-2">
-                          <button
+                          <Button
                             className="vs-btn vs-btn--primary"
                             style={{ justifyContent: 'center' }}
                             onClick={() => adapter.applyCrop()}
                           >
                             <CheckIcon /> Apply crop
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             className="vs-btn vs-btn--light"
                             style={{ justifyContent: 'center' }}
                             onClick={() => adapter.cancelCrop()}
                           >
                             Cancel crop
-                          </button>
+                          </Button>
                         </div>
                       </>
                     )}
-                    <button
+                    <Button
                       className="vs-btn vs-btn--light"
                       style={{ justifyContent: 'center' }}
                       onClick={() => patch({ crop: undefined })}
                     >
                       Reset crop
-                    </button>
+                    </Button>
                   </Sec>
 
                   <Sec title="Adjustments" icon={<SlidersIcon />}>
@@ -926,13 +959,13 @@ export function EditorFeatures({
                       {number('Tint', 'tint', -100, 100)}
                     </div>
                     <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                      <button
+                      <Button
                         data-tip="Apply Mono filter"
                         onClick={() => patch({ filter: 'mono', saturation: 0, contrast: 10 })}
                       >
                         Mono
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Apply Dreamy filter"
                         onClick={() =>
                           patch({
@@ -944,8 +977,8 @@ export function EditorFeatures({
                         }
                       >
                         Dreamy
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Apply Film filter"
                         onClick={() =>
                           patch({
@@ -957,8 +990,8 @@ export function EditorFeatures({
                         }
                       >
                         Film
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Reset to original"
                         onClick={() =>
                           patch({
@@ -973,7 +1006,7 @@ export function EditorFeatures({
                         }
                       >
                         Original
-                      </button>
+                      </Button>
                     </div>
                   </Sec>
 
@@ -988,48 +1021,44 @@ export function EditorFeatures({
                           ? 'Checking image toolsâ€¦'
                           : ai.error ||
                             'Background removal needs rembg. Start rembg s, set REMBG_URL in .env, and restart the AI server.'}
-                        <button
+                        <Button
                           className="panel-secondary-action"
                           disabled={ai.checking}
                           onClick={() => void ai.refresh()}
                         >
                           Check connection
-                        </button>
+                        </Button>
                       </div>
                     )}
                     <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                      <button
+                      <Button
                         data-tip={
                           ai.status?.backgroundConfigured
                             ? 'Create a transparent cutout; keep the original for Undo'
                             : 'Set up the background removal service first'
                         }
-                        title="Remove the background using the rembg cutout service"
+
                         disabled={mediaBusy || ai.checking || !ai.status?.backgroundConfigured}
                         onClick={() => void runMedia(() => adapter.removeBackground())}
                       >
                         <ScissorsIcon /> Remove bg
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Resample image at 2Ã—"
                         disabled={mediaBusy}
                         onClick={() => void runMedia(() => adapter.upscaleImage())}
                       >
                         Resample 2Ã—
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Add image detail using the configured AI upscaler"
-                        title={
-                          ai.status?.upscaleConfigured
-                            ? 'Improve detail at twice the size'
-                            : 'Configure UPSCALE_URL and UPSCALE_TOKEN first; Resample works locally'
-                        }
+
                         disabled={mediaBusy || !ai.status?.upscaleConfigured}
                         onClick={() => void runMedia(() => adapter.upscaleAI())}
                       >
                         <WandIcon /> AI upscale 2Ã—
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Split into foreground and background layers"
                         disabled={
                           mediaBusy || !ai.status?.backgroundConfigured || !ai.status?.configured
@@ -1037,23 +1066,23 @@ export function EditorFeatures({
                         onClick={() => void runMedia(() => adapter.splitImageLayers())}
                       >
                         Split foreground/background
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Match colors from a second selected image"
                         disabled={mediaBusy || adapter.selectedIds.length !== 2}
                         onClick={() => void runMedia(() => adapter.matchImageStyle())}
                       >
                         Match reference colors
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         data-tip="Reset all source edits"
                         onClick={() => patch({ rendition: undefined, colorOverrides: undefined })}
                       >
                         <UndoIcon /> Reset source edits
-                      </button>
+                      </Button>
                     </div>
                     {mediaBusy && (
-                      <p role="status" style={{ margin: 0, fontSize: 12.5 }}>
+                      <p role="status" style={{ margin: 0, fontSize: 'var(--gs-text-13)' }}>
                         Processing imageâ€¦
                       </p>
                     )}
@@ -1104,14 +1133,14 @@ export function EditorFeatures({
                             ))}
                         </select>
                       </label>
-                      <button
+                      <Button
                         className="vs-btn vs-btn--light"
                         style={{ justifyContent: 'center' }}
                         disabled={!item.contentAsset}
                         onClick={() => adapter.detachFrameContent()}
                       >
                         Detach content
-                      </button>
+                      </Button>
                     </Sec>
                   )}
                 </Sec>
@@ -1152,14 +1181,14 @@ export function EditorFeatures({
                       </select>
                     </label>
                   </div>
-                  <button
+                  <Button
                     className="vs-btn vs-btn--light"
                     style={{ justifyContent: 'center' }}
                     disabled={!item.gradient || item.locked}
                     onClick={() => patch({ gradient: undefined })}
                   >
                     Remove gradient
-                  </button>
+                  </Button>
                   {item.kind === 'shape' && (
                     <>
                       <label className="vs-check">
@@ -1310,16 +1339,22 @@ export function EditorFeatures({
               </Sec>
               {item.connector && (
                 <Sec title="Connector" open={false} icon={<SlidersIcon />}>
-                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--vs-ink-2)' }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 'var(--gs-text-13)',
+                      color: 'var(--gs-text-secondary)',
+                    }}
+                  >
                     This arrow follows its connected objects.
                   </p>
-                  <button
+                  <Button
                     className="vs-btn vs-btn--light"
                     style={{ justifyContent: 'center' }}
                     onClick={() => patch({ connector: undefined })}
                   >
                     Detach connector
-                  </button>
+                  </Button>
                 </Sec>
               )}
             </>

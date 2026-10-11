@@ -1,3 +1,4 @@
+import { Button } from './ui/Button';
 import { useEffect, useRef, useState } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
 import { requestAI } from '../vision/aiClient';
@@ -113,17 +114,17 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         value={prompt}
         onChange={(event) => setPrompt(event.target.value)}
       />
-      <button
+      <Button
         className="panel-action"
         aria-label="Generate"
-        title={help.action}
+
         data-tip={help.action}
         disabled={busy || !prompt.trim()}
         onClick={() => void generate()}
       >
         {busy ? 'Working…' : help.action}
-      </button>
-      {busy && <button onClick={() => controller.current?.abort()}>Cancel generation</button>}
+      </Button>
+      {busy && <Button onClick={() => controller.current?.abort()}>Cancel generation</Button>}
       {busy && (
         <p className="ai-tool-help" role="status">
           {progress}
@@ -151,17 +152,17 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
               : 'Add to your board as editable text.'}
           </p>
           <div className="ai-result__actions">
-            <button className="panel-action" disabled={busy} onClick={() => void insert()}>
+            <Button className="panel-action" disabled={busy} onClick={() => void insert()}>
               Add to board
-            </button>
+            </Button>
             {result.image && (
-              <button
+              <Button
                 className="panel-secondary-action"
                 disabled={busy}
                 onClick={() => void insert(true)}
               >
                 Use as background
-              </button>
+              </Button>
             )}
           </div>
         </section>

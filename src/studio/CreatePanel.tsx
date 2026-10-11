@@ -1,3 +1,4 @@
+import { Button } from './ui/Button';
 import { useState } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
 import { ArrowRightIcon, ShapeIcon } from './icons';
@@ -33,7 +34,7 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
         </div>
         <div className="create-shape-grid" aria-label="Quick shapes">
           {SHAPES.map((shape) => (
-            <button
+            <Button
               key={shape}
               data-tip={`Add ${shape}`}
               aria-label={shape}
@@ -41,11 +42,11 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
             >
               <ShapeIcon shape={shape} />
               <span>{shape[0].toUpperCase() + shape.slice(1)}</span>
-            </button>
+            </Button>
           ))}
         </div>
         {adapter.selectedIds.length === 2 && (
-          <button
+          <Button
             className="panel-secondary-action create-connect-action"
             disabled={adapter.selectedIds.length !== 2}
             onClick={() => {
@@ -59,7 +60,7 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
           >
             Connect selected objects
             <ArrowRightIcon />
-          </button>
+          </Button>
         )}
       </section>
 
@@ -78,22 +79,22 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
           className="create-card-actions"
           style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}
         >
-          <button
+          <Button
             className="panel-action"
             style={{ height: 42, margin: 0 }}
             disabled={!card.trim()}
             onClick={() => adapter.createCard(card.trim())}
           >
             Add goal card
-          </button>
-          <button
+          </Button>
+          <Button
             className="panel-secondary-action"
             style={{ height: 42, margin: 0 }}
             disabled={!card.trim()}
             onClick={() => adapter.createCard(card.trim(), 'affirmation')}
           >
             Add affirmation
-          </button>
+          </Button>
         </div>
       </section>
     </div>

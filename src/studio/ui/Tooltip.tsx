@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useId, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-export function TooltipLayer({ ownerWindow }: { ownerWindow: Window }) {
+export function TooltipProvider({ ownerWindow }: { ownerWindow: Window }) {
+  const id = useId();
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const tip = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
@@ -15,7 +16,7 @@ export function TooltipLayer({ ownerWindow }: { ownerWindow: Window }) {
     const show = (event: Event) => {
       const node =
         (event.target as Element | null)?.nodeType === 1
-          ? (event.target as Element).closest<HTMLElement>('.vs [data-tip]')
+          ? (event.target as Element).closest<HTMLElement>('[data-tip]')
           : null;
       if (
         !node ||
@@ -26,24 +27,40 @@ export function TooltipLayer({ ownerWindow }: { ownerWindow: Window }) {
       ownerWindow.clearTimeout(timer);
       timer = ownerWindow.setTimeout(() => setTarget(node), event.type === 'focusin' ? 0 : 300);
     };
+    const leave = (event: Event) => {
+      const node = (event.target as Element | null)?.closest?.('[data-tip]');
+      if (!node?.contains((event as PointerEvent | FocusEvent).relatedTarget as Node | null))
+        hide();
+    };
     document.addEventListener('pointerover', show);
     document.addEventListener('focusin', show);
-    document.addEventListener('pointerout', hide);
-    document.addEventListener('focusout', hide);
+    document.addEventListener('pointerout', leave);
+    document.addEventListener('focusout', leave);
     document.addEventListener('scroll', hide, true);
     document.addEventListener('keydown', hide);
+    document.addEventListener('click', hide);
     ownerWindow.addEventListener('resize', hide);
     return () => {
       hide();
       document.removeEventListener('pointerover', show);
       document.removeEventListener('focusin', show);
-      document.removeEventListener('pointerout', hide);
-      document.removeEventListener('focusout', hide);
+      document.removeEventListener('pointerout', leave);
+      document.removeEventListener('focusout', leave);
       document.removeEventListener('scroll', hide, true);
       document.removeEventListener('keydown', hide);
+      document.removeEventListener('click', hide);
       ownerWindow.removeEventListener('resize', hide);
     };
   }, [ownerWindow]);
+  useEffect(() => {
+    if (!target) return;
+    const previous = target.getAttribute('aria-describedby');
+    target.setAttribute('aria-describedby', [previous, id].filter(Boolean).join(' '));
+    return () => {
+      if (previous) target.setAttribute('aria-describedby', previous);
+      else target.removeAttribute('aria-describedby');
+    };
+  }, [target, id]);
   useLayoutEffect(() => {
     if (!target || !tip.current) return;
     const anchor = target.getBoundingClientRect();
@@ -62,7 +79,7 @@ export function TooltipLayer({ ownerWindow }: { ownerWindow: Window }) {
   }, [target, ownerWindow]);
   return target
     ? createPortal(
-        <div ref={tip} className="vs-tooltip" role="tooltip" style={position}>
+        <div id={id} ref={tip} className="vs-tooltip" role="tooltip" style={position}>
           {target.dataset.tip}
         </div>,
         ownerWindow.document.body,
