@@ -1,6 +1,14 @@
 import { ZoomControls } from '../studio/chrome/ZoomControls';
 import { Button } from '../studio/ui/Button';
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { createPortal } from 'react-dom';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
 import { KonvaStage } from '../vision/canvas/KonvaStage';
@@ -10,6 +18,7 @@ import { ContextActions } from '../studio/ContextActions';
 import { Popover } from '../studio/ui/Popover';
 import { useMenuPlacement } from '../studio/useMenuPlacement';
 import { EditorFeatures, type EditorPanel } from '../studio/EditorFeatures';
+import { selectedQuickShape, tweakpaneD1Enabled } from '../studio/appearance/feature';
 import type { StudioTab } from '../studio/studioTypes';
 import {
   ChevronDownIcon,
@@ -31,6 +40,8 @@ const DRAW_MODES = [
   },
   { id: 'eraser', label: 'eraser', tip: 'Eraser — remove drawings', Icon: EraserIcon },
 ] as const;
+
+const QuickShapeInspector = lazy(() => import('../studio/appearance/QuickShapeInspector'));
 
 export function Editor({
   adapter,
@@ -180,10 +191,14 @@ export function Editor({
     };
   }, [workspaceNode, adapter]);
   const selection = adapter.getSelection();
+  const quickShape = tweakpaneD1Enabled ? selectedQuickShape(adapter) : undefined;
   useEffect(() => {
     const isEditorInput = (target: EventTarget | null) => {
       const node = target as HTMLElement;
-      return /INPUT|TEXTAREA|SELECT/.test(node?.tagName) && !node.closest('[aria-modal="true"]');
+      return (
+        /INPUT|TEXTAREA|SELECT/.test(node?.tagName) &&
+        !node.closest('[aria-modal="true"], [data-gesture-owner="tweakpane"]')
+      );
     };
     const focusIn = (event: FocusEvent) => {
       if (isEditorInput(event.target)) adapter.beginGesture();
@@ -389,6 +404,7 @@ export function Editor({
                 adapter={adapter}
                 formattingTrigger={formattingTrigger}
                 formattingOpen={editorPanel === 'style'}
+                appearanceInspector={!!quickShape}
                 replacingImage={replacingImage}
                 onReplaceImage={() => {
                   const selected = adapter.history.document.items.find((entry) =>
@@ -406,17 +422,33 @@ export function Editor({
                 anchor={formattingTrigger}
                 onDismiss={() => setEditorPanel(null)}
                 ownedSurfaceSelector=".studio-color-popover"
-                className="gs-formatting-popover"
+                className={
+                  quickShape && editorPanel === 'style'
+                    ? 'gs-shape-inspector-popover'
+                    : 'gs-formatting-popover'
+                }
                 role="dialog"
-                aria-label="Object formatting"
+                aria-label={
+                  quickShape && editorPanel === 'style' ? 'Shape appearance' : 'Object formatting'
+                }
                 focusOnOpen
               >
-                <EditorFeatures
-                  adapter={adapter}
-                  panel={editorPanel}
-                  setPanel={setEditorPanel}
-                  inline
-                />
+                {quickShape && editorPanel === 'style' ? (
+                  <Suspense fallback={<p role="status">Loading appearance controls…</p>}>
+                    <QuickShapeInspector
+                      adapter={adapter}
+                      id={quickShape.id}
+                      onClose={() => setEditorPanel(null)}
+                    />
+                  </Suspense>
+                ) : (
+                  <EditorFeatures
+                    adapter={adapter}
+                    panel={editorPanel}
+                    setPanel={setEditorPanel}
+                    inline
+                  />
+                )}
               </Popover>
             )}
           </div>

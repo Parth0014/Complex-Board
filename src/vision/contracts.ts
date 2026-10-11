@@ -175,6 +175,7 @@ export interface StudioAdapter extends CanvasAdapter {
   commit(document: BoardDocument): void;
   beginGesture(): void;
   endGesture(): void;
+  cancelGesture(): void;
   changeAppearance(change: import('./appearance/update').AppearanceChange, ids?: string[]): void;
   setAppearanceField(field: import('./appearance/controls').AppearanceField, value: unknown): void;
   patchItems(patches: Array<{ id: string; patch: Partial<BoardItem> }>): void;

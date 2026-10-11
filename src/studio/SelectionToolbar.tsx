@@ -23,6 +23,7 @@ type Props = {
   formattingOpen: boolean;
   onReplaceImage: () => void;
   replacingImage: boolean;
+  appearanceInspector?: boolean;
 };
 
 function TextSize({
@@ -85,6 +86,7 @@ export function SelectionToolbar({
   formattingOpen,
   onReplaceImage,
   replacingImage,
+  appearanceInspector = false,
 }: Props) {
   const selection = adapter.getSelection();
   const selected = adapter.history.document.items.filter((entry) =>
@@ -282,7 +284,7 @@ export function SelectionToolbar({
           Flip
         </Button>
       )}
-      {item?.kind === 'shape' && !anyLocked && (
+      {item?.kind === 'shape' && !anyLocked && !appearanceInspector && (
         <div
           className="vs-actionbar__color"
           data-tip="Set a solid fill color. Replaces any gradient fill."
@@ -335,50 +337,52 @@ export function SelectionToolbar({
               : 'Appearance'}
         </Button>
       )}
-      <div className="vs-actionbar__menu">
-        <Button
-          className="vs-actionbar__button"
-          aria-haspopup="true"
-          aria-label="Object opacity"
-          ref={opacityTrigger}
-          aria-expanded={menu === 'opacity'}
-          onClick={() => setMenu((current) => (current === 'opacity' ? null : 'opacity'))}
-        >
-          <ContrastIcon /> {mixedOpacity ? 'Mixed' : `${opacity}%`} <ChevronDownIcon />
-        </Button>
-        {menu === 'opacity' && (
-          <Popover
-            anchor={opacityTrigger}
-            onDismiss={() => setMenu(null)}
-            className="vs-actionbar__popover vs-actionbar__popover--small"
-            role="group"
-            aria-label="Opacity"
+      {!appearanceInspector && (
+        <div className="vs-actionbar__menu">
+          <Button
+            className="vs-actionbar__button"
+            aria-haspopup="true"
+            aria-label="Object opacity"
+            ref={opacityTrigger}
+            aria-expanded={menu === 'opacity'}
+            onClick={() => setMenu((current) => (current === 'opacity' ? null : 'opacity'))}
           >
-            <p>
-              {mixedOpacity
-                ? 'Mixed opacity · moving the slider sets all selected objects'
-                : 'Object opacity'}
-            </p>
-            <div className="vs-actionbar__range">
-              <input
-                aria-label="Set opacity for all selected objects"
-                type="range"
-                min="0"
-                max="100"
-                disabled={anyLocked}
-                value={opacity}
-                onPointerDown={() => adapter.beginGesture()}
-                onPointerUp={() => adapter.endGesture()}
-                onPointerCancel={() => adapter.endGesture()}
-                onChange={(event) =>
-                  adapter.updateSelection({ opacity: Number(event.target.value) })
-                }
-              />
-              <output>{mixedOpacity ? 'Mixed' : `${opacity}%`}</output>
-            </div>
-          </Popover>
-        )}
-      </div>
+            <ContrastIcon /> {mixedOpacity ? 'Mixed' : `${opacity}%`} <ChevronDownIcon />
+          </Button>
+          {menu === 'opacity' && (
+            <Popover
+              anchor={opacityTrigger}
+              onDismiss={() => setMenu(null)}
+              className="vs-actionbar__popover vs-actionbar__popover--small"
+              role="group"
+              aria-label="Opacity"
+            >
+              <p>
+                {mixedOpacity
+                  ? 'Mixed opacity · moving the slider sets all selected objects'
+                  : 'Object opacity'}
+              </p>
+              <div className="vs-actionbar__range">
+                <input
+                  aria-label="Set opacity for all selected objects"
+                  type="range"
+                  min="0"
+                  max="100"
+                  disabled={anyLocked}
+                  value={opacity}
+                  onPointerDown={() => adapter.beginGesture()}
+                  onPointerUp={() => adapter.endGesture()}
+                  onPointerCancel={() => adapter.endGesture()}
+                  onChange={(event) =>
+                    adapter.updateSelection({ opacity: Number(event.target.value) })
+                  }
+                />
+                <output>{mixedOpacity ? 'Mixed' : `${opacity}%`}</output>
+              </div>
+            </Popover>
+          )}
+        </div>
+      )}
     </div>
   );
 }

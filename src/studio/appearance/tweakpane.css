@@ -1,0 +1,102 @@
+/* Scoped to the opt-in inspector. Tweakpane's palette uses existing app tokens. */
+.gs-shape-inspector-popover {
+  width: min(340px, calc(100vw - 16px));
+  padding: 0;
+  max-height: min(640px, calc(100dvh - 24px));
+  overflow: hidden;
+}
+.gs-shape-inspector {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  color: var(--gs-text);
+}
+.gs-shape-inspector header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--gs-space-2);
+  padding: var(--gs-space-3) var(--gs-space-4);
+  border-bottom: 1px solid var(--gs-line);
+}
+.gs-shape-inspector h3 {
+  margin: 0;
+  font-size: var(--gs-text-15);
+  font-weight: var(--gs-weight-strong);
+}
+.gs-shape-inspector p {
+  margin: var(--gs-space-1) 0 0;
+  color: var(--gs-text-secondary);
+  font-size: var(--gs-text-11);
+}
+.gs-shape-inspector__body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--gs-space-2);
+  min-height: 0;
+}
+.gs-tweakpane {
+  --tp-base-background-color: var(--gs-surface);
+  --tp-base-border-radius: var(--gs-radius-control);
+  --tp-base-font-family: var(--gs-font);
+  --tp-base-shadow-color: transparent;
+  --tp-blade-border-radius: var(--gs-radius-control);
+  --tp-blade-horizontal-padding: var(--gs-space-2);
+  --tp-blade-value-width: 60%;
+  --tp-button-background-color: var(--gs-surface-muted);
+  --tp-button-background-color-hover: var(--gs-hover);
+  --tp-button-background-color-focus: var(--gs-accent-soft);
+  --tp-button-background-color-active: var(--gs-hover);
+  --tp-button-foreground-color: var(--gs-text);
+  --tp-container-background-color: var(--gs-surface);
+  --tp-container-background-color-hover: var(--gs-hover);
+  --tp-container-background-color-focus: var(--gs-accent-soft);
+  --tp-container-background-color-active: var(--gs-hover);
+  --tp-container-foreground-color: var(--gs-text);
+  --tp-container-horizontal-padding: var(--gs-space-2);
+  --tp-container-unit-size: var(--gs-control-height);
+  --tp-container-unit-spacing: var(--gs-space-1);
+  --tp-container-vertical-padding: var(--gs-space-2);
+  --tp-groove-foreground-color: var(--gs-control-line);
+  --tp-input-background-color: var(--gs-surface-muted);
+  --tp-input-background-color-hover: var(--gs-hover);
+  --tp-input-background-color-focus: var(--gs-accent-soft);
+  --tp-input-background-color-active: var(--gs-hover);
+  --tp-input-foreground-color: var(--gs-text);
+  --tp-label-foreground-color: var(--gs-text-secondary);
+  --tp-monitor-background-color: var(--gs-surface-muted);
+  --tp-monitor-foreground-color: var(--gs-text);
+}
+.gs-tweakpane .tp-rotv {
+  font-size: var(--gs-text-13);
+  font-weight: var(--gs-weight-regular);
+  box-shadow: none;
+}
+.gs-tweakpane .tp-fldv_b {
+  font-weight: var(--gs-weight-strong);
+}
+.gs-tweakpane :is(input, select, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--gs-focus-color);
+  outline-offset: 2px;
+}
+.gs-tweakpane .tp-sldv_t {
+  touch-action: none;
+}
+.gs-tweakpane .tp-ckbv_i {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.gs-tweakpane .tp-ckbv:focus-within .tp-ckbv_w {
+  outline: 2px solid var(--gs-focus-color);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .gs-tweakpane {
+    --tp-container-unit-size: var(--gs-touch-target);
+  }
+  .gs-shape-inspector .gs-icon-button {
+    min-width: var(--gs-touch-target);
+    min-height: var(--gs-touch-target);
+  }
+}
