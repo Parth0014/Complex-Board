@@ -46,17 +46,16 @@ export function StudioShell({
         }}
       />
 
-      <div className="vs-body">
-        {error && !share && (
-          <div className="vs-error" role="alert">
-            <div className="vs-alert vs-alert--error">
-              <InfoIcon />
-              <span>{error}</span>
-              <Button onClick={() => setError('')}>Dismiss</Button>
-            </div>
+      {error && !share && (
+        <div className="vs-error" role="alert">
+          <div className="vs-alert vs-alert--error">
+            <InfoIcon />
+            <span>{error}</span>
+            <Button onClick={() => setError('')}>Dismiss</Button>
           </div>
-        )}
-
+        </div>
+      )}
+      <div className="vs-body">
         <StudioSidebar
           adapter={adapter}
           tab={tab}

@@ -1386,7 +1386,7 @@
     color: var(--gs-success);
   }
   .vs-error {
-    position: absolute;
+    position: fixed;
     z-index: var(--gs-z-tooltip);
     top: calc(var(--gs-header-height, 56px) + 16px);
     left: 50%;
