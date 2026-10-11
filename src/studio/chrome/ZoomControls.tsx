@@ -1,4 +1,4 @@
-import { IconButton } from '../ui/Button';
+import { Button, IconButton } from '../ui/Button';
 import { MinusIcon, PlusIcon, FitIcon } from '../icons';
 export function ZoomControls({
   value,
@@ -25,16 +25,30 @@ export function ZoomControls({
       >
         <MinusIcon />
       </IconButton>
-      <input
-        className="vs-range"
-        aria-label="Zoom"
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value) / 100)}
-      />
-      <span className="vs-zoom__pct">{value}%</span>
+      <div className="gs-zoom-track">
+        <input
+          className="vs-range"
+          aria-label="Zoom"
+          type="range"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value) / 100)}
+        />
+        <span
+          className="gs-zoom-notch"
+          aria-hidden="true"
+          style={{ left: `${((100 - min) / (max - min)) * 100}%` }}
+        />
+      </div>
+      <Button
+        className="vs-zoom__pct"
+        aria-label="Reset zoom to 100%"
+        data-tip="Reset zoom to 100%"
+        onClick={() => onChange(1)}
+      >
+        {value}%
+      </Button>
       <IconButton
         className="vs-icon-btn"
         data-tip="Zoom in"

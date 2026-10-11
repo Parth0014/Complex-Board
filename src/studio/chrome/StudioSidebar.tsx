@@ -1,3 +1,4 @@
+import { Skeleton } from '../ui/Skeleton';
 import { Button, IconButton } from '../ui/Button';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { TemplatesPanel } from '../TemplatesPanel';
@@ -99,13 +100,7 @@ export function StudioSidebar({
             ) : tab === 'create' ? (
               <CreatePanel adapter={adapter} />
             ) : tab === 'ai' ? (
-              <Suspense
-                fallback={
-                  <div className="panel-loading" role="status">
-                    Opening AI tools…
-                  </div>
-                }
-              >
+              <Suspense fallback={<Skeleton label="Opening AI tools" />}>
                 <AIPanel adapter={adapter} />
               </Suspense>
             ) : tab === 'background' ? (

@@ -1,8 +1,7 @@
 import { StudioHeader } from './chrome/StudioHeader';
 import { ExportDialog } from './export/ExportDialog';
-import { Button } from './ui/Button';
-import { useState, type ReactNode } from 'react';
-import { InfoIcon } from './icons';
+import { Toast } from './ui/Toast';
+import { useCallback, useState, type ReactNode } from 'react';
 import type { StudioTab } from './studioTypes';
 import type { EditorAdapter } from '../vision/contracts';
 import { useAIStatus } from './useAIStatus';
@@ -25,6 +24,7 @@ export function StudioShell({
 }) {
   const [share, setShare] = useState(false);
   const [error, setError] = useState('');
+  const dismissError = useCallback(() => setError(''), []);
   const [elementCategory] = useState(adapter.history.document.boardTheme || 'all');
   const { status: aiStatus } = useAIStatus(adapter.ownerWindow);
   const document = adapter.history.document;
@@ -46,15 +46,7 @@ export function StudioShell({
         }}
       />
 
-      {error && !share && (
-        <div className="vs-error" role="alert">
-          <div className="vs-alert vs-alert--error">
-            <InfoIcon />
-            <span>{error}</span>
-            <Button onClick={() => setError('')}>Dismiss</Button>
-          </div>
-        </div>
-      )}
+      {error && !share && <Toast message={error} error onDismiss={dismissError} />}
       <div className="vs-body">
         <StudioSidebar
           adapter={adapter}

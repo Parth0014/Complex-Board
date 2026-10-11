@@ -14,13 +14,11 @@
  */
 @layer v2 {
   .vs {
-    --v2-rail: 72px;
-    --v2-panel: 320px;
-    --v2-dock: 320px;
-    --v2-radius: 12px;
-    --v2-float-shadow:
-      0 1px 2px color-mix(in srgb, var(--gs-text) 8%, transparent),
-      0 6px 20px color-mix(in srgb, var(--gs-text) 10%, transparent);
+    --v2-rail: var(--gs-rail-width);
+    --v2-panel: var(--gs-panel-width);
+    --v2-dock: var(--gs-dock-width);
+    --v2-radius: var(--gs-radius-card);
+    --v2-float-shadow: var(--gs-shadow-float);
     --v2-kicker: var(--gs-text-11);
   }
 
@@ -35,6 +33,9 @@
     min-width: 0;
     position: relative;
     overflow: hidden;
+    background:
+      radial-gradient(circle, var(--gs-canvas-dots) 1px, transparent 1px) 0 0 / 20px 20px,
+      var(--gs-workspace);
   }
 
   /* ───────────────────────── Header ───────────────────────── */
@@ -43,7 +44,7 @@
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: var(--gs-space-3);
-    height: 52px;
+    height: var(--gs-header-height);
     padding: 0 var(--gs-space-4);
     background: var(--gs-surface);
     color: var(--gs-text);
@@ -140,11 +141,11 @@
   }
   .vs-header .vs-history .vs-icon-btn:hover:not(:disabled) {
     background: var(--gs-surface);
-    box-shadow: 0 1px 2px color-mix(in srgb, var(--gs-text) 12%, transparent);
+    box-shadow: var(--gs-shadow-float);
   }
 
   /* header buttons share one height and radius */
-  .vs-header .vs-btn,
+  .vs-header .gs-button,
   .vs-header .vs-file-btn {
     display: inline-flex;
     align-items: center;
@@ -175,12 +176,12 @@
     filter: none;
     box-shadow: none;
   }
-  .vs-header .vs-btn--primary {
+  .vs-header .gs-button--primary {
     background: var(--gs-accent);
     color: var(--gs-on-accent);
     border: 1px solid transparent;
   }
-  .vs-header .vs-btn--primary:hover:not(:disabled) {
+  .vs-header .gs-button--primary:hover:not(:disabled) {
     background: var(--gs-accent-hover);
   }
 
@@ -361,7 +362,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 52px;
+    height: var(--gs-header-height);
     padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
     border-bottom: 1px solid var(--gs-line);
   }
@@ -611,7 +612,7 @@
     z-index: var(--gs-z-panel);
   }
   .gs-appearance-dock .gs-appearance-header {
-    height: 52px;
+    height: var(--gs-header-height);
     padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
   }
   .gs-appearance-header p {
@@ -665,7 +666,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 52px;
+    height: var(--gs-header-height);
     margin: 0 0 var(--gs-space-2);
     padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
     background: var(--gs-surface);
@@ -740,7 +741,7 @@
       box-shadow: var(--v2-float-shadow);
     }
   }
-  @media (max-width: 700px) {
+  @media (max-width: 768px) {
     .vs-header {
       grid-template-columns: minmax(0, 1fr) auto;
       padding: 0 var(--gs-space-3);
@@ -853,7 +854,7 @@
     padding: var(--gs-space-5);
 
     background: var(--gs-accent-soft);
-    border-color: color-mix(in srgb, var(--gs-accent) 35%, var(--gs-line));
+    border-color: var(--gs-accent);
   }
   .vs-export-option[data-format='png'] .vs-export-copy {
     flex: 1;
@@ -943,6 +944,95 @@
   @media (prefers-reduced-motion: reduce) {
     .vs-export-option {
       transition: none;
+    }
+  }
+}
+
+@layer v2 {
+  .vs-canvas {
+    background:
+      radial-gradient(circle at 1px 1px, var(--gs-canvas-dots) 1px, transparent 0) 0 0 / 22px 22px,
+      var(--gs-workspace);
+  }
+  .vs-title__input {
+    font-family: var(--gs-font-display);
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-regular);
+  }
+  .vs-lib__title {
+    font-family: var(--gs-font-display);
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-regular);
+  }
+  .vs-rail__tab > span:not([class]) {
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .vs-rail__tab.is-active::before {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: var(--gs-space-2) 0 var(--gs-space-2) auto;
+    width: 3px;
+    background: var(--gs-accent);
+    border-radius: var(--gs-radius-control);
+  }
+  .gs-zoom-track {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .gs-zoom-notch {
+    position: absolute;
+    width: 2px;
+    height: 8px;
+    background: var(--gs-text-secondary);
+    pointer-events: none;
+    transform: translateX(-50%);
+  }
+  .vs-zoom__pct {
+    padding: 0 var(--gs-space-1);
+  }
+  .vs-bottom-dock {
+    min-height: var(--gs-control-height-lg);
+  }
+  @media (min-width: 769px) {
+    .vs-lib {
+      width: calc(var(--gs-rail-width) + var(--gs-panel-width));
+      transition: width var(--gs-duration-overlay) var(--gs-ease);
+    }
+    .vs-lib.is-collapsed {
+      width: var(--gs-rail-width);
+    }
+    .vs-lib__panel {
+      flex-shrink: 0;
+    }
+  }
+  @media (min-width: 769px) and (max-width: 1400px) {
+    .vs {
+      --gs-panel-width: 264px;
+      --gs-dock-width: 272px;
+    }
+  }
+  @media (max-width: 768px) {
+    .gs-zoom-track {
+      display: none;
+    }
+    .vs-lib__panel {
+      max-height: 85dvh;
+    }
+    .gs-object-dock.gs-formatting-popover {
+      max-height: 85dvh;
+    }
+    .gs-toast {
+      bottom: calc(var(--gs-space-7) * 3 + env(safe-area-inset-bottom));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vs-lib,
+    .gs-object-dock {
+      transition: none;
+      animation: none;
     }
   }
 }

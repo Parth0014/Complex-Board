@@ -102,7 +102,7 @@ export function StudioHeader({
 
       <div className="vs-header__end">
         <Button
-          className="vs-btn vs-btn--primary"
+          variant="primary"
           aria-label="Share"
           data-tip="Export or share your board"
           data-tip-pos="below"
