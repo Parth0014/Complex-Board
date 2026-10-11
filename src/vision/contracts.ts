@@ -212,7 +212,6 @@ export interface EditorAdapter extends StudioAdapter {
   arrangeSelection(position: 'front' | 'back' | 'forward' | 'backward'): void;
   createShape(shape: NonNullable<BoardItem['shape']>): void;
   connectSelection(): void;
-  createCard(text: string, context?: 'goal' | 'affirmation'): void;
   attachFrameContent(assetId: string): Promise<void>;
   detachFrameContent(): void;
 }

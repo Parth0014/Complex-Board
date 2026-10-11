@@ -891,7 +891,9 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       items.map((item) => {
         const patch = { ...patches.find((patch) => patch.id === item.id)?.patch };
         if (patch.text !== undefined && patch.text !== item.text && !('textRuns' in patch)) {
-          patch.textRuns = item.textRuns ? shiftRuns(item.textRuns, item.text || '', patch.text) : undefined;
+          patch.textRuns = item.textRuns
+            ? shiftRuns(item.textRuns, item.text || '', patch.text)
+            : undefined;
         }
         if (item.locked)
           return {
@@ -1683,151 +1685,6 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         return { id: item.id, patch: { points: assisted.points, strokeTension: assisted.tension } };
       });
     if (patches.length) this.patchItems(patches);
-  }
-  createCard(text: string, context: 'goal' | 'affirmation' = 'goal') {
-    if (!text.trim()) return;
-    const group = this.id();
-    const affirmation = context === 'affirmation';
-    const width = Math.min(420, this.history.document.width * 0.8);
-    const padding = 28;
-    const measure = new Konva.Text({
-      text,
-      width: width - padding * 2,
-      fontSize: 28,
-      fontFamily: fontFamily(affirmation ? 'georgia' : 'assistant'),
-      lineHeight: 1.2,
-    });
-    const textHeight = Math.ceil(measure.height());
-    measure.destroy();
-    const height = Math.max(340, textHeight + 235);
-    const x = Math.max(0, (this.history.document.width - width) / 2);
-    const y = Math.max(0, (this.history.document.height - height) / 2);
-    const base = {
-      rotation: 0,
-      opacity: 1,
-      groupId: this.groupScope[0] || group,
-      groupPath: [...this.groupScope, group],
-    };
-    const label = this.id();
-    const pieces: BoardItem[] = [
-      {
-        ...base,
-        id: this.id(),
-        kind: 'shape',
-        shape: 'rectangle',
-        x,
-        y,
-        width,
-        height,
-        color: affirmation ? '#faeaf0' : '#eaf2fb',
-        radius: affirmation ? 32 : 12,
-        borderWidth: 1,
-        borderColor: affirmation ? '#edc8d9' : '#c5d8ed',
-      },
-      {
-        ...base,
-        id: this.id(),
-        kind: 'text',
-        text: affirmation ? 'A LITTLE LOVE FOR MYSELF' : 'THE FUTURE I?M BUILDING',
-        x: x + padding,
-        y: y + 92,
-        width: width - padding * 2,
-        height: 22,
-        fontFamily: 'assistant',
-        fontSize: 13,
-        bold: true,
-        letterSpacing: 2,
-        align: affirmation ? 'center' : 'left',
-        color: affirmation ? '#a45b7d' : '#4e7299',
-      },
-      {
-        ...base,
-        id: label,
-        kind: 'text',
-        text,
-        x: x + padding,
-        y: y + 130,
-        width: width - padding * 2,
-        height: textHeight,
-        fontFamily: affirmation ? 'georgia' : 'assistant',
-        fontSize: 28,
-        lineHeight: 1.2,
-        italic: affirmation,
-        bold: !affirmation,
-        align: affirmation ? 'center' : 'left',
-        color: affirmation ? '#753d60' : '#244668',
-      },
-      {
-        ...base,
-        id: this.id(),
-        kind: 'text',
-        text: affirmation
-          ? 'Breathe. Believe. Become.'
-          : 'NEXT STEP  __________________\nWORKING TOWARDS IT, ONE DAY AT A TIME',
-        x: x + padding,
-        y: y + height - 70,
-        width: width - padding * 2,
-        height: 45,
-        fontFamily: 'assistant',
-        fontSize: 14,
-        align: affirmation ? 'center' : 'left',
-        color: affirmation ? '#a45b7d' : '#4e7299',
-      },
-    ];
-    const decoration = (
-      shape: BoardItem['shape'],
-      dx: number,
-      dy: number,
-      w: number,
-      h: number,
-      color: string,
-      extra: Partial<BoardItem> = {},
-    ): BoardItem => ({
-      ...base,
-      id: this.id(),
-      kind: 'shape',
-      shape,
-      x: x + dx,
-      y: y + dy,
-      width: w,
-      height: h,
-      color,
-      ...extra,
-    });
-    if (affirmation) {
-      pieces.splice(
-        1,
-        0,
-        decoration('circle', width / 2 - 34, 20, 68, 68, '#f5d4e2'),
-        decoration('heart', width / 2 - 20, 35, 40, 35, '#c8799d'),
-        decoration('star', 24, height - 48, 16, 16, '#c4a4dc'),
-        decoration('star', width - 45, 36, 20, 20, '#c4a4dc'),
-        decoration('heart', width - 54, height - 47, 17, 15, '#df9dba'),
-      );
-    } else {
-      pieces.splice(
-        1,
-        0,
-        decoration('circle', padding, 22, 60, 60, '#c9dff5'),
-        decoration('circle', padding + 9, 31, 42, 42, '#eaf2fb', {
-          borderColor: '#4e7299',
-          borderWidth: 2,
-        }),
-        decoration('circle', padding + 22, 44, 16, 16, '#4e7299'),
-        decoration('arrow', padding + 29, 21, 37, 37, '#244668', {
-          borderColor: '#244668',
-          borderWidth: 3,
-        }),
-        decoration('rectangle', padding, height - 92, width - padding * 2, 6, '#ccdded', {
-          radius: 3,
-        }),
-        decoration('rectangle', padding, height - 92, (width - padding * 2) * 0.15, 6, '#4e7299', {
-          radius: 3,
-        }),
-      );
-    }
-    this.items((items) => [...items, ...pieces]);
-    this.select([label]);
   }
   async attachFrameContent(assetId: string) {
     const item = this.history.document.items.find((item) => this.selectedIds.includes(item.id));

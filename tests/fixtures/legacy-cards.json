@@ -1,0 +1,355 @@
+{
+  "version": 2,
+  "title": "My 2026 vision",
+  "width": 1920,
+  "height": 1080,
+  "color": "#fffaf6",
+  "items": [
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "c7a9aebf-a9b7-4edc-a16f-b7a5089890e9",
+      "kind": "shape",
+      "shape": "rectangle",
+      "x": 750,
+      "y": 370,
+      "width": 420,
+      "height": 340,
+      "color": "#eaf2fb",
+      "radius": 12,
+      "borderWidth": 1,
+      "borderColor": "#c5d8ed"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "d7fada8d-b146-4128-805c-5652367cebad",
+      "kind": "shape",
+      "shape": "circle",
+      "x": 778,
+      "y": 392,
+      "width": 60,
+      "height": 60,
+      "color": "#c9dff5"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "897fe086-72d5-4dce-87cb-a3c04e122878",
+      "kind": "shape",
+      "shape": "circle",
+      "x": 787,
+      "y": 401,
+      "width": 42,
+      "height": 42,
+      "color": "#eaf2fb",
+      "borderColor": "#4e7299",
+      "borderWidth": 2
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "c45104bd-e330-4507-a972-387a57109e03",
+      "kind": "shape",
+      "shape": "circle",
+      "x": 800,
+      "y": 414,
+      "width": 16,
+      "height": 16,
+      "color": "#4e7299"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "c3c78545-caa6-48a2-8f78-2434f03f3222",
+      "kind": "shape",
+      "shape": "arrow",
+      "x": 807,
+      "y": 391,
+      "width": 37,
+      "height": 37,
+      "color": "#244668",
+      "borderColor": "#244668",
+      "borderWidth": 3
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "1adf6037-697d-4b26-8648-6820e69cdebd",
+      "kind": "shape",
+      "shape": "rectangle",
+      "x": 778,
+      "y": 618,
+      "width": 364,
+      "height": 6,
+      "color": "#ccdded",
+      "radius": 3
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "ddd4050c-a162-4734-adde-d11a42609352",
+      "kind": "shape",
+      "shape": "rectangle",
+      "x": 778,
+      "y": 618,
+      "width": 54.6,
+      "height": 6,
+      "color": "#4e7299",
+      "radius": 3
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "9d181d3e-79f0-4732-bfe9-df8cefc728dc",
+      "kind": "text",
+      "text": "THE FUTURE I?M BUILDING",
+      "x": 778,
+      "y": 462,
+      "width": 364,
+      "height": 22,
+      "fontFamily": "assistant",
+      "fontSize": 13,
+      "bold": true,
+      "letterSpacing": 2,
+      "align": "left",
+      "color": "#4e7299"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "f9d7da56-e650-449a-b57f-70ad116a6885",
+      "kind": "text",
+      "text": "Plan my next adventure",
+      "x": 778,
+      "y": 500,
+      "width": 364,
+      "height": 34,
+      "fontFamily": "assistant",
+      "fontSize": 28,
+      "lineHeight": 1.2,
+      "italic": false,
+      "bold": true,
+      "align": "left",
+      "color": "#244668"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "4c35b4d1-e121-4de7-a890-b200001140a5",
+      "groupPath": [
+        "4c35b4d1-e121-4de7-a890-b200001140a5"
+      ],
+      "id": "2b1b79fd-a951-41b3-b91b-5163862f68a6",
+      "kind": "text",
+      "text": "NEXT STEP  __________________\nWORKING TOWARDS IT, ONE DAY AT A TIME",
+      "x": 778,
+      "y": 640,
+      "width": 364,
+      "height": 45,
+      "fontFamily": "assistant",
+      "fontSize": 14,
+      "align": "left",
+      "color": "#4e7299"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "023fa56a-9bd2-4d80-b832-b0ac445ff04d",
+      "kind": "shape",
+      "shape": "rectangle",
+      "x": 750,
+      "y": 370,
+      "width": 420,
+      "height": 340,
+      "color": "#faeaf0",
+      "radius": 32,
+      "borderWidth": 1,
+      "borderColor": "#edc8d9"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "a930d622-1e89-4b1c-ad3b-24cfccd67b31",
+      "kind": "shape",
+      "shape": "circle",
+      "x": 926,
+      "y": 390,
+      "width": 68,
+      "height": 68,
+      "color": "#f5d4e2"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "803075ec-8ed0-4202-a873-a72fd6bad0b5",
+      "kind": "shape",
+      "shape": "heart",
+      "x": 940,
+      "y": 405,
+      "width": 40,
+      "height": 35,
+      "color": "#c8799d"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "f6cf7353-f37c-4ddf-b166-0a664eef8878",
+      "kind": "shape",
+      "shape": "star",
+      "x": 774,
+      "y": 662,
+      "width": 16,
+      "height": 16,
+      "color": "#c4a4dc"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "47055154-fe71-4890-a586-50f2bf4da0a3",
+      "kind": "shape",
+      "shape": "star",
+      "x": 1125,
+      "y": 406,
+      "width": 20,
+      "height": 20,
+      "color": "#c4a4dc"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "6f29934a-7946-4625-83a5-fc4590ce4489",
+      "kind": "shape",
+      "shape": "heart",
+      "x": 1116,
+      "y": 663,
+      "width": 17,
+      "height": 15,
+      "color": "#df9dba"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "e14ab8d5-195f-49f1-a47d-b85bba14cbe7",
+      "kind": "text",
+      "text": "A LITTLE LOVE FOR MYSELF",
+      "x": 778,
+      "y": 462,
+      "width": 364,
+      "height": 22,
+      "fontFamily": "assistant",
+      "fontSize": 13,
+      "bold": true,
+      "letterSpacing": 2,
+      "align": "center",
+      "color": "#a45b7d"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "92e516e2-8e14-48a8-b69b-d7589cb7560a",
+      "kind": "text",
+      "text": "Plan my next adventure",
+      "x": 778,
+      "y": 500,
+      "width": 364,
+      "height": 34,
+      "fontFamily": "georgia",
+      "fontSize": 28,
+      "lineHeight": 1.2,
+      "italic": true,
+      "bold": false,
+      "align": "center",
+      "color": "#753d60"
+    },
+    {
+      "rotation": 0,
+      "opacity": 1,
+      "groupId": "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e",
+      "groupPath": [
+        "a73c15e1-b2c1-47ff-a6ad-6610cb052f7e"
+      ],
+      "id": "3add45a5-edd1-4fd4-a1fb-22284bdd852d",
+      "kind": "text",
+      "text": "Breathe. Believe. Become.",
+      "x": 778,
+      "y": 640,
+      "width": 364,
+      "height": 45,
+      "fontFamily": "assistant",
+      "fontSize": 14,
+      "align": "center",
+      "color": "#a45b7d"
+    }
+  ],
+  "boardTheme": "planning",
+  "updatedAt": 1791699002953
+}

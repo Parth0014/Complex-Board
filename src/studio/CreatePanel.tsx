@@ -17,7 +17,6 @@ const SHAPES = [
 ] as const;
 
 export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
-  const [card, setCard] = useState('Plan my next adventure');
   const [error, setError] = useState('');
 
   return (
@@ -62,40 +61,6 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
             <ArrowRightIcon />
           </Button>
         )}
-      </section>
-
-      <section className="create-panel__section">
-        <div className="panel-section-heading">
-          <h3>Goals & affirmations</h3>
-        </div>
-        <textarea
-          className="create-card-copy vs-textarea"
-          aria-label="Goal or affirmation text"
-          placeholder="Write a goal or affirmation…"
-          value={card}
-          onChange={(event) => setCard(event.target.value)}
-        />
-        <div
-          className="create-card-actions"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}
-        >
-          <Button
-            className="panel-action"
-            style={{ height: 42, margin: 0 }}
-            disabled={!card.trim()}
-            onClick={() => adapter.createCard(card.trim())}
-          >
-            Add goal card
-          </Button>
-          <Button
-            className="panel-secondary-action"
-            style={{ height: 42, margin: 0 }}
-            disabled={!card.trim()}
-            onClick={() => adapter.createCard(card.trim(), 'affirmation')}
-          >
-            Add affirmation
-          </Button>
-        </div>
       </section>
     </div>
   );
