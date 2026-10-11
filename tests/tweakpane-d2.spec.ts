@@ -137,3 +137,53 @@ test('text fill outline background and rich character defaults retain canonical 
     ),
   ).toBe(true);
 });
+
+test('drawings use stroke capabilities without modifying brush geometry', async ({ page }) => {
+  const h = await open(page, 'drawing');
+  const before = await h.evaluate(({ adapter }) =>
+    adapter.history.document.items.find((i) => i.id === 'drawing')!,
+  );
+  await expect(page.getByRole('group', { name: 'Fill type', exact: true })).toHaveCount(0);
+  await color(page, 'Stroke color', '#663399');
+  await number(page, 'Opacity (%)', 45);
+  await page.getByRole('tab', { name: 'Stroke', exact: true }).click();
+  await number(page, 'Stroke width', 17.5);
+  await page.getByLabel('Stroke cap', { exact: true }).selectOption({ label: 'Square' });
+  await page.getByLabel('Stroke join', { exact: true }).selectOption({ label: 'Bevel' });
+  const after = await h.evaluate(({ adapter }) =>
+    adapter.history.document.items.find((i) => i.id === 'drawing')!,
+  );
+  expect({ ...after, appearance: before.appearance }).toEqual(before);
+  expect(after.appearance).toMatchObject({
+    kind: 'drawing',
+    opacity: 0.45,
+    stroke: { color: '#663399', width: 17.5, cap: 'square', join: 'bevel' },
+  });
+  expect(
+    await h.evaluate(({ stage }) =>
+      stage
+        .findOne('#drawing')!
+        .find('Line')
+        .some(
+          (node) =>
+            node.getAttr('stroke') === '#663399' &&
+            node.getAttr('lineCap') === 'square' &&
+            node.getAttr('lineJoin') === 'bevel',
+        ),
+    ),
+  ).toBe(true);
+  await page.getByRole('tab', { name: 'Effects', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Outline', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Glow', exact: true }).click();
+  expect(
+    await h.evaluate(
+      ({ adapter }) =>
+        adapter.history.document.items.find((i) => i.id === 'drawing')!.appearance?.shadow.enabled,
+    ),
+  ).toBe(true);
+  await h.evaluate(({ adapter }) => adapter.undo());
+  await expect(page.getByRole('button', { name: 'None', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+});
