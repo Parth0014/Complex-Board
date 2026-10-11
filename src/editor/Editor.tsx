@@ -18,7 +18,12 @@ import { ContextActions } from '../studio/ContextActions';
 import { Popover } from '../studio/ui/Popover';
 import { useMenuPlacement } from '../studio/useMenuPlacement';
 import { EditorFeatures, type EditorPanel } from '../studio/EditorFeatures';
-import { selectedQuickShape, tweakpaneD1Enabled } from '../studio/appearance/feature';
+import {
+  selectedAppearance,
+  selectedQuickShape,
+  tweakpaneD1Enabled,
+  tweakpaneD2Enabled,
+} from '../studio/appearance/feature';
 import type { StudioTab } from '../studio/studioTypes';
 import {
   ChevronDownIcon,
@@ -42,6 +47,7 @@ const DRAW_MODES = [
 ] as const;
 
 const QuickShapeInspector = lazy(() => import('../studio/appearance/QuickShapeInspector'));
+const UnifiedInspector = lazy(() => import('../studio/appearance/UnifiedInspector'));
 
 export function Editor({
   adapter,
@@ -191,7 +197,9 @@ export function Editor({
     };
   }, [workspaceNode, adapter]);
   const selection = adapter.getSelection();
-  const quickShape = tweakpaneD1Enabled ? selectedQuickShape(adapter) : undefined;
+  const editable = tweakpaneD2Enabled ? selectedAppearance(adapter) : undefined;
+  const quickShape =
+    !tweakpaneD2Enabled && tweakpaneD1Enabled ? selectedQuickShape(adapter) : undefined;
   useEffect(() => {
     const isEditorInput = (target: EventTarget | null) => {
       const node = target as HTMLElement;
@@ -417,7 +425,7 @@ export function Editor({
                 onEditStyle={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
               />
             </div>
-            {editorPanel && (
+            {editorPanel && !editable && (
               <Popover
                 anchor={formattingTrigger}
                 onDismiss={() => setEditorPanel(null)}
@@ -452,6 +460,15 @@ export function Editor({
               </Popover>
             )}
           </div>
+        )}
+        {editable && editorPanel === 'style' && (
+          <Suspense fallback={<p role="status">Loading appearance controls…</p>}>
+            <UnifiedInspector
+              adapter={adapter}
+              trigger={formattingTrigger}
+              onClose={() => setEditorPanel(null)}
+            />
+          </Suspense>
         )}
         <KonvaStage
           key="vision-canvas"
