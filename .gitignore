@@ -8,3 +8,7 @@ playwright-report/
 .env.*
 !.env.example
 vision-board/
+%SystemDrive%/
+tmp/
+exports/*
+!exports/appearance-legacy/
