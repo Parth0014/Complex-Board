@@ -15,11 +15,12 @@ export class TweakpaneSession {
     private adapter: StudioAdapter,
     readonly id: string,
     private refresh: () => void,
+    private selected: typeof import('./feature').selectedAppearance = selectedQuickShape,
   ) {
     this.document = adapter.history.document;
     this.unsubscribe = adapter.subscribe(() => {
       if (this.disposed) return;
-      const current = selectedQuickShape(adapter);
+      const current = this.selected(adapter);
       const external = !this.applying && this.document !== adapter.history.document;
       this.document = adapter.history.document;
       if (current?.id !== id || current.locked || (external && this.owned)) {
@@ -31,7 +32,7 @@ export class TweakpaneSession {
   }
 
   begin() {
-    const current = selectedQuickShape(this.adapter);
+    const current = this.selected(this.adapter);
     if (this.disposed || current?.id !== this.id || current.locked) return;
     this.interrupted = false;
     if (!this.owned) {
@@ -43,7 +44,7 @@ export class TweakpaneSession {
   }
 
   change(change: AppearanceChange, last: boolean, interacting: boolean) {
-    const current = selectedQuickShape(this.adapter);
+    const current = this.selected(this.adapter);
     if (this.disposed || this.interrupted || current?.id !== this.id || current.locked) return;
     if (!this.owned) this.begin();
     this.applying = true;

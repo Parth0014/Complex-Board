@@ -67,6 +67,69 @@
   background: var(--gs-control-line);
   margin: var(--gs-space-2) auto 0;
 }
+.gs-appearance-tabs,
+.gs-paint-types,
+.gs-effect-choices {
+  display: flex;
+  gap: var(--gs-space-1);
+}
+.gs-appearance-tabs {
+  padding: var(--gs-space-2) var(--gs-space-3);
+  border-bottom: 1px solid var(--gs-line);
+  flex-shrink: 0;
+}
+.gs-appearance-tabs button {
+  flex: 1;
+  white-space: nowrap;
+}
+.gs-appearance-tabs [aria-selected='true'],
+.gs-paint-types [aria-pressed='true'],
+.gs-effect-choices [aria-pressed='true'] {
+  background: var(--gs-accent-soft);
+  color: var(--gs-accent);
+}
+.gs-appearance-fields {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+.gs-appearance-fields h3 {
+  font-size: var(--gs-text-13);
+  margin: var(--gs-space-4) 0 var(--gs-space-2);
+  font-weight: var(--gs-weight-strong);
+}
+.gs-appearance-note {
+  font-size: var(--gs-text-11);
+  color: var(--gs-text-secondary);
+  line-height: var(--gs-line-height-body);
+  margin: var(--gs-space-3) 0;
+}
+.gs-effect-choices {
+  flex-wrap: wrap;
+}
+.gs-creative-palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gs-space-2);
+  margin-bottom: var(--gs-space-3);
+}
+.gs-creative-palette .gs-creative-swatch {
+  width: 100%;
+  height: var(--gs-control-height);
+  border: 1px solid var(--gs-control-line);
+  border-radius: var(--gs-radius-control);
+}
+.gs-creative-swatch[aria-pressed='true'] {
+  box-shadow: var(--gs-focus);
+}
+.gs-appearance-dock button,
+.gs-appearance-sheet button {
+  font-size: var(--gs-text-13);
+}
+.gs-appearance-body .gs-tweakpane {
+  margin-inline: calc(-1 * var(--gs-space-2));
+}
 @media (max-width: 700px) {
   .gs-appearance-sheet :is(button, select, input) {
     min-height: var(--gs-touch-target);
