@@ -280,7 +280,7 @@ test('save/reload and PNG export preserve the exact canvas artwork after inspect
         y: 0,
         width: adapter.history.document.width,
         height: adapter.history.document.height,
-        pixelRatio: 1,
+        pixelRatio: 2,
       });
     } finally {
       artwork.destroy();
@@ -422,12 +422,12 @@ test.describe('mobile touch inspector', () => {
     await page.getByRole('button', { name: 'Fill color picker', exact: true }).tap();
     await expect(page.locator('[data-appearance-control="fillColor"] .tp-svpv')).toBeVisible();
     await page.getByRole('button', { name: 'Shadow', exact: true }).tap();
-    const panel = page.getByRole('dialog', { name: 'Shape appearance', exact: true });
+    const panel = page.getByRole('complementary', { name: 'Shape appearance', exact: true });
     const panelBox = (await panel.boundingBox())!;
-    expect(panelBox.x).toBeGreaterThanOrEqual(8);
-    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(382);
-    expect(panelBox.y).toBeGreaterThanOrEqual(8);
-    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(836);
+    expect(panelBox.x).toBeGreaterThanOrEqual(0);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(390);
+    expect(panelBox.y).toBeGreaterThanOrEqual(0);
+    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(844);
     expect(
       await page
         .locator('.gs-shape-inspector__body')

@@ -1,4 +1,3 @@
-
 @layer components {
   /* ---------- Tokens (scoped to the home page so the editor is untouched) ---------- */
   .home-page {
@@ -6,10 +5,11 @@
     height: 100%;
     overflow-y: auto;
     background:
-      radial-gradient(circle at 1px 1px, var(--hp-palette-1) 1px, transparent 0) 0 0 / 22px 22px,
-      var(--hp-paper);
-    color: var(--hp-ink);
-    font-family: var(--hp-body);
+      radial-gradient(circle at 1px 1px, var(--gs-home-palette-1) 1px, transparent 0) 0 0 / 22px
+        22px,
+      var(--gs-workspace);
+    color: var(--gs-text);
+    font-family: var(--gs-font);
   }
 
   /* ---------- Header ---------- */
@@ -21,19 +21,19 @@
     justify-content: space-between;
     background: transparent;
     border: 0;
-    color: var(--hp-ink-soft);
-    font-family: var(--hp-display);
+    color: var(--gs-text-secondary);
+    font-family: var(--gs-font-display);
     font-style: italic;
-    font-size: var(--hp-type-1);
+    font-size: var(--gs-home-type-1);
   }
   .home-brand {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--hp-ink);
-    font-family: var(--hp-display);
+    color: var(--gs-text);
+    font-family: var(--gs-font-display);
     font-style: normal;
-    font-size: var(--hp-type-2);
+    font-size: var(--gs-home-type-2);
     font-weight: 600;
     letter-spacing: -0.02em;
   }
@@ -62,33 +62,33 @@
     align-items: center;
     gap: 12px;
     margin: 0 0 18px;
-    color: var(--hp-violet);
-    font-family: var(--hp-display);
+    color: var(--gs-accent);
+    font-family: var(--gs-font-display);
     font-style: italic;
-    font-size: var(--hp-type-3);
+    font-size: var(--gs-home-type-3);
   }
   .home-eyebrow::before {
     content: '';
     width: 36px;
     height: 2px;
-    background: var(--hp-coral);
+    background: var(--gs-coral-500);
     border-radius: 2px;
   }
   .home-intro h1 {
     margin: 0 0 22px;
     max-width: 11em;
-    font-family: var(--hp-display);
+    font-family: var(--gs-font-display);
     font-weight: 500;
-    font-size: var(--hp-type-4);
+    font-size: var(--gs-home-type-4);
     line-height: 1.02;
     letter-spacing: -0.03em;
-    color: var(--hp-ink);
+    color: var(--gs-text);
   }
   .home-intro p:last-of-type {
     margin: 0 0 34px;
     max-width: 460px;
-    color: var(--hp-ink-soft);
-    font-size: var(--hp-type-5);
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-home-type-5);
     line-height: 1.65;
   }
 
@@ -106,27 +106,27 @@
     cursor: wait;
   }
   .home-page .home-primary {
-    background: var(--hp-violet);
-    color: var(--hp-palette-2);
-    border: 2px solid var(--hp-ink);
+    background: var(--gs-accent);
+    color: var(--gs-home-palette-2);
+    border: 2px solid var(--gs-text);
     border-radius: 999px;
     padding: 15px 28px;
     font-weight: 600;
-    font-size: var(--hp-type-1);
+    font-size: var(--gs-home-type-1);
     white-space: nowrap;
-    box-shadow: 4px 4px 0 var(--hp-ink);
+    box-shadow: 4px 4px 0 var(--gs-text);
     transition:
       transform 0.15s ease,
       opacity 0.15s ease;
   }
   .home-page .home-primary:hover:not(:disabled) {
-    background: var(--hp-violet);
+    background: var(--gs-accent);
     transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 var(--hp-ink);
+    box-shadow: 6px 6px 0 var(--gs-text);
   }
   .home-page .home-primary:active:not(:disabled) {
     transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--hp-ink);
+    box-shadow: 1px 1px 0 var(--gs-text);
   }
 
   /* ---------- Hero collage (decorative) ---------- */
@@ -152,7 +152,7 @@
     width: 44%;
     height: 62%;
     border-radius: 999px 999px 8px 8px;
-    background: var(--hp-violet);
+    background: var(--gs-accent);
   }
   .c-circle {
     --r: 0deg;
@@ -162,7 +162,7 @@
     width: 36%;
     aspect-ratio: 1;
     border-radius: 50%;
-    background: var(--hp-coral);
+    background: var(--gs-coral-500);
   }
   .c-print {
     --r: 6deg;
@@ -172,9 +172,9 @@
     width: 52%;
     aspect-ratio: 4 / 3;
     padding: 8px;
-    background: var(--hp-sheet);
+    background: var(--gs-surface);
     border-radius: 6px;
-    box-shadow: 0 22px 34px -18px var(--hp-palette-3);
+    box-shadow: 0 22px 34px -18px var(--gs-home-palette-3);
   }
   .c-print::before {
     content: '';
@@ -182,8 +182,8 @@
     height: 100%;
     border-radius: 3px;
     background:
-      radial-gradient(circle at 28% 36%, var(--hp-saffron) 0 14%, transparent 15%),
-      linear-gradient(160deg, var(--hp-mint) 0 58%, var(--hp-palette-4) 58%);
+      radial-gradient(circle at 28% 36%, var(--gs-saffron-500) 0 14%, transparent 15%),
+      linear-gradient(160deg, var(--gs-mint-500) 0 58%, var(--gs-home-palette-4) 58%);
   }
   .c-tape {
     --r: -14deg;
@@ -193,7 +193,7 @@
     width: 46%;
     height: 11%;
     border-radius: 3px;
-    background: var(--hp-palette-5);
+    background: var(--gs-home-palette-5);
   }
   .c-dot {
     --r: 0deg;
@@ -203,7 +203,7 @@
     width: 7%;
     aspect-ratio: 1;
     border-radius: 50%;
-    background: var(--hp-ink);
+    background: var(--gs-text);
   }
   @keyframes home-drop {
     from {
@@ -214,17 +214,17 @@
 
   /* ---------- Errors ---------- */
   .home-error {
-    color: var(--gs-danger, var(--hp-coral-deep));
+    color: var(--gs-danger, var(--gs-danger));
     margin: 0 0 24px;
   }
 
   /* ---------- Setup sheet ---------- */
   .home-setup {
-    background: var(--hp-sheet);
+    background: var(--gs-surface);
     padding: 32px;
-    border: 2px solid var(--hp-ink);
+    border: 2px solid var(--gs-text);
     border-radius: 24px;
-    box-shadow: 8px 8px 0 var(--hp-ink);
+    box-shadow: 8px 8px 0 var(--gs-text);
     margin: 0 8px 64px 0;
   }
   .home-section-heading {
@@ -236,29 +236,29 @@
   }
   .home-section-heading h2 {
     margin: 0;
-    font-family: var(--hp-display);
+    font-family: var(--gs-font-display);
     font-weight: 500;
-    font-size: var(--hp-type-6);
+    font-size: var(--gs-home-type-6);
     letter-spacing: -0.02em;
   }
   .home-section-heading span {
     padding: 4px 12px;
-    border: 1px solid var(--hp-line);
+    border: 1px solid var(--gs-line);
     border-radius: 999px;
-    background: var(--hp-sheet);
-    color: var(--hp-ink-soft);
-    font-size: var(--hp-type-7);
+    background: var(--gs-surface);
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-home-type-7);
   }
   .home-setup p,
   .home-local-note {
-    color: var(--hp-ink-soft);
-    font-size: var(--hp-type-8);
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-home-type-8);
     line-height: 1.6;
   }
   .home-section-heading button {
     background: transparent;
     border: 0;
-    color: var(--hp-violet);
+    color: var(--gs-accent);
     font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 4px;
@@ -272,30 +272,30 @@
   .home-setup label {
     display: grid;
     gap: 8px;
-    font-size: var(--hp-type-8);
+    font-size: var(--gs-home-type-8);
     font-weight: 500;
   }
   .home-setup input,
   .home-setup select {
     width: 100%;
     padding: 12px 14px;
-    border: 1.5px solid var(--hp-line);
-    background: var(--hp-palette-2);
-    color: var(--hp-ink);
+    border: 1.5px solid var(--gs-line);
+    background: var(--gs-home-palette-2);
+    color: var(--gs-text);
     border-radius: 12px;
     box-sizing: border-box;
     transition: border-color 0.15s ease;
   }
   .home-setup input:hover,
   .home-setup select:hover {
-    border-color: var(--hp-ink-soft);
+    border-color: var(--gs-text-secondary);
   }
 
   /* ---------- Board library ---------- */
   .home-library .home-section-heading {
     padding-bottom: 14px;
     margin-bottom: 36px;
-    border-bottom: 1.5px solid var(--hp-ink);
+    border-bottom: 1.5px solid var(--gs-text);
   }
   .home-board-grid {
     display: grid;
@@ -312,13 +312,13 @@
     transition: transform 0.25s ease;
   }
   .home-board-card:nth-child(3n + 1) {
-    --tape: var(--hp-palette-5);
+    --tape: var(--gs-home-palette-5);
   }
   .home-board-card:nth-child(3n + 2) {
-    --tape: var(--hp-palette-6);
+    --tape: var(--gs-home-palette-6);
   }
   .home-board-card:nth-child(3n) {
-    --tape: var(--hp-palette-7);
+    --tape: var(--gs-home-palette-7);
   }
   .home-board-card:hover,
   .home-board-card:focus-within {
@@ -332,7 +332,7 @@
     z-index: 2;
     width: 88px;
     height: 22px;
-    background: var(--tape, var(--hp-palette-5));
+    background: var(--tape, var(--gs-home-palette-5));
     transform: translateX(-50%) rotate(-3deg);
     border-radius: 2px;
     pointer-events: none;
@@ -342,20 +342,20 @@
     width: 100%;
     padding: 12px 12px 8px;
     text-align: left;
-    background: var(--hp-sheet);
-    border: 1px solid var(--hp-line);
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
     border-radius: 6px;
     overflow: hidden;
-    color: var(--hp-ink);
-    box-shadow: 0 8px 14px -12px var(--hp-palette-8);
+    color: var(--gs-text);
+    box-shadow: 0 8px 14px -12px var(--gs-home-palette-8);
     transition:
       opacity 0.2s ease,
       border-color 0.25s ease;
   }
   .home-page .home-board:hover:not(:disabled) {
-    background: var(--hp-sheet);
-    border-color: var(--hp-violet);
-    box-shadow: 0 30px 40px -22px var(--hp-palette-9);
+    background: var(--gs-surface);
+    border-color: var(--gs-accent);
+    box-shadow: 0 30px 40px -22px var(--gs-home-palette-9);
   }
   .home-board-preview {
     height: 190px;
@@ -365,52 +365,53 @@
     justify-content: center;
     border-radius: 3px;
     background:
-      radial-gradient(circle at 1px 1px, var(--hp-palette-10) 1px, transparent 0) 0 0 / 14px 14px,
-      var(--hp-paper);
+      radial-gradient(circle at 1px 1px, var(--gs-home-palette-10) 1px, transparent 0) 0 0 / 14px
+        14px,
+      var(--gs-workspace);
   }
   .home-board-preview svg {
     max-width: 100%;
     max-height: 100%;
-    box-shadow: 0 6px 14px -4px var(--hp-palette-11);
+    box-shadow: 0 6px 14px -4px var(--gs-home-palette-11);
   }
   .home-board-info {
     padding: 16px 4px 8px;
   }
   .home-board-info h3 {
     margin: 0 0 6px;
-    font-family: var(--hp-display);
+    font-family: var(--gs-font-display);
     font-weight: 500;
-    font-size: var(--hp-type-9);
+    font-size: var(--gs-home-type-9);
     letter-spacing: -0.01em;
     overflow-wrap: anywhere;
   }
   .home-board-info p {
     margin: 0;
-    color: var(--hp-ink-soft);
-    font-size: var(--hp-type-7);
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-home-type-7);
   }
   .home-page .home-board-card > .gs-button--danger {
     justify-self: end;
     padding: 4px 6px;
     background: transparent;
     border: 0;
-    color: var(--hp-coral-deep);
-    font-size: var(--hp-type-7);
+    color: var(--gs-danger);
+    font-size: var(--gs-home-type-7);
     text-decoration: underline;
     text-underline-offset: 3px;
   }
   .home-page .home-board-card > .gs-button--danger:hover:not(:disabled) {
     background: transparent;
-    color: var(--hp-palette-12);
+    color: var(--gs-home-palette-12);
   }
 
   /* ---------- Empty state ---------- */
   .home-empty {
     padding: 64px var(--gs-space-5, 20px);
-    border: 2px dashed var(--hp-line);
+    border: 2px dashed var(--gs-line);
     border-radius: 24px;
     text-align: center;
-    color: var(--hp-ink-soft);
+    color: var(--gs-text-secondary);
   }
   .home-empty::before {
     content: '';
@@ -419,15 +420,15 @@
     height: 72px;
     margin: 0 auto 20px;
     border-radius: 999px 999px 6px 6px;
-    background: var(--hp-violet);
+    background: var(--gs-accent);
     opacity: 0.85;
   }
   .home-empty h3 {
     margin: 0 0 8px;
-    font-family: var(--hp-display);
+    font-family: var(--gs-font-display);
     font-weight: 500;
-    font-size: var(--hp-type-10);
-    color: var(--hp-ink);
+    font-size: var(--gs-home-type-10);
+    color: var(--gs-text);
   }
 
   .home-local-note {
@@ -437,7 +438,7 @@
 
   /* ---------- Focus ---------- */
   .home-page :focus-visible {
-    outline: 3px solid var(--hp-violet);
+    outline: 3px solid var(--gs-accent);
     outline-offset: 3px;
   }
 
@@ -494,9 +495,9 @@
   .home-setup {
     max-width: 760px;
     margin: 0 0 48px;
-    border: 1px solid var(--hp-line);
+    border: 1px solid var(--gs-line);
     border-radius: 20px;
-    box-shadow: 0 6px 0 var(--hp-line);
+    box-shadow: 0 6px 0 var(--gs-line);
   }
   .home-setup .home-section-heading {
     align-items: center;
@@ -506,7 +507,7 @@
     text-decoration: none;
     padding: 10px 14px;
     border-radius: 999px;
-    background: var(--hp-paper);
+    background: var(--gs-workspace);
   }
   .home-name-field {
     margin-bottom: 24px;
@@ -545,22 +546,22 @@
     gap: 10px;
     min-height: 44px;
     padding: 10px 18px;
-    border: 1px solid var(--hp-line);
+    border: 1px solid var(--gs-line);
     border-radius: 12px;
-    background: var(--hp-sheet);
-    color: var(--hp-ink-soft);
+    background: var(--gs-surface);
+    color: var(--gs-text-secondary);
     transition: background 120ms ease;
   }
   .home-choice input:checked + span {
-    border-color: var(--hp-violet);
-    background: var(--hp-paper);
-    color: var(--hp-violet-deep);
+    border-color: var(--gs-accent);
+    background: var(--gs-workspace);
+    color: var(--gs-accent-hover);
   }
   .home-choice input:focus-visible {
     outline: 0;
   }
   .home-choice input:focus-visible + span {
-    outline: 2px solid var(--hp-violet);
+    outline: 2px solid var(--gs-accent);
     outline-offset: 3px;
   }
   .home-choice-field:disabled {
@@ -597,7 +598,7 @@
     gap: 16px;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid var(--hp-line);
+    border-top: 1px solid var(--gs-line);
     padding-top: 22px;
   }
   .home-setup-footer p {

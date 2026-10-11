@@ -43,7 +43,7 @@ test('closed and open shapes share a bounded inspector and canonical bindings', 
   page,
 }) => {
   const h = await open(page);
-  await expect(page.getByRole('dialog', { name: 'Object formatting' })).toHaveCount(0);
+  await expect(page.getByRole('complementary', { name: 'Object formatting' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Radial', exact: true }).click();
   await color(page, 'Second color', '#cc6688');
   await page.getByRole('tab', { name: 'Border', exact: true }).click();
@@ -204,7 +204,10 @@ test('quick controls and inspector use one command path; keyboard tabs never mov
   await expect(page.getByRole('button', { name: 'Appearance', exact: true })).toBeFocused();
   await page.getByRole('combobox', { name: 'Quick fill type', exact: true }).selectOption('linear');
   await page.getByRole('button', { name: 'Shape fill color', exact: true }).click();
-  await page.getByRole('button', { name: 'Shape fill color: #d15b52', exact: true }).click();
+  await page
+    .getByRole('group', { name: 'Shape fill color palette', exact: true })
+    .getByRole('button', { name: 'Coral', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Close quick appearance control', exact: true }).click();
   await page.getByRole('button', { name: 'Appearance', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Fill color', exact: true })).toHaveValue(
@@ -232,7 +235,9 @@ test('quick controls and inspector use one command path; keyboard tabs never mov
     ),
   ).toEqual(before.appearance);
   await h.evaluate(({ adapter }) => adapter.select(['solid', 'text']));
-  await expect(page.getByRole('dialog', { name: 'Object formatting', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('complementary', { name: 'Object formatting', exact: true }),
+  ).toHaveCount(0);
   await expect(page.getByRole('complementary', { name: 'Appearance inspector' })).toHaveCount(0);
 });
 
@@ -408,9 +413,13 @@ test('curated Elements and uploaded photos retain their separate controls and un
   );
   expect(asset.kind).toBe('asset');
   await expect(page.locator('[aria-label="Appearance inspector"]')).toHaveCount(0);
-  if (!(await page.getByRole('dialog', { name: 'Object formatting', exact: true }).isVisible()))
+  if (
+    !(await page.getByRole('complementary', { name: 'Object formatting', exact: true }).isVisible())
+  )
     await page.getByRole('button', { name: 'Image effects', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Object formatting', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('complementary', { name: 'Object formatting', exact: true }),
+  ).toBeVisible();
   expect(
     await h.evaluate(
       ({ adapter }, id) => adapter.history.document.items.find((i) => i.id === id),
@@ -490,7 +499,7 @@ test('inspector navigation does not redraw artwork; bounds remain an explicit se
   await page.getByRole('tab', { name: 'Text', exact: true }).click();
   await frames(page);
   expect(await counter.evaluate((counter) => counter.draws)).toBe(0);
-  await page.getByText('Object settings', { exact: false }).first().click();
+  await expect(page.getByText('Object settings', { exact: false }).first()).toBeVisible();
   const size = page.getByLabel('Bounds width', { exact: true });
   const before = await h.evaluate(({ adapter }) => adapter.history.document);
   await size.fill('400');
@@ -551,7 +560,7 @@ test('shape frame conversion remains available as the original explicit object a
   page,
 }) => {
   const h = await open(page);
-  await page.getByText('Object settings', { exact: false }).first().click();
+  await expect(page.getByText('Object settings', { exact: false }).first()).toBeVisible();
   const frame = page.getByRole('combobox', { name: 'Convert shape to frame', exact: true });
   await expect.poll(() => frame.locator('option').count()).toBeGreaterThan(1);
   const id = await frame.locator('option').nth(1).getAttribute('value');

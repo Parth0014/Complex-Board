@@ -14,11 +14,9 @@ import { migrateDocument } from '../../src/vision/appearance/migration';
 import fixture from './appearance-phase-c-v2.json';
 import { KonvaCanvasAdapter } from '../../src/vision/canvas/KonvaCanvasAdapter';
 import { createAppearance } from '../../src/vision/appearance/defaults';
-import { applyFluentTheme } from '../../src/studio/design-system/fluentTheme';
 import '../../src/studio/design-system/index.css';
 import '../../src/studio/appearance/tweakpane.css';
 
-applyFluentTheme(document);
 const adapter = new KonvaCanvasAdapter(window, 'isolated-d1-lifecycle');
 adapter.history.document.items = [
   {

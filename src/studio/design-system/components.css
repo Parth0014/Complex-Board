@@ -83,8 +83,6 @@
     border: 0;
   }
 
-
-
   .vs-icon-btn {
     display: inline-flex;
     align-items: center;
@@ -1330,14 +1328,7 @@
     flex-shrink: 0;
     color: var(--gs-success);
   }
-  .vs-error {
-    position: fixed;
-    z-index: var(--gs-z-tooltip);
-    top: calc(var(--gs-header-height, 56px) + 16px);
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: min(560px, calc(100% - 40px));
-  }
+
   @media (max-width: 1023px) {
     .vs-lib {
       width: 288px;

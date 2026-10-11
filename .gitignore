@@ -12,3 +12,5 @@ vision-board/
 tmp/
 exports/*
 !exports/appearance-legacy/
+
+.playwright-cli/

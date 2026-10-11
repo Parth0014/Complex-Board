@@ -16,6 +16,7 @@ export function CuratedPanel({
   const [search, setSearch] = useState(''),
     [category, setCategory] = useState(initialTheme),
     [error, setError] = useState('');
+  const [loaded, setLoaded] = useState<Set<string>>(() => new Set());
   const assets = curatedAssets.filter(
     (asset) =>
       (category === 'all' || asset.topics?.includes(category)) &&
@@ -37,7 +38,12 @@ export function CuratedPanel({
           }}
         />
         {search && (
-          <Button type="button" aria-label="Clear element search" onClick={() => setSearch('')}>
+          <Button
+            type="button"
+            aria-label="Clear element search"
+            data-tip="Clear element search"
+            onClick={() => setSearch('')}
+          >
             <X size={16} aria-hidden="true" />
           </Button>
         )}
@@ -92,7 +98,14 @@ export function CuratedPanel({
                     void adapter.insertAsset(asset).catch((error) => setError(String(error)));
                   }}
                 >
-                  <img src={asset.previewUrl} alt={asset.title} loading="lazy" />
+                  <img
+                    src={asset.previewUrl}
+                    alt={asset.title}
+                    loading="lazy"
+                    className={loaded.has(asset.id) ? undefined : 'gs-skeleton'}
+                    onLoad={() => setLoaded((current) => new Set(current).add(asset.id))}
+                    onError={() => setLoaded((current) => new Set(current).add(asset.id))}
+                  />
                   <span>{asset.title}</span>
                 </Button>
               ))}
