@@ -1,3 +1,6 @@
+/* primitives.css – low-level resets and primitive component styles.
+   Lives at @layer base (resets) and @layer components (primitives). */
+
 @layer base {
   *,
   *::before,
@@ -15,6 +18,7 @@
     font-size: var(--gs-text-13);
     color: var(--gs-text);
     background: var(--gs-workspace);
+    line-height: var(--gs-line-height-body);
   }
   button,
   input,
@@ -22,55 +26,174 @@
   textarea {
     font: inherit;
   }
-  .gs-button {
-    cursor: pointer;
-    font: inherit;
-    color: inherit;
-    min-height: var(--gs-control-height);
-    padding: var(--gs-space-1) var(--gs-space-2);
-    border: 1px solid transparent;
-    border-radius: var(--gs-radius-control);
-    background: transparent;
-  }
-  .gs-button:disabled {
-    cursor: not-allowed;
-  }
-  .gs-button--primary,
-  .gs-button--secondary,
-  .gs-button--danger {
-    min-height: var(--gs-control-height);
-    border: 1px solid var(--gs-control-line);
-    border-radius: var(--gs-radius-control);
-    padding: var(--gs-space-2) var(--gs-space-3);
-  }
-  .gs-button--primary {
-    background: var(--gs-accent);
-    color: var(--gs-on-accent);
-    border-color: transparent;
-  }
-  .gs-button--primary:hover:not(:disabled) {
-    background: var(--gs-accent-hover);
-  }
-  .gs-button--secondary {
-    background: var(--gs-surface);
-  }
-  .gs-button--danger {
-    color: var(--gs-danger);
-    background: var(--gs-danger-soft);
-  }
-  .gs-icon-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: var(--gs-control-height);
-    min-height: var(--gs-control-height);
-  }
+
+  /* ── Focus ring (global) ──────────────────────── */
   :where(button, summary, input, select, textarea, [tabindex]):focus-visible {
     outline: 2px solid var(--gs-accent);
     outline-offset: 2px;
   }
 }
+
 @layer components {
+  /* ── Button ───────────────────────────────────── */
+  .gs-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gs-space-2);
+    min-height: var(--gs-control-height);
+    padding: var(--gs-space-1) var(--gs-space-3);
+    border: 1px solid transparent;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    color: var(--gs-text);
+    font: inherit;
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition:
+      background var(--gs-duration-feedback) var(--gs-ease),
+      border-color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .gs-button:focus-visible {
+    outline: none;
+    box-shadow: var(--gs-focus);
+  }
+  .gs-button:disabled {
+    color: var(--gs-text-disabled);
+    background: var(--gs-surface-muted);
+    border-color: transparent;
+    cursor: not-allowed;
+  }
+
+  /* sizes */
+  .gs-button--sm {
+    min-height: var(--gs-control-height-sm);
+  }
+  .gs-button--lg {
+    min-height: var(--gs-control-height-lg);
+    padding: 0 var(--gs-space-4);
+  }
+
+  /* primary */
+  .gs-button--primary {
+    background: var(--gs-accent);
+    color: var(--gs-on-accent);
+    border-color: transparent;
+    padding: var(--gs-space-2) var(--gs-space-3);
+  }
+  .gs-button--primary:hover:not(:disabled) {
+    background: var(--gs-accent-hover);
+  }
+  .gs-button--primary:active:not(:disabled) {
+    background: var(--gs-accent-pressed);
+  }
+
+  /* secondary */
+  .gs-button--secondary {
+    background: var(--gs-surface);
+    border-color: var(--gs-control-line);
+    padding: var(--gs-space-2) var(--gs-space-3);
+  }
+  .gs-button--secondary:hover:not(:disabled) {
+    border-color: var(--gs-control-line-hover);
+  }
+
+  /* plain (ghost) */
+  .gs-button--plain:hover:not(:disabled) {
+    background: var(--gs-hover);
+  }
+
+  /* danger */
+  .gs-button--danger {
+    background: var(--gs-danger-soft);
+    color: var(--gs-danger);
+    padding: var(--gs-space-2) var(--gs-space-3);
+  }
+  .gs-button--danger:hover:not(:disabled) {
+    background: var(--gs-danger);
+    color: var(--gs-on-accent);
+  }
+
+  /* ── Icon button ──────────────────────────────── */
+  .gs-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--gs-control-height);
+    height: var(--gs-control-height);
+    min-width: var(--gs-control-height);
+    min-height: var(--gs-control-height);
+    padding: 0;
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    color: var(--gs-text-secondary);
+    cursor: pointer;
+    transition:
+      background var(--gs-duration-feedback) var(--gs-ease),
+      color var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .gs-icon-button:hover:not(:disabled) {
+    background: var(--gs-hover);
+    color: var(--gs-text);
+  }
+  .gs-icon-button:focus-visible {
+    outline: none;
+    box-shadow: var(--gs-focus);
+  }
+  .gs-icon-button:disabled {
+    color: var(--gs-text-disabled);
+    cursor: not-allowed;
+  }
+
+  /* ── Touch target enlargement ─────────────────── */
+  @media (pointer: coarse) {
+    .gs-button,
+    .gs-icon-button {
+      min-height: var(--gs-touch-target);
+    }
+    .gs-icon-button {
+      width: var(--gs-touch-target);
+      min-width: var(--gs-touch-target);
+    }
+  }
+
+  /* ── Input / Select / Textarea ────────────────── */
+  .gs-input,
+  .gs-select {
+    display: block;
+    width: 100%;
+    height: var(--gs-control-height);
+    padding: 0 var(--gs-space-3);
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-control);
+    background: var(--gs-surface);
+    font: inherit;
+    font-size: var(--gs-text-13);
+    color: var(--gs-text);
+    transition:
+      border-color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .gs-input::placeholder {
+    color: var(--gs-text-disabled);
+  }
+  .gs-input:hover,
+  .gs-select:hover {
+    border-color: var(--gs-control-line-hover);
+  }
+  .gs-input:focus-visible,
+  .gs-select:focus-visible {
+    outline: none;
+    border-color: var(--gs-accent);
+    box-shadow: var(--gs-focus);
+  }
+
+  /* ── Popover ──────────────────────────────────── */
   .gs-popover {
     position: fixed;
     z-index: var(--gs-z-popover);
@@ -88,6 +211,8 @@
   .gs-popover.vs-actionbar__popover {
     transform: none;
   }
+
+  /* ── Submenu trigger & panel ──────────────────── */
   .gs-submenu-trigger {
     display: flex;
     align-items: center;
@@ -102,7 +227,7 @@
     background: var(--gs-hover);
   }
   .gs-submenu {
-    width: 220px;
+    min-width: 220px;
   }
   .gs-submenu button {
     display: flex;
@@ -126,7 +251,144 @@
     font-size: var(--gs-text-11);
     color: var(--gs-text-secondary);
   }
+
+  /* ── Segmented control ────────────────────────── */
+  .gs-segmented {
+    display: inline-flex;
+    gap: 2px;
+    background: var(--gs-surface-muted);
+    border-radius: var(--gs-radius-control);
+    padding: 2px;
+  }
+  .gs-segmented__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--gs-control-height-sm);
+    padding: 0 var(--gs-space-3);
+    border: 0;
+    border-radius: calc(var(--gs-radius-control) - 2px);
+    background: transparent;
+    font: inherit;
+    font-size: var(--gs-text-13);
+    color: var(--gs-text-secondary);
+    cursor: pointer;
+    transition:
+      background var(--gs-duration-feedback) var(--gs-ease),
+      color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .gs-segmented__item:hover {
+    color: var(--gs-text);
+  }
+  .gs-segmented__item[aria-pressed='true'],
+  .gs-segmented__item[data-active] {
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    box-shadow: var(--gs-shadow-float);
+  }
+  .gs-segmented__item:focus-visible {
+    outline: none;
+    box-shadow: var(--gs-focus);
+  }
+
+  /* ── Toast ────────────────────────────────────── */
+  .gs-toast {
+    position: fixed;
+    bottom: var(--gs-space-5);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--gs-z-modal);
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-3);
+    padding: var(--gs-space-3) var(--gs-space-4);
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-card);
+    box-shadow: var(--gs-shadow-float);
+    font-size: var(--gs-text-13);
+    color: var(--gs-text);
+    animation: gs-toast-in var(--gs-duration-overlay) var(--gs-ease);
+  }
+  .gs-toast--error {
+    border-color: var(--gs-danger);
+  }
+  @keyframes gs-toast-in {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(8px);
+    }
+  }
+
+  /* ── Skeleton (loading placeholder) ───────────── */
+  .gs-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--gs-surface-muted),
+      var(--gs-hover),
+      var(--gs-surface-muted)
+    );
+    background-size: 200% 100%;
+    border-radius: var(--gs-radius-control);
+    animation: gs-shimmer var(--gs-duration-slow) linear infinite alternate;
+  }
+  @keyframes gs-shimmer {
+    to {
+      background-position: -100% 0;
+    }
+  }
+
+  /* ── Swatch ───────────────────────────────────── */
+  .gs-swatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--gs-line);
+    cursor: pointer;
+    padding: 0;
+    transition: box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .gs-swatch[aria-pressed='true'],
+  .gs-swatch.is-selected {
+    box-shadow: 0 0 0 2px var(--gs-focus-color);
+  }
+
+  /* ── Kicker (uppercase section label) ─────────── */
+  .gs-kicker {
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--gs-tracking-kicker);
+    color: var(--gs-text-secondary);
+    margin: 0;
+  }
+
+  /* ── Visually hidden (a11y) ───────────────────── */
+  .gs-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ── Truncation ───────────────────────────────── */
+  .gs-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
+
 @layer utilities {
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -135,6 +397,41 @@
       animation-duration: 0s;
       transition-duration: 0s;
       scroll-behavior: auto;
+    }
+  }
+}
+
+@layer components {
+  .gs-loading {
+    display: grid;
+    gap: var(--gs-space-3);
+    padding: var(--gs-space-3);
+  }
+  .gs-loading .gs-skeleton {
+    height: var(--gs-control-height);
+  }
+  .gs-loading .gs-skeleton:last-child {
+    height: calc(var(--gs-control-height) * 2);
+  }
+  .gs-toast {
+    bottom: calc(var(--gs-footer-height) + var(--gs-space-7));
+    max-width: min(560px, calc(100vw - var(--gs-space-6)));
+  }
+  .gs-toast > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .gs-toast svg {
+    flex-shrink: 0;
+  }
+  .gs-swatch:focus-visible {
+    outline: none;
+    box-shadow: var(--gs-focus);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gs-toast,
+    .gs-skeleton {
+      animation: none;
     }
   }
 }

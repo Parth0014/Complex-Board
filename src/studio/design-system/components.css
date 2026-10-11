@@ -83,62 +83,7 @@
     border: 0;
   }
 
-  .vs-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--gs-space-2);
-    border: 1px solid transparent;
-    border-radius: var(--gs-radius-pill);
-    padding: var(--gs-space-2) var(--gs-space-4);
-    font-weight: var(--gs-weight-strong);
-    font-size: var(--gs-text-13);
-    line-height: 1;
-    background: transparent;
-    color: var(--gs-text);
-    transition: all var(--gs-duration-overlay) var(--gs-ease);
-    white-space: nowrap;
-  }
-  .vs-btn svg {
-    flex-shrink: 0;
-  }
-  .vs-btn:active:not(:disabled) {
-    transform: scale(0.96);
-  }
 
-  .vs-btn--primary {
-    background: var(--gs-accent);
-    color: var(--gs-on-accent);
-    box-shadow: none;
-  }
-  .vs-btn--primary:hover:not(:disabled) {
-    box-shadow: none;
-    transform: translateY(-1px);
-  }
-
-  .vs-btn--ghost {
-    border-color: var(--gs-line);
-    color: var(--gs-text);
-  }
-  .vs-btn--ghost:hover:not(:disabled) {
-    background: var(--gs-surface-muted);
-    border-color: var(--gs-control-line);
-  }
-
-  .vs-btn--light {
-    border-color: var(--gs-line);
-    background: var(--gs-surface);
-    color: var(--gs-text);
-    box-shadow: none;
-  }
-  .vs-btn--light:hover:not(:disabled) {
-    background: var(--gs-surface);
-    box-shadow: none;
-    transform: translateY(-1px);
-  }
-  .vs-btn--danger:hover:not(:disabled) {
-    background: var(--gs-danger-soft);
-  }
 
   .vs-icon-btn {
     display: inline-flex;
@@ -1424,10 +1369,10 @@
     .vs-save span:last-child {
       display: none;
     }
-    .vs-header .vs-btn span {
+    .vs-header .gs-button span {
       display: none;
     }
-    .vs-header .vs-btn {
+    .vs-header .gs-button {
       padding: 10px var(--gs-space-3);
     }
     .vs-history .vs-icon-btn {
@@ -2460,13 +2405,9 @@
     color: var(--gs-on-accent);
     font-weight: var(--gs-weight-strong);
   }
-  .vs-header .vs-btn--primary {
+  .vs-header .gs-button--primary {
     padding: var(--gs-space-2) var(--gs-space-4);
     font-weight: var(--gs-weight-medium);
-  }
-  .vs-header .vs-btn--ghost {
-    border-color: transparent;
-    color: var(--gs-on-accent);
   }
   .vs-file-btn {
     background: transparent;
@@ -2944,7 +2885,7 @@
     width: 30px;
     height: 30px;
   }
-  .vs .vs-header .vs-btn {
+  .vs .vs-header .gs-button {
     padding: var(--gs-space-2) 14px;
     border-radius: var(--gs-radius-menu, 8px);
   }
@@ -3544,7 +3485,7 @@
     border: 0;
     box-shadow: none;
   }
-  .vs :is(.vs-btn, .panel-action, .panel-secondary-action, .vs-compose-action) {
+  .vs :is(.gs-button, .panel-action, .panel-secondary-action, .vs-compose-action) {
     border-radius: var(--gs-radius-control);
     min-height: 32px;
     padding: 6px 10px;
@@ -3552,7 +3493,7 @@
     font-weight: var(--gs-weight-regular);
     box-shadow: none;
   }
-  .vs :is(.vs-btn--primary, .vs-share-btn) {
+  .vs :is(.gs-button--primary, .vs-share-btn) {
     background: var(--gs-accent);
     color: var(--gs-on-accent);
     box-shadow: none;
@@ -3726,7 +3667,7 @@
   .vs .vs-header :is(.vs-brand__name strong, .vs-save, .vs-new-btn, .vs-file-btn) {
     color: var(--gs-text-secondary);
   }
-  .vs .vs-header button:not(.vs-share-btn):not(.vs-btn--primary) {
+  .vs .vs-header button:not(.vs-share-btn):not(.gs-button--primary) {
     color: var(--gs-text);
   }
   .vs .vs-save__dot {
@@ -3807,7 +3748,7 @@
   }
   .vs
     :is(
-      .vs-btn,
+      .gs-button,
       .panel-action,
       .panel-secondary-action,
       .vs-compose-action,
@@ -3825,10 +3766,10 @@
   .vs :is(input, select, textarea):hover:not(:disabled) {
     border-color: var(--gs-control-line-hover);
   }
-  .vs :is(.vs-btn--primary, .vs-share-btn):hover:not(:disabled) {
+  .vs :is(.gs-button--primary, .vs-share-btn):hover:not(:disabled) {
     background: var(--gs-accent-hover);
   }
-  .vs :is(.vs-btn--primary, .vs-share-btn):active:not(:disabled) {
+  .vs :is(.gs-button--primary, .vs-share-btn):active:not(:disabled) {
     background: var(--gs-accent-pressed);
   }
   .vs :is(.vs-context-flyout, .vs-object-context, .vs-selectionbar, .vs-canvas-settings),
@@ -4395,7 +4336,7 @@
       width: 32px;
       padding: 6px;
     }
-    .vs .vs-header .vs-btn {
+    .vs .vs-header .gs-button {
       flex-shrink: 0;
       min-width: 32px;
       padding: 6px var(--gs-space-2);

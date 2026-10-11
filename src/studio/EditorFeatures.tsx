@@ -52,7 +52,7 @@ function Sec({
   return (
     <details className="vs-sec" open={open}>
       <summary>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        <span className="gs-kicker" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           {icon}
           {title}
         </span>
@@ -630,7 +630,7 @@ export function EditorFeatures({
             </Sec>
             {adapter.groupScope.length > 0 && (
               <Button
-                className="vs-btn vs-btn--light"
+                variant="secondary"
                 style={{ justifyContent: 'center' }}
                 onClick={() => adapter.exitGroup()}
               >
@@ -677,7 +677,7 @@ export function EditorFeatures({
                     ))}
                   </div>
                   <Button
-                    className="vs-btn vs-btn--light"
+                    variant="secondary"
                     disabled={
                       item.locked ||
                       selected.length !== 1 ||
@@ -790,7 +790,7 @@ export function EditorFeatures({
                       </Button>
                     </div>
                     <Button
-                      className="vs-btn vs-btn--light"
+                      variant="secondary"
                       style={{ justifyContent: 'center' }}
                       onClick={() => patch({ textRuns: undefined })}
                     >
@@ -817,14 +817,14 @@ export function EditorFeatures({
                     {color('Text background', 'background', '#fff3bd')}
                     <div className="vs-row-2">
                       <Button
-                        className="vs-btn vs-btn--light"
+                        variant="secondary"
                         style={{ justifyContent: 'center' }}
                         onClick={() => set('background', null)}
                       >
                         Clear background
                       </Button>
                       <Button
-                        className="vs-btn vs-btn--light"
+                        variant="secondary"
                         style={{ justifyContent: 'center' }}
                         aria-pressed={!!item.strike}
                         onClick={() => patch({ strike: !item.strike })}
@@ -832,14 +832,14 @@ export function EditorFeatures({
                         Strikethrough
                       </Button>
                       <Button
-                        className="vs-btn vs-btn--light"
+                        variant="secondary"
                         style={{ justifyContent: 'center' }}
                         onClick={() => patch({ text: item.text?.toUpperCase() })}
                       >
                         UPPERCASE
                       </Button>
                       <Button
-                        className="vs-btn vs-btn--light"
+                        variant="secondary"
                         style={{ justifyContent: 'center' }}
                         onClick={() => patch({ text: item.text?.toLowerCase() })}
                       >
@@ -919,7 +919,7 @@ export function EditorFeatures({
                     </div>
                     {!crop ? (
                       <Button
-                        className="vs-btn vs-btn--light"
+                        variant="secondary"
                         style={{ justifyContent: 'center' }}
                         onClick={() => adapter.startImageCrop()}
                       >
@@ -961,14 +961,14 @@ export function EditorFeatures({
                         </div>
                         <div className="vs-row-2">
                           <Button
-                            className="vs-btn vs-btn--primary"
+                            variant="primary"
                             style={{ justifyContent: 'center' }}
                             onClick={() => adapter.applyCrop()}
                           >
                             <CheckIcon /> Apply crop
                           </Button>
                           <Button
-                            className="vs-btn vs-btn--light"
+                            variant="secondary"
                             style={{ justifyContent: 'center' }}
                             onClick={() => adapter.cancelCrop()}
                           >
@@ -978,7 +978,7 @@ export function EditorFeatures({
                       </>
                     )}
                     <Button
-                      className="vs-btn vs-btn--light"
+                      variant="secondary"
                       style={{ justifyContent: 'center' }}
                       onClick={() => patch({ crop: undefined })}
                     >
@@ -1171,7 +1171,7 @@ export function EditorFeatures({
                         </select>
                       </label>
                       <Button
-                        className="vs-btn vs-btn--light"
+                        variant="secondary"
                         style={{ justifyContent: 'center' }}
                         disabled={!item.contentAsset}
                         onClick={() => adapter.detachFrameContent()}
@@ -1217,7 +1217,7 @@ export function EditorFeatures({
                     </label>
                   </div>
                   <Button
-                    className="vs-btn vs-btn--light"
+                    variant="secondary"
                     style={{ justifyContent: 'center' }}
                     disabled={!read(item, 'fill.endColor') || item.locked}
                     onClick={() => set('fill.endColor', undefined)}
@@ -1388,7 +1388,7 @@ export function EditorFeatures({
                     This arrow follows its connected objects.
                   </p>
                   <Button
-                    className="vs-btn vs-btn--light"
+                    variant="secondary"
                     style={{ justifyContent: 'center' }}
                     onClick={() => patch({ connector: undefined })}
                   >

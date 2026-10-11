@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { Button } from './Button';
 import { Popover } from './Popover';
+import { ChevronRightIcon as ChevronRight } from '../icons';
 
 const MenuContext = createContext<{
   active: string | null;
@@ -112,7 +113,7 @@ export function Submenu({
         {icon}
         {label}
         <span className="vs-context-v2__chevron" aria-hidden="true">
-          ›
+          <ChevronRight size={14} />
         </span>
       </Button>
       {open && (
