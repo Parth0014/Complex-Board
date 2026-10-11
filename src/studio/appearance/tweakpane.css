@@ -22,7 +22,7 @@
 .gs-shape-inspector h3 {
   margin: 0;
   font-size: var(--gs-text-15);
-  font-weight: var(--gs-weight-strong);
+  font-weight: var(--gs-weight-medium);
 }
 .gs-shape-inspector p {
   margin: var(--gs-space-1) 0 0;
@@ -73,7 +73,7 @@
   box-shadow: none;
 }
 .gs-tweakpane .tp-fldv_b {
-  font-weight: var(--gs-weight-strong);
+  font-weight: var(--gs-weight-medium);
 }
 .gs-tweakpane :is(input, select, button, [tabindex]):focus-visible {
   outline: 2px solid var(--gs-focus-color);

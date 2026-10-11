@@ -24,7 +24,7 @@
     margin: 0 0 var(--gs-space-1);
     font-size: var(--gs-text-11);
     color: var(--gs-text-secondary);
-    letter-spacing: 0.08em;
+    letter-spacing: var(--gs-tracking-kicker);
   }
   .gs-appearance-header h2 {
     margin: 0;
@@ -89,7 +89,7 @@
   .gs-appearance-fields h3 {
     font-size: var(--gs-text-13);
     margin: var(--gs-space-4) 0 var(--gs-space-2);
-    font-weight: var(--gs-weight-strong);
+    font-weight: var(--gs-weight-medium);
   }
   .gs-appearance-note {
     font-size: var(--gs-text-11);
@@ -164,7 +164,7 @@
   }
   .gs-text-advanced summary {
     cursor: pointer;
-    font-weight: var(--gs-weight-strong);
+    font-weight: var(--gs-weight-medium);
   }
   .gs-text-advanced summary span {
     font-size: var(--gs-text-11);

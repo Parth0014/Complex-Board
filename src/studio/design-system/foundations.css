@@ -69,6 +69,7 @@
     --gs-weight-regular: 400;
     --gs-weight-medium: 500;
     --gs-weight-strong: 700;
+    --gs-weight-display: 900;
     --gs-line-height-body: 1.45;
     --gs-line-height-tight: 1.2;
     --gs-tracking-kicker: 0.06em;
@@ -112,6 +113,7 @@
     --gs-duration-press: 100ms;
     --gs-duration-exit: 120ms;
     --gs-duration-overlay: 200ms;
+    --gs-duration-enter: 160ms;
     --gs-duration-slow: 320ms;
     --gs-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --gs-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -159,6 +161,7 @@
       --gs-duration-press: 0.01ms;
       --gs-duration-exit: 0.01ms;
       --gs-duration-overlay: 0.01ms;
+      --gs-duration-enter: 0.01ms;
       --gs-duration-slow: 0.01ms;
     }
   }
