@@ -80,7 +80,7 @@ export function BoardSetup({
           <legend>Topic</legend>
           <div className="home-theme-choices">
             {ELEMENT_THEMES.filter((item) => item.id !== 'creative').map((item) => (
-              <label className="home-choice" key={item.id}>
+              <label className="home-choice gs-chip" key={item.id}>
                 <input
                   type="radio"
                   name="board-theme"
@@ -122,8 +122,8 @@ export function BoardSetup({
         </div>
       </fieldset>
       <div className="home-setup-footer">
-        <Button type="submit" variant="primary" className="home-primary" disabled={busy}>
-          {busy ? 'Creating\u2026' : 'Create board'}
+        <Button type="submit" variant="primary" className="home-primary" loading={busy}>
+          Create board
         </Button>
       </div>
     </form>

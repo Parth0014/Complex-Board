@@ -20,7 +20,7 @@ function opticalStroke(size: number, base: number) {
 
 export function Glyph({
   name,
-  size = 18,
+  size = 16,
   strokeWidth = 1.5,
   duotone = true,
   className,
@@ -39,15 +39,10 @@ export function Glyph({
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
-      className={className ? `gs-glyph ${className}` : 'gs-glyph'}
+      className={className ? `gs-glyph gs-icon ${className}` : 'gs-glyph gs-icon'}
     >
       {duotone && glyph.t ? (
-        <path
-          d={glyph.t}
-          fill="currentColor"
-          stroke="none"
-          style={{ fillOpacity: 'var(--gs-glyph-tint, 0.16)' }}
-        />
+        <path d={glyph.t} fill="currentColor" stroke="none" className="gs-icon__tint" />
       ) : null}
       {glyph.s ? <path d={glyph.s} fill="currentColor" stroke="none" /> : null}
       {glyph.d ? <path d={glyph.d} /> : null}

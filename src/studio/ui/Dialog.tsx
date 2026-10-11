@@ -1,13 +1,15 @@
 import { useLayoutEffect, useRef, type ComponentProps } from 'react';
+import { useSurfaceMotion } from './useSurfaceMotion';
 export function Dialog({
   onClose,
   children,
   ...props
 }: ComponentProps<'div'> & { onClose: () => void; 'aria-label': string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const close = useRef(onClose);
+  const { dismiss, motion } = useSurfaceMotion(onClose);
+  const close = useRef(dismiss);
   useLayoutEffect(() => {
-    close.current = onClose;
+    close.current = dismiss;
   });
   useLayoutEffect(() => {
     const node = ref.current!;
@@ -23,7 +25,7 @@ export function Dialog({
       if (event.key === 'Escape' && !(event.target as HTMLElement).closest('.gs-popover')) {
         event.preventDefault();
         event.stopPropagation();
-        close.current();
+        close.current(true);
       }
       if (event.key === 'Tab') {
         const items = focusable(),
@@ -48,7 +50,20 @@ export function Dialog({
     };
   }, []);
   return (
-    <div {...props} ref={ref} role="dialog" aria-modal="true" tabIndex={-1}>
+    <div
+      {...props}
+      ref={ref}
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+      data-motion={motion}
+      onClickCapture={(event) => {
+        if ((event.target as Element).closest('[data-dialog-close]')) {
+          event.stopPropagation();
+          dismiss(event.detail === 0);
+        }
+      }}
+    >
       {children}
     </div>
   );

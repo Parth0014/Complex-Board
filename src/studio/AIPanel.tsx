@@ -125,10 +125,11 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         aria-label="Generate"
 
         data-tip={help.action}
-        disabled={busy || !prompt.trim()}
+        disabled={!prompt.trim()}
+        loading={busy}
         onClick={() => void generate()}
       >
-        {busy ? 'Working…' : help.action}
+        {help.action}
       </Button>
       {busy && <Skeleton label="Generating" />}
       {busy && <Button onClick={() => controller.current?.abort()}>Cancel generation</Button>}

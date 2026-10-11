@@ -46,7 +46,7 @@ export function StudioShell({
         }}
       />
 
-      {error && !share && <Toast message={error} error onDismiss={dismissError} />}
+      {error && !share && <Toast key={error} message={error} error onDismiss={dismissError} />}
       <div className="vs-body">
         <StudioSidebar
           adapter={adapter}

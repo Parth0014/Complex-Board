@@ -14,7 +14,7 @@ export type { GlyphName } from './icon-set/glyphs';
  */
 type IconProps = { size?: number; strokeWidth?: number };
 
-function ic(name: GlyphName, defaultSize = 18) {
+function ic(name: GlyphName, defaultSize = 16) {
   return function StudioIcon({ size = defaultSize, strokeWidth = 1.5 }: IconProps) {
     return <Glyph name={name} size={size} strokeWidth={strokeWidth} />;
   };
@@ -30,7 +30,7 @@ const TAB_GLYPHS: Record<StudioTab, GlyphName> = {
   background: 'tab-background',
   ai: 'tab-ai',
 };
-export const TabIcon = ({ tab, size = 22 }: { tab: StudioTab; size?: number }) => (
+export const TabIcon = ({ tab, size = 20 }: { tab: StudioTab; size?: number }) => (
   <Glyph name={TAB_GLYPHS[tab]} size={size} />
 );
 
@@ -187,7 +187,7 @@ export const ShapeIcon = ({ shape, size = 22 }: { shape: string; size?: number }
           transform={transform}
           fill="currentColor"
           stroke="none"
-          style={{ fillOpacity: 'var(--gs-glyph-tint, 0.16)' }}
+          className="gs-icon__tint"
         />
         <path d={d} transform={transform} vectorEffect="non-scaling-stroke" strokeWidth="1.8" />
       </svg>

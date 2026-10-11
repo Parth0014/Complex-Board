@@ -89,6 +89,9 @@
     --gs-control-height-lg: 40px;
     --gs-touch-target: 44px;
     --gs-icon-size: 16px;
+    --gs-glyph-tint: 0.16;
+    /* Dynamic swatch colors come from document content. */
+    --gs-swatch-color: var(--gs-surface);
     --gs-icon-stroke: 1.5;
     --gs-radius-xs: 2px;
     --gs-radius-sm: 6px;

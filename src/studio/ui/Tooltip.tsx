@@ -9,8 +9,12 @@ export function TooltipProvider({ ownerWindow }: { ownerWindow: Window }) {
   useEffect(() => {
     const document = ownerWindow.document;
     let timer = 0;
+    let visible = false;
+    let lastVisible = -Infinity;
     const hide = () => {
       ownerWindow.clearTimeout(timer);
+      if (visible) lastVisible = performance.now();
+      visible = false;
       setTarget(null);
     };
     const show = (event: Event) => {
@@ -25,7 +29,14 @@ export function TooltipProvider({ ownerWindow }: { ownerWindow: Window }) {
       )
         return;
       ownerWindow.clearTimeout(timer);
-      timer = ownerWindow.setTimeout(() => setTarget(node), event.type === 'focusin' ? 0 : 300);
+      const warm = visible || performance.now() - lastVisible < 400;
+      timer = ownerWindow.setTimeout(
+        () => {
+          visible = true;
+          setTarget(node);
+        },
+        warm || event.type === 'focusin' ? 0 : 300,
+      );
     };
     const leave = (event: Event) => {
       const node = (event.target as Element | null)?.closest?.('[data-tip]');

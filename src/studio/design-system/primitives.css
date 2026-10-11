@@ -64,10 +64,12 @@
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
+    position: relative;
     transition:
-      background var(--gs-duration-feedback) var(--gs-ease),
-      border-color var(--gs-duration-feedback) var(--gs-ease),
-      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+      background-color var(--gs-duration-feedback) var(--gs-ease-out),
+      border-color var(--gs-duration-feedback) var(--gs-ease-out),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease-out),
+      transform var(--gs-duration-press) var(--gs-ease-out);
   }
   .gs-button:focus-visible {
     box-shadow: var(--gs-focus);
@@ -227,6 +229,7 @@
     border-radius: var(--gs-radius-menu);
     box-shadow: var(--gs-shadow-popup);
     padding: var(--gs-space-2);
+    animation: gs-pop var(--gs-duration-enter) var(--gs-ease-out);
   }
   .gs-popover.vs-actionbar__popover {
     transform: none;
@@ -318,8 +321,8 @@
 
   /* ── Toast ────────────────────────────────────── */
   .gs-toast {
+    width: max-content;
     position: fixed;
-    bottom: var(--gs-space-5);
     left: 50%;
     transform: translateX(-50%);
     z-index: var(--gs-z-modal);
@@ -334,6 +337,8 @@
     font-size: var(--gs-text-13);
     color: var(--gs-text);
     animation: gs-toast-in var(--gs-duration-overlay) var(--gs-ease);
+    bottom: calc(var(--gs-dock-offset) + var(--gs-control-height-lg) + var(--gs-space-4));
+    max-width: min(560px, calc(100vw - var(--gs-space-6)));
   }
   .gs-toast--error {
     border-color: var(--gs-danger);
@@ -368,14 +373,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
     border-radius: var(--gs-radius-sm);
     border: 0;
     box-shadow: inset 0 0 0 1px var(--gs-line);
     cursor: pointer;
     padding: 0;
     transition: box-shadow var(--gs-duration-feedback) var(--gs-ease);
+    width: var(--gs-space-5);
+    height: var(--gs-space-5);
+    min-height: var(--gs-space-5);
+    background: var(--gs-swatch-color);
+    color: var(--gs-text);
   }
   .gs-swatch[aria-pressed='true'],
   .gs-swatch.is-selected {
@@ -437,10 +445,6 @@
   .gs-loading .gs-skeleton:last-child {
     height: calc(var(--gs-control-height) * 2);
   }
-  .gs-toast {
-    bottom: calc(var(--gs-footer-height) + var(--gs-space-7));
-    max-width: min(560px, calc(100vw - var(--gs-space-6)));
-  }
   .gs-toast > span {
     min-width: 0;
     overflow-wrap: anywhere;
@@ -454,6 +458,105 @@
   @media (prefers-reduced-motion: reduce) {
     .gs-toast,
     .gs-skeleton {
+      animation: none;
+    }
+  }
+}
+
+@layer components {
+  .gs-button:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .gs-button__label {
+    visibility: hidden;
+    display: contents;
+  }
+  .gs-button--loading > .gs-button__label {
+    visibility: hidden;
+  }
+  .gs-button__spinner {
+    position: absolute;
+    width: var(--gs-icon-size);
+    height: var(--gs-icon-size);
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: gs-spin 800ms linear infinite;
+  }
+  @keyframes gs-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .gs-popover[data-motion='exit'],
+  [role='dialog'][data-motion='exit'] {
+    animation: gs-pop var(--gs-duration-exit) var(--gs-ease-out) reverse both;
+  }
+  .gs-popover[data-motion='keyboard'],
+  [role='dialog'][data-motion='keyboard'],
+  .gs-toast[data-motion='keyboard'] {
+    animation: none;
+  }
+  .gs-toast[data-motion='exit'] {
+    animation: gs-toast-in var(--gs-duration-exit) var(--gs-ease-out) reverse both;
+  }
+  .gs-toast--warning {
+    color: var(--gs-warning);
+    background: var(--gs-warning-soft);
+    border-color: var(--gs-warning);
+  }
+  .gs-swatch--dark {
+    color: var(--gs-on-accent);
+  }
+  .gs-icon {
+    flex-shrink: 0;
+    width: var(--gs-icon-size);
+    height: var(--gs-icon-size);
+  }
+  .gs-icon__tint {
+    fill-opacity: var(--gs-glyph-tint);
+  }
+  .gs-chip {
+    border-radius: var(--gs-radius-pill);
+  }
+  .gs-empty {
+    display: grid;
+    justify-items: start;
+    gap: var(--gs-space-3);
+    padding: var(--gs-space-5);
+  }
+  .gs-empty h3 {
+    font-family: var(--gs-font-display);
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-regular);
+    font-style: italic;
+    margin: 0;
+  }
+  .gs-empty p {
+    color: var(--gs-text-secondary);
+    margin: 0;
+  }
+  textarea.gs-input {
+    height: auto;
+    min-height: calc(var(--gs-control-height) * 2);
+    resize: vertical;
+    padding: var(--gs-space-2);
+  }
+  @media (pointer: coarse) {
+    .gs-swatch {
+      width: var(--gs-touch-target);
+      height: var(--gs-touch-target);
+      min-height: var(--gs-touch-target);
+      background: linear-gradient(var(--gs-swatch-color), var(--gs-swatch-color)) center /
+        var(--gs-space-5) var(--gs-space-5) no-repeat;
+      box-shadow: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gs-popover,
+    [role='dialog'],
+    .gs-toast[data-motion],
+    .gs-button__spinner {
       animation: none;
     }
   }

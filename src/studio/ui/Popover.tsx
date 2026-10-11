@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ComponentProps, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
+import { useSurfaceMotion } from './useSurfaceMotion';
 
 type Props = ComponentProps<'div'> & {
   anchor: RefObject<HTMLElement | null>;
@@ -20,9 +21,10 @@ export function Popover({
   ...props
 }: Props) {
   const surface = useRef<HTMLDivElement>(null);
-  const dismiss = useRef(onDismiss);
+  const { dismiss: requestDismiss, motion } = useSurfaceMotion(onDismiss);
+  const dismiss = useRef(requestDismiss);
   useLayoutEffect(() => {
-    dismiss.current = onDismiss;
+    dismiss.current = requestDismiss;
   });
   useLayoutEffect(() => {
     const node = surface.current,
@@ -39,6 +41,14 @@ export function Popover({
       if (side === 'bottom' && top + b.height > win.innerHeight - 8) top = a.top - b.height - 6;
       node.style.left = Math.max(8, Math.min(left, win.innerWidth - b.width - 8)) + 'px';
       node.style.top = Math.max(8, Math.min(top, win.innerHeight - b.height - 8)) + 'px';
+      node.style.transformOrigin =
+        side === 'right'
+          ? left < a.left
+            ? 'right top'
+            : 'left top'
+          : top < a.top
+            ? 'right bottom'
+            : 'right top';
     };
     const outside = (event: PointerEvent) => {
       const target = event.target as Element;
@@ -53,7 +63,7 @@ export function Popover({
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
-        dismiss.current();
+        dismiss.current(true);
         trigger.focus();
       }
     };
@@ -78,7 +88,7 @@ export function Popover({
   const doc = anchor.current?.ownerDocument;
   return doc
     ? createPortal(
-        <div {...props} ref={surface} className={`gs-popover ${className}`}>
+        <div {...props} ref={surface} data-motion={motion} className={`gs-popover ${className}`}>
           {children}
         </div>,
         doc.body,

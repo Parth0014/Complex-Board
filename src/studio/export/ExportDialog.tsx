@@ -2,6 +2,7 @@ import { Button, IconButton } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { CloseIcon, DownloadIcon } from '../icons';
 import type { EditorAdapter } from '../../vision/contracts';
+import { useState } from 'react';
 export function ExportDialog({
   adapter,
   error = '',
@@ -14,6 +15,7 @@ export function ExportDialog({
   onClose: () => void;
 }) {
   const document = adapter.history.document;
+  const [downloading, setDownloading] = useState<string | null>(null);
   const options = [
     {
       id: 'png',
@@ -59,7 +61,12 @@ export function ExportDialog({
             <h2>Download board</h2>
             <p className="vs-export-board-name">{document.title}</p>
           </div>
-          <IconButton className="vs-icon-btn" aria-label="Close export" onClick={onClose}>
+          <IconButton
+            className="vs-icon-btn"
+            aria-label="Close export"
+            data-dialog-close
+            onClick={onClose}
+          >
             <CloseIcon />
           </IconButton>
         </div>
@@ -74,13 +81,18 @@ export function ExportDialog({
               className="vs-export-option"
               data-format={option.id}
               key={option.id}
+              loading={downloading === option.id}
+              disabled={downloading !== null}
               aria-label={
                 option.id === 'png' ? 'Download PNG' : 'Download ' + option.id.toUpperCase()
               }
               onClick={() => {
+                setDownloading(option.id);
+                onError('');
                 void Promise.resolve()
                   .then(option.run)
-                  .catch((error) => onError(String(error)));
+                  .catch(() => onError('Download failed. Try again.'))
+                  .finally(() => setDownloading(null));
               }}
             >
               <span className="vs-export-extension">{option.extension}</span>
