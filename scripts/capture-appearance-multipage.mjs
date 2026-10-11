@@ -12,11 +12,14 @@ try {
   await page.evaluate(async (value) => {
     const request = indexedDB.open('gratitude-studio-v1', 2);
     const db = await new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
     });
     await new Promise((resolve, reject) => {
-      const tx = db.transaction('boards', 'readwrite'); tx.objectStore('boards').put(value, 'appearance-multipage');
-      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+      const tx = db.transaction('boards', 'readwrite');
+      tx.objectStore('boards').put(value, 'appearance-multipage');
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
     });
     db.close();
   }, board);
@@ -37,11 +40,16 @@ try {
   await copyFile(await (await pending).path(), `${output}/multipage.pdf`);
   for (const id of board.pages.map((page) => page.id)) {
     await adapter.evaluate((a, id) => a.switchPage(id), id);
-    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    pending = page.waitForEvent('download'); await adapter.evaluate((a) => a.exportImage());
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    pending = page.waitForEvent('download');
+    await adapter.evaluate((a) => a.exportImage());
     await copyFile(await (await pending).path(), `${output}/multipage-${id}.png`);
     await page.screenshot({ path: `${output}/multipage-${id}-canvas.png` });
   }
   await adapter.dispose();
   console.log(`Captured actual multipage PDF, page PNGs and canvas references in ${output}`);
-} finally { await browser.close(); }
+} finally {
+  await browser.close();
+}

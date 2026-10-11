@@ -8,7 +8,7 @@ This approved revision supersedes the Phase 0 provenance blocker and the origina
 
 **B: Independent model.** Introduce strongly typed canonical appearance, per-object capabilities, validators, normalization, a single immutable validated update function, and deterministic versioned migration. Test these without connecting them to live storage, history or rendering. Gate: migration idempotence, serialization, style preservation, per-kind semantics, all loading envelopes, and legacy runtime regressions pass. Keep document version 2 live; version 3 is staged only.
 
-**C: Rendering and format activation (not authorized in this task).** Connect the shared appearance-to-Konva translation, canonical update pathway and version 3 document format together. Replace legacy field reads/writes throughout creation, rendering, clipboard, style copying, and imports. Preserve stroke scaling. Do not activate canonical persistence while the renderer still depends on legacy fields. Gate: migrated fixtures visually match their captured legacy PNGs, including archived pages and rich text.
+**C: Rendering and format activation (authorized 2026-10-11).** Connect the shared appearance-to-Konva translation, canonical update pathway and version 3 document format together. Replace legacy field reads/writes throughout creation, rendering, clipboard, style copying, and imports. Preserve stroke scaling. Do not activate canonical persistence while the renderer still depends on legacy fields. Gate: migrated fixtures visually match their captured legacy PNGs, including archived pages and rich text.
 
 **D: Tweakpane (not authorized in this task).** Add official pinned v4 dependency and one adapting inspector in the existing location. Route toolbar/context actions through the same update function. Remove replaced controls; handle refresh, stale selection, continuous history gestures, disposal and Strict Mode. No second inspector, storage or history.
 
@@ -26,10 +26,14 @@ This approved revision supersedes the Phase 0 provenance blocker and the origina
 ## Source of truth and loading activation
 
 ```text
-Current A/B runtime: legacy document v2 → existing patches/history → existing Konva renderer
-Staged B module: validated legacy/envelope → pure migration → canonical document v3
-Future C/D runtime: canonical document → one validated appearance update
-                   → existing history → shared Konva appearance mapping → canvas/export
+Active C runtime: legacy/import boundary ? migrate/validate document v3
+                 canonical document ? updateAppearance ? existing history
+                                    ? shared Konva appearance mapping ? canvas/export
+Validation build: same model/renderer, board persistence disabled
 ```
 
-The staged model is not a second active editing architecture: nothing in the live app imports it. It replaces the legacy appearance system when C activates it. Migration is one-way; no reverse document format or dual writes are added.
+A/B are accepted and retained as historical gate reports. Phase C activates rendering,
+writes and persistence in one coordinated commit after the acceptance tests pass.
+There are no dual style writes. Reverse conversion exists only in explicit offline
+rollback utilities, never in live rendering, editing or persistence. Phase D is not
+started by this activation. See `UNIFIED_APPEARANCE_PHASE_C_REPORT.md`.

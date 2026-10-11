@@ -32,6 +32,10 @@ try {
     await page.getByLabel('Restore backup', { exact: true }).setInputFiles(source);
     await page.getByLabel('File menu', { exact: true }).click();
   }
+  if (process.env.APPEARANCE_CAPTURE_CLOSE_PANEL === '1') {
+    const close = page.getByRole('button', { name: 'Close panel', exact: true });
+    if (await close.isVisible()) await close.click();
+  }
   await page.getByLabel('Editable vision board', { exact: true }).focus();
   await page.keyboard.press('Escape');
   await page.screenshot({
