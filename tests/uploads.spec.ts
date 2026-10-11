@@ -17,10 +17,10 @@ async function photo(page: Page) {
   );
 }
 async function backup(page: Page) {
-  if (!(await page.getByRole('button', { name: 'Save backup', exact: true }).isVisible()))
+  if (!(await page.getByRole('button', { name: 'Save .visbo file', exact: true }).isVisible()))
     await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save backup', exact: true }).click();
+  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
   const saved = await pending;
   return readFileSync((await saved.path())!, 'utf8');
 }
@@ -72,7 +72,7 @@ test('photos retain originals, edits, undo and portable backups in a fresh brows
   try {
     await restored.goto('/');
     await restored.getByText('File', { exact: true }).click();
-    await restored.getByLabel('Restore backup', { exact: true }).setInputFiles({
+    await restored.getByLabel('Open board file', { exact: true }).setInputFiles({
       name: 'board.json',
       mimeType: 'application/json',
       buffer: Buffer.from(JSON.stringify(saved)),
@@ -205,7 +205,7 @@ test('photo drops stay contained and duplicate uploads share storage through fra
   expect(saved.items[3].crop.width).toBe(0.7);
   const corrupt = structuredClone(saved);
   corrupt.media[0].id = `upload:${'b'.repeat(64)}`;
-  await page.getByLabel('Restore backup', { exact: true }).setInputFiles({
+  await page.getByLabel('Open board file', { exact: true }).setInputFiles({
     name: 'corrupt.json',
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(corrupt)),

@@ -1179,9 +1179,7 @@
     position: fixed;
     inset: 0;
     z-index: var(--gs-z-modal);
-    background: var(--gs-text);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--gs-text) 18%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1191,7 +1189,6 @@
   @keyframes vs-fade {
     from {
       opacity: 0;
-      backdrop-filter: blur(0px);
     }
   }
   .vs-dialog {

@@ -361,7 +361,7 @@ test('style paste duplicate locking deletion backups reload and PNG keep one can
   await page.getByLabel('Editable vision board', { exact: true }).waitFor();
   expect((await downloadBackup(page)).items).toEqual(saved.items);
   await page.getByLabel('File menu', { exact: true }).click();
-  await page.getByLabel('Restore backup', { exact: true }).setInputFiles({
+  await page.getByLabel('Open board file', { exact: true }).setInputFiles({
     name: 'edited-v3.json',
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(saved)),

@@ -64,14 +64,14 @@ test('explicit storage rollback preserves media, snapshots v3 data and produces 
   await page.getByRole('button', { name: '+ Create a vision board', exact: true }).click();
   await page.getByRole('button', { name: 'Create board', exact: true }).click();
   await page.getByLabel('File menu', { exact: true }).click();
-  await page.getByLabel('Restore backup', { exact: true }).setInputFiles({
+  await page.getByLabel('Open board file', { exact: true }).setInputFiles({
     name: 'recovered-v2.json',
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(recovered.board)),
   });
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(canonical.title);
   const saved = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save backup', exact: true }).click();
+  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
   expect(JSON.parse(readFileSync((await (await saved).path())!, 'utf8')).version).toBe(2);
   await page.getByLabel('File menu', { exact: true }).click();
   await page.getByRole('button', { name: 'Share', exact: true }).click();

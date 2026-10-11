@@ -47,7 +47,7 @@ test('marquee previews partial overlaps before release and clears when dragged a
 async function backup(page: Page): Promise<BoardDocument> {
   await page.getByLabel('File menu', { exact: true }).click();
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save backup', exact: true }).click();
+  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
   const file = await (await download).path();
   const document = JSON.parse(readFileSync(file!, 'utf8')) as BoardDocument;
   await page.getByLabel('File menu', { exact: true }).click();

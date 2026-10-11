@@ -219,12 +219,19 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       media = await portableMedia(this.ownerWindow, board);
     const blob = new this.ownerWindow.Blob(
       [JSON.stringify(media.length ? { ...board, media } : board)],
-      { type: 'application/json' },
+      { type: 'application/vnd.visbo.project+json' },
     );
     if (blob.size > 180 * 1024 * 1024)
       throw new Error('Backup exceeds 180 MB. Use fewer or smaller images.');
     const url = this.ownerWindow.URL.createObjectURL(blob);
-    this.download(url, 'vision-board.json');
+    const filename = board.title
+      .split('')
+      .map((character) => (character.charCodeAt(0) < 32 ? '-' : character))
+      .join('')
+      .replace(/[<>:"/\\|?*]/g, '-')
+      .replace(/[. ]+$/, '')
+      .trim();
+    this.download(url, (filename || 'vision-board') + '.visbo');
     this.ownerWindow.setTimeout(() => this.ownerWindow.URL.revokeObjectURL(url), 1000);
   }
   async restore(text: string) {

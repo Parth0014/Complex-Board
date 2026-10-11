@@ -1,6 +1,6 @@
 import { Button, IconButton } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
-import { CloseIcon, DownloadIcon, FileTextIcon, PrinterIcon, InfoIcon } from '../icons';
+import { CloseIcon, DownloadIcon } from '../icons';
 import type { EditorAdapter } from '../../vision/contracts';
 export function ExportDialog({
   adapter,
@@ -14,11 +14,51 @@ export function ExportDialog({
   onClose: () => void;
 }) {
   const document = adapter.history.document;
+  const options = [
+    {
+      id: 'png',
+      extension: '.png',
+      title: 'Original',
+      description: `${document.width * 2}\u00d7${document.height * 2} px \u00b7 For larger prints`,
+      run: () => adapter.downloadHighResolution(adapter.ownerWindow.document),
+    },
+    {
+      id: '4k',
+      extension: '.png',
+      title: '4K resolution',
+      description: '3840 px long edge \u00b7 Large displays',
+      run: () => adapter.exportFormat('4k'),
+    },
+    {
+      id: 'transparent',
+      extension: '.png',
+      title: 'Transparent PNG',
+      description: 'No board background \u00b7 For overlays',
+      run: () => adapter.exportFormat('transparent'),
+    },
+    {
+      id: 'jpeg',
+      extension: '.jpg',
+      title: 'JPEG',
+      description: 'Smaller file for easy sharing',
+      run: () => adapter.exportFormat('jpeg'),
+    },
+    {
+      id: 'pdf',
+      extension: '.pdf',
+      title: 'PDF',
+      description: 'Single-page document for printing',
+      run: () => adapter.exportFormat('pdf'),
+    },
+  ];
   return (
     <div className="vs-veil">
-      <Dialog className="vs-dialog" aria-label="Export board" onClose={onClose}>
+      <Dialog className="vs-dialog vs-export-dialog" aria-label="Export board" onClose={onClose}>
         <div className="vs-dialog__head">
-          <h2>Export your board</h2>
+          <div>
+            <h2>Download board</h2>
+            <p className="vs-export-board-name">{document.title}</p>
+          </div>
           <IconButton className="vs-icon-btn" aria-label="Close export" onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -28,103 +68,30 @@ export function ExportDialog({
             {error}
           </p>
         )}
-        <section className="vs-export__group">
-          <div className="vs-export__label">
-            <h3>Recommended</h3>
-            <span>Best for sharing</span>
-          </div>
-          <div className="vs-export__featured">
+        <div className="vs-export-options">
+          {options.map((option) => (
             <Button
-              className="vs-export__card"
-              aria-label="Download PNG"
+              className="vs-export-option"
+              data-format={option.id}
+              key={option.id}
+              aria-label={
+                option.id === 'png' ? 'Download PNG' : 'Download ' + option.id.toUpperCase()
+              }
               onClick={() => {
-                try {
-                  adapter.exportImage();
-                } catch (error) {
-                  onError(String(error));
-                }
-              }}
-            >
-              <span className="vs-export__badge">PNG</span>
-              <span>
-                <strong>Download PNG</strong>
-                <small>
-                  {document.width} × {document.height} px · Original size
-                </small>
-              </span>
-              <DownloadIcon />
-            </Button>
-            <Button
-              className="vs-export__card"
-              aria-label="Download 2× PNG"
-              onClick={() => {
-                void adapter
-                  .downloadHighResolution(adapter.ownerWindow.document)
+                void Promise.resolve()
+                  .then(option.run)
                   .catch((error) => onError(String(error)));
               }}
             >
-              <span className="vs-export__badge">2×</span>
-              <span>
-                <strong>Download 2× PNG</strong>
-                <small>Extra detail for print and large screens</small>
+              <span className="vs-export-extension">{option.extension}</span>
+              <span className="vs-export-copy">
+                <strong>{option.title}</strong>
+                <small>{option.description}</small>
               </span>
               <DownloadIcon />
             </Button>
-          </div>
-        </section>
-        <section className="vs-export__group">
-          <div className="vs-export__label">
-            <h3>More formats</h3>
-          </div>
-          <div className="vs-export__grid">
-            {(['jpeg', 'transparent', 'pdf', '4k'] as const).map((format) => (
-              <Button
-                className="vs-export__mini"
-                key={format}
-                aria-label={'Download ' + format.toUpperCase()}
-                onClick={() => {
-                  void adapter.exportFormat(format).catch((error) => onError(String(error)));
-                }}
-              >
-                <DownloadIcon />
-                {format.toUpperCase()}
-              </Button>
-            ))}
-          </div>
-        </section>
-        <section className="vs-export__group">
-          <div className="vs-export__utils">
-            <Button
-              className="vs-export__util"
-              aria-label="Download asset credits"
-              onClick={() => adapter.downloadAttributions(adapter.ownerWindow.document)}
-            >
-              <FileTextIcon />
-              <span>
-                <strong>Asset credits</strong>
-                <small>Source and license details</small>
-              </span>
-            </Button>
-            <Button
-              className="vs-export__util"
-              onClick={() => {
-                void adapter
-                  .printBoard(adapter.ownerWindow.document)
-                  .catch((error) => onError(String(error)));
-              }}
-            >
-              <PrinterIcon />
-              <span>
-                <strong>Print board</strong>
-                <small>Open your device print dialog</small>
-              </span>
-            </Button>
-          </div>
-        </section>
-        <p className="vs-export__privacy">
-          <InfoIcon />
-          <span>Boards stay in this browser. AI requests only use your configured service.</span>
-        </p>
+          ))}
+        </div>
       </Dialog>
     </div>
   );

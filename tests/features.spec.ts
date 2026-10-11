@@ -128,12 +128,12 @@ test('page switching, graphic recolor and backups preserve independent content',
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save backup', exact: true }).click();
+  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
   const backup = await pending;
   const document = JSON.parse(readFileSync((await backup.path())!, 'utf8'));
   expect(document.pages).toHaveLength(2);
   expect(document.items[0].colorOverrides.currentcolor).toBe('#ff0000');
-  await page.getByLabel('Restore backup', { exact: true }).setInputFiles({
+  await page.getByLabel('Open board file', { exact: true }).setInputFiles({
     name: 'bad.json',
     mimeType: 'application/json',
     buffer: Buffer.from('{"version":99}'),

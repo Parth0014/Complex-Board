@@ -73,7 +73,7 @@ test('uploaded photos replace starter images without changing layout or disappea
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(titles[4]);
   await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save backup', exact: true }).click();
+  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
   const backup = await pending;
   const { readFileSync } = await import('node:fs');
   const saved = JSON.parse(readFileSync((await backup.path())!, 'utf8'));

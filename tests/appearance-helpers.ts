@@ -12,7 +12,7 @@ export async function createAppearanceBoard(
   await page.getByRole('button', { name: '+ New board', exact: true }).click();
   await page.getByRole('button', { name: 'Create board', exact: true }).click();
   await page.getByLabel('File menu', { exact: true }).click();
-  await page.getByLabel('Restore backup', { exact: true }).setInputFiles(fixture);
+  await page.getByLabel('Open board file', { exact: true }).setInputFiles(fixture);
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(
     JSON.parse(readFileSync(fixture, 'utf8')).title,
   );
@@ -57,7 +57,7 @@ export async function runtime(page: Page) {
 export async function downloadBackup(page: Page): Promise<BoardDocument> {
   await page.getByLabel('File menu', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save backup', exact: true }).click();
+  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
   const document = JSON.parse(readFileSync((await (await pending).path())!, 'utf8'));
   await page.getByLabel('File menu', { exact: true }).click();
   return document;

@@ -2,10 +2,10 @@ import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { openProperties, openSection } from './helpers/editor';
 async function backup(page: Page) {
-  if (!(await page.getByRole('button', { name: 'Save backup', exact: true }).isVisible()))
+  if (!(await page.getByRole('button', { name: 'Save .visbo file', exact: true }).isVisible()))
     await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save backup', exact: true }).click();
+  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
   const result = JSON.parse(readFileSync((await (await pending).path())!, 'utf8'));
   await page.getByText('File', { exact: true }).click();
   return result;

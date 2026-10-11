@@ -1,5 +1,5 @@
+import { useEffect, useRef } from 'react';
 import { Button, IconButton } from '../ui/Button';
-import { BOARD_SIZES } from '../BoardSizeControl';
 import {
   VisionMark,
   UndoIcon,
@@ -30,6 +30,27 @@ export function StudioHeader({
   onError: (message: string) => void;
   shareDisabled?: boolean;
 }) {
+  const fileMenu = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const menu = fileMenu.current;
+    if (!menu) return;
+    const ownerDocument = menu.ownerDocument;
+    const closeOutside = (event: PointerEvent) => {
+      if (menu.open && !event.composedPath().includes(menu)) menu.open = false;
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (menu.open && event.key === 'Escape') {
+        menu.open = false;
+        menu.querySelector('summary')?.focus();
+      }
+    };
+    ownerDocument.addEventListener('pointerdown', closeOutside, true);
+    ownerDocument.addEventListener('keydown', closeOnEscape);
+    return () => {
+      ownerDocument.removeEventListener('pointerdown', closeOutside, true);
+      ownerDocument.removeEventListener('keydown', closeOnEscape);
+    };
+  }, []);
   const document = adapter.history.document;
   return (
     <header className="vs-header">
@@ -92,10 +113,10 @@ export function StudioHeader({
           <span>Share</span>
         </Button>
 
-        <details className="vs-menu">
+        <details ref={fileMenu} className="vs-menu">
           <summary
             className="vs-file-btn"
-            data-tip="New board, backup and page size"
+            data-tip="New board and backups"
             data-tip-pos="below"
             aria-label="File menu"
           >
@@ -107,7 +128,7 @@ export function StudioHeader({
               <span>New board</span>
             </Button>
             <div className="vs-menu__divider" />
-            <p className="vs-menu__kicker">Backup</p>
+            <p className="vs-menu__kicker">Editable board</p>
             <Button
               className="vs-menu__item"
               onClick={() => {
@@ -115,15 +136,15 @@ export function StudioHeader({
               }}
             >
               <SaveIcon />
-              <span>Save backup</span>
+              <span>Save .visbo file</span>
             </Button>
             <label className="vs-menu__item">
               <RestoreIcon />
-              <span>Restore backup</span>
+              <span>Open board file</span>
               <input
-                aria-label="Restore backup"
+                aria-label="Open board file"
                 type="file"
-                accept=".json,application/json"
+                accept=".visbo,.json,application/vnd.visbo.project+json,application/json"
                 className="sr-only"
                 onChange={async (event) => {
                   const file = event.target.files?.[0];
@@ -139,34 +160,6 @@ export function StudioHeader({
                   event.target.value = '';
                 }}
               />
-            </label>
-            <div className="vs-menu__divider" />
-            <p className="vs-menu__kicker">Canvas</p>
-            <label className="vs-menu__row">
-              <span>Page size</span>
-              <select
-                className="vs-select"
-                aria-label="Page size"
-                value={`${document.width}x${document.height}`}
-                onChange={(event) => {
-                  const [width, height] = event.target.value.split('x').map(Number);
-                  adapter.commit({ ...document, width, height });
-                  adapter.fitBoard();
-                }}
-              >
-                {!BOARD_SIZES.some(
-                  ([value]) => value === `${document.width}x${document.height}`,
-                ) && (
-                  <option value={`${document.width}x${document.height}`} disabled hidden>
-                    Current board
-                  </option>
-                )}
-                {BOARD_SIZES.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
             </label>
             <p className="vs-menu__note">Your board is saved locally as you work.</p>
           </div>

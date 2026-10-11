@@ -79,6 +79,7 @@ export function KonvaStage({
   }, [editing?.id]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [size, setSize] = useState({ width: 800, height: 700 });
+  const [fitRevision, setFitRevision] = useState(0);
   const drag = useRef<{
     items: BoardItem[];
     origin: BoardItem;
@@ -196,7 +197,7 @@ export function KonvaStage({
   const centeredView = useRef('');
   useLayoutEffect(() => {
     const anchor = zoomAnchor.current;
-    const viewKey = `${scale}:${document.width}:${document.height}:${size.width}:${size.height}`;
+    const viewKey = `${scale}:${document.width}:${document.height}:${size.width}:${size.height}:${fitRevision}`;
     const viewChanged = centeredView.current !== viewKey;
     centeredView.current = viewKey;
     if (anchor && container.current) {
@@ -212,7 +213,7 @@ export function KonvaStage({
         top + (document.height * scale) / 2 - size.height / 2,
       );
     }
-  }, [left, top, scale, document.width, document.height, size.width, size.height]);
+  }, [left, top, scale, document.width, document.height, size.width, size.height, fitRevision]);
   const zoomAt = (clientX: number, clientY: number, nextScale: number) => {
     const node = container.current;
     if (!node) return;
@@ -299,8 +300,11 @@ export function KonvaStage({
     const observer = new ownerWindow.ResizeObserver(() => flushSync(measure));
     observer.observe(node);
     adapter.fit = () => {
+      zoomAnchor.current = null;
       onZoomChange(null);
-      node.scrollTo({ left: 0, top: 0 });
+      // Reuse the post-layout centering calculation even when zoom is already
+      // automatic. Scrolling to zero would displace an already fitted board.
+      setFitRevision((revision) => revision + 1);
     };
     return () => {
       observer.disconnect();

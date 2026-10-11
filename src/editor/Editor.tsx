@@ -15,7 +15,7 @@ import { KonvaStage } from '../vision/canvas/KonvaStage';
 import { StudioShell } from '../studio/StudioShell';
 import { SelectionToolbar } from '../studio/SelectionToolbar';
 import { ContextActions } from '../studio/ContextActions';
-import { Popover } from '../studio/ui/Popover';
+import { ObjectDock } from '../studio/appearance/ObjectDock';
 import { useMenuPlacement } from '../studio/useMenuPlacement';
 import { EditorFeatures, type EditorPanel } from '../studio/EditorFeatures';
 import {
@@ -445,20 +445,13 @@ export function Editor({
               )}
             </div>
             {editorPanel && !editable && !(tweakpaneD2Enabled && selection.count > 1) && (
-              <Popover
-                anchor={formattingTrigger}
-                onDismiss={() => setEditorPanel(null)}
-                ownedSurfaceSelector=".studio-color-popover"
-                className={
-                  quickShape && editorPanel === 'style'
-                    ? 'gs-shape-inspector-popover'
-                    : 'gs-formatting-popover'
-                }
-                role="dialog"
-                aria-label={
+              <ObjectDock
+                ownerWindow={adapter.ownerWindow}
+                trigger={formattingTrigger}
+                onClose={() => setEditorPanel(null)}
+                label={
                   quickShape && editorPanel === 'style' ? 'Shape appearance' : 'Object formatting'
                 }
-                focusOnOpen
               >
                 {quickShape && editorPanel === 'style' ? (
                   <Suspense fallback={<p role="status">Loading appearance controls…</p>}>
@@ -476,7 +469,7 @@ export function Editor({
                     inline
                   />
                 )}
-              </Popover>
+              </ObjectDock>
             )}
           </div>
         )}
