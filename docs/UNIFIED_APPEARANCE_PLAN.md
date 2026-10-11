@@ -45,3 +45,15 @@ Tweakpane proof of concept using the active Phase C pipeline. The earlier Phase 
 authorization wording above describes the scope of the A/B/C task. Text and Drawing
 inspector migration and the complete Phase D2 redesign remain deferred. See
 `TWEAKPANE_PHASE_D1_REPORT.md` for the implementation and acceptance evidence.
+
+## Subsequent Phase D2 authorization
+
+The user subsequently authorized the unified hybrid editor for Text, Quick Shapes
+and Drawings. D2 shares the active canonical appearance pipeline and the extracted
+D1 binding lifecycle. React owns creative choices and adaptive presentation;
+Tweakpane owns technical controls. `VITE_TWEAKPANE_D2=1` enables the implementation;
+the default-disabled path retains the existing UI for rollback. Curated Elements,
+photo editing, storage recovery and canvas interactions retain their existing
+implementations. See `TWEAKPANE_PHASE_D2_REPORT.md` for the exact control map,
+acceptance results, screenshots and rollout limitations. Phase E and a master
+merge remain outside this authorization.
