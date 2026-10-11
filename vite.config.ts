@@ -43,6 +43,7 @@ export default defineConfig({
         manualChunks(id) {
           const path = id.replaceAll('\\', '/');
           if (!path.includes('/node_modules/')) return;
+          if (/\/(?:tweakpane|@tweakpane\/core)\//.test(path)) return 'tweakpane';
           if (/\/(?:konva|react-konva)\//.test(path)) return 'canvas';
           if (/\/(?:react|react-dom|react-reconciler|scheduler)\//.test(path)) return 'react';
           return 'vendor';

@@ -18,7 +18,7 @@ Arial and Georgia are browser/system font choices and are not bundled. Older `co
 
 ## Runtime dependencies
 
-React, React DOM, Konva and react-konva are MIT-licensed. Their upstream notices remain in the installed packages; the production build includes those notices in `dist/THIRD_PARTY_LICENSES.txt`.
+React, React DOM, Konva, react-konva and Tweakpane are MIT-licensed. The production build includes upstream notices in `dist/THIRD_PARTY_LICENSES.txt`. Tweakpane's npm package omits its license file; the exact 4.0.5 upstream notice is preserved in [licenses/Tweakpane-MIT.txt](licenses/Tweakpane-MIT.txt), from https://github.com/cocopon/tweakpane/blob/4.0.5/LICENSE.txt. Tweakpane 4.0.5 is isolated in the opt-in Phase D1 inspector chunk; `@tweakpane/core` 2.0.5 supplies its development-time TypeScript declarations.
 
 ## Artwork
 
