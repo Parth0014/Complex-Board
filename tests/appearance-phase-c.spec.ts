@@ -1,33 +1,23 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 const multipage = JSON.parse(readFileSync('tests/fixtures/appearance-multipage-v2.json', 'utf8'));
-import {
-  createAppearanceBoard,
-  runtime,
-  frames,
-  downloadBackup,
-  pixelDifference,
-  boardScreenBounds,
-} from './appearance-helpers';
+import { createAppearanceBoard, runtime, frames, downloadBackup } from './appearance-helpers';
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
-test('expanded legacy appearance has exact canvas pixels and PNG export parity', async ({
+test('expanded legacy appearance preserves exact PNG export parity in the redesigned viewport', async ({
   page,
 }, info) => {
   await createAppearanceBoard(page);
   await page.getByLabel('Editable vision board', { exact: true }).focus();
   await page.keyboard.press('Escape');
   await frames(page);
-  const screen = await page.screenshot();
-  expect(
-    await pixelDifference(
-      page,
-      readFileSync('exports/appearance-legacy/phase-c-canvas.png'),
-      screen,
-      await boardScreenBounds(page, 1600, 1400),
-    ),
-  ).toEqual({ count: 0, max: 0 });
+  // Docking intentionally changes the viewport scale. Keep artwork parity at
+  // document resolution below, and attach the new layout separately.
+  await info.attach('studio-v2-canvas.png', {
+    body: await page.screenshot(),
+    contentType: 'image/png',
+  });
   await page.getByRole('button', { name: 'Share', exact: true }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
@@ -296,14 +286,10 @@ test('multipage documents preserve exact page renders and actual all-pages PDF e
   for (const id of ['first', 'second']) {
     await r.evaluate(({ adapter }, id) => adapter.switchPage(id), id);
     await frames(page);
-    expect(
-      await pixelDifference(
-        page,
-        readFileSync(`exports/appearance-legacy/multipage-${id}-canvas.png`),
-        await page.screenshot(),
-        await boardScreenBounds(page, 1080, 1080),
-      ),
-    ).toEqual({ count: 0, max: 0 });
+    await info.attach(`studio-v2-${id}.png`, {
+      body: await page.screenshot(),
+      contentType: 'image/png',
+    });
     pending = page.waitForEvent('download');
     await r.evaluate(({ adapter }) => adapter.exportImage());
     expect(

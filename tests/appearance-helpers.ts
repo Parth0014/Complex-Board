@@ -9,7 +9,7 @@ export async function createAppearanceBoard(
   fixture = 'tests/fixtures/appearance-phase-c-v2.json',
 ) {
   await page.goto('/');
-  await page.getByRole('button', { name: '+ Create a vision board', exact: true }).click();
+  await page.getByRole('button', { name: '+ New board', exact: true }).click();
   await page.getByRole('button', { name: 'Create board', exact: true }).click();
   await page.getByLabel('File menu', { exact: true }).click();
   await page.getByLabel('Restore backup', { exact: true }).setInputFiles(fixture);

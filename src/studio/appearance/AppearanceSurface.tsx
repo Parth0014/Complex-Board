@@ -86,7 +86,8 @@ export function AppearanceSurface({
       {children}
     </>
   );
-  const root = ownerWindow.document.querySelector('.vs')!;
+  const root = (ownerWindow.document.querySelector('.vs-body') ??
+    ownerWindow.document.querySelector('.vs'))!;
   const keys = (event: KeyboardEvent) => {
     if ((event.target as Element).closest('[data-gesture-owner]')) return;
     if (event.key === 'Escape' && (event.target as Element).hasAttribute('data-appearance-draft'))

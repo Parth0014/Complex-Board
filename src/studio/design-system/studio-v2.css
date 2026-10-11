@@ -1,0 +1,706 @@
+﻿/*
+ * VisBo editor â€” v2 layout & chrome.
+ *
+ * Lives in the last cascade layer (`v2`), so it deliberately wins over the
+ * 28 historical `.vs-rail__tab`-style overrides in components.css without
+ * needing priority overrides. When a block here is verified, delete the matching
+ * legacy rules from components.css.
+ *
+ * Principles
+ *  1. Docked, not floating: rail + library | canvas | inspector are columns.
+ *  2. One scale: 11 / 13 / 15 type, 4-pt spacing, 32px controls, 12px panels.
+ *  3. One surface language: white surface, 1px --gs-line border, soft shadow
+ *     only on things that actually float (toolbar, zoom bar, menus).
+ */
+@layer v2 {
+  .vs {
+    --v2-rail: 72px;
+    --v2-panel: 320px;
+    --v2-dock: 320px;
+    --v2-radius: 12px;
+    --v2-float-shadow:
+      0 1px 2px color-mix(in srgb, var(--gs-text) 8%, transparent),
+      0 6px 20px color-mix(in srgb, var(--gs-text) 10%, transparent);
+    --v2-kicker: var(--gs-text-11);
+  }
+
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .vs-body {
+    display: flex;
+    flex-direction: row;
+    background: var(--gs-workspace);
+  }
+  .vs-canvas {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .vs-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--gs-space-3);
+    height: 52px;
+    padding: 0 var(--gs-space-4);
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    border: 0;
+    border-bottom: 1px solid var(--gs-line);
+    box-shadow: none;
+  }
+  .vs-header__start,
+  .vs-header__end {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-3);
+    min-width: 0;
+  }
+  .vs-header__end {
+    justify-content: flex-end;
+  }
+  .vs-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    padding: var(--gs-space-1) var(--gs-space-2);
+    border: 0;
+    background: transparent;
+    color: var(--gs-text);
+    border-radius: var(--gs-radius-control);
+  }
+  .vs-brand:hover {
+    background: var(--gs-hover);
+  }
+  .vs-title {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    min-width: 0;
+    padding-left: var(--gs-space-3);
+    border-left: 1px solid var(--gs-line);
+  }
+  .vs-title__input {
+    width: 200px;
+    max-width: 28vw;
+    height: var(--gs-control-height);
+    padding: 0 var(--gs-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    color: var(--gs-text);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    text-overflow: ellipsis;
+  }
+  .vs-title__input:hover {
+    border-color: var(--gs-line);
+  }
+  .vs-title__input:focus {
+    outline: none;
+    background: var(--gs-surface);
+    border-color: var(--gs-accent);
+    box-shadow: var(--gs-focus);
+  }
+  .vs-save {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-1);
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-regular);
+    white-space: nowrap;
+  }
+  .vs-save__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gs-success);
+  }
+
+  /* history: a quiet segmented pair, centered */
+  .vs-header .vs-history {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    background: var(--gs-surface-muted);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-control);
+  }
+  .vs-header .vs-history .vs-icon-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border-radius: calc(var(--gs-radius-control) - 2px);
+    color: var(--gs-text);
+  }
+  .vs-header .vs-history .vs-icon-btn:hover:not(:disabled) {
+    background: var(--gs-surface);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--gs-text) 12%, transparent);
+  }
+
+  /* header buttons share one height and radius */
+  .vs-header .vs-btn,
+  .vs-header .vs-file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    height: var(--gs-control-height);
+    padding: 0 var(--gs-space-3);
+    border-radius: var(--gs-radius-control);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-strong);
+    transform: none;
+    filter: none;
+    box-shadow: none;
+    list-style: none;
+    cursor: pointer;
+  }
+  .vs-header .vs-file-btn {
+    color: var(--gs-text);
+    background: transparent;
+    border: 1px solid var(--gs-control-line);
+  }
+  .vs-header .vs-file-btn::-webkit-details-marker {
+    display: none;
+  }
+  .vs-header .vs-file-btn:hover,
+  .vs-header .vs-menu[open] .vs-file-btn {
+    background: var(--gs-hover);
+    transform: none;
+    filter: none;
+    box-shadow: none;
+  }
+  .vs-header .vs-btn--primary {
+    background: var(--gs-accent);
+    color: var(--gs-on-accent);
+    border: 1px solid transparent;
+  }
+  .vs-header .vs-btn--primary:hover:not(:disabled) {
+    background: var(--gs-accent-hover);
+  }
+
+  /* menus (File) */
+  .vs-header .vs-menu {
+    position: relative;
+  }
+  .vs-header .vs-menu__pop {
+    position: absolute;
+    right: 0;
+    left: auto;
+    top: calc(100% + var(--gs-space-2));
+    min-width: 248px;
+    padding: var(--gs-space-2);
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--v2-radius);
+    box-shadow: var(--v2-float-shadow);
+    z-index: var(--gs-z-popover);
+  }
+  .vs-menu__kicker {
+    margin: var(--gs-space-2) var(--gs-space-2) var(--gs-space-1);
+    font-size: var(--v2-kicker);
+    font-weight: var(--gs-weight-strong);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gs-text-secondary);
+  }
+  .vs-menu__item {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    width: 100%;
+    min-height: var(--gs-control-height);
+    padding: 0 var(--gs-space-2);
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    color: var(--gs-text);
+    font-size: var(--gs-text-13);
+    text-align: left;
+    cursor: pointer;
+  }
+  .vs-menu__item:hover {
+    background: var(--gs-hover);
+  }
+  .vs-menu__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gs-space-3);
+    padding: var(--gs-space-1) var(--gs-space-2);
+    font-size: var(--gs-text-13);
+  }
+  .vs-menu__divider {
+    height: 1px;
+    margin: var(--gs-space-2) calc(-1 * var(--gs-space-2));
+    background: var(--gs-line);
+  }
+  .vs-menu__note {
+    margin: var(--gs-space-2);
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
+
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Left: rail + library (docked) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .vs-lib {
+    position: relative;
+    inset: auto;
+    flex: 0 0 auto;
+    width: auto;
+    height: 100%;
+    display: flex;
+    background: var(--gs-surface);
+    border: 0;
+    border-right: 1px solid var(--gs-line);
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    overflow: hidden;
+    z-index: var(--gs-z-panel);
+  }
+  .vs-lib.is-collapsed {
+    width: auto;
+  }
+  .vs-rail {
+    flex: 0 0 var(--v2-rail);
+    width: var(--v2-rail);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--gs-space-1);
+    padding: var(--gs-space-3) var(--gs-space-2);
+    background: var(--gs-surface);
+    border: 0;
+    border-right: 1px solid var(--gs-line);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .vs-lib:not(.is-collapsed) .vs-rail {
+    background: var(--gs-surface-muted);
+  }
+  .vs-rail__tab,
+  .vs-rail .vs-menu > .vs-rail__tab {
+    position: relative;
+    width: 100%;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: var(--gs-space-2) 0;
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    letter-spacing: 0;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  .vs-rail__tab > span:last-child,
+  .vs-rail__tab > span:not([class]) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vs-rail__tab svg {
+    width: 20px;
+    height: 20px;
+  }
+  .vs-rail__tab:hover {
+    background: var(--gs-hover);
+    color: var(--gs-text);
+  }
+  .vs-rail__tab.is-active,
+  .vs-rail__tab[aria-pressed='true'],
+  .vs-rail__tab[aria-expanded='true'] {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+  .vs-rail__tab::before {
+    display: none; /* the old edge indicator; active state is now the filled pill */
+  }
+  .vs-rail__divider {
+    width: auto;
+    height: 1px;
+    margin: var(--gs-space-2) var(--gs-space-2);
+    background: var(--gs-line);
+  }
+  .vs-rail__badge {
+    position: absolute;
+    top: 8px;
+    right: 18px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gs-accent);
+    border: 2px solid var(--gs-surface-muted);
+  }
+
+  .vs-lib__panel {
+    width: var(--v2-panel);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--gs-surface);
+  }
+  .vs-lib.is-collapsed .vs-lib__panel {
+    display: none;
+  }
+  .vs-lib__head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .vs-lib__title,
+  .vs-lib__head h3 {
+    margin: 0;
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-strong);
+    color: var(--gs-text);
+  }
+  .vs-lib__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--gs-space-4);
+  }
+
+  /* one heading style for every panel section */
+  .panel-section-heading,
+  .vs-sec-head {
+    margin: 0 0 var(--gs-space-2);
+  }
+  .panel-section-heading h3,
+  .vs-sec-head h3 {
+    margin: 0;
+    font-size: var(--v2-kicker);
+    font-weight: var(--gs-weight-strong);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gs-text-secondary);
+  }
+
+  /* shape tiles: one grid, one tile */
+  .create-shape-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gs-space-2);
+  }
+  .create-shape-grid > button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gs-space-1);
+    min-height: 72px;
+    padding: var(--gs-space-2);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-control);
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    font-size: var(--gs-text-11);
+    transition:
+      background var(--gs-duration-feedback) var(--gs-ease),
+      border-color var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .create-shape-grid > button:hover {
+    background: var(--gs-accent-soft);
+    border-color: var(--gs-accent);
+    color: var(--gs-accent);
+  }
+  .create-shape-grid svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* text presets */
+  .text-panel__list {
+    display: grid;
+    gap: var(--gs-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .text-panel__item {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    padding: var(--gs-space-3);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-control);
+    background: var(--gs-surface);
+    text-align: left;
+  }
+  .text-panel__item:hover {
+    border-color: var(--gs-accent);
+    background: var(--gs-accent-soft);
+  }
+  .text-panel__label {
+    font-size: var(--v2-kicker);
+    color: var(--gs-text-secondary);
+  }
+  .text-panel__add {
+    position: absolute;
+    top: var(--gs-space-3);
+    right: var(--gs-space-3);
+    color: var(--gs-text-secondary);
+  }
+
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Canvas furniture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .vs-bottom-dock {
+    right: auto;
+    width: max-content;
+    max-width: calc(100% - 24px);
+    position: absolute;
+    left: 50%;
+    bottom: var(--gs-space-4);
+    transform: translateX(-50%);
+    z-index: var(--gs-z-float);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-1);
+    padding: var(--gs-space-1) var(--gs-space-2);
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-pill);
+    box-shadow: var(--v2-float-shadow);
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+  }
+  .vs .vs-bottom-dock .vs-zoom,
+  .vs .vs-bottom-dock .canvas-tools {
+    position: static;
+    transform: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-1);
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .vs-bottom-dock__sep {
+    width: 1px;
+    height: 16px;
+    margin-inline: var(--gs-space-1);
+    background: var(--gs-line);
+  }
+  .vs-bottom-dock .vs-icon-btn,
+  .vs-bottom-dock .vs-page-select {
+    height: 28px;
+    min-width: 28px;
+    min-height: 0;
+    padding: 0 var(--gs-space-2);
+    border: 0;
+    border-radius: var(--gs-radius-pill);
+    background: transparent;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-1);
+    list-style: none;
+    cursor: pointer;
+  }
+  .vs-bottom-dock .vs-icon-btn:hover:not(:disabled),
+  .vs-bottom-dock .vs-page-select:hover {
+    background: var(--gs-hover);
+    color: var(--gs-text);
+  }
+  .vs-bottom-dock .vs-page-select::-webkit-details-marker {
+    display: none;
+  }
+  .vs-bottom-dock .vs-range {
+    width: 112px;
+  }
+  .vs-zoom__pct {
+    min-width: 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--gs-text);
+  }
+  .vs-bottom-dock .vs-menu {
+    position: relative;
+  }
+  .vs-bottom-dock .vs-menu__pop {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + var(--gs-space-3));
+    min-width: 240px;
+    padding: var(--gs-space-3);
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--v2-radius);
+    box-shadow: var(--v2-float-shadow);
+  }
+
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Contextual toolbar (selection) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .vs-top-editing-bar {
+    z-index: var(--gs-z-float);
+    padding: var(--gs-space-1);
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--v2-radius);
+    box-shadow: var(--v2-float-shadow);
+  }
+  .gs-hybrid-quickbar {
+    gap: var(--gs-space-1);
+    justify-content: flex-start;
+  }
+  .gs-hybrid-quickbar > :is(button, select),
+  .gs-hybrid-quickbar .gs-committed-number input {
+    height: var(--gs-control-height);
+    border-radius: var(--gs-radius-control);
+    font-size: var(--gs-text-13);
+  }
+  .gs-hybrid-quickbar > button {
+    min-width: var(--gs-control-height);
+    padding: 0 var(--gs-space-2);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--gs-text);
+  }
+  .gs-hybrid-quickbar > button:hover:not(:disabled) {
+    background: var(--gs-hover);
+  }
+  .gs-hybrid-quickbar > button[aria-pressed='true'] {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+  .gs-hybrid-quickbar select {
+    border: 1px solid var(--gs-line);
+    background: var(--gs-surface);
+    padding: 0 var(--gs-space-2);
+    max-width: 128px;
+  }
+  .gs-quick-divider {
+    height: 20px;
+    margin-inline: var(--gs-space-1);
+  }
+
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Right: appearance inspector (docked) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .gs-appearance-dock {
+    position: relative;
+    inset: auto;
+    flex: 0 0 var(--v2-dock);
+    width: var(--v2-dock);
+    max-height: none;
+    height: 100%;
+    background: var(--gs-surface);
+    border: 0;
+    border-left: 1px solid var(--gs-line);
+    border-radius: 0;
+    box-shadow: none;
+    z-index: var(--gs-z-panel);
+  }
+  .gs-appearance-dock .gs-appearance-header {
+    height: 52px;
+    padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
+  }
+  .gs-appearance-header p {
+    display: none; /* the "APPEARANCE" kicker repeated the dock's purpose */
+  }
+  .gs-appearance-header h2 {
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-strong);
+    text-transform: capitalize;
+  }
+  .gs-appearance-fields h3 {
+    margin: var(--gs-space-5) 0 var(--gs-space-2);
+    font-size: var(--v2-kicker);
+    font-weight: var(--gs-weight-strong);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gs-text-secondary);
+  }
+  .gs-appearance-fields h3:first-child {
+    margin-top: 0;
+  }
+
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Narrow screens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  @media (max-width: 1100px) {
+    /* Not enough room for three columns: the inspector floats over the canvas again. */
+    .gs-appearance-dock {
+      position: absolute;
+      top: var(--gs-space-3);
+      right: var(--gs-space-3);
+      bottom: 72px;
+      height: auto;
+      border: 1px solid var(--gs-line);
+      border-radius: var(--v2-radius);
+      box-shadow: var(--v2-float-shadow);
+    }
+  }
+  @media (max-width: 700px) {
+    .vs-header {
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 0 var(--gs-space-3);
+    }
+    .vs-header .vs-header__center {
+      display: none; /* undo/redo remain on the keyboard & canvas gestures */
+    }
+    .vs-title,
+    .vs-save {
+      display: none;
+    }
+    .vs-body {
+      flex-direction: column-reverse; /* rail becomes a bottom tab bar */
+    }
+    .vs-lib {
+      flex-direction: column-reverse;
+      width: 100%;
+      height: auto;
+      border-right: 0;
+      border-top: 1px solid var(--gs-line);
+    }
+    .vs-rail {
+      flex: 0 0 auto;
+      width: 100%;
+      flex-direction: row;
+      justify-content: space-around;
+      padding: var(--gs-space-1) var(--gs-space-2)
+        calc(var(--gs-space-1) + env(safe-area-inset-bottom));
+      border-right: 0;
+      overflow-x: auto;
+    }
+    .vs-rail__tab {
+      width: auto;
+      min-width: 56px;
+      min-height: var(--gs-touch-target);
+    }
+    .vs-rail__divider {
+      display: none;
+    }
+    .vs-lib__panel {
+      width: 100%;
+      height: 46dvh;
+      border-bottom: 1px solid var(--gs-line);
+    }
+    .vs-bottom-dock {
+      bottom: var(--gs-space-3);
+    }
+    .vs-bottom-dock .vs-range {
+      display: none;
+    }
+    .gs-appearance-dock {
+      display: none; /* mobile uses the existing bottom sheet */
+    }
+  }
+}

@@ -1,4 +1,5 @@
-@layer tokens, base, components, utilities;
+@layer tokens, base, components, utilities, v2;
 @import './foundations.css';
 @import './primitives.css';
 @import './components.css';
+@import './studio-v2.css';

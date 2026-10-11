@@ -501,8 +501,7 @@ export function Editor({
           onZoomChange={setZoom}
           onScaleChange={setDisplayZoom}
         />
-        <div className="vs-bottom-dock" aria-label="Board controls">
-          <ZoomControls value={displayZoom} onChange={setZoom} onFit={() => adapter.fitBoard()} />
+        <div className="vs-bottom-dock" role="group" aria-label="Board controls">
           <details className="vs-menu vs-canvas-settings">
             <summary className="vs-page-select" aria-label="Canvas settings">
               Canvas settings <ChevronDownIcon />
@@ -511,6 +510,8 @@ export function Editor({
               <div className="vs-snap-slot" ref={setSnappingContainer} />
             </div>
           </details>
+          <span className="vs-bottom-dock__sep" aria-hidden="true" />
+          <ZoomControls value={displayZoom} onChange={setZoom} onFit={() => adapter.fitBoard()} />
         </div>
       </div>
 

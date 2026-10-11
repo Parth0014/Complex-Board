@@ -78,9 +78,7 @@ export function StudioSidebar({
       {tab && (
         <section className="vs-lib__panel" aria-label={`${STUDIO_TAB_LABELS[tab]} panel`}>
           <div className="vs-lib__head">
-            <div className="vs-sec-head" style={{ marginBottom: 0 }}>
-              <h3>{STUDIO_TAB_LABELS[tab]}</h3>
-            </div>
+            <h2 className="vs-lib__title">{STUDIO_TAB_LABELS[tab]}</h2>
             <IconButton
               type="button"
               className="vs-icon-btn"
