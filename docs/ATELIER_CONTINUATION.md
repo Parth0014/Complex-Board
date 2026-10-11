@@ -32,3 +32,7 @@ The long-running Vite server on port 5173 served a stale ZoomControls module wit
 ## Rollback
 
 Changes are isolated in phase commits; revert the desired phase commits in reverse order rather than resetting the working tree. No storage rollback is required for this design-only continuation. Existing v3 recovery documentation remains unchanged. Refresh or restart the dev server after reverting. Changes have not been pushed.
+
+## Phase F acceptance follow-up
+
+Final audit completed the missed primary button variant in BoardSetup and the disabled Share explanation. Lint, all 122 unit tests, typecheck and build passed again. Browser verification confirms the visible creation button uses `gs-button--primary`. The preceding 27-test browser regression result remains the result for the larger redesign; it was not rerun for these two presentation-only changes. No phase beyond F is defined in the supplied plan; its explicit deferred items remain deferred.

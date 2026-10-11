@@ -104,7 +104,9 @@ export function StudioHeader({
         <Button
           variant="primary"
           aria-label="Share"
-          data-tip="Export or share your board"
+          data-tip={
+            shareDisabled ? 'Add something to your board to share' : 'Export or share your board'
+          }
           data-tip-pos="below"
           onClick={onShare}
           disabled={shareDisabled}

@@ -122,7 +122,7 @@ export function BoardSetup({
         </div>
       </fieldset>
       <div className="home-setup-footer">
-        <Button type="submit" className="home-primary" disabled={busy}>
+        <Button type="submit" variant="primary" className="home-primary" disabled={busy}>
           {busy ? 'Creating\u2026' : 'Create board'}
         </Button>
       </div>
