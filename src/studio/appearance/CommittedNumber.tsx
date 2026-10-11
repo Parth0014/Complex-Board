@@ -37,6 +37,7 @@ export function CommittedNumber({
       <span>{label}</span>
       <input
         type="number"
+        data-appearance-draft
         aria-label={label}
         value={draft}
         min={min}

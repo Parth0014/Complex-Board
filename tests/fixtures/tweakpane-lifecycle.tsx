@@ -3,6 +3,15 @@ import { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { TweakpaneHost } from '../../src/studio/appearance/TweakpaneHost';
 import { createShapePane } from '../../src/studio/appearance/shapePane';
+import { createBindingPane } from '../../src/studio/appearance/bindingPane';
+import {
+  controlChange,
+  controlValues,
+  technicalControls,
+} from '../../src/studio/appearance/appearanceControls';
+import { selectedAppearance } from '../../src/studio/appearance/feature';
+import { migrateDocument } from '../../src/vision/appearance/migration';
+import fixture from './appearance-phase-c-v2.json';
 import { KonvaCanvasAdapter } from '../../src/vision/canvas/KonvaCanvasAdapter';
 import { createAppearance } from '../../src/vision/appearance/defaults';
 import { applyFluentTheme } from '../../src/studio/design-system/fluentTheme';
@@ -25,6 +34,11 @@ adapter.history.document.items = [
   },
 ];
 adapter.select(['test-shape']);
+const kind = new URLSearchParams(location.search).get('kind');
+if (kind === 'text' || kind === 'drawing' || kind === 'line') {
+  adapter.history.document = migrateDocument(fixture);
+  adapter.select([kind]);
+}
 const stats = { created: 0, disposed: 0 };
 const documentListeners = new Map<string, Set<EventListenerOrEventListenerObject>>();
 const tracked = new Set([
@@ -63,7 +77,14 @@ document.removeEventListener = ((
 function Harness() {
   const create = useCallback((container: HTMLDivElement) => {
     stats.created++;
-    const pane = createShapePane(container, adapter, 'test-shape');
+    const pane = kind
+      ? createBindingPane(container, adapter, kind, {
+          selected: selectedAppearance,
+          values: controlValues,
+          command: controlChange,
+          controls: technicalControls(selectedAppearance(adapter)!, 'color'),
+        })
+      : createShapePane(container, adapter, 'test-shape');
     return {
       dispose() {
         stats.disposed++;

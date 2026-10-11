@@ -58,14 +58,19 @@ export function AppearanceSurface({
       ownerWindow.removeEventListener('resize', update);
     };
   }, [ownerWindow]);
+  useLayoutEffect(
+    () => () => {
+      // Selection switching can replace the original trigger while a sheet stays open.
+      queueMicrotask(() => {
+        if (trigger.current?.isConnected) trigger.current.focus();
+      });
+    },
+    [trigger],
+  );
   useLayoutEffect(() => {
     if (mobile) return;
     const node = surface.current!;
     node.querySelector<HTMLButtonElement>('button')?.focus();
-    const previous = trigger.current;
-    return () => {
-      previous?.isConnected && previous.focus();
-    };
   }, [mobile, trigger]);
   const content = (
     <>
@@ -84,6 +89,8 @@ export function AppearanceSurface({
   const root = ownerWindow.document.querySelector('.vs')!;
   const keys = (event: KeyboardEvent) => {
     if ((event.target as Element).closest('[data-gesture-owner]')) return;
+    if (event.key === 'Escape' && (event.target as Element).hasAttribute('data-appearance-draft'))
+      return;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
       event.preventDefault();
       event.stopPropagation();

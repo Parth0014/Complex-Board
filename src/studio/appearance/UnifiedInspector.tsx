@@ -1,4 +1,4 @@
-import type { StudioAdapter } from '../../vision/contracts';
+import type { EditorAdapter } from '../../vision/contracts';
 import { useState, type RefObject } from 'react';
 import type { EditableItem } from '../../vision/appearance/types';
 import { capabilities, primaryColor } from '../../vision/appearance/capabilities';
@@ -7,6 +7,7 @@ import { applyControl, type InspectorArea } from './appearanceControls';
 import { TechnicalControls } from './TechnicalControls';
 import { CreativePalette } from './CreativePalette';
 import { TextProperties } from './TextProperties';
+import { ObjectSettings } from './ObjectSettings';
 import { selectedAppearance } from './feature';
 import { AppearanceSurface } from './AppearanceSurface';
 
@@ -15,7 +16,7 @@ export default function UnifiedInspector({
   onClose,
   trigger,
 }: {
-  adapter: StudioAdapter;
+  adapter: EditorAdapter;
   onClose(): void;
   trigger: RefObject<HTMLButtonElement | null>;
 }) {
@@ -46,7 +47,7 @@ export default function UnifiedInspector({
   );
 }
 
-function InspectorBody({ adapter, item }: { adapter: StudioAdapter; item: EditableItem }) {
+function InspectorBody({ adapter, item }: { adapter: EditorAdapter; item: EditableItem }) {
   const [area, setArea] = useState<InspectorArea>('color');
   const a = item.appearance;
   const cap = capabilities(item)!;
@@ -141,6 +142,12 @@ function InspectorBody({ adapter, item }: { adapter: StudioAdapter; item: Editab
           {area === 'effects' && (
             <>
               <h3>Finishing touches</h3>
+              {!cap.effects.includes(a.effect) && (
+                <p className="gs-appearance-note" role="status">
+                  The saved {a.effect} effect is unavailable for this object's current formatting.
+                  Choose a supported effect to replace it.
+                </p>
+              )}
               <div className="gs-effect-choices" role="group" aria-label="Appearance effect">
                 {cap.effects.map((effect) => (
                   <Button
@@ -169,6 +176,7 @@ function InspectorBody({ adapter, item }: { adapter: StudioAdapter; item: Editab
               area={area}
             />
           )}
+          <ObjectSettings key={item.id} adapter={adapter} item={item} />
         </fieldset>
       </div>
     </>

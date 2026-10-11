@@ -14,6 +14,9 @@ test('D1 disabled retains the original Quick Shape controls and canonical v3 dat
   await page.getByRole('button', { name: 'Appearance', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Object formatting', exact: true })).toBeVisible();
   await expect(page.locator('.gs-tweakpane')).toHaveCount(0);
+  await expect(
+    page.locator('.gs-hybrid-quickbar, .gs-appearance-dock, .gs-appearance-sheet'),
+  ).toHaveCount(0);
   await expect(page.getByLabel('Border width', { exact: true })).toHaveValue('8');
   expect(await h.evaluate(({ adapter }) => adapter.history.document.version)).toBe(3);
   expect(fetched.filter((url) => /\/tweakpane-[^/]+\.js/.test(url))).toEqual([]);
