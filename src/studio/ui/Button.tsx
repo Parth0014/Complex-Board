@@ -1,6 +1,7 @@
 import type { ComponentPropsWithRef } from 'react';
 
 export type ButtonProps = ComponentPropsWithRef<'button'> & {
+  'data-tip'?: string;
   variant?: 'plain' | 'primary' | 'secondary' | 'danger';
 };
 /** Shared native button semantics; existing component classes remain composable. */
@@ -22,13 +23,14 @@ export function Button({
 }
 export function IconButton({
   'aria-label': label,
+  title,
   ...props
 }: ButtonProps & { 'aria-label': string }) {
   return (
     <Button
       {...props}
       aria-label={label}
-      title={props.title ?? label}
+      data-tip={props['data-tip'] ?? title ?? label}
       className={`gs-icon-button ${props.className ?? ''}`}
     />
   );
