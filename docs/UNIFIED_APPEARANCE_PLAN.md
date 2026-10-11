@@ -37,3 +37,11 @@ writes and persistence in one coordinated commit after the acceptance tests pass
 There are no dual style writes. Reverse conversion exists only in explicit offline
 rollback utilities, never in live rendering, editing or persistence. Phase D is not
 started by this activation. See `UNIFIED_APPEARANCE_PHASE_C_REPORT.md`.
+
+## Subsequent Phase D1 authorization
+
+The user subsequently authorized Phase D1 only: a feature-flagged Quick Shape
+Tweakpane proof of concept using the active Phase C pipeline. The earlier Phase D
+authorization wording above describes the scope of the A/B/C task. Text and Drawing
+inspector migration and the complete Phase D2 redesign remain deferred. See
+`TWEAKPANE_PHASE_D1_REPORT.md` for the implementation and acceptance evidence.
