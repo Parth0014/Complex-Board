@@ -1,17 +1,7 @@
+import { STUDIO_PALETTE as SWATCHES } from './palette';
 import { Button } from './ui/Button';
 import { useEffect, useRef, useState } from 'react';
 import { Popover } from './ui/Popover';
-
-const SWATCHES = [
-  '#ffffff',
-  '#222222',
-  '#d15b52',
-  '#d7a64c',
-  '#7a9c77',
-  '#5988b5',
-  '#9578b5',
-  '#e8b5bf',
-];
 
 function hsv(h: number, s: number, v: number) {
   const f = (n: number) => {

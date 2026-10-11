@@ -1,3 +1,4 @@
+import { STUDIO_PALETTE } from '../palette';
 import { useRef, useState } from 'react';
 import type { StudioAdapter } from '../../vision/contracts';
 import type { EditableItem } from '../../vision/appearance/types';
@@ -139,16 +140,18 @@ export function TextProperties({
           </Button>
         </div>
         <div className="gs-text-formatting" role="group" aria-label="Character color">
-          {['#222222', '#d15b52', '#5988b5', '#9578b5'].map((color) => (
-            <Button
-              key={color}
-              className="gs-creative-swatch"
-              style={{ background: color }}
-              aria-label={`Character color ${color}`}
-              disabled={range.start === range.end}
-              onClick={() => format({ color })}
-            />
-          ))}
+          {[STUDIO_PALETTE[1], STUDIO_PALETTE[2], STUDIO_PALETTE[5], STUDIO_PALETTE[6]].map(
+            (color) => (
+              <Button
+                key={color}
+                className="gs-creative-swatch"
+                style={{ background: color }}
+                aria-label={`Character color ${color}`}
+                disabled={range.start === range.end}
+                onClick={() => format({ color })}
+              />
+            ),
+          )}
         </div>
         <Button onClick={() => patch({ textRuns: undefined })}>Clear range formatting</Button>
       </details>
