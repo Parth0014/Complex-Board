@@ -1,4 +1,5 @@
-import { STUDIO_PALETTE as SWATCHES } from './palette';
+import { PALETTE } from './palette';
+import { Swatch } from './ui/Swatch';
 import { Button } from './ui/Button';
 import { useEffect, useRef, useState } from 'react';
 import { Popover } from './ui/Popover';
@@ -91,15 +92,14 @@ export function ColorPicker({
             </Button>
           </div>
           <div className="studio-color-swatches">
-            {SWATCHES.map((color) => (
-              <Button
-                key={color}
-                type="button"
-                style={{ background: color }}
-                aria-label={`Use ${color}`}
+            {PALETTE.map((swatch) => (
+              <Swatch
+                key={swatch.hex}
+                swatch={swatch}
+                selected={value.toLowerCase() === swatch.hex}
                 onClick={() => {
-                  setTone(fromHex(color));
-                  onChange(color);
+                  setTone(fromHex(swatch.hex));
+                  onChange(swatch.hex);
                 }}
               />
             ))}

@@ -1,4 +1,4 @@
-﻿@layer components {
+@layer components {
   .gs-appearance-dock,
   .gs-appearance-sheet {
     display: flex;
@@ -47,7 +47,7 @@
   }
   .gs-appearance-sheet {
     width: 100%;
-    max-height: 78%;
+    max-height: 85%;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     padding-bottom: env(safe-area-inset-bottom);
@@ -269,7 +269,7 @@
   .gs-quick-popover .gs-tweakpane {
     margin-inline: calc(-1 * var(--gs-space-2));
   }
-  @media (max-width: 700px) {
+  @media (max-width: 768px) {
     .gs-appearance-sheet :is(button, select, input) {
       min-height: var(--gs-touch-target);
     }
@@ -304,5 +304,28 @@
     .gs-appearance-sheet details[open] > summary::before {
       transform: rotate(90deg);
     }
+  }
+}
+
+@layer components {
+  .gs-hybrid-quickbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .gs-appearance-header h2 {
+    font-family: var(--gs-font-display);
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-regular);
+  }
+  .gs-appearance-section h3 {
+    font-size: var(--gs-text-11);
+    letter-spacing: var(--gs-tracking-kicker);
+    text-transform: uppercase;
+  }
+  .gs-radius-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 80px;
+    align-items: end;
+    gap: var(--gs-space-3);
   }
 }

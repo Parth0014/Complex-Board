@@ -1,3 +1,4 @@
+import { Skeleton } from './ui/Skeleton';
 import { Button } from './ui/Button';
 import { useEffect, useRef, useState } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
@@ -15,6 +16,16 @@ const modeHelp = {
     action: 'Write affirmation',
   },
 };
+
+/** Style preset for AI-generated affirmations. */
+const AFFIRMATION_STYLE = {
+  id: 'ai-quote',
+  label: 'AI affirmation',
+  category: 'reflection',
+  fontFamily: 'assistant',
+  fontSize: 34,
+  color: '#49375e',
+} as const;
 type Result = {
   image?: string;
   text?: string;
@@ -67,13 +78,8 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       if (result.image) await adapter.insertGeneratedImage(result.image, prompt, background);
       else if (result.text)
         adapter.createTextPreset({
-          id: 'ai-quote',
+          ...AFFIRMATION_STYLE,
           sample: result.text,
-          label: 'AI affirmation',
-          category: 'reflection',
-          fontFamily: 'assistant',
-          fontSize: 34,
-          color: '#49375e',
         });
       setResult(null);
     } catch (error) {
@@ -124,6 +130,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       >
         {busy ? 'Working…' : help.action}
       </Button>
+      {busy && <Skeleton label="Generating" />}
       {busy && <Button onClick={() => controller.current?.abort()}>Cancel generation</Button>}
       {busy && (
         <p className="ai-tool-help" role="status">

@@ -44,7 +44,7 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
             </Button>
           ))}
         </div>
-        {adapter.selectedIds.length === 2 && (
+        <>
           <Button
             className="panel-secondary-action create-connect-action"
             disabled={adapter.selectedIds.length !== 2}
@@ -60,7 +60,10 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
             Connect selected objects
             <ArrowRightIcon />
           </Button>
-        )}
+          {adapter.selectedIds.length !== 2 && (
+            <p className="gs-appearance-note">Select two objects to connect them.</p>
+          )}
+        </>
       </section>
     </div>
   );

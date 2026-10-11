@@ -1,6 +1,6 @@
 import { Button } from './ui/Button';
 import { useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { SearchIcon as Search, CloseIcon as X } from './icons';
 import { matchesElementSearch } from '../assets/elementSearch';
 import { curatedAssets } from '../assets/curatedPack';
 import { ELEMENT_THEMES } from '../assets/elementThemes';

@@ -31,7 +31,7 @@ export function AppearanceSurface({
   onUndo(redo: boolean): void;
   onCancel(): void;
 }) {
-  const query = useRef(ownerWindow.matchMedia('(max-width: 700px)')).current;
+  const query = useRef(ownerWindow.matchMedia('(max-width: 768px)')).current;
   const mobile = useSyncExternalStore(
     (notify) => {
       query.addEventListener('change', notify);

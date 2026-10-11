@@ -1,3 +1,11 @@
+import {
+  BoldIcon,
+  ItalicIcon,
+  UnderlineIcon,
+  StrikeIcon,
+  UppercaseIcon,
+  LowercaseIcon,
+} from '../icons';
 import { STUDIO_PALETTE } from '../palette';
 import { useRef, useState } from 'react';
 import type { StudioAdapter } from '../../vision/contracts';
@@ -6,6 +14,18 @@ import { editorFonts, canonicalFontId } from '../../vision/fonts';
 import { formatRange, isRangeActive, type TextStyle } from '../../vision/text';
 import { Button } from '../ui/Button';
 import { CommittedNumber } from './CommittedNumber';
+
+const FORMAT_ICONS = {
+  bold: BoldIcon,
+  italic: ItalicIcon,
+  underline: UnderlineIcon,
+  strike: StrikeIcon,
+};
+
+function FormattingIcon({ format }: { format: keyof typeof FORMAT_ICONS }) {
+  const Icon = FORMAT_ICONS[format];
+  return <Icon />;
+}
 
 /** Existing typography/range commands; object appearance never edits character runs. */
 export function TextProperties({
@@ -93,6 +113,7 @@ export function TextProperties({
             aria-pressed={!!item[key]}
             onClick={() => patch({ [key]: !item[key] })}
           >
+            <FormattingIcon format={key} />
             {key.charAt(0).toUpperCase() + key.slice(1)}
           </Button>
         ))}
@@ -129,7 +150,7 @@ export function TextProperties({
               aria-label={`${key.charAt(0).toUpperCase() + key.slice(1)} text range`}
               onClick={() => format({ [key]: true })}
             >
-              {key}
+              <FormattingIcon format={key} /> {key}
             </Button>
           ))}
           <Button disabled={range.start === range.end} onClick={() => format({ script: 'super' })}>
@@ -183,8 +204,12 @@ export function TextProperties({
           </label>
         ))}
         <div className="gs-text-formatting">
-          <Button onClick={() => patch({ text: item.text?.toUpperCase() })}>UPPERCASE</Button>
-          <Button onClick={() => patch({ text: item.text?.toLowerCase() })}>lowercase</Button>
+          <Button onClick={() => patch({ text: item.text?.toUpperCase() })}>
+            <UppercaseIcon /> UPPERCASE
+          </Button>
+          <Button onClick={() => patch({ text: item.text?.toLowerCase() })}>
+            <LowercaseIcon /> lowercase
+          </Button>
         </div>
       </details>
     </div>

@@ -1,17 +1,10 @@
+import { PALETTE } from './palette';
+import { Swatch } from './ui/Swatch';
 import { Button } from './ui/Button';
 import { ColorPicker } from './ColorPicker';
 import type { EditorAdapter } from '../vision/contracts';
 
-const COLORS = [
-  ['#ffffff', 'White'],
-  ['#fffaf6', 'Cream'],
-  ['#fce4ec', 'Blush'],
-  ['#efe8ff', 'Lavender'],
-  ['#e6f4ec', 'Sage'],
-  ['#e7efff', 'Sky'],
-  ['#fff3cd', 'Butter'],
-  ['#25263a', 'Midnight'],
-] as const;
+const BACKGROUND_GRADIENT_DEFAULT = '#f2d7c4';
 
 export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
   const document = adapter.history.document;
@@ -45,7 +38,7 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
           onClick={() =>
             adapter.commit({
               ...document,
-              gradient: document.gradient || '#f2d7c4',
+              gradient: document.gradient || BACKGROUND_GRADIENT_DEFAULT,
               background: undefined,
             })
           }
@@ -57,16 +50,13 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
         <h3>{document.gradient ? 'Start color' : 'Choose a color'}</h3>
       </div>
       <div className="background-color-grid">
-        {COLORS.map(([color, name]) => (
-          <Button
-            key={color}
-            aria-label={`Set background ${color}`}
-            aria-pressed={document.color.toLowerCase() === color}
-            onClick={() => setColor(color)}
-          >
-            <span style={{ background: color }} />
-            <span>{name}</span>
-          </Button>
+        {PALETTE.map((swatch) => (
+          <Swatch
+            key={swatch.hex}
+            swatch={swatch}
+            selected={document.color.toLowerCase() === swatch.hex}
+            onClick={() => setColor(swatch.hex)}
+          />
         ))}
       </div>
       <label className="background-color-label">

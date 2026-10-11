@@ -1,3 +1,5 @@
+import { Skeleton } from '../ui/Skeleton';
+import { Button } from '../ui/Button';
 import type { BoardDocument } from '../../vision/document';
 import { BoardCard } from '../boards/BoardCard';
 export function BoardLibrary({
@@ -6,12 +8,14 @@ export function BoardLibrary({
   busy = false,
   onOpen,
   onDelete,
+  onCreate,
 }: {
   boards: { id: string; document: BoardDocument }[];
   loading?: boolean;
   busy?: boolean;
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
+  onCreate(): void;
 }) {
   return (
     <section className="home-library" aria-label="Your boards">
@@ -22,7 +26,7 @@ export function BoardLibrary({
         </span>
       </div>
       {loading ? (
-        <p role="status">Loading your boards…</p>
+        <Skeleton label="Loading your boards" />
       ) : boards.length ? (
         <div className="home-board-grid">
           {boards.map(({ id, document }) => (
@@ -39,6 +43,9 @@ export function BoardLibrary({
         <div className="home-empty">
           <h3>No boards yet.</h3>
           <p>Create a board to get started.</p>
+          <Button variant="primary" disabled={busy} onClick={onCreate}>
+            New board
+          </Button>
         </div>
       )}
     </section>

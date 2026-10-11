@@ -19,9 +19,7 @@ export function HomePage({ onOpen }: { onOpen: OpenBoard }) {
         <section className="home-intro">
           <div>
             <h1>Your vision, in one place.</h1>
-            <p>
-              Images, ideas and plans. Bring them together on a board.
-            </p>
+            <p>Images, ideas and plans. Bring them together on a board.</p>
             <Button
               className="home-primary"
               disabled={busy || loading}
@@ -51,6 +49,7 @@ export function HomePage({ onOpen }: { onOpen: OpenBoard }) {
           />
         )}
         <BoardLibrary
+          onCreate={() => setCreating(true)}
           boards={boards}
           loading={loading}
           busy={busy}

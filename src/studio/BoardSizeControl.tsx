@@ -17,6 +17,28 @@ export function BoardSizeControl({ adapter }: { adapter: EditorAdapter }) {
         value={value}
         onChange={(event) => {
           const [width, height] = event.target.value.split('x').map(Number);
+          const shrinking = width < document.width || height < document.height;
+          const outside = document.items.some((item) => {
+            const angle = (item.rotation * Math.PI) / 180;
+            return [
+              [0, 0],
+              [item.width, 0],
+              [0, item.height],
+              [item.width, item.height],
+            ].some(([x, y]) => {
+              const px = item.x + x * Math.cos(angle) - y * Math.sin(angle);
+              const py = item.y + x * Math.sin(angle) + y * Math.cos(angle);
+              return px < 0 || py < 0 || px > width || py > height;
+            });
+          });
+          if (
+            shrinking &&
+            outside &&
+            !adapter.ownerWindow.confirm(
+              'Some objects will be outside the smaller board. Change size anyway?',
+            )
+          )
+            return;
           adapter.commit({ ...document, width, height });
           adapter.fitBoard();
         }}

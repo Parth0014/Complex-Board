@@ -12,6 +12,7 @@ export function UploadsPanel({
 }) {
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
+  const [dragging, setDragging] = useState(false);
   const selected = adapter.history.document.items.find(
     (item) => item.id === adapter.selectedIds[0],
   );
@@ -36,7 +37,23 @@ export function UploadsPanel({
 
   return (
     <div className="uploads-panel">
-      <label className={`upload-picker${busy ? ' is-busy' : ''}`}>
+      <label
+        className={`upload-picker${busy ? ' is-busy' : ''}${dragging ? ' is-dragging' : ''}`}
+        onDragOver={(event) => {
+          event.preventDefault();
+          if (!busy && event.dataTransfer.types.includes('Files')) setDragging(true);
+        }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setDragging(false);
+          const files = Array.from(event.dataTransfer.files);
+          if (!busy && files.length) void upload(files);
+        }}
+      >
         <span className="upload-picker__icon" aria-hidden="true">
           <UploadIcon />
         </span>

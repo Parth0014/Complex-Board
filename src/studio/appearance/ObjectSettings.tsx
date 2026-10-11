@@ -1,3 +1,4 @@
+import { FlipHIcon } from '../icons';
 import { useEffect, useState } from 'react';
 import type { EditorAdapter } from '../../vision/contracts';
 import type { EditableItem } from '../../vision/appearance/types';
@@ -9,7 +10,7 @@ import { selectedAppearance } from './feature';
 
 /** Retain existing bounds/frame actions separately from appearance; no new geometry logic. */
 export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item: EditableItem }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [assets, setAssets] = useState<GratitudeAsset[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -44,6 +45,11 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
       ].map((asset) => [asset.id, asset]),
     ).values(),
   ];
+  const setRadius = (radius: number) => {
+    const current = selectedAppearance(adapter);
+    if (current?.id === item.id && !current.locked)
+      adapter.patchItems([{ id: item.id, patch: { radius } }]);
+  };
   const resize = (key: 'width' | 'height', value: number) => {
     const current = selectedAppearance(adapter);
     if (current?.id === item.id && !current.locked)
@@ -55,6 +61,7 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
   };
   return (
     <details
+      open={open}
       className="gs-text-advanced gs-object-settings"
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
@@ -92,17 +99,29 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
       )}
       {((item.kind === 'shape' && item.shape === 'rectangle') ||
         (item.appearance.kind === 'text' && item.appearance.background !== null)) && (
-        <CommittedNumber
-          label="Corner radius"
-          value={item.radius || 0}
-          min={0}
-          max={150}
-          onCommit={(radius) => {
-            const current = selectedAppearance(adapter);
-            if (current?.id === item.id && !current.locked)
-              adapter.patchItems([{ id: item.id, patch: { radius } }]);
-          }}
-        />
+        <div className="gs-radius-controls">
+          <label>
+            Corner radius
+            <input
+              type="range"
+              aria-label="Corner radius slider"
+              min={0}
+              max={150}
+              value={item.radius || 0}
+              onPointerDown={() => adapter.beginGesture()}
+              onPointerUp={() => adapter.endGesture()}
+              onPointerCancel={() => adapter.endGesture()}
+              onChange={(event) => setRadius(Number(event.target.value))}
+            />
+          </label>
+          <CommittedNumber
+            label="Corner radius"
+            value={item.radius || 0}
+            min={0}
+            max={150}
+            onCommit={setRadius}
+          />
+        </div>
       )}
       <Button
         onClick={() => {
@@ -111,7 +130,7 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
             adapter.patchItems([{ id: item.id, patch: { flipX: !current.flipX } }]);
         }}
       >
-        Flip horizontally
+        <FlipHIcon /> Flip horizontally
       </Button>
       {frame && (
         <label className="gs-frame-choice">

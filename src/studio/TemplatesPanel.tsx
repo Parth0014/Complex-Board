@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Button } from './ui/Button';
 import React, { useState } from 'react';
 
@@ -108,6 +109,11 @@ const TemplatePreview = ({ template }: { template: VisionTemplate }) =>
 export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
   const [applied, setApplied] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!applied) return;
+    const timer = setTimeout(() => setApplied(null), 3000);
+    return () => clearTimeout(timer);
+  }, [applied]);
   const [error, setError] = useState('');
   return (
     <div className="templates-panel">

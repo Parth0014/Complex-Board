@@ -3,7 +3,19 @@ import { Menu, Submenu } from './ui/Menu';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
 import {
   PasteIcon,
-  MoveIcon,
+  AlignIcon,
+  AlignLeftIcon,
+  AlignCenterHIcon,
+  AlignRightIcon,
+  AlignTopIcon,
+  AlignMiddleIcon,
+  AlignBottomIcon,
+  DistributeHIcon,
+  DistributeVIcon,
+  ForwardIcon,
+  BringFrontIcon,
+  BackwardIcon,
+  SendBackIcon,
   LayersIcon,
   ScissorsIcon,
   DuplicateIcon,
@@ -104,44 +116,44 @@ export function ContextActions({ adapter, onClose }: Props) {
             <Submenu label="Layer" icon={<LayersIcon />}>
               {(
                 [
-                  ['forward', 'Bring forward', ']'],
-                  ['front', 'Bring to front', 'Ctrl+]'],
-                  ['backward', 'Send backward', '['],
-                  ['back', 'Send to back', 'Ctrl+['],
+                  ['forward', 'Bring forward', ']', ForwardIcon],
+                  ['front', 'Bring to front', 'Ctrl+]', BringFrontIcon],
+                  ['backward', 'Send backward', '[', BackwardIcon],
+                  ['back', 'Send to back', 'Ctrl+[', SendBackIcon],
                 ] as const
-              ).map(([position, label, shortcut]) => (
+              ).map(([position, label, shortcut, Icon]) => (
                 <Button
                   key={position}
                   role="menuitem"
                   disabled={anyLocked}
                   onClick={run(() => adapter.arrangeSelection(position))}
                 >
-                  {label}
+                  <Icon /> {label}
                   <kbd>{formatShortcut(shortcut)}</kbd>
                 </Button>
               ))}
             </Submenu>
             <Submenu
               label={unitCount === 1 ? 'Align to page' : 'Arrange selection'}
-              icon={<MoveIcon />}
+              icon={<AlignIcon />}
             >
               {(
                 [
-                  ['left', 'Left'],
-                  ['center', 'Center'],
-                  ['right', 'Right'],
-                  ['top', 'Top'],
-                  ['middle', 'Middle'],
-                  ['bottom', 'Bottom'],
+                  ['left', 'Left', AlignLeftIcon],
+                  ['center', 'Center', AlignCenterHIcon],
+                  ['right', 'Right', AlignRightIcon],
+                  ['top', 'Top', AlignTopIcon],
+                  ['middle', 'Middle', AlignMiddleIcon],
+                  ['bottom', 'Bottom', AlignBottomIcon],
                 ] as const
-              ).map(([value, label]) => (
+              ).map(([value, label, Icon]) => (
                 <Button
                   key={value}
                   role="menuitem"
                   disabled={anyLocked}
                   onClick={run(() => adapter.alignSelection(value))}
                 >
-                  {label}
+                  <Icon /> {label}
                 </Button>
               ))}
               {unitCount >= 3 && (
@@ -151,14 +163,14 @@ export function ContextActions({ adapter, onClose }: Props) {
                     disabled={anyLocked}
                     onClick={run(() => adapter.distributeSelection('horizontal'))}
                   >
-                    Space evenly horizontally
+                    <DistributeHIcon /> Space evenly horizontally
                   </Button>
                   <Button
                     role="menuitem"
                     disabled={anyLocked}
                     onClick={run(() => adapter.distributeSelection('vertical'))}
                   >
-                    Space evenly vertically
+                    <DistributeVIcon /> Space evenly vertically
                   </Button>
                 </>
               )}
