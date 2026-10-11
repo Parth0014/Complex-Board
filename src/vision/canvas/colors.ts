@@ -8,12 +8,14 @@
 /* ── Fallback constants (match foundations.css token values) ── */
 const FALLBACK = {
   selection: '#4a3fd8',
-  guide: '#ff7b5c',
+  guide: '#b53a24',
+  artboardStroke: '#c4bcdc',
+  artboardShadow: 'rgba(30, 26, 54, 0.22)',
   marqueeFill: 'rgba(74, 63, 216, 0.12)',
   marqueeStroke: '#4a3fd8',
   highlighter: '#f6c453',
   pen: '#1e1a36',
-  dots: 'rgba(30, 26, 54, 0.07)',
+  dots: 'rgba(30, 26, 54, 0.16)',
 } as const;
 
 /* ── Item-content default colors (legacy, kept unchanged) ── */
@@ -26,6 +28,8 @@ export const ITEM_BLACK = '#000';
 export interface CanvasColors {
   selection: string;
   guide: string;
+  artboardStroke: string;
+  artboardShadow: string;
   marqueeFill: string;
   marqueeStroke: string;
   highlighter: string;

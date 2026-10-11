@@ -279,7 +279,7 @@
   .home-setup select {
     width: 100%;
     padding: 12px 14px;
-    border: 1.5px solid var(--gs-line);
+    border: 1.5px solid var(--gs-control-line);
     background: var(--gs-home-palette-2);
     color: var(--gs-text);
     border-radius: 12px;

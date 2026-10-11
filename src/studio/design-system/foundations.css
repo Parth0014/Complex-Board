@@ -4,6 +4,7 @@
     /* ── Palette (raw) ───────────────────────────── */
     --gs-ink-900: #1e1a36;
     --gs-ink-700: #5f5a7a;
+    --gs-ink-600: #716b8a;
     --gs-ink-500: #8f8aa8;
     --gs-paper: #f3f0fa;
     --gs-sheet: #fffdfc;
@@ -11,29 +12,32 @@
     --gs-line-200: #dcd6ec;
     --gs-line-300: #c4bcdc;
     --gs-line-400: #a79fc8;
+    --gs-line-500: #8a84a8;
+    --gs-line-600: #6d6790;
     --gs-violet-100: #ebe8fb;
     --gs-violet-600: #4a3fd8;
     --gs-violet-700: #30289a;
     --gs-violet-800: #251f7a;
     --gs-coral-100: #ffe9e3;
     --gs-coral-500: #ff7b5c;
-    --gs-coral-700: #c8412a;
+    --gs-coral-700: #b53a24;
     --gs-saffron-100: #fdf3d6;
     --gs-saffron-500: #f6c453;
     --gs-saffron-800: #8a5d00;
     --gs-mint-100: #e3f5ef;
     --gs-mint-500: #83d3bb;
-    --gs-mint-700: #2a7f68;
+    --gs-mint-700: #25705b;
     --gs-white: #ffffff;
     --gs-ink-rgb: 30, 26, 54; /* for rgba(var(--gs-ink-rgb), a) in shadows/overlays */
 
     /* ── Semantic (what components use) ─────────── */
     --gs-text: var(--gs-ink-900);
     --gs-text-secondary: var(--gs-ink-700);
+    --gs-text-placeholder: var(--gs-ink-600);
     --gs-text-disabled: var(--gs-ink-500);
     --gs-line: var(--gs-line-200);
-    --gs-control-line: var(--gs-line-300);
-    --gs-control-line-hover: var(--gs-line-400);
+    --gs-control-line: var(--gs-line-500);
+    --gs-control-line-hover: var(--gs-line-600);
     --gs-surface: var(--gs-sheet);
     --gs-surface-muted: var(--gs-sheet-2);
     --gs-workspace: var(--gs-paper);
@@ -68,8 +72,10 @@
     --gs-line-height-body: 1.45;
     --gs-line-height-tight: 1.2;
     --gs-tracking-kicker: 0.06em;
+    --gs-tracking-tight: -0.01em;
 
     /* ── Space, size, radius ────────────────────── */
+    --gs-space-0: 2px;
     --gs-space-1: 4px;
     --gs-space-2: 8px;
     --gs-space-3: 12px;
@@ -83,6 +89,8 @@
     --gs-touch-target: 44px;
     --gs-icon-size: 16px;
     --gs-icon-stroke: 1.5;
+    --gs-radius-xs: 2px;
+    --gs-radius-sm: 6px;
     --gs-radius-control: 8px;
     --gs-radius-card: 12px;
     --gs-radius-menu: 12px;
@@ -101,9 +109,13 @@
 
     /* ── Motion ─────────────────────────────────── */
     --gs-duration-feedback: 120ms;
+    --gs-duration-press: 100ms;
+    --gs-duration-exit: 120ms;
     --gs-duration-overlay: 200ms;
     --gs-duration-slow: 320ms;
-    --gs-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --gs-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --gs-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --gs-ease: var(--gs-ease-out);
 
     /* ── Layout ─────────────────────────────────── */
     --gs-header-height: 56px;
@@ -111,15 +123,19 @@
     --gs-rail-width: 72px;
     --gs-panel-width: clamp(264px, 22vw, 320px);
     --gs-dock-width: clamp(272px, 22vw, 320px);
+    --gs-scrollbar-size: 12px;
+    --gs-dock-offset: calc(var(--gs-space-4) + var(--gs-scrollbar-size));
 
     /* ── Canvas (Konva reads these via src/vision/canvas/colors.ts) ── */
     --gs-canvas-selection: var(--gs-violet-600);
-    --gs-canvas-guide: var(--gs-coral-500);
+    --gs-canvas-guide: var(--gs-coral-700);
+    --gs-canvas-artboard-stroke: var(--gs-line-300);
+    --gs-canvas-artboard-shadow: rgba(var(--gs-ink-rgb), 0.22);
     --gs-canvas-marquee-fill: rgba(74, 63, 216, 0.12);
     --gs-canvas-marquee-stroke: var(--gs-violet-600);
     --gs-canvas-highlighter: var(--gs-saffron-500);
     --gs-canvas-pen: var(--gs-ink-900);
-    --gs-canvas-dots: rgba(var(--gs-ink-rgb), 0.07);
+    --gs-canvas-dots: rgba(var(--gs-ink-rgb), 0.16);
 
     /* ── Z-index (unchanged) ────────────────────── */
     --gs-z-canvas: 0;
@@ -140,6 +156,8 @@
   @media (prefers-reduced-motion: reduce) {
     :root {
       --gs-duration-feedback: 0.01ms;
+      --gs-duration-press: 0.01ms;
+      --gs-duration-exit: 0.01ms;
       --gs-duration-overlay: 0.01ms;
       --gs-duration-slow: 0.01ms;
     }

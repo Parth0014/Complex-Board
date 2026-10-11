@@ -97,7 +97,7 @@
     text-overflow: ellipsis;
   }
   .vs-title__input:hover {
-    border-color: var(--gs-line);
+    border-color: var(--gs-control-line-hover);
   }
   .vs-title__input:focus {
     outline: none;
@@ -586,7 +586,7 @@
     color: var(--gs-accent);
   }
   .gs-hybrid-quickbar select {
-    border: 1px solid var(--gs-line);
+    border: 1px solid var(--gs-control-line);
     background: var(--gs-surface);
     padding: 0 var(--gs-space-2);
     max-width: 128px;

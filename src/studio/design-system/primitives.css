@@ -181,7 +181,7 @@
       box-shadow var(--gs-duration-feedback) var(--gs-ease);
   }
   .gs-input::placeholder {
-    color: var(--gs-text-disabled);
+    color: var(--gs-text-placeholder);
   }
   .gs-input:hover,
   .gs-select:hover {
@@ -256,6 +256,7 @@
   /* ── Segmented control ────────────────────────── */
   .gs-segmented {
     display: inline-flex;
+    border: 1px solid var(--gs-control-line);
     gap: 2px;
     background: var(--gs-surface-muted);
     border-radius: var(--gs-radius-control);

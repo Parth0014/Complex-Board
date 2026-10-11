@@ -25,30 +25,28 @@ function luminance(color: string) {
   );
   return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
 }
-const pairs: [string, string, number, boolean][] = [
-  ['text', 'surface', 4.5, false],
-  ['text-secondary', 'surface', 4.5, false],
-  ['text-secondary', 'workspace', 4.5, false],
-  ['text-placeholder', 'surface', 4.5, true],
-  ['text-placeholder', 'surface-muted', 4.5, true],
-  ['on-accent', 'accent', 4.5, false],
-  ['accent', 'surface', 4.5, false],
-  ['accent', 'accent-soft', 4.5, false],
-  ['danger', 'danger-soft', 4.5, true],
-  ['warning', 'warning-soft', 4.5, false],
-  ['success', 'success-soft', 4.5, true],
-  ['control-line', 'surface', 3, true],
-  ['control-line', 'workspace', 3, true],
-  ['control-line-hover', 'surface', 3, true],
-  ['focus-color', 'surface', 3, false],
-  ['focus-color', 'workspace', 3, false],
-  ['canvas-guide', 'white', 3, true],
+const pairs: [string, string, number][] = [
+  ['text', 'surface', 4.5],
+  ['text-secondary', 'surface', 4.5],
+  ['text-secondary', 'workspace', 4.5],
+  ['text-placeholder', 'surface', 4.5],
+  ['text-placeholder', 'surface-muted', 4.5],
+  ['on-accent', 'accent', 4.5],
+  ['accent', 'surface', 4.5],
+  ['accent', 'accent-soft', 4.5],
+  ['danger', 'danger-soft', 4.5],
+  ['warning', 'warning-soft', 4.5],
+  ['success', 'success-soft', 4.5],
+  ['control-line', 'surface', 3],
+  ['control-line', 'workspace', 3],
+  ['control-line-hover', 'surface', 3],
+  ['focus-color', 'surface', 3],
+  ['focus-color', 'workspace', 3],
+  ['canvas-guide', 'white', 3],
 ];
 describe('Atelier contrast thresholds', () => {
-  for (const [foreground, background, minimum, knownFailure] of pairs) {
-    // G0 baseline only: G1 must remove every expected-failure marker.
-    const check = knownFailure ? test.fails : test;
-    check(`${foreground} / ${background} >= ${minimum}:1`, () => {
+  for (const [foreground, background, minimum] of pairs) {
+    test(`${foreground} / ${background} >= ${minimum}:1`, () => {
       const a = luminance(resolve('--gs-' + foreground));
       const b = luminance(resolve('--gs-' + background));
       expect((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toBeGreaterThanOrEqual(minimum);
