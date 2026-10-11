@@ -2,6 +2,7 @@ import { chromium } from '@playwright/test';
 import { mkdir, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 const output = 'exports/appearance-legacy';
+const name = process.argv[3] || 'styles';
 await mkdir(output, { recursive: true });
 await mkdir('tests/fixtures', { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true });
@@ -34,14 +35,14 @@ try {
   await page.getByLabel('Editable vision board', { exact: true }).focus();
   await page.keyboard.press('Escape');
   await page.screenshot({
-    path: output + (process.argv.includes('--cards') ? '/cards-canvas.png' : '/styles-canvas.png'),
+    path: output + (process.argv.includes('--cards') ? '/cards-canvas.png' : `/${name}-canvas.png`),
   });
   await page.getByRole('button', { name: 'Share', exact: true }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
   await copyFile(
     await (await pending).path(),
-    output + (process.argv.includes('--cards') ? '/cards.png' : '/styles.png'),
+    output + (process.argv.includes('--cards') ? '/cards.png' : `/${name}.png`),
   );
   console.log('Captured legacy canvas and PNG export in ' + output);
 } finally {
