@@ -25,7 +25,7 @@ export function TechnicalControls({
   const create = useCallback(
     (container: HTMLDivElement) => {
       const item = selectedAppearance(adapter);
-      if (!item || item.id !== id) throw new Error('Selected object changed.');
+      if (!item || item.id !== id) return { dispose() {} };
       const controls = technicalControls(item, area).filter(
         (control) => !only || control.key === only,
       );

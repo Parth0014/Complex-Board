@@ -1,3 +1,4 @@
+import { canvasColors } from './colors';
 import { itemOpacity } from '../appearance/capabilities';
 import { primaryColor } from '../appearance/capabilities';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -58,7 +59,7 @@ export function KonvaStage({
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svg.setAttribute('width', '24');
     svg.setAttribute('height', '24');
-    svg.setAttribute('stroke', '#1b1d23');
+    svg.setAttribute('stroke', canvasColors(node.ownerDocument).pen);
     const encoded = encodeURIComponent(new XMLSerializer().serializeToString(svg));
     const hotspot = drawMode === 'eraser' ? '8 18' : '3 20';
     node.style.cursor = `url("data:image/svg+xml,${encoded}") ${hotspot}, crosshair`;
@@ -120,6 +121,7 @@ export function KonvaStage({
     crop: NonNullable<BoardItem['crop']>;
     item: BoardItem;
   } | null>(null);
+  const colors = useMemo(() => canvasColors(adapter.ownerWindow.document), [adapter.ownerWindow]);
   const document = adapter.history.document;
   const editingItem = document.items.find((item) => item.id === editing?.id);
   const finishTextEditing = (save: boolean) => {
@@ -543,7 +545,7 @@ export function KonvaStage({
       setStrokePreview([]);
       adapter.createDrawing(
         points,
-        drawMode === 'highlighter' ? '#f4c847' : '#573575',
+        drawMode === 'highlighter' ? colors.highlighter : colors.pen,
         drawMode === 'pen' ? 4 : drawMode === 'marker' ? 12 : 28,
         drawMode === 'highlighter' ? 0.4 : 1,
       );
@@ -999,7 +1001,7 @@ export function KonvaStage({
             {strokePreview.length > 1 && (
               <Line
                 points={strokePreview}
-                stroke={drawMode === 'highlighter' ? '#f4c847' : '#573575'}
+                stroke={drawMode === 'highlighter' ? colors.highlighter : colors.pen}
                 strokeWidth={drawMode === 'pen' ? 4 : drawMode === 'marker' ? 12 : 28}
                 opacity={drawMode === 'highlighter' ? 0.4 : 1}
                 lineCap="round"
@@ -1017,7 +1019,7 @@ export function KonvaStage({
               width={hoverBounds.width * scale}
               height={hoverBounds.height * scale}
               rotation={hoverBounds.rotation}
-              stroke="#8b3dff"
+              stroke={colors.selection}
               strokeWidth={1}
               opacity={0.65}
               listening={false}
@@ -1031,7 +1033,7 @@ export function KonvaStage({
                 left + guides.vertical * scale,
                 top + document.height * scale,
               ]}
-              stroke="#e441be"
+              stroke={colors.guide}
               strokeWidth={1}
               dash={[5, 4]}
               listening={false}
@@ -1045,7 +1047,7 @@ export function KonvaStage({
                 left + document.width * scale,
                 top + guides.horizontal * scale,
               ]}
-              stroke="#e441be"
+              stroke={colors.guide}
               strokeWidth={1}
               dash={[5, 4]}
               listening={false}
@@ -1054,8 +1056,8 @@ export function KonvaStage({
           {selectionRect && (
             <Rect
               {...selectionRect}
-              fill="#8943e420"
-              stroke="#8943e4"
+              fill={colors.marqueeFill}
+              stroke={colors.marqueeStroke}
               strokeWidth={1}
               listening={false}
             />
@@ -1068,9 +1070,9 @@ export function KonvaStage({
               width={item.width * scale}
               height={item.height * scale}
               rotation={item.rotation}
-              stroke="#8b3dff"
+              stroke={colors.selection}
               strokeWidth={2}
-              fill="#8943e420"
+              fill={colors.marqueeFill}
               listening={false}
             />
           ))}
@@ -1078,8 +1080,8 @@ export function KonvaStage({
             ref={transformer}
             rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
             rotationSnapTolerance={5}
-            borderStroke="#8b3dff"
-            anchorStroke="#8b3dff"
+            borderStroke={colors.selection}
+            anchorStroke={colors.selection}
             anchorFill="white"
             anchorSize={9}
             anchorCornerRadius={4}
@@ -1203,7 +1205,7 @@ export function KonvaStage({
             boxSizing: 'border-box',
             padding: editingItem.textPadding || 0,
             border: 'none',
-            outline: '2px solid #8b3dff',
+            outline: `2px solid ${colors.selection}`,
             borderRadius: 0,
             margin: 0,
             resize: 'none',

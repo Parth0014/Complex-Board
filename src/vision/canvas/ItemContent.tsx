@@ -1,3 +1,4 @@
+import { ITEM_FILL_DEFAULT, ITEM_INK_DEFAULT, ITEM_WHITE, ITEM_BLACK } from './colors';
 import { appearanceToKonva } from './appearance';
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Konva from 'konva';
@@ -101,8 +102,8 @@ function Content({
       ? appearanceToKonva(item)
       : {
           fillEnabled: !item.noFill,
-          fill: item.color || item.fill || '#b48ce3',
-          stroke: item.borderColor || '#33272b',
+          fill: item.color || item.fill || ITEM_FILL_DEFAULT,
+          stroke: item.borderColor || ITEM_INK_DEFAULT,
           strokeWidth:
             item.effect === 'outline' ? Math.max(2, item.borderWidth || 0) : item.borderWidth || 0,
           dash:
@@ -113,7 +114,8 @@ function Content({
                 : undefined,
           shadowEnabled: (!!item.shadow && item.shadow !== 'none') || item.effect === 'glow',
           shadowColor:
-            item.shadowColor || (item.effect === 'glow' ? item.color || '#b48ce3' : '#000'),
+            item.shadowColor ||
+            (item.effect === 'glow' ? item.color || ITEM_FILL_DEFAULT : ITEM_BLACK),
           shadowOpacity: item.shadowOpacity ?? (item.effect === 'glow' ? 0.8 : 0.25),
           shadowBlur:
             item.shadowBlur ??
@@ -137,9 +139,9 @@ function Content({
           fillLinearGradientEndPoint: { x: item.width, y: item.height },
           fillLinearGradientColorStops: [
             0,
-            item.color || item.fill || '#b48ce3',
+            item.color || item.fill || ITEM_FILL_DEFAULT,
             1,
-            item.gradient || '#fff',
+            item.gradient || ITEM_WHITE,
           ],
           fillRadialGradientStartPoint: { x: item.width / 2, y: item.height / 2 },
           fillRadialGradientEndPoint: { x: item.width / 2, y: item.height / 2 },
@@ -147,9 +149,9 @@ function Content({
           fillRadialGradientEndRadius: Math.max(item.width, item.height) / 2,
           fillRadialGradientColorStops: [
             0,
-            item.color || item.fill || '#b48ce3',
+            item.color || item.fill || ITEM_FILL_DEFAULT,
             1,
-            item.gradient || '#fff',
+            item.gradient || ITEM_WHITE,
           ],
         };
   if (item.kind === 'text') {
