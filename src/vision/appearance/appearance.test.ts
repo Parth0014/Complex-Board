@@ -123,9 +123,19 @@ describe('legacy migration and effective style preservation', () => {
       }),
     ).toThrow('Mixed');
     const canonical = migrateDocument(fixture);
-    expect(() =>
-      migrateDocument({ ...canonical, items: [{ ...canonical.items[0], color: '#fff' }] }),
-    ).toThrow('legacy');
+    const mixed = { ...canonical, items: [{ ...canonical.items[0], color: '#fff' }] };
+    const recovered = migrateDocument(mixed);
+    expect(recovered.items[0]).toEqual(canonical.items[0]);
+    expect(mixed.items[0].color).toBe('#fff');
+    expect(migrateDocument(recovered)).toEqual(recovered);
+    const mislabeled = { ...fixture, version: 3 };
+    expect(migrateDocument(mislabeled)).toEqual(canonical);
+    expect(migrateDocument({ ...multipage, version: 3 })).toEqual(migrateDocument(multipage));
+    const mixedItems = {
+      ...canonical,
+      items: [canonical.items[0], ...fixture.items.slice(1)],
+    };
+    expect(migrateDocument(mixedItems)).toEqual(canonical);
     expect(() =>
       migrateDocument({ ...canonical, items: [{ ...canonical.items[0], kind: 'text' }] }),
     ).toThrow('kind');

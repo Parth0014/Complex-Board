@@ -30,73 +30,103 @@ export function BoardSetup({
   onCreate,
 }: BoardSetupProps) {
   return (
-    <section className="home-setup" aria-label="New board setup">
+    <form
+      className="home-setup"
+      aria-label="New board setup"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!busy) onCreate();
+      }}
+    >
       <div className="home-section-heading">
-        <h2>Start your vision board</h2>
+        <h2>New board</h2>
         <Button disabled={busy} onClick={onClose} aria-label="Close board setup">
-          Close
+          Cancel
         </Button>
       </div>
-      <div className="home-setup-grid">
-        <label>
-          Board name
-          <input
-            maxLength={80}
-            value={title}
-            placeholder={kind === 'yearly' ? 'My ' + year + ' vision' : 'Give your vision a name'}
-            disabled={busy}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </label>
-        <label>
-          What is it about?
-          <select
-            aria-label="Board type"
-            value={kind}
-            disabled={busy}
-            onChange={(e) => setKind(e.target.value)}
-          >
-            <option value="yearly">My year ahead</option>
-            <option value="topic">A specific topic</option>
-          </select>
-        </label>
-        {kind === 'topic' && (
-          <label>
-            Choose a theme
-            <select
-              aria-label="Board theme"
-              value={theme}
-              disabled={busy}
-              onChange={(e) => setTheme(e.target.value)}
-            >
-              {ELEMENT_THEMES.filter((item) => item.id !== 'creative').map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label>
-          Orientation
-          <select
-            aria-label="Board orientation"
-            value={orientation}
-            disabled={busy}
-            onChange={(e) => setOrientation(e.target.value)}
-          >
-            <option value="1920x1080">Landscape</option>
-            <option value="1080x1920">Portrait</option>
-            <option value="1080x1080">Square</option>
-          </select>
-        </label>
+      <label className="home-name-field">
+        Name
+        <input
+          autoFocus
+          maxLength={80}
+          value={title}
+          placeholder={kind === 'yearly' ? `${year} board` : 'Untitled board'}
+          disabled={busy}
+          onChange={(event) => setTitle(event.target.value)}
+        />
+      </label>
+      <fieldset disabled={busy} className="home-choice-field">
+        <legend>Focus</legend>
+        <div className="home-choice-row">
+          {[
+            ['yearly', 'Year ahead'],
+            ['topic', 'Topic'],
+          ].map(([value, label]) => (
+            <label className="home-choice" key={value}>
+              <input
+                type="radio"
+                name="board-kind"
+                value={value}
+                checked={kind === value}
+                onChange={() => setKind(value)}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      {kind === 'topic' && (
+        <fieldset disabled={busy} className="home-choice-field">
+          <legend>Topic</legend>
+          <div className="home-theme-choices">
+            {ELEMENT_THEMES.filter((item) => item.id !== 'creative').map((item) => (
+              <label className="home-choice" key={item.id}>
+                <input
+                  type="radio"
+                  name="board-theme"
+                  value={item.id}
+                  checked={theme === item.id}
+                  onChange={() => setTheme(item.id)}
+                />
+                <span>{item.label.split(' & ')[0]}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      <fieldset disabled={busy} className="home-choice-field">
+        <legend>Layout</legend>
+        <div className="home-layout-choices">
+          {[
+            ['1920x1080', 'Landscape', 'landscape'],
+            ['1080x1920', 'Portrait', 'portrait'],
+            ['1080x1080', 'Square', 'square'],
+          ].map(([value, label, shape]) => (
+            <label className="home-choice home-layout-choice" key={value}>
+              <input
+                type="radio"
+                name="board-orientation"
+                value={value}
+                checked={orientation === value}
+                onChange={() => setOrientation(value)}
+              />
+              <span>
+                <i
+                  className={`home-layout-preview home-layout-preview--${shape}`}
+                  aria-hidden="true"
+                />
+                {label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div className="home-setup-footer">
+        <p>You can change these later.</p>
+        <Button type="submit" className="home-primary" disabled={busy}>
+          {busy ? 'Creating?' : 'Create board'}
+        </Button>
       </div>
-      <p>
-        We’ll open artwork for your theme. You can change the theme and orientation in the editor.
-      </p>
-      <Button className="home-primary" disabled={busy} onClick={onCreate}>
-        {busy ? 'Opening…' : 'Create board'}
-      </Button>
-    </section>
+    </form>
   );
 }

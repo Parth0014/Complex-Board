@@ -144,7 +144,41 @@ export function validateCanonicalDocument(value: unknown): CanonicalDocument {
 /** Deterministic and idempotent import boundary for legacy and canonical documents. */
 export function migrateDocument(value: unknown): CanonicalDocument {
   const raw = record(value);
-  if (raw.version === 3) return validateCanonicalDocument(raw);
+  if (raw.version === 3) {
+    // Some previously saved v3 records retain obsolete top-level style fields.
+    // Canonical appearance already drove their rendering: preserve it exactly
+    // and remove only redundant fields on the import boundary, never in-place.
+    const cleanItems = (value: unknown) => {
+      if (!Array.isArray(value)) return value;
+      return value.map((rawItem) => {
+        const item = structuredClone(record(rawItem));
+        if (item.kind !== 'asset' && item.appearance === undefined) {
+          const legacy = validateBoard({
+            ...raw,
+            version: 2,
+            items: [item],
+            pages: undefined,
+            activePageId: undefined,
+          });
+          return migrateItem(legacy.items[0]);
+        }
+        if (item.kind !== 'asset') for (const key of LEGACY_APPEARANCE_FIELDS) delete item[key];
+        return item;
+      });
+    };
+    return validateCanonicalDocument({
+      ...raw,
+      items: cleanItems(raw.items),
+      ...(Array.isArray(raw.pages)
+        ? {
+            pages: raw.pages.map((page) => ({
+              ...record(page),
+              items: cleanItems(record(page).items),
+            })),
+          }
+        : {}),
+    });
+  }
   const legacy = validateBoard(raw);
   if (
     legacy.items.some((item) => 'appearance' in item) ||

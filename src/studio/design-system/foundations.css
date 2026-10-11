@@ -72,3 +72,44 @@
     --gs-focus-color: var(--fluent-colorStrokeFocus2);
   }
 }
+
+/* Homepage palette and display scale from the supplied redesign. */
+@layer tokens {
+  .home-page {
+    --hp-paper: #f3f0fa;
+    --hp-sheet: #fffdfc;
+    --hp-ink: #1e1a36;
+    --hp-ink-soft: #5f5a7a;
+    --hp-line: #dcd6ec;
+    --hp-violet: #4a3fd8;
+    --hp-violet-deep: #30289a;
+    --hp-coral: #ff7b5c;
+    --hp-coral-deep: #c8412a;
+    --hp-saffron: #f6c453;
+    --hp-mint: #83d3bb;
+    --hp-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --hp-body: 'DM Sans', var(--gs-font, system-ui), sans-serif;
+    --hp-palette-1: rgba(30, 26, 54, 0.07);
+    --hp-palette-2: #fff;
+    --hp-palette-3: rgba(30, 26, 54, 0.5);
+    --hp-palette-4: #4fae96;
+    --hp-palette-5: rgba(246, 196, 83, 0.9);
+    --hp-palette-6: rgba(255, 123, 92, 0.8);
+    --hp-palette-7: rgba(131, 211, 187, 0.9);
+    --hp-palette-8: rgba(30, 26, 54, 0.45);
+    --hp-palette-9: rgba(74, 63, 216, 0.45);
+    --hp-palette-10: rgba(30, 26, 54, 0.12);
+    --hp-palette-11: rgba(30, 26, 54, 0.35);
+    --hp-palette-12: #9d2d1a;
+    --hp-type-1: 16px;
+    --hp-type-2: 28px;
+    --hp-type-3: 18px;
+    --hp-type-4: clamp(2.8rem, 6vw, 5rem);
+    --hp-type-5: 17px;
+    --hp-type-6: 30px;
+    --hp-type-7: 13px;
+    --hp-type-8: 14px;
+    --hp-type-9: 22px;
+    --hp-type-10: 26px;
+  }
+}

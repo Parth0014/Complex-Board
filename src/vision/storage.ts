@@ -50,10 +50,14 @@ export async function saveBoard(
       previous.onsuccess = () => {
         // Capture the untouched legacy value before its first canonical write.
         // Both writes share a transaction: recovery failure aborts activation.
-        if (previous.result && [1, 2].includes(previous.result.version)) {
-          const recovery = store.get(LEGACY_RECOVERY_PREFIX + key);
+        const repairedV3 =
+          previous.result?.version === 3 &&
+          JSON.stringify(migrateDocument(previous.result)) !== JSON.stringify(previous.result);
+        if (previous.result && ([1, 2].includes(previous.result.version) || repairedV3)) {
+          const recoveryKey = LEGACY_RECOVERY_PREFIX + (repairedV3 ? 'mixed-v3:' : '') + key;
+          const recovery = store.get(recoveryKey);
           recovery.onsuccess = () => {
-            if (!recovery.result) store.put(previous.result, LEGACY_RECOVERY_PREFIX + key);
+            if (!recovery.result) store.put(previous.result, recoveryKey);
             store.put({ ...canonical, updatedAt: Date.now() }, key);
           };
         } else store.put({ ...canonical, updatedAt: Date.now() }, key);
@@ -67,6 +71,25 @@ export async function saveBoard(
   }
 }
 export const validateBoard = migrateDocument;
+
+/** Delete only the selected live record; recovery snapshots and shared media remain intact. */
+export async function deleteBoard(
+  ownerWindow: Window & typeof globalThis,
+  key: string,
+): Promise<void> {
+  const db = await openBoardStore(ownerWindow);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('boards', 'readwrite');
+      tx.objectStore('boards').delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+}
 
 export async function listBoards(
   ownerWindow: Window & typeof globalThis,
@@ -88,7 +111,23 @@ export async function listBoards(
           cursor.continue();
           return;
         }
-        const board = validateBoard(cursor.value);
+        let board: BoardDocument;
+        try {
+          board = validateBoard(cursor.value);
+        } catch (error) {
+          // Preserve the actual validation failure instead of losing it behind
+          // IndexedDB's generic abort. Abort also rolls back any page extraction.
+          reject(
+            new Error(
+              'Saved board ' +
+                String(cursor.key) +
+                ': ' +
+                (error instanceof Error ? error.message : 'Invalid saved document.'),
+            ),
+          );
+          tx.abort();
+          return;
+        }
         if (board.pages?.length && appearancePersistenceEnabled()) {
           const legacyValue = structuredClone(cursor.value);
           const legacyKey = String(cursor.key);

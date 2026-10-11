@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import { itemOpacity, primaryColor } from '../../vision/appearance/capabilities';
 import type { BoardDocument } from '../../vision/document';
-export function BoardPreview({
+export const BoardPreview = memo(function BoardPreview({
   document,
   maxItems = 100,
 }: {
@@ -53,4 +54,4 @@ export function BoardPreview({
       ))}
     </svg>
   );
-}
+});

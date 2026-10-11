@@ -5,30 +5,40 @@ export function BoardLibrary({
   loading = false,
   busy = false,
   onOpen,
+  onDelete,
 }: {
   boards: { id: string; document: BoardDocument }[];
   loading?: boolean;
   busy?: boolean;
   onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <section className="home-library" aria-label="Your boards">
       <div className="home-section-heading">
         <h2>Your boards</h2>
-        <span>{boards.length} saved locally</span>
+        <span>
+          {boards.length} {boards.length === 1 ? 'board' : 'boards'}
+        </span>
       </div>
       {loading ? (
         <p role="status">Loading your boards…</p>
       ) : boards.length ? (
         <div className="home-board-grid">
           {boards.map(({ id, document }) => (
-            <BoardCard key={id} document={document} disabled={busy} onOpen={() => onOpen(id)} />
+            <BoardCard
+              key={id}
+              document={document}
+              disabled={busy}
+              onOpen={() => onOpen(id)}
+              onDelete={() => onDelete(id)}
+            />
           ))}
         </div>
       ) : (
         <div className="home-empty">
-          <h3>Your next chapter starts here.</h3>
-          <p>Create your first vision board and make it your own.</p>
+          <h3>No boards yet.</h3>
+          <p>Create a board to get started.</p>
         </div>
       )}
     </section>

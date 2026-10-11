@@ -128,68 +128,80 @@ it('internal clipboard and duplication preserve appearance and rich-text data wi
   expect(a.history.document.items).toHaveLength(fixture.items.length + 1);
 });
 
-it('home library loading keeps version 3 and preserves every extracted multipage style', async () => {
-  const written: unknown[] = [];
-  const entries = [fixture, multipage];
-  const request: { result?: unknown; onsuccess?: () => void; onerror?: () => void } = {};
-  let transaction: { oncomplete?: () => void };
-  let index = 0;
-  const next = () =>
-    queueMicrotask(() => {
-      request.result =
-        index < entries.length
-          ? {
-              key: `board-${index}`,
-              value: entries[index],
-              delete() {},
-              continue() {
-                index++;
-                next();
-              },
-            }
-          : null;
-      request.onsuccess?.();
-      if (!request.result) transaction.oncomplete?.();
-    });
-  const db = {
-    close() {},
-    transaction() {
-      transaction = {
-        objectStore: () => ({
-          openCursor() {
-            next();
-            return request;
-          },
-          get() {
-            const lookup: { result: unknown; onsuccess?: () => void } = { result: undefined };
-            queueMicrotask(() => lookup.onsuccess?.());
-            return lookup;
-          },
-          put(value: unknown) {
-            written.push(value);
-          },
-        }),
-      } as typeof transaction;
-      return transaction;
-    },
-  };
-  const owner = {
-    indexedDB: {
-      open() {
-        const opening: { result: unknown; onsuccess?: () => void } = { result: db };
-        queueMicrotask(() => opening.onsuccess?.());
-        return opening;
+it.each([false, true])(
+  'home library loading preserves styles and reports invalid records (%s)',
+  async (invalid) => {
+    const written: unknown[] = [];
+    const entries = [fixture, invalid ? { ...multipage, title: undefined } : multipage];
+    const request: { result?: unknown; onsuccess?: () => void; onerror?: () => void } = {};
+    let transaction: { oncomplete?: () => void };
+    let index = 0;
+    const next = () =>
+      queueMicrotask(() => {
+        request.result =
+          index < entries.length
+            ? {
+                key: `board-${index}`,
+                value: entries[index],
+                delete() {},
+                continue() {
+                  index++;
+                  next();
+                },
+              }
+            : null;
+        request.onsuccess?.();
+        if (!request.result) transaction.oncomplete?.();
+      });
+    const db = {
+      close() {},
+      transaction() {
+        transaction = {
+          abort: vi.fn(),
+          objectStore: () => ({
+            openCursor() {
+              next();
+              return request;
+            },
+            get() {
+              const lookup: { result: unknown; onsuccess?: () => void } = { result: undefined };
+              queueMicrotask(() => lookup.onsuccess?.());
+              return lookup;
+            },
+            put(value: unknown) {
+              written.push(value);
+            },
+          }),
+        } as typeof transaction;
+        return transaction;
       },
-    },
-  } as unknown as Window & typeof globalThis;
-  const listed = await listBoards(owner);
-  expect(listed).toHaveLength(1);
-  expect(listed[0].document.version).toBe(3);
-  expect(migrateDocument(listed[0].document)).toEqual(migrateDocument(fixture));
-  expect(written).toHaveLength(3);
-  expect(written[2]).toEqual(multipage);
-  for (const [pageIndex, document] of written.slice(0, 2).entries())
-    expect(migrateDocument(document).items).toEqual(
-      migrateDocument(multipage).pages![pageIndex].items,
-    );
-});
+    };
+    const owner = {
+      indexedDB: {
+        open() {
+          const opening: { result: unknown; onsuccess?: () => void } = { result: db };
+          queueMicrotask(() => opening.onsuccess?.());
+          return opening;
+        },
+      },
+    } as unknown as Window & typeof globalThis;
+    if (invalid) {
+      await expect(listBoards(owner)).rejects.toThrow('Saved board board-1: Invalid board backup.');
+      expect(
+        (transaction! as typeof transaction & { abort: () => void }).abort,
+      ).toHaveBeenCalledOnce();
+      expect(written).toHaveLength(0);
+      return;
+    }
+    const listed = await listBoards(owner);
+    expect(listed).toHaveLength(1);
+    expect(listed[0].document.version).toBe(3);
+    expect(migrateDocument(listed[0].document)).toEqual(migrateDocument(fixture));
+    expect(written).toHaveLength(3);
+    expect(written[2]).toEqual(multipage);
+    for (const [pageIndex, document] of written.slice(0, 2).entries())
+      expect(migrateDocument(document).items).toEqual(
+        migrateDocument(multipage).pages![pageIndex].items,
+      );
+  },
+);

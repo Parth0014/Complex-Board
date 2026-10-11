@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ELEMENT_THEMES } from '../../assets/elementThemes';
 import { newBoard, type BoardDocument } from '../../vision/document';
-import { listBoards, saveBoard } from '../../vision/storage';
+import { deleteBoard, listBoards, saveBoard } from '../../vision/storage';
 
 export type OpenBoard = (id: string, isNew: boolean) => Promise<void>;
 export function useHomeBoards(onOpen: OpenBoard) {
@@ -21,8 +21,13 @@ export function useHomeBoards(onOpen: OpenBoard) {
       .then((value) => {
         if (active) setBoards(value);
       })
-      .catch(() => {
-        if (active) setError('Unable to load your boards. Try refreshing.');
+      .catch((error: unknown) => {
+        if (active)
+          setError(
+            'Unable to load your boards. ' +
+              (error instanceof Error ? error.message : 'Storage could not be read.') +
+              ' Your saved data has not been cleared.',
+          );
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -68,6 +73,25 @@ export function useHomeBoards(onOpen: OpenBoard) {
       setBusy(false);
     }
   };
+  const remove = async (id: string) => {
+    const board = boards.find((board) => board.id === id);
+    if (
+      !board ||
+      busy ||
+      !window.confirm(`Delete “${board.document.title}”? This cannot be undone.`)
+    )
+      return;
+    setBusy(true);
+    setError('');
+    try {
+      await deleteBoard(window, id);
+      setBoards((current) => current.filter((board) => board.id !== id));
+    } catch {
+      setError('Unable to delete this board. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
   return {
     boards,
     loading,
@@ -86,5 +110,6 @@ export function useHomeBoards(onOpen: OpenBoard) {
     year,
     open,
     create,
+    remove,
   };
 }
