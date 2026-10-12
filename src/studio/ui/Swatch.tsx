@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { Button } from './Button';
 import { CheckIcon } from '../icons';
 import type { PaletteSwatch } from '../palette';
@@ -20,13 +21,13 @@ export function Swatch({
   const dark = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 < 150;
   return (
     <Button
-      className="gs-swatch"
+      className={`gs-swatch${dark ? ' gs-swatch--dark' : ''}`}
       aria-label={swatch.name}
       data-tip={swatch.name}
       aria-pressed={selected}
       disabled={disabled}
       onClick={onClick}
-      style={{ background: swatch.hex, color: dark ? 'var(--gs-on-accent)' : 'var(--gs-text)' }}
+      style={{ '--gs-swatch-color': swatch.hex } as CSSProperties}
     >
       {selected && <CheckIcon />}
     </Button>

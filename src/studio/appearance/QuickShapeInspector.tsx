@@ -23,7 +23,7 @@ export default function QuickShapeInspector({
     <section className="gs-shape-inspector" aria-label="Quick Shape inspector">
       <header>
         <div>
-          <h3>Shape appearance</h3>
+          <h3 className="gs-panel-title">Shape appearance</h3>
           <p>Fill, border and finishing touches</p>
         </div>
         <IconButton aria-label="Close shape inspector" onClick={onClose}>
