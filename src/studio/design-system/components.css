@@ -5363,3 +5363,35 @@
     outline-offset: 3px;
   }
 }
+
+@layer components {
+  .image-filter-presets {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .vs .image-filter-presets > .gs-button {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px;
+    min-width: 0;
+    border: 1px solid var(--gs-line);
+    border-radius: 8px;
+  }
+  .image-filter-presets canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    background: var(--gs-surface-muted);
+  }
+  .image-filter-presets span {
+    font-size: var(--gs-text-11);
+  }
+  .vs .image-filter-presets > button[aria-pressed='true'] {
+    border-color: var(--gs-accent);
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+}

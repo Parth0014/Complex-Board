@@ -184,6 +184,7 @@ export interface StudioAdapter extends CanvasAdapter {
   redo(): void;
 }
 export interface EditorAdapter extends StudioAdapter {
+  readonly images: Map<string, HTMLImageElement>;
   replaceAsset(id: string): Promise<string | null>;
   shapeAssist: boolean;
   cleanSelectedDrawings(): void;

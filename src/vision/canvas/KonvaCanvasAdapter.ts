@@ -1646,7 +1646,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   }
   setImageFit(mode: 'fit' | 'fill') {
     this.patchItems(
-      this.selectedIds.map((id) => ({ id, patch: { imageFit: mode, crop: undefined } })),
+      this.selectedIds.map((id) => ({
+        id,
+        patch: { imageFit: mode, crop: undefined, contentSize: undefined },
+      })),
     );
   }
   rotateSelection(degrees: number) {

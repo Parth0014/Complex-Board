@@ -370,7 +370,8 @@ function Content({
     );
   }
   const source = item.contentAsset || item.asset,
-    sourceRatio = (source?.width || 1) / (source?.height || 1),
+    sourceRatio =
+      (image?.naturalWidth || source?.width || 1) / (image?.naturalHeight || source?.height || 1),
     targetRatio = item.width / item.height;
   const cover =
     sourceRatio > targetRatio

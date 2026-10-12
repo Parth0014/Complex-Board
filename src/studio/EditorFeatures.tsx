@@ -1,3 +1,4 @@
+import { ImageFilterPresets } from './ImageFilterPresets';
 // Canvas formatting and layer controls.
 import { errorMessage } from './errors';
 import { appearanceValue, type AppearanceField } from '../vision/appearance/controls';
@@ -754,13 +755,15 @@ export function EditorFeatures({
                   <Sec title="Fit & crop" icon={<CropIcon />}>
                     <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                       <Button
-                        data-tip="Fit image inside frame"
+                        data-tip="Show the whole image inside its frame"
+                        aria-pressed={item.imageFit === 'fit'}
                         onClick={() => adapter.setImageFit('fit')}
                       >
                         Fit image
                       </Button>
                       <Button
-                        data-tip="Fill frame with image"
+                        data-tip="Fill the frame; crop edges when needed"
+                        aria-pressed={item.imageFit === 'fill'}
                         onClick={() => adapter.setImageFit('fill')}
                       >
                         Fill image
@@ -824,56 +827,13 @@ export function EditorFeatures({
                       {number('Temperature', 'warmth', -100, 100)}
                       {number('Tint', 'tint', -100, 100)}
                     </div>
-                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                      <Button
-                        data-tip="Apply Mono filter"
-                        onClick={() => patch({ filter: 'mono', saturation: 0, contrast: 10 })}
-                      >
-                        Mono
-                      </Button>
-                      <Button
-                        data-tip="Apply Dreamy filter"
-                        onClick={() =>
-                          patch({
-                            filter: 'dreamy',
-                            brightness: 0.1,
-                            contrast: -15,
-                            saturation: -0.3,
-                          })
-                        }
-                      >
-                        Dreamy
-                      </Button>
-                      <Button
-                        data-tip="Apply Film filter"
-                        onClick={() =>
-                          patch({
-                            filter: 'film',
-                            brightness: -0.05,
-                            contrast: 25,
-                            saturation: -0.5,
-                          })
-                        }
-                      >
-                        Film
-                      </Button>
-                      <Button
-                        data-tip="Reset to original"
-                        onClick={() =>
-                          patch({
-                            filter: 'original',
-                            brightness: 0,
-                            contrast: 0,
-                            saturation: 0,
-                            blur: 0,
-                            warmth: 0,
-                            tint: 0,
-                          })
-                        }
-                      >
-                        Original
-                      </Button>
-                    </div>
+                    <ImageFilterPresets
+                      image={adapter.images.get(
+                        item.rendition || (item.contentAsset || item.asset)?.assetUrl || '',
+                      )}
+                      value={item.filter}
+                      onChange={patch}
+                    />
                   </Sec>
 
                   {item.asset?.editable.colors &&
