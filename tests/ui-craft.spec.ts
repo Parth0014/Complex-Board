@@ -182,6 +182,59 @@ test.describe('craft invariants (item 44)', () => {
     }
   });
 
+  test('the object dock pins to the right of the canvas (fix-brief item 1)', async ({
+    page,
+  }) => {
+    // Regression: the ObjectDock portals into .vs-body; it must occupy the
+    // third grid column (right of the canvas), not wrap under the library.
+    for (const viewport of [
+      { width: 1366, height: 768 },
+      { width: 1920, height: 1080 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await createBoard(page);
+      await addItem(page, 'shape');
+      await openInspector(page);
+      await settle(page);
+      const layout = await page.evaluate(() => {
+        const dock = document.querySelector('.gs-object-dock');
+        const canvas = document.querySelector('.vs-canvas');
+        const body = document.querySelector('.vs-body');
+        if (!dock || !canvas || !body) return { missing: true };
+        const d = dock.getBoundingClientRect();
+        const c = canvas.getBoundingClientRect();
+        const b = body.getBoundingClientRect();
+        const zoomInput = document.querySelector<HTMLInputElement>(
+          'input[aria-label="Zoom"]',
+        );
+        return {
+          dockLeft: d.left,
+          canvasRight: c.right,
+          dockTop: d.top,
+          bodyTop: b.top,
+          bodyBottom: b.bottom,
+          zoom: zoomInput ? Number(zoomInput.value) : -1,
+        };
+      });
+      expect(layout, 'dock/canvas/body present').not.toHaveProperty('missing');
+      if (!('missing' in layout)) {
+        expect(
+          layout.dockLeft,
+          `dock left (${viewport.width}) >= canvas right`,
+        ).toBeGreaterThanOrEqual(layout.canvasRight - 1);
+        expect(
+          layout.dockTop,
+          `dock top (${viewport.width}) within workspace`,
+        ).toBeGreaterThanOrEqual(layout.bodyTop - 1);
+        expect(
+          layout.dockTop,
+          `dock top (${viewport.width}) within workspace`,
+        ).toBeLessThanOrEqual(layout.bodyBottom);
+        expect(layout.zoom, `artboard zoom (${viewport.width}) > 25%`).toBeGreaterThan(25);
+      }
+    }
+  });
+
   test('every icon-only button has an accessible name and no native tooltip', async ({
     page,
   }) => {

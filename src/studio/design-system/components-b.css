@@ -574,9 +574,35 @@
     }
     .vs-body {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-rows: minmax(0, 1fr);
       gap: 0;
       padding: 0;
+    }
+    /* The ObjectDock portals into .vs-body as a third grid item; pin it to
+       column 3 so it docks on the right instead of wrapping to row 2. The
+       third `auto` column collapses to 0 when the dock is closed. */
+    .vs-body > .gs-object-dock.gs-formatting-popover {
+      grid-column: 3;
+      grid-row: 1;
+    }
+    @media (max-width: 768px) {
+      /* 720–768px: the mobile bottom-sheet styles (max-width: 768px) clash
+         with the floating-dock styles (max-width: 1100px) and collapse the
+         sheet to 0 width. Keep the right-docked inspector here; the bottom
+         sheet is for ≤719px only. */
+      .vs-body > .gs-object-dock.gs-formatting-popover {
+        position: relative;
+        inset: auto;
+        width: var(--v2-dock);
+        max-width: none;
+        height: 100%;
+        max-height: none;
+        border: 0;
+        border-left: 1px solid var(--gs-line);
+        border-radius: 0;
+        box-shadow: none;
+      }
     }
     .vs-lib {
       position: relative;
@@ -643,7 +669,9 @@
   .vs-object-context .vs-context-actions:last-child {
     border-bottom: none;
   }
-  .vs-object-context {
+  /* Specificity (0,2,0) beats the later `.vs` rule's height:100%: the menu
+     must shrink to its content, not fill the viewport. */
+  .vs.vs-object-context {
     position: fixed;
     z-index: var(--gs-z-popover);
     overflow: auto;
