@@ -52,7 +52,7 @@ export async function handleRequest(req, res) {
     }
     return;
   }
-  if (req.url === '/api/ai/status' && req.method === 'GET') {
+  if (route.pathname === '/api/ai/status' && req.method === 'GET') {
     let backgroundAvailable = false;
     if (process.env.REMBG_URL) {
       try {
@@ -82,7 +82,7 @@ export async function handleRequest(req, res) {
       '/api/ai/edit',
       '/api/ai/upscale',
       '/api/ai/video',
-    ].includes(req.url) ||
+    ].includes(route.pathname) ||
     req.method !== 'POST'
   ) {
     respond(404, { error: 'Not found' });
@@ -102,17 +102,18 @@ export async function handleRequest(req, res) {
   }
   active++;
   try {
-    const limit = req.url === '/api/ai/generate' ? 16000 : process.env.VERCEL ? 4000000 : 16000100;
+    const limit =
+      route.pathname === '/api/ai/generate' ? 16000 : process.env.VERCEL ? 4000000 : 16000100;
     const input = await readInput(req, limit);
     respond(
       200,
-      req.url === '/api/ai/remove-background'
+      route.pathname === '/api/ai/remove-background'
         ? await removeBackground(input.image)
-        : req.url === '/api/ai/edit'
+        : route.pathname === '/api/ai/edit'
           ? await editImage(input)
-          : req.url === '/api/ai/upscale'
+          : route.pathname === '/api/ai/upscale'
             ? await upscaleImage(input.image)
-            : req.url === '/api/ai/video'
+            : route.pathname === '/api/ai/video'
               ? await generateVideo(input)
               : await generateAI(input),
     );

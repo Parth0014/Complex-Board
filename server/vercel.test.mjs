@@ -37,8 +37,17 @@ test('Vercel rewrites, preview origin, parsed JSON body and cross-instance image
         .status,
       403,
     );
-    const ai = await request('/api/handler?route=ai/status');
+    const ai = await request('/api/handler?route=ai/status&deployment=test');
     assert.equal(ai.status, 200);
+    assert.equal(
+      (
+        await request('/api/handler?route=ai/generate&deployment=test', 'POST', {
+          mode: 'invalid',
+          prompt: 'test',
+        })
+      ).status,
+      400,
+    );
     const invalid = await request('/api/handler?route=images/import', 'POST', { token: 'invalid' });
     assert.equal(invalid.status, 400);
     assert.equal(
