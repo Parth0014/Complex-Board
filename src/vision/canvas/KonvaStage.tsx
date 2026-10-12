@@ -1,3 +1,4 @@
+import { Toast } from '../../studio/ui/Toast';
 import { requestAI } from '../aiClient';
 import { CropOverlay } from './CropOverlay';
 import { canvasColors } from './colors';
@@ -900,11 +901,7 @@ export function KonvaStage({
         }
       }}
     >
-      {dropError && (
-        <p className="canvas-message" role="alert">
-          {dropError}
-        </p>
-      )}
+      {dropError && <Toast message={dropError} error onDismiss={() => setDropError('')} />}
       {snappingContainer &&
         createPortal(
           <div className="canvas-tools" role="group" aria-label="Canvas snapping options">
