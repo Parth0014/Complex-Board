@@ -749,7 +749,7 @@ export function KonvaStage({
   return (
     <div
       ref={container}
-      className="v1-artboard"
+      className="gs-artboard"
       aria-label="Editable vision board"
       tabIndex={0}
       onContextMenu={(event) => {
@@ -931,12 +931,12 @@ export function KonvaStage({
             width={document.width * scale}
             height={document.height * scale}
             fill="white"
-            stroke="#dfe2e9"
+            stroke={colors.artboardStroke}
             strokeWidth={1}
-            shadowColor="#222638"
-            shadowBlur={24}
-            shadowOpacity={0.14}
-            shadowOffsetY={8}
+            shadowColor={colors.artboardShadow}
+            shadowBlur={32}
+            shadowOpacity={1}
+            shadowOffsetY={12}
             listening={false}
           />
           <Group id="artboard" x={left} y={top} scaleX={scale} scaleY={scale}>

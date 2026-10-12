@@ -52,7 +52,7 @@ function Sec({
   return (
     <details className="vs-sec" open={open}>
       <summary>
-        <span className="gs-kicker" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        <span className="gs-kicker vs-sec__title">
           {icon}
           {title}
         </span>
@@ -95,35 +95,40 @@ function BoundsInput({
     } else setDraft(String(value));
   };
   return (
-    <input
-      className="vs-input"
-      aria-label={label}
-      type="number"
-      min="10"
-      max="10000"
-      disabled={disabled}
-      value={draft}
-      onFocus={() => {
-        focused.current = true;
-      }}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={() => {
-        focused.current = false;
-        commit();
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          event.currentTarget.blur();
-        }
-        if (event.key === 'Escape') {
-          cancelled.current = true;
-          setDraft(String(value));
+    <span className="vs-input-unit">
+      <input
+        className="vs-input"
+        aria-label={label}
+        type="number"
+        min="10"
+        max="10000"
+        disabled={disabled}
+        value={draft}
+        onFocus={() => {
+          focused.current = true;
+        }}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => {
           focused.current = false;
-          event.currentTarget.blur();
-        }
-      }}
-    />
+          commit();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            event.currentTarget.blur();
+          }
+          if (event.key === 'Escape') {
+            cancelled.current = true;
+            setDraft(String(value));
+            focused.current = false;
+            event.currentTarget.blur();
+          }
+        }}
+      />
+      <span className="vs-input-unit__suffix" aria-hidden="true">
+        px
+      </span>
+    </span>
   );
 }
 
@@ -590,7 +595,7 @@ export function EditorFeatures({
         )}
         {(panel ?? 'style') === 'layers' && (
           <>
-            <Sec title="Layer stack" open icon={<LayersIcon />}>
+            <Sec title="Layer stack" open={selected.length > 0} icon={<LayersIcon />}>
               <p
                 style={{
                   margin: 0,
@@ -726,7 +731,6 @@ export function EditorFeatures({
                   </label>
                   <div className="vs-row-2">
                     {number('Text size', 'fontSize', 8, 240)}
-                    {color('Text color', 'fill.color', '#222222')}
                   </div>
                   <Sec title="Advanced text" open={false}>
                     <p
@@ -986,7 +990,7 @@ export function EditorFeatures({
                     </Button>
                   </Sec>
 
-                  <Sec title="Adjustments" icon={<SlidersIcon />}>
+                  <Sec title="Adjustments" open icon={<SlidersIcon />}>
                     <div className="vs-row-2">
                       {number('Brightness', 'brightness', -1, 1, 0.05)}
                       {number('Contrast', 'contrast', -100, 100)}
@@ -1193,37 +1197,50 @@ export function EditorFeatures({
                     'fill.color',
                     '#b48ce3',
                   )}
-                  <div className="vs-row-2">
-                    <div className="vs-field">
-                      <span>Gradient</span>
-                      <ColorPicker
-                        label="Item gradient"
-                        value={String(read(item, 'fill.endColor') || '#fff3bd')}
-                        onChange={(value) => set('fill.endColor', value)}
-                      />
-                    </div>
-                    <label className="vs-field">
-                      <span>Gradient type</span>
-                      <select
-                        className="vs-select"
-                        aria-label="Item gradient type"
-                        disabled={!read(item, 'fill.endColor') || item.locked}
-                        value={String(read(item, 'fill.kind') || 'linear')}
-                        onChange={(event) => set('fill.kind', event.target.value)}
+                  {!read(item, 'fill.endColor') ? (
+                    <Button
+                      variant="secondary"
+                      style={{ justifyContent: 'center' }}
+                      disabled={item.locked}
+                      onClick={() => set('fill.endColor', '#fff3bd')}
+                    >
+                      Add gradient
+                    </Button>
+                  ) : (
+                    <>
+                      <div className="vs-row-2">
+                        <div className="vs-field">
+                          <span>Gradient</span>
+                          <ColorPicker
+                            label="Item gradient"
+                            value={String(read(item, 'fill.endColor'))}
+                            onChange={(value) => set('fill.endColor', value)}
+                          />
+                        </div>
+                        <label className="vs-field">
+                          <span>Gradient type</span>
+                          <select
+                            className="vs-select"
+                            aria-label="Item gradient type"
+                            disabled={item.locked}
+                            value={String(read(item, 'fill.kind') || 'linear')}
+                            onChange={(event) => set('fill.kind', event.target.value)}
+                          >
+                            <option>linear</option>
+                            <option>radial</option>
+                          </select>
+                        </label>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        style={{ justifyContent: 'center' }}
+                        disabled={item.locked}
+                        onClick={() => set('fill.endColor', undefined)}
                       >
-                        <option>linear</option>
-                        <option>radial</option>
-                      </select>
-                    </label>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    style={{ justifyContent: 'center' }}
-                    disabled={!read(item, 'fill.endColor') || item.locked}
-                    onClick={() => set('fill.endColor', undefined)}
-                  >
-                    Remove gradient
-                  </Button>
+                        Remove gradient
+                      </Button>
+                    </>
+                  )}
                   {item.kind === 'shape' && (
                     <>
                       <label className="vs-check">
