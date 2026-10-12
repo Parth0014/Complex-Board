@@ -1,3 +1,4 @@
+import { errorMessage } from '../errors';
 import { FlipHIcon } from '../icons';
 import { useEffect, useState } from 'react';
 import type { EditorAdapter } from '../../vision/contracts';
@@ -26,7 +27,7 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
         if (!canceled) setAssets(result.items);
       })
       .catch((error) => {
-        if (!canceled) setError(String(error));
+        if (!canceled) setError(errorMessage(error));
       });
     return () => {
       canceled = true;
@@ -75,6 +76,7 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
           </p>
           <div className="gs-text-controls">
             <CommittedNumber
+              adapter={adapter}
               label="Bounds width"
               value={item.width}
               min={10}
@@ -82,6 +84,7 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
               onCommit={(value) => resize('width', value)}
             />
             <CommittedNumber
+              adapter={adapter}
               label="Bounds height"
               value={item.height}
               min={10}
@@ -115,6 +118,7 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
             />
           </label>
           <CommittedNumber
+            adapter={adapter}
             label="Corner radius"
             value={item.radius || 0}
             min={0}
@@ -147,7 +151,7 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
               try {
                 await adapter.attachFrameContent(id);
               } catch (error) {
-                setError(String(error));
+                setError(errorMessage(error));
               } finally {
                 setBusy(false);
               }

@@ -1,3 +1,4 @@
+import { errorMessage } from '../errors';
 import { useEffect, useRef } from 'react';
 import { Button, IconButton } from '../ui/Button';
 import {
@@ -114,7 +115,7 @@ export function StudioHeader({
           }
           data-tip-pos="below"
           onClick={onShare}
-          disabled={shareDisabled}
+          disabledReason={shareDisabled ? 'Add something to your board to share' : undefined}
         >
           <ExportIcon />
           <span>Share</span>
@@ -139,7 +140,7 @@ export function StudioHeader({
             <Button
               className="vs-menu__item"
               onClick={() => {
-                void adapter.backup().catch((error) => onError(String(error)));
+                void adapter.backup().catch((error) => onError(errorMessage(error)));
               }}
             >
               <SaveIcon />
@@ -158,11 +159,13 @@ export function StudioHeader({
                   if (file)
                     try {
                       if (file.size > MAX_BACKUP_BYTES)
-                        throw new Error('Backup is too large (maximum 180 MB). Choose a smaller backup file.');
+                        throw new Error(
+                          'Backup is too large (maximum 180 MB). Choose a smaller backup file.',
+                        );
                       await adapter.restore(await file.text());
                       onError('');
                     } catch (error) {
-                      onError(String(error));
+                      onError(errorMessage(error));
                     }
                   event.target.value = '';
                 }}

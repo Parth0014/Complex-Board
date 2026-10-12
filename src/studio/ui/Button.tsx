@@ -6,6 +6,8 @@ export type ButtonProps = ComponentPropsWithRef<'button'> & {
   variant?: 'plain' | 'primary' | 'secondary' | 'danger';
   /** Loading state: spinner glyph, aria-busy, disabled, width held. */
   loading?: boolean;
+  /** Keeps an unavailable control focusable so its explanation is reachable. */
+  disabledReason?: string;
 };
 /** Shared native button semantics; existing component classes remain composable. */
 export function Button({
@@ -17,16 +19,29 @@ export function Button({
   loading = false,
   children,
   disabled,
+  disabledReason,
+  onClick,
   ...props
 }: ButtonProps) {
+  const unavailable =
+    !!disabledReason || props['aria-disabled'] === true || props['aria-disabled'] === 'true';
   return (
     <button
       type={type}
       className={`gs-button gs-button--${variant} gs-button--${size}${loading ? ' gs-button--loading' : ''} ${className}`}
-      data-tip={props['data-tip'] ?? title}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...props}
+      data-tip={disabledReason ?? props['data-tip'] ?? title}
+      aria-disabled={unavailable || props['aria-disabled'] || undefined}
+      onClick={(event) => {
+        if (unavailable) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        onClick?.(event);
+      }}
     >
       {loading ? (
         <>

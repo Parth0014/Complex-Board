@@ -1,5 +1,7 @@
+import { listMedia, mediaAsset, type MediaRecord } from '../vision/media';
+import { errorMessage } from './errors';
 import { Button } from './ui/Button';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { StudioAdapter } from '../vision/contracts';
 import { UploadIcon } from './icons';
 
@@ -16,6 +18,57 @@ export function UploadsPanel({
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState('');
   const [failedFiles, setFailedFiles] = useState<File[] | null>(null);
+  const [library, setLibrary] = useState<Array<{ record: MediaRecord; url: string }>>([]);
+  const [loadingLibrary, setLoadingLibrary] = useState(true);
+  const [inserting, setInserting] = useState('');
+  useEffect(() => {
+    const win = adapter.ownerWindow;
+    let live = true,
+      serial = 0;
+    let urls: string[] = [];
+    const refresh = async () => {
+      const request = ++serial;
+      try {
+        const records = await listMedia(win);
+        if (!live || request !== serial) return;
+        const next = records.map((record) => ({
+          record,
+          url: win.URL.createObjectURL(record.working),
+        }));
+        urls.forEach((url) => win.URL.revokeObjectURL(url));
+        urls = next.map((item) => item.url);
+        setLibrary(next);
+      } catch (error) {
+        if (live) setError(errorMessage(error));
+      } finally {
+        if (live) setLoadingLibrary(false);
+      }
+    };
+    void refresh();
+    const changed = () => {
+      void refresh();
+    };
+    win.addEventListener('studio-media-changed', changed);
+    win.addEventListener('focus', changed);
+    return () => {
+      live = false;
+      win.removeEventListener('studio-media-changed', changed);
+      win.removeEventListener('focus', changed);
+      urls.forEach((url) => win.URL.revokeObjectURL(url));
+    };
+  }, [adapter]);
+  const reuse = async (record: MediaRecord) => {
+    setInserting(record.id);
+    setError('');
+    try {
+      await adapter.insertAsset(mediaAsset(record));
+      setMessage('Photo added to this board.');
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setInserting('');
+    }
+  };
   const selected = adapter.history.document.items.find(
     (item) => item.id === adapter.selectedIds[0],
   );
@@ -104,6 +157,31 @@ export function UploadsPanel({
         </div>
       )}
 
+      <section aria-label="Your uploaded photos" className="uploads-library">
+        <h3>Your photos</h3>
+        <p className="ai-tool-help">Saved in this browser. Reuse on any board.</p>
+        {loadingLibrary ? (
+          <p role="status">Loading photos...</p>
+        ) : !library.length ? (
+          <p className="ai-tool-help">Your uploaded photos will appear here.</p>
+        ) : (
+          <div className="discover-grid">
+            {library.map(({ record, url }) => (
+              <article className="discover-photo" key={record.id}>
+                <Button
+                  aria-label={`Add uploaded photo ${record.name} to board`}
+                  disabled={busy || Boolean(inserting)}
+                  aria-busy={inserting === record.id}
+                  onClick={() => void reuse(record)}
+                >
+                  <img src={url} alt="" loading="lazy" />
+                </Button>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       {hasOriginal && (
         <div className="uploads-panel__actions">
           <Button
@@ -114,7 +192,7 @@ export function UploadsPanel({
               setDownloading(true);
               void adapter
                 .downloadOriginalPhoto()
-                .catch((error) => onError(String(error)))
+                .catch((error) => onError(errorMessage(error)))
                 .finally(() => setDownloading(false));
             }}
           >

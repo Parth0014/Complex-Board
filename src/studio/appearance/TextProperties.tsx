@@ -98,6 +98,7 @@ export function TextProperties({
           </select>
         </label>
         <CommittedNumber
+          adapter={adapter}
           label="Inspector text size"
           value={item.fontSize ?? 24}
           min={8}
@@ -179,6 +180,7 @@ export function TextProperties({
       <details className="gs-text-advanced">
         <summary>Advanced typography</summary>
         <CommittedNumber
+          adapter={adapter}
           label="Font weight"
           value={item.fontWeight ?? 400}
           min={100}
@@ -187,6 +189,7 @@ export function TextProperties({
           onCommit={(value) => patch({ fontWeight: value })}
         />
         <CommittedNumber
+          adapter={adapter}
           label="Text curve"
           value={item.curve ?? 0}
           min={-400}

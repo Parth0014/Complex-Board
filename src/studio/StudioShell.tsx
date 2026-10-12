@@ -4,7 +4,6 @@ import { Toast } from './ui/Toast';
 import { useCallback, useState, type ReactNode } from 'react';
 import type { StudioTab } from './studioTypes';
 import type { EditorAdapter } from '../vision/contracts';
-import { useAIStatus } from './useAIStatus';
 import { StudioSidebar } from './chrome/StudioSidebar';
 
 export function StudioShell({
@@ -26,7 +25,6 @@ export function StudioShell({
   const [error, setError] = useState('');
   const dismissError = useCallback(() => setError(''), []);
   const [elementCategory] = useState(adapter.history.document.boardTheme || 'all');
-  const { status: aiStatus } = useAIStatus(adapter.ownerWindow);
   const document = adapter.history.document;
   const hasContent = Boolean(
     document.items.length ||
@@ -53,13 +51,43 @@ export function StudioShell({
           tab={tab}
           setTab={setTab}
           drawingTools={drawingTools}
-          showAI={Boolean(aiStatus?.configured)}
+          showAI
           initialTheme={elementCategory}
           onError={setError}
         />
 
         <main className="vs-canvas" aria-label="Vision board canvas">
           {children}
+          <div className="discover-credits" aria-label="Photo credits">
+            {document.items
+              .filter(
+                (item) =>
+                  item.kind === 'asset' && item.asset?.provider === 'unsplash' && !item.hidden,
+              )
+              .map(
+                (item) =>
+                  item.kind === 'asset' && (
+                    <span key={item.id}>
+                      Photo by{' '}
+                      <a
+                        href={item.asset!.license.authorUrl || item.asset!.license.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {item.asset!.license.author}
+                      </a>{' '}
+                      on{' '}
+                      <a
+                        href="https://unsplash.com/?utm_source=visbo&utm_medium=referral"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Unsplash
+                      </a>
+                    </span>
+                  ),
+              )}
+          </div>
         </main>
       </div>
       {share && (

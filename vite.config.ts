@@ -23,6 +23,11 @@ function distributionNotices(): Plugin {
       }
       this.emitFile({
         type: 'asset',
+        fileName: 'favicon.svg',
+        source: readFileSync('public/favicon.svg', 'utf8'),
+      });
+      this.emitFile({
+        type: 'asset',
         fileName: 'THIRD_PARTY_LICENSES.txt',
         source: files
           .map((file) => `===== ${file} =====\n${readFileSync(file, 'utf8')}`)
@@ -34,8 +39,10 @@ function distributionNotices(): Plugin {
 export default defineConfig({
   plugins: [react(), distributionNotices()],
   publicDir: false,
-  server: { proxy: { '/api/ai': 'http://127.0.0.1:8787' } },
-  preview: { proxy: { '/api/ai': 'http://127.0.0.1:8787' } },
+  server: { proxy: { '/api/ai': 'http://127.0.0.1:8787', '/api/images': 'http://127.0.0.1:8787' } },
+  preview: {
+    proxy: { '/api/ai': 'http://127.0.0.1:8787', '/api/images': 'http://127.0.0.1:8787' },
+  },
   build: {
     outDir: 'dist',
     rollupOptions: {

@@ -1,7 +1,8 @@
+import { CropOverlay } from './CropOverlay';
 import { canvasColors } from './colors';
 import { itemOpacity } from '../appearance/capabilities';
 import { primaryColor } from '../appearance/capabilities';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import Konva from 'konva';
 import { Stage, Layer, Rect, Image, Transformer, Group, Line } from 'react-konva';
@@ -189,11 +190,15 @@ export function KonvaStage({
       Math.min((size.width - 64) / document.width, (size.height - 200) / document.height, 1),
     );
   // Object movement must never resize the scroll surface or move the board origin.
-  const stageWidth = Math.max(size.width, document.width * scale + 96);
+  // Grow backing buffers in small buckets instead of reallocating both scene
+  // and hit canvases at every fractional zoom step.
+  const stageWidth = Math.ceil(Math.max(size.width, document.width * scale + 96) / 128) * 128;
   // Keep room to scroll edge artwork clear of the floating toolbar and footer,
   // even when the whole board already fits in the viewport.
   const verticalScrollSpace = 240;
-  const stageHeight = Math.max(size.height, document.height * scale) + verticalScrollSpace * 2;
+  const stageHeight =
+    Math.ceil((Math.max(size.height, document.height * scale) + verticalScrollSpace * 2) / 128) *
+    128;
   const left = (stageWidth - document.width * scale) / 2;
   const top = (stageHeight - document.height * scale) / 2;
   const centeredView = useRef('');
@@ -216,24 +221,38 @@ export function KonvaStage({
       );
     }
   }, [left, top, scale, document.width, document.height, size.width, size.height, fitRevision]);
-  const zoomAt = (clientX: number, clientY: number, nextScale: number) => {
-    const node = container.current;
-    if (!node) return;
-    const rect = node.getBoundingClientRect(),
-      viewX = clientX - rect.left,
-      viewY = clientY - rect.top;
-    zoomAnchor.current = {
-      x: (node.scrollLeft + viewX - left) / scale,
-      y: (node.scrollTop + viewY - top) / scale,
-      viewX,
-      viewY,
+  const zoomAt = useCallback(
+    (clientX: number, clientY: number, nextScale: number) => {
+      const node = container.current;
+      if (!node) return;
+      const rect = node.getBoundingClientRect(),
+        viewX = clientX - rect.left,
+        viewY = clientY - rect.top;
+      zoomAnchor.current = {
+        x: (node.scrollLeft + viewX - left) / scale,
+        y: (node.scrollTop + viewY - top) / scale,
+        viewX,
+        viewY,
+      };
+      onZoomChange(Math.max(0.1, Math.min(1.5, nextScale)));
+    },
+    [left, top, scale, onZoomChange],
+  );
+  useLayoutEffect(() => {
+    adapter.zoomView = (next) => {
+      const node = container.current;
+      if (!node) return;
+      const bounds = node.getBoundingClientRect();
+      zoomAt(bounds.left + node.clientWidth / 2, bounds.top + node.clientHeight / 2, next);
     };
-    onZoomChange(Math.max(0.1, Math.min(1.5, nextScale)));
-  };
+    return () => {
+      adapter.zoomView = undefined;
+    };
+  }, [adapter, zoomAt]);
 
   useEffect(() => {
-    onScaleChange(Math.round(scale * 100));
-  }, [scale, onScaleChange]);
+    if (zoom === null) onScaleChange(Math.round(scale * 100));
+  }, [scale, zoom, onScaleChange]);
   useEffect(() => {
     const ownerDocument = container.current?.ownerDocument;
     const down = (event: KeyboardEvent) => {
@@ -329,14 +348,14 @@ export function KonvaStage({
       (item) => adapter.selectedIds.includes(item.id) && item.locked,
     );
     transformer.current.nodes(
-      locked || editing
+      locked || editing || adapter.cropDraft
         ? []
         : adapter.selectedIds
             .map((id) => stage.findOne(`#${id}`))
             .filter((node): node is Konva.Node => !!node),
     );
     transformer.current.getLayer()?.draw();
-  }, [adapter, document.items, adapter.selectedIds, scale, left, top, editing]);
+  }, [adapter, document.items, adapter.selectedIds, scale, left, top, editing, adapter.cropDraft]);
 
   useEffect(() => {
     adapter.exporter = (ratio, selectedOnly, transparent) => {
@@ -751,6 +770,7 @@ export function KonvaStage({
       ref={container}
       className="gs-artboard"
       aria-label="Editable vision board"
+      role="group"
       tabIndex={0}
       onContextMenu={(event) => {
         if (event.defaultPrevented) return;
@@ -817,7 +837,7 @@ export function KonvaStage({
       )}
       {snappingContainer &&
         createPortal(
-          <div className="canvas-tools" aria-label="Canvas snapping options">
+          <div className="canvas-tools" role="group" aria-label="Canvas snapping options">
             <label className="snap-toggle">
               <input
                 type="checkbox"
@@ -855,7 +875,17 @@ export function KonvaStage({
         onWheel={(event) => {
           const wheel = event.evt;
           // Trackpad pinch is a Ctrl-wheel gesture; plain wheel/two-finger motion scrolls.
-          if (!wheel.ctrlKey) return;
+          if (!wheel.ctrlKey) {
+            const node = container.current;
+            if (node && (wheel.deltaX || wheel.shiftKey)) {
+              wheel.preventDefault();
+              const unit =
+                wheel.deltaMode === 1 ? 16 : wheel.deltaMode === 2 ? node.clientWidth : 1;
+              node.scrollLeft += (wheel.deltaX || wheel.deltaY) * unit;
+              if (!wheel.shiftKey) node.scrollTop += wheel.deltaY * unit;
+            }
+            return;
+          }
           wheel.preventDefault();
           const pending = wheelZoom.current;
           // Normalize mouse notches and trackpad pixels, then batch canvas updates.
@@ -869,7 +899,10 @@ export function KonvaStage({
             const delta = Math.max(-80, Math.min(80, pending.delta));
             pending.delta = 0;
             pending.frame = 0;
-            if (delta) zoomAt(pending.clientX, pending.clientY, scale * Math.exp(-delta * 0.014));
+            if (delta)
+              flushSync(() =>
+                zoomAt(pending.clientX, pending.clientY, scale * Math.exp(-delta * 0.014)),
+              );
           });
         }}
         onMouseDown={startMarquee}
@@ -1012,6 +1045,19 @@ export function KonvaStage({
           </Group>
         </Layer>
         <Layer>
+          {adapter.cropDraft &&
+            document.items
+              .filter((item) => item.id === adapter.cropDraft?.id)
+              .map((item) => (
+                <CropOverlay
+                  key={item.id}
+                  adapter={adapter}
+                  item={item}
+                  scale={scale}
+                  left={left}
+                  top={top}
+                />
+              ))}
           {hoverBounds && (
             <Rect
               x={left + hoverBounds.x * scale}
@@ -1078,6 +1124,8 @@ export function KonvaStage({
           ))}
           <Transformer
             ref={transformer}
+            visible={!adapter.cropDraft}
+            listening={!adapter.cropDraft}
             rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
             rotationSnapTolerance={5}
             borderStroke={colors.selection}
@@ -1146,6 +1194,7 @@ export function KonvaStage({
                 : next;
             }}
             onTransformEnd={() => {
+              if (adapter.cropDraft) return;
               setGuides({});
               const patches = (transformer.current?.nodes() || []).map((node) => {
                 const item = document.items.find((item) => item.id === node.id());

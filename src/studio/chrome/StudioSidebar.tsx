@@ -1,3 +1,4 @@
+import { readDuration } from '../ui/motion';
 import { Skeleton } from '../ui/Skeleton';
 import { Button, IconButton } from '../ui/Button';
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -11,7 +12,9 @@ import type { EditorAdapter } from '../../vision/contracts';
 import { UploadsPanel } from '../UploadsPanel';
 import { CreatePanel } from '../CreatePanel';
 
-const AIPanel = lazy(() => import('../AIPanel').then(({ AIPanel }) => ({ default: AIPanel })));
+const AIPanel = lazy(() =>
+  import('../DiscoverPanel').then(({ DiscoverPanel }) => ({ default: DiscoverPanel })),
+);
 const ADD_TABS: readonly StudioTab[] = [
   'templates',
   'elements',
@@ -26,7 +29,7 @@ export function StudioSidebar({
   tab,
   setTab,
   drawingTools,
-  showAI = false,
+  showAI = true,
   initialTheme = 'all',
   onError,
 }: {
@@ -38,6 +41,7 @@ export function StudioSidebar({
   initialTheme?: string;
   onError: (message: string) => void;
 }) {
+  const panelRef = useRef<HTMLElement>(null);
   const elementCategory = initialTheme;
   // Keep the panel and its column mounted until the content fade finishes.
   const [exitingTab, setExitingTab] = useState<StudioTab | null>(null);
@@ -51,7 +55,10 @@ export function StudioSidebar({
         setExitingTab(null);
         return;
       }
-      const t = adapter.ownerWindow.setTimeout(() => setExitingTab(null), 120);
+      const t = adapter.ownerWindow.setTimeout(
+        () => setExitingTab(null),
+        panelRef.current ? readDuration(panelRef.current) : 0,
+      );
       return () => adapter.ownerWindow.clearTimeout(t);
     }
     prevTab.current = tab;
@@ -84,12 +91,12 @@ export function StudioSidebar({
             className={`vs-rail__tab vs-rail__tab--ai${tab === 'ai' ? ' is-active' : ''}`}
             data-tip="AI — generate images and ideas"
             data-tip-pos="right"
-            aria-label="AI"
+            aria-label="Discover"
             aria-pressed={tab === 'ai'}
             onClick={() => setTab(tab === 'ai' ? null : 'ai')}
           >
             <TabIcon tab="ai" />
-            <span>AI</span>
+            <span>Discover</span>
             <span className="vs-rail__badge" aria-hidden="true" />
           </Button>
         )}
@@ -97,6 +104,7 @@ export function StudioSidebar({
 
       {visibleTab && (
         <section
+          ref={panelRef}
           key={visibleTab}
           className={`vs-lib__panel${exitingTab ? ' is-exiting' : ''}`}
           aria-label={`${STUDIO_TAB_LABELS[visibleTab]} panel`}
@@ -128,7 +136,7 @@ export function StudioSidebar({
             ) : visibleTab === 'create' ? (
               <CreatePanel adapter={adapter} />
             ) : visibleTab === 'ai' ? (
-              <Suspense fallback={<Skeleton label="Opening AI tools" />}>
+              <Suspense fallback={<Skeleton label="Opening Discover" />}>
                 <AIPanel adapter={adapter} />
               </Suspense>
             ) : visibleTab === 'background' ? (

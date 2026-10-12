@@ -1,3 +1,5 @@
+// Canvas formatting and layer controls.
+import { errorMessage } from './errors';
 import { appearanceValue, type AppearanceField } from '../vision/appearance/controls';
 import { capabilities } from '../vision/appearance/capabilities';
 import { Button, IconButton } from './ui/Button';
@@ -9,27 +11,22 @@ import type { BoardItem } from '../vision/document';
 import { canonicalFontId, editorFonts } from '../vision/fonts';
 import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
-import { formatRange, isRangeActive, type TextStyle } from '../vision/text';
 import { useAIStatus } from './useAIStatus';
 import {
   BringFrontIcon,
-  BoldIcon,
   CheckIcon,
-  ChevronDownIcon,
   CloseIcon,
   CropIcon,
   DropletIcon,
   EyeIcon,
   EyeOffIcon,
   ImageIcon,
-  ItalicIcon,
   LayersIcon,
   LockIcon,
   PenIcon,
   ScissorsIcon,
   SlidersIcon,
   TypeIcon,
-  UnderlineIcon,
   UndoIcon,
   UnlockIcon,
   WandIcon,
@@ -41,8 +38,6 @@ export type EditorPanel = 'style' | 'layers' | null;
 function Sec({
   title,
   children,
-  open = false,
-  icon,
 }: {
   title: string;
   children: ReactNode;
@@ -50,18 +45,10 @@ function Sec({
   icon?: ReactNode;
 }) {
   return (
-    <details className="vs-sec" open={open}>
-      <summary>
-        <span className="gs-kicker vs-sec__title">
-          {icon}
-          {title}
-        </span>
-        <span className="vs-sec__chev" aria-hidden="true">
-          <ChevronDownIcon />
-        </span>
-      </summary>
-      <div className="vs-sec__body">{children}</div>
-    </details>
+    <section className="vs-properties-section" aria-label={title}>
+      <h3>{title === 'Object bounds' ? 'Size' : title === 'Appearance' ? 'Style' : title}</h3>
+      <div className="vs-properties-section__body">{children}</div>
+    </section>
   );
 }
 function BoundsInput({
@@ -69,30 +56,32 @@ function BoundsInput({
   label,
   disabled,
   onCommit,
+  onCancel,
 }: {
   value: number;
   label: string;
   disabled: boolean;
   onCommit(value: number): void;
+  onCancel(): void;
 }) {
-  const [draft, setDraft] = useState(String(value));
+  const [draft, setDraft] = useState(String(Math.round(value)));
   const focused = useRef(false);
   const cancelled = useRef(false);
   useEffect(() => {
-    if (!focused.current) setDraft(String(value));
+    if (!focused.current) setDraft(String(Math.round(value)));
   }, [value]);
   const commit = () => {
     if (cancelled.current) {
       cancelled.current = false;
-      setDraft(String(value));
+      setDraft(String(Math.round(value)));
       return;
     }
     const next = Number(draft);
     if (draft.trim() && Number.isFinite(next)) {
-      const clamped = Math.max(10, Math.min(10000, next));
-      onCommit(clamped);
+      const clamped = Math.max(10, Math.min(10000, Math.round(next)));
+      if (clamped !== Math.round(value)) onCommit(clamped);
       setDraft(String(clamped));
-    } else setDraft(String(value));
+    } else setDraft(String(Math.round(value)));
   };
   return (
     <span className="vs-input-unit">
@@ -107,7 +96,20 @@ function BoundsInput({
         onFocus={() => {
           focused.current = true;
         }}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          const raw = event.target.value;
+          const parsed = Number(raw);
+          const next = Math.round(parsed);
+          setDraft(raw && Number.isFinite(parsed) ? String(next) : raw);
+          if (
+            raw.trim() &&
+            Number.isFinite(parsed) &&
+            next >= 10 &&
+            next <= 10000 &&
+            (value === undefined || next !== Math.round(value))
+          )
+            onCommit(next);
+        }}
         onBlur={() => {
           focused.current = false;
           commit();
@@ -119,7 +121,9 @@ function BoundsInput({
           }
           if (event.key === 'Escape') {
             cancelled.current = true;
-            setDraft(String(value));
+            onCancel();
+            event.stopPropagation();
+            setDraft(String(Math.round(value)));
             focused.current = false;
             event.currentTarget.blur();
           }
@@ -132,7 +136,7 @@ function BoundsInput({
   );
 }
 
-/** Numeric properties commit once on blur/Enter; temporary empty values do not change the canvas. */
+/** Valid numeric edits update immediately; empty drafts never change the canvas. */
 function CommitNumber({
   label,
   value,
@@ -142,6 +146,7 @@ function CommitNumber({
   disabled,
   placeholder,
   onCommit,
+  onCancel,
 }: {
   label: string;
   value: number | undefined;
@@ -151,25 +156,26 @@ function CommitNumber({
   disabled?: boolean;
   placeholder?: string;
   onCommit: (value: number) => void;
+  onCancel: () => void;
 }) {
-  const [draft, setDraft] = useState(value === undefined ? '' : String(value));
+  const [draft, setDraft] = useState(value === undefined ? '' : String(Math.round(value)));
   const editing = useRef(false);
   const cancelled = useRef(false);
   useEffect(() => {
-    if (!editing.current) setDraft(value === undefined ? '' : String(value));
+    if (!editing.current) setDraft(value === undefined ? '' : String(Math.round(value)));
   }, [value]);
   const commit = () => {
     if (cancelled.current) {
       cancelled.current = false;
-      setDraft(value === undefined ? '' : String(value));
+      setDraft(value === undefined ? '' : String(Math.round(value)));
       return;
     }
     if (draft.trim() === '' || !Number.isFinite(Number(draft))) {
-      setDraft(value === undefined ? '' : String(value));
+      setDraft(value === undefined ? '' : String(Math.round(value)));
       return;
     }
-    const clamped = Math.min(max, Math.max(min, Number(draft)));
-    if (value === undefined || clamped !== value) onCommit(clamped);
+    const clamped = Math.min(max, Math.max(min, Math.round(Number(draft))));
+    if (value === undefined || clamped !== Math.round(value)) onCommit(clamped);
     setDraft(String(clamped));
   };
   return (
@@ -186,7 +192,20 @@ function CommitNumber({
       onFocus={() => {
         editing.current = true;
       }}
-      onChange={(event) => setDraft(event.target.value)}
+      onChange={(event) => {
+        const raw = event.target.value;
+        const parsed = Number(raw);
+        const next = Math.round(parsed);
+        setDraft(raw && Number.isFinite(parsed) ? String(next) : raw);
+        if (
+          raw.trim() &&
+          Number.isFinite(parsed) &&
+          next >= min &&
+          next <= max &&
+          (value === undefined || next !== Math.round(value))
+        )
+          onCommit(next);
+      }}
       onBlur={() => {
         editing.current = false;
         commit();
@@ -195,7 +214,8 @@ function CommitNumber({
         if (event.key === 'Enter') event.currentTarget.blur();
         if (event.key === 'Escape') {
           cancelled.current = true;
-          setDraft(value === undefined ? '' : String(value));
+          onCancel();
+          setDraft(value === undefined ? '' : String(Math.round(value)));
           event.stopPropagation();
           event.currentTarget.blur();
         }
@@ -224,7 +244,7 @@ export function EditorFeatures({
     try {
       await action();
     } catch (error) {
-      setError(String(error));
+      setError(errorMessage(error));
     } finally {
       setMediaBusy(false);
     }
@@ -246,36 +266,7 @@ export function EditorFeatures({
   const patch = (patch: Partial<BoardItem>) =>
     adapter.patchItems(adapter.selectedIds.map((id) => ({ id, patch })));
   const crop = adapter.cropDraft?.id === item?.id ? adapter.cropDraft?.crop : null;
-  const [textRange, setTextRange] = useState({ start: 0, end: 0 });
-  const textEditor = useRef<HTMLTextAreaElement>(null);
-  const formatText = (style: TextStyle) => {
-    const start = textEditor.current?.selectionStart ?? textRange.start,
-      end = textEditor.current?.selectionEnd ?? textRange.end;
-    if (item?.kind === 'text' && end > start) {
-      const runs = item.textRuns || [];
-      const patchStyle: TextStyle = { ...style };
-      for (const [key, val] of Object.entries(style) as Array<[keyof TextStyle, unknown]>) {
-        if (key === 'script') {
-          if (isRangeActive(runs, start, end, 'script', val)) {
-            patchStyle.script = 'normal';
-          }
-        } else if (typeof val === 'boolean') {
-          if (isRangeActive(runs, start, end, key, true)) {
-            (patchStyle as Record<string, unknown>)[key] = false;
-          }
-        }
-      }
-      adapter.patchItems([
-        {
-          id: item.id,
-          patch: {
-            textRuns: formatRange(item.text || '', runs, start, end, patchStyle),
-            curve: 0,
-          },
-        },
-      ]);
-    }
-  };
+
   const layerDrag = (event: React.DragEvent, key: string, path: string[]) => {
     event.stopPropagation();
     event.dataTransfer.setData('application/x-studio-layer', JSON.stringify({ key, path }));
@@ -300,7 +291,7 @@ export function EditorFeatures({
         if (!cancelled) setAssets(result.items);
       })
       .catch((error) => {
-        if (!cancelled) setError(String(error));
+        if (!cancelled) setError(errorMessage(error));
       });
     return () => {
       cancelled = true;
@@ -401,25 +392,25 @@ export function EditorFeatures({
   };
   const mixed = (key: Field) => selected.some((other) => read(other, key) !== read(item, key));
   const number = (label: string, key: Field, min: number, max: number, step = 1) => {
+    const scale = ['opacity', 'shadow.opacity', 'brightness', 'saturation'].includes(key) ? 100 : 1;
     const fallback = key === 'opacity' || key === 'lineHeight' ? 1 : key === 'fontWeight' ? 400 : 0;
-    const value = mixed(key)
-      ? undefined
-      : Number(read(item, key) ?? fallback) * (key === 'opacity' ? 100 : 1);
+    const value = mixed(key) ? undefined : Number(read(item, key) ?? fallback) * scale;
     return (
       <label className="vs-field">
         <span>{label}</span>
         <CommitNumber
           label={label}
           value={value}
-          min={min}
-          max={max}
-          step={step}
+          min={min * scale}
+          max={max * scale}
+          step={Math.max(1, step * scale)}
           placeholder={mixed(key) ? 'Mixed' : undefined}
           disabled={
             ['rotation', 'width', 'height'].includes(key) &&
             selected.some((entry) => entry.locked || entry.connector)
           }
-          onCommit={(next) => set(key, next / (key === 'opacity' ? 100 : 1))}
+          onCommit={(next) => set(key, next / scale)}
+          onCancel={() => adapter.cancelGesture()}
         />
       </label>
     );
@@ -533,7 +524,8 @@ export function EditorFeatures({
   };
 
   return (
-    <aside
+    <div
+      role="group"
       className={`vs-inspector${inline ? ' vs-inspector--inline' : ''}${panel ? '' : ' is-collapsed'}`}
       aria-label="Object inspector"
       hidden={!panel}
@@ -668,6 +660,7 @@ export function EditorFeatures({
                         <BoundsInput
                           key={item.id + key}
                           label={`Bounds ${key}`}
+                          onCancel={() => adapter.cancelGesture()}
                           disabled={!!item.locked || selected.length !== 1}
                           value={item[key]}
                           onCommit={(value) =>
@@ -695,21 +688,14 @@ export function EditorFeatures({
                 </Sec>
               )}
               {item.kind === 'text' && (
-                <Sec title="Text" open icon={<TypeIcon />}>
+                <Sec title="Text">
                   <label className="vs-field">
                     <span>Content</span>
                     <textarea
                       className="vs-textarea"
-                      ref={textEditor}
                       aria-label="Styled text"
                       value={item.text || ''}
                       onChange={(event) => patch({ text: event.target.value })}
-                      onSelect={(event) =>
-                        setTextRange({
-                          start: event.currentTarget.selectionStart,
-                          end: event.currentTarget.selectionEnd,
-                        })
-                      }
                     />
                   </label>
                   <label className="vs-field">
@@ -729,132 +715,7 @@ export function EditorFeatures({
                       ))}
                     </select>
                   </label>
-                  <div className="vs-row-2">
-                    {number('Text size', 'fontSize', 8, 240)}
-                  </div>
-                  <Sec title="Advanced text" open={false}>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: 'var(--gs-text-13)',
-                        color: 'var(--gs-text-secondary)',
-                      }}
-                    >
-                      Select a range above, then apply formatting.
-                    </p>
-                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                      <Button
-                        data-tip="Bold range"
-                        aria-label="Bold text range"
-                        onClick={() => formatText({ bold: true })}
-                      >
-                        <BoldIcon /> Bold
-                      </Button>
-                      <Button
-                        data-tip="Italic range"
-                        aria-label="Italic text range"
-                        onClick={() => formatText({ italic: true })}
-                      >
-                        <ItalicIcon /> Italic
-                      </Button>
-                      <Button
-                        data-tip="Underline range"
-                        aria-label="Underline text range"
-                        onClick={() => formatText({ underline: true })}
-                      >
-                        <UnderlineIcon /> Under
-                      </Button>
-                      <Button
-                        data-tip="Superscript"
-                        aria-label="Superscript"
-                        onClick={() => formatText({ script: 'super' })}
-                      >
-                        Super
-                      </Button>
-                      <Button
-                        data-tip="Subscript"
-                        aria-label="Subscript"
-                        onClick={() => formatText({ script: 'sub' })}
-                      >
-                        Sub
-                      </Button>
-                      <Button
-                        data-tip="Clear range formatting"
-                        onClick={() =>
-                          formatText({
-                            bold: false,
-                            italic: false,
-                            underline: false,
-                            strike: false,
-                            script: 'normal',
-                          })
-                        }
-                      >
-                        Normal
-                      </Button>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      style={{ justifyContent: 'center' }}
-                      onClick={() => patch({ textRuns: undefined })}
-                    >
-                      Clear range formatting
-                    </Button>
-                    <div className="vs-row-2">
-                      <label className="vs-check">
-                        <input
-                          type="checkbox"
-                          checked={item.kerning !== false}
-                          onChange={(event) => patch({ kerning: event.target.checked })}
-                        />
-                        Kerning
-                      </label>
-                      <label className="vs-check">
-                        <input
-                          type="checkbox"
-                          checked={item.ligatures !== false}
-                          onChange={(event) => patch({ ligatures: event.target.checked })}
-                        />
-                        Ligatures
-                      </label>
-                    </div>
-                    {color('Text background', 'background', '#fff3bd')}
-                    <div className="vs-row-2">
-                      <Button
-                        variant="secondary"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => set('background', null)}
-                      >
-                        Clear background
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        style={{ justifyContent: 'center' }}
-                        aria-pressed={!!item.strike}
-                        onClick={() => patch({ strike: !item.strike })}
-                      >
-                        Strikethrough
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => patch({ text: item.text?.toUpperCase() })}
-                      >
-                        UPPERCASE
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => patch({ text: item.text?.toLowerCase() })}
-                      >
-                        lowercase
-                      </Button>
-                    </div>
-                    <div className="vs-row-2">
-                      {number('Font weight', 'fontWeight', 100, 900, 100)}
-                      {number('Text curve', 'curve', -400, 400)}
-                    </div>
-                  </Sec>
+                  {number('Text size', 'fontSize', 8, 240)}
                 </Sec>
               )}
               {item.kind === 'asset' && item.asset?.provider !== 'curated-v1' && (
@@ -931,38 +792,10 @@ export function EditorFeatures({
                       </Button>
                     ) : (
                       <>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: 'var(--gs-text-13)',
-                            color: 'var(--gs-text-secondary)',
-                          }}
-                        >
-                          Drag the selected content to reposition it. Source coordinates are
-                          percentages. Apply commits one edit.
+                        <p className="ai-tool-help">
+                          Drag the image's crop edges or corners to choose the area. Drag inside the
+                          boundary to move it.
                         </p>
-                        <div className="vs-row-2">
-                          {(['x', 'y', 'width', 'height'] as const).map((key) => (
-                            <label className="vs-field" key={key}>
-                              <span style={{ textTransform: 'capitalize' }}>Crop {key}</span>
-                              <input
-                                className="vs-input"
-                                aria-label={`Crop ${key}`}
-                                type="number"
-                                min={key === 'width' || key === 'height' ? 1 : 0}
-                                max="100"
-                                value={Math.round(crop[key] * 100)}
-                                onChange={(event) => {
-                                  const value = Math.max(
-                                    key === 'width' || key === 'height' ? 0.01 : 0,
-                                    Math.min(1, Number(event.target.value) / 100),
-                                  );
-                                  adapter.updateCropDraft({ ...crop, [key]: value });
-                                }}
-                              />
-                            </label>
-                          ))}
-                        </div>
                         <div className="vs-row-2">
                           <Button
                             variant="primary"
@@ -992,9 +825,9 @@ export function EditorFeatures({
 
                   <Sec title="Adjustments" open icon={<SlidersIcon />}>
                     <div className="vs-row-2">
-                      {number('Brightness', 'brightness', -1, 1, 0.05)}
+                      {number('Brightness (%)', 'brightness', -1, 1, 0.05)}
                       {number('Contrast', 'contrast', -100, 100)}
-                      {number('Saturation', 'saturation', -2, 2, 0.1)}
+                      {number('Saturation (%)', 'saturation', -2, 2, 0.1)}
                       {number('Blur', 'blur', 0, 30)}
                       {number('Temperature', 'warmth', -100, 100)}
                       {number('Tint', 'tint', -100, 100)}
@@ -1161,7 +994,7 @@ export function EditorFeatures({
                             if (event.target.value)
                               void adapter
                                 .attachFrameContent(event.target.value)
-                                .catch((error) => setError(String(error)));
+                                .catch((error) => setError(errorMessage(error)));
                           }}
                         >
                           <option value="">Choose image or graphic</option>
@@ -1188,7 +1021,7 @@ export function EditorFeatures({
               )}{' '}
               {item.kind !== 'asset' && capabilities(item)?.fill && (
                 <Sec
-                  title={item.kind === 'text' ? 'Text fill & gradient' : 'Shape fill & gradient'}
+                  title={item.kind === 'text' ? 'Color' : 'Shape fill & gradient'}
                   open
                   icon={<DropletIcon />}
                 >
@@ -1304,7 +1137,7 @@ export function EditorFeatures({
                   </>
                 )}
                 {item.kind === 'drawing' && color('Stroke color', 'stroke.color', '#573575')}
-                {number('Opacity (%)', 'opacity', 0, 100)}
+                {number('Transparency (%)', 'opacity', 0, 1)}
                 <div className="vs-row-2">
                   {(item.kind === 'asset' ||
                     (item.kind === 'shape' && item.shape === 'rectangle') ||
@@ -1367,7 +1200,7 @@ export function EditorFeatures({
                   <Sec title="Shadow details" open={false}>
                     <div className="vs-row-2">
                       {color('Shadow color', 'shadow.color', '#000000')}
-                      {number('Shadow opacity', 'shadow.opacity', 0, 1, 0.05)}
+                      {number('Shadow transparency (%)', 'shadow.opacity', 0, 1, 0.05)}
                     </div>
                     <div className="vs-row-3">
                       {number('Shadow blur', 'shadow.blur', 0, 100)}
@@ -1416,6 +1249,6 @@ export function EditorFeatures({
             </>
           ))}
       </div>
-    </aside>
+    </div>
   );
 }

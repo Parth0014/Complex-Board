@@ -1,11 +1,9 @@
+import { readDuration } from './motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from './Button';
 import { AlertIcon, InfoIcon } from '../icons';
 
 const INFO_MS = 4000;
-const ERROR_MS = 10000; // errors persist >= 10s (§4, item 11)
-/** Exit duration (§4): keep in sync with --gs-duration-exit. */
-const EXIT_MS = 140;
 
 export function Toast({
   message,
@@ -18,50 +16,63 @@ export function Toast({
   error?: boolean;
   warning?: boolean;
 }) {
+  const root = useRef<HTMLDivElement>(null);
+  const exitTimer = useRef<number | null>(null);
   const [exiting, setExiting] = useState(false);
-  const remaining = useRef(error ? ERROR_MS : INFO_MS);
+  const remaining = useRef(INFO_MS);
   const deadline = useRef(0);
   const timer = useRef(0);
 
   const dismiss = useCallback(() => {
-    setExiting((was) => {
-      if (!was) window.setTimeout(onDismiss, EXIT_MS);
-      return true;
-    });
+    const node = root.current;
+    const ownerWindow = node?.ownerDocument.defaultView;
+    if (!node || !ownerWindow || exitTimer.current !== null) return;
+    setExiting(true);
+    exitTimer.current = ownerWindow.setTimeout(onDismiss, readDuration(node));
   }, [onDismiss]);
 
   const start = useCallback(() => {
-    window.clearTimeout(timer.current);
+    const ownerWindow = root.current?.ownerDocument.defaultView;
+    if (!ownerWindow || error || exitTimer.current !== null) return;
+    ownerWindow.clearTimeout(timer.current);
     deadline.current = Date.now() + remaining.current;
-    timer.current = window.setTimeout(dismiss, remaining.current);
-  }, [dismiss]);
+    timer.current = ownerWindow.setTimeout(dismiss, remaining.current);
+  }, [dismiss, error]);
 
   const pause = useCallback(() => {
-    window.clearTimeout(timer.current);
+    root.current?.ownerDocument.defaultView?.clearTimeout(timer.current);
     remaining.current = Math.max(0, deadline.current - Date.now());
   }, []);
 
   // Reset the clock when the message changes (a new toast replaces the old).
   useEffect(() => {
-    remaining.current = error ? ERROR_MS : INFO_MS;
+    const ownerWindow = root.current?.ownerDocument.defaultView;
+    remaining.current = INFO_MS;
     setExiting(false);
     start();
-    return () => window.clearTimeout(timer.current);
+    return () => {
+      ownerWindow?.clearTimeout(timer.current);
+      if (exitTimer.current !== null) ownerWindow?.clearTimeout(exitTimer.current);
+      exitTimer.current = null;
+    };
   }, [message, error, start]);
 
   // Pause while the tab is hidden.
   useEffect(() => {
+    const ownerDocument = root.current?.ownerDocument;
+    if (!ownerDocument) return;
     const onVis = () => {
-      if (document.hidden) pause();
+      if (ownerDocument.hidden) pause();
       else start();
     };
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
+    ownerDocument.addEventListener('visibilitychange', onVis);
+    return () => ownerDocument.removeEventListener('visibilitychange', onVis);
   }, [pause, start]);
 
   const Icon = error || warning ? AlertIcon : InfoIcon;
   return (
     <div
+      ref={root}
       className={`gs-toast${error ? ' gs-toast--error' : ''}${warning ? ' gs-toast--warning' : ''}${exiting ? ' is-exiting' : ''}`}
       role={error || warning ? 'alert' : 'status'}
       onPointerEnter={pause}

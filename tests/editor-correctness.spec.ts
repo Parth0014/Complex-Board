@@ -1,0 +1,164 @@
+import type Konva from 'konva';
+import { expect, test } from '@playwright/test';
+import { createBoard } from './helpers/board';
+import { runtime } from './appearance-helpers';
+
+test('unavailable Share explains itself and cannot activate', async ({ page }) => {
+  await createBoard(page);
+  const share = page.getByRole('button', { name: 'Share', exact: true });
+  await expect(share).toHaveAttribute('aria-disabled', 'true');
+  expect(await share.evaluate((node: HTMLButtonElement) => node.disabled)).toBe(false);
+  await share.focus();
+  await expect(page.getByRole('tooltip')).toContainText('Add something to your board to share');
+  await share.press('Enter');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('keyboard select all excludes hidden objects and retains visible locked objects', async ({
+  page,
+}) => {
+  await createBoard(page, { closeLibrary: true });
+  const handle = await runtime(page);
+  const ids = await handle.evaluate(({ adapter }) => {
+    adapter.createShape('rectangle');
+    adapter.createShape('rectangle');
+    adapter.createShape('rectangle');
+    const items = adapter.history.document.items;
+    adapter.history.commit({
+      ...adapter.history.document,
+      items: items.map((item, index) => ({ ...item, hidden: index === 0, locked: index === 1 })),
+    });
+    adapter.select([]);
+    return items.slice(1).map((item) => item.id);
+  });
+  await page.getByLabel('Editable vision board', { exact: true }).focus();
+  await page.keyboard.press('Control+a');
+  await expect.poll(() => handle.evaluate(({ adapter }) => adapter.selectedIds)).toEqual(ids);
+});
+
+test('color errors have resolvable IDs and the inspector has one landmark', async ({ page }) => {
+  await createBoard(page);
+  const handle = await runtime(page);
+  await handle.evaluate(({ adapter }) => {
+    adapter.createTextPreset({
+      id: 'review',
+      label: 'Review',
+      sample: 'A clear future',
+      fontFamily: 'georgia',
+      fontSize: 64,
+      color: '#33272b',
+    });
+  });
+  const formatting = page
+    .getByRole('toolbar', { name: 'Selected object actions' })
+    .getByRole('button', { name: 'Formatting', exact: true });
+  expect(await formatting.getAttribute('aria-haspopup')).toBeNull();
+  await formatting.click();
+  const dock = page.getByRole('complementary', { name: 'Object formatting', exact: true });
+  await expect(dock.locator('aside')).toHaveCount(0);
+  await dock.getByRole('button', { name: 'Text color', exact: true }).first().click();
+  const hex = page
+    .getByRole('group', { name: 'Text color picker', exact: true })
+    .getByLabel('Text color hex', { exact: true });
+  await hex.fill('#bad');
+  await expect(hex).toHaveAttribute('aria-invalid', 'true');
+  const id = await hex.getAttribute('aria-describedby');
+  expect(id).toBeTruthy();
+  expect(id).not.toMatch(/\s/);
+  expect(await page.evaluate((id) => document.getElementById(id!)?.textContent, id)).toContain(
+    'Use a 6-digit hex',
+  );
+});
+
+test('error notifications remain visible until dismissed', async ({ page }) => {
+  await createBoard(page);
+  await page.getByLabel('File menu', { exact: true }).click();
+  await page.getByLabel('Open board file', { exact: true }).setInputFiles({
+    name: 'broken.visbo',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{broken'),
+  });
+  const toast = page.locator('.gs-toast--error');
+  await expect(toast).toBeVisible();
+  await page.clock.install();
+  await page.clock.fastForward(11000);
+  await expect(toast).toBeVisible();
+  await toast.getByRole('button', { name: 'Dismiss' }).click();
+  await page.clock.fastForward(200);
+  await expect(toast).toHaveCount(0);
+});
+
+test('Formatting numeric controls update live and preserve cancel and undo', async ({ page }) => {
+  await createBoard(page);
+  const handle = await runtime(page);
+  await handle.evaluate(({ adapter }) =>
+    adapter.createTextPreset({
+      id: 'live-formatting',
+      label: 'Live formatting',
+      sample: 'Live formatting',
+      fontFamily: 'georgia',
+      fontSize: 64,
+      color: '#33272b',
+    }),
+  );
+  await page
+    .getByRole('toolbar', { name: 'Selected object actions' })
+    .getByRole('button', { name: 'Formatting', exact: true })
+    .click();
+  const dock = page.getByRole('complementary', { name: 'Object formatting', exact: true });
+  const fields = [
+    ['Bounds width', '617', 'width', 617],
+    ['Bounds height', '383', 'height', 383],
+    ['Text size', '101', 'fontSize', 101],
+    ['Transparency (%)', '55', 'appearance.opacity', 0.55],
+    ['Text outline width', '4', 'appearance.stroke.width', 4],
+    ['Shadow blur', '30', 'appearance.shadow.blur', 30],
+    ['Shadow X', '12', 'appearance.shadow.offsetX', 12],
+    ['Shadow transparency (%)', '60', 'appearance.shadow.opacity', 0.6],
+  ] as const;
+  for (const [label, value, path, expected] of fields) {
+    const field = dock.getByLabel(label, { exact: true });
+    await field.fill(value);
+    await expect
+      .poll(() =>
+        handle.evaluate(
+          ({ adapter }, path) =>
+            path
+              .split('.')
+              .reduce<unknown>(
+                (value, key) => (value as Record<string, unknown>)[key],
+                adapter.history.document.items[0],
+              ),
+          path,
+        ),
+      )
+      .toBe(expected);
+    await expect(field).toBeFocused();
+    await field.press('Tab');
+  }
+  const size = dock.getByLabel('Text size', { exact: true });
+  await size.fill('120');
+  await size.press('ArrowUp');
+  await expect
+    .poll(() =>
+      handle.evaluate(({ stage }) =>
+        stage
+          .find('Text')
+          .filter((node) => 'text' in node && (node as Konva.Text).text() === 'Live formatting')
+          .map((node) => (node as Konva.Text).fontSize()),
+      ),
+    )
+    .toContain(121);
+  await size.press('Escape');
+  await expect
+    .poll(() => handle.evaluate(({ adapter }) => adapter.history.document.items[0].fontSize))
+    .toBe(101);
+  const width = dock.getByLabel('Bounds width', { exact: true });
+  await width.fill('700');
+  await width.press('ArrowUp');
+  await width.press('Tab');
+  await handle.evaluate(({ adapter }) => adapter.undo());
+  await expect
+    .poll(() => handle.evaluate(({ adapter }) => adapter.history.document.items[0].width))
+    .toBe(617);
+});

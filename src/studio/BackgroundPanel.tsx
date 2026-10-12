@@ -1,5 +1,6 @@
-import { PALETTE } from './palette';
-import { Swatch } from './ui/Swatch';
+import { BACKGROUND_PALETTE } from './palette';
+import type { CSSProperties } from 'react';
+import { CheckIcon } from './icons';
 import { Button } from './ui/Button';
 import { ColorPicker } from './ColorPicker';
 import type { EditorAdapter } from '../vision/contracts';
@@ -50,19 +51,31 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
         <h3>{document.gradient ? 'Start color' : 'Choose a color'}</h3>
       </div>
       <div className="background-color-grid">
-        {PALETTE.map((swatch) => (
-          <Swatch
+        {BACKGROUND_PALETTE.map((swatch) => (
+          <Button
             key={swatch.hex}
-            swatch={swatch}
-            selected={document.color.toLowerCase() === swatch.hex}
+            className="background-preset"
+            aria-label={swatch.name}
+            aria-pressed={document.color.toLowerCase() === swatch.hex}
             onClick={() => setColor(swatch.hex)}
-          />
+            style={{ '--gs-swatch-color': swatch.hex } as CSSProperties}
+          >
+            <span className="background-preset__color" aria-hidden="true">
+              {document.color.toLowerCase() === swatch.hex && <CheckIcon />}
+            </span>
+            <span>{swatch.name}</span>
+          </Button>
         ))}
       </div>
       <label className="background-color-label">
         <span>Custom color</span>
         <span className="background-color-value">
-          <ColorPicker label="Board color" value={document.color} onChange={setColor} />
+          <ColorPicker
+            label="Board color"
+            value={document.color}
+            onChange={setColor}
+            palette={BACKGROUND_PALETTE}
+          />
           <span>{document.color.toUpperCase()}</span>
         </span>
       </label>
@@ -72,6 +85,7 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
             <span>End color</span>
             <ColorPicker
               label="Gradient end color"
+              palette={BACKGROUND_PALETTE}
               value={document.gradient}
               onChange={(value) =>
                 adapter.commit({ ...document, gradient: value, background: undefined })

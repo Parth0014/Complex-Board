@@ -64,6 +64,19 @@ export async function loadMedia(
     db.close();
   }
 }
+/** Shared upload library across all boards in this browser. */
+export async function listMedia(ownerWindow: Window & typeof globalThis): Promise<MediaRecord[]> {
+  const db = await openBoardStore(ownerWindow);
+  try {
+    return await new Promise<MediaRecord[]>((resolve, reject) => {
+      const request = db.transaction('media', 'readonly').objectStore('media').getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  } finally {
+    db.close();
+  }
+}
 export async function saveMedia(
   ownerWindow: Window & typeof globalThis,
   records: MediaRecord[],
@@ -83,6 +96,7 @@ export async function saveMedia(
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
     });
+    ownerWindow.dispatchEvent(new ownerWindow.Event('studio-media-changed'));
   } finally {
     db.close();
   }

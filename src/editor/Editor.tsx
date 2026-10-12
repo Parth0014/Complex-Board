@@ -1,3 +1,4 @@
+import { selectableIds } from '../studio/selection';
 import { ZoomControls } from '../studio/chrome/ZoomControls';
 import { Button } from '../studio/ui/Button';
 import {
@@ -237,7 +238,7 @@ export function Editor({
       const command = event.ctrlKey || event.metaKey;
       if (command && event.key.toLowerCase() === 'a') {
         event.preventDefault();
-        adapter.select(adapter.history.document.items.map((item) => item.id));
+        adapter.select(selectableIds(adapter.history.document.items));
       } else if (command && event.key.toLowerCase() === 'g') {
         event.preventDefault();
         event.shiftKey ? adapter.ungroupSelection() : adapter.groupSelection();
@@ -505,7 +506,11 @@ export function Editor({
             </div>
           </details>
           <span className="vs-bottom-dock__sep" aria-hidden="true" />
-          <ZoomControls value={displayZoom} onChange={setZoom} onFit={() => adapter.fitBoard()} />
+          <ZoomControls
+            value={zoom === null ? displayZoom : Math.round(zoom * 100)}
+            onChange={(next) => (adapter.zoomView ? adapter.zoomView(next) : setZoom(next))}
+            onFit={() => adapter.fitBoard()}
+          />
         </div>
       </div>
 

@@ -77,7 +77,10 @@ export function createBindingPane(
         binding.disabled = definition.disabled?.(current) ?? false;
         binding.hidden = definition.hidden?.(current) ?? false;
         const slider = binding.element.querySelector('[role="slider"]');
-        slider?.setAttribute('aria-valuenow', String(next[key]));
+        slider?.setAttribute(
+          'aria-valuenow',
+          String(typeof next[key] === 'number' ? Math.round(next[key]) : next[key]),
+        );
       }
     } finally {
       refreshing = false;
@@ -85,7 +88,17 @@ export function createBindingPane(
   };
   const session = new TweakpaneSession(adapter, id, refresh, config.selected);
   const add = (folder: FolderApi, key: string, label: string, options: BindingParams = {}) => {
-    const binding = folder.addBinding(params, key, { label, ...options });
+    const numeric = typeof params[key] === 'number';
+    const binding = folder.addBinding(params, key, {
+      label,
+      ...options,
+      ...(numeric
+        ? {
+            step: Math.max(1, Number(options.step ?? 1)),
+            format: (value: number) => String(Math.round(value)),
+          }
+        : {}),
+    });
     bindings.set(key, binding);
     binding.element.dataset.appearanceControl = key;
     const inputs = binding.element.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
@@ -103,7 +116,10 @@ export function createBindingPane(
       slider.setAttribute('aria-label', `${label} slider`);
       slider.setAttribute('aria-valuemin', String(options.min));
       slider.setAttribute('aria-valuemax', String(options.max));
-      slider.setAttribute('aria-valuenow', String(params[key]));
+      slider.setAttribute(
+        'aria-valuenow',
+        String(typeof params[key] === 'number' ? Math.round(params[key]) : params[key]),
+      );
     }
     binding.element
       .querySelectorAll<HTMLElement>('.tp-svpv, .tp-hplv, .tp-aplv')

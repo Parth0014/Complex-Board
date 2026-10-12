@@ -1,3 +1,4 @@
+import { selectableIds } from './selection';
 import { Button } from './ui/Button';
 import { Menu, Submenu } from './ui/Menu';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
@@ -209,13 +210,7 @@ export function ContextActions({ adapter, onClose }: Props) {
           <Button
             role="menuitem"
             disabled={!adapter.history.document.items.some((entry) => !entry.hidden)}
-            onClick={run(() =>
-              adapter.select(
-                adapter.history.document.items
-                  .filter((entry) => !entry.hidden)
-                  .map((entry) => entry.id),
-              ),
-            )}
+            onClick={run(() => adapter.select(selectableIds(adapter.history.document.items)))}
           >
             <SelectIcon /> Select all <kbd>{formatShortcut('Ctrl+A')}</kbd>
           </Button>

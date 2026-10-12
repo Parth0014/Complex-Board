@@ -1,3 +1,4 @@
+import { errorMessage } from './errors';
 import { Button } from './ui/Button';
 import { useState } from 'react';
 import { SearchIcon as Search, CloseIcon as X } from './icons';
@@ -110,7 +111,7 @@ export function CuratedPanel({
                   }
                   onClick={() => {
                     setError('');
-                    void adapter.insertAsset(asset).catch((error) => setError(String(error)));
+                    void adapter.insertAsset(asset).catch((error) => setError(errorMessage(error)));
                   }}
                 >
                   <img

@@ -47,6 +47,7 @@ export default function HybridQuickBar({
   return (
     <div
       className="gs-hybrid-quickbar"
+      role="toolbar"
       aria-label={`${item.kind} quick formatting`}
       onKeyDown={(event) => {
         if ((event.target as Element).closest('[data-gesture-owner]')) return;
@@ -79,6 +80,7 @@ export default function HybridQuickBar({
             ))}
           </select>
           <CommittedNumber
+            adapter={adapter}
             label="Text size in points"
             value={item.fontSize ?? 24}
             min={8}
@@ -152,7 +154,7 @@ export default function HybridQuickBar({
             aria-label={cap.fill ? 'Quick border' : 'Quick stroke width'}
             data-tip={cap.fill ? 'Border color, width and style' : 'Stroke width and style'}
           >
-            {cap.fill ? 'Border' : `Width ${a.stroke.width}`}
+            {cap.fill ? 'Border' : `Width ${Math.round(a.stroke.width)}`}
           </Button>
           {a.kind === 'open-shape' && (
             <select
@@ -171,10 +173,10 @@ export default function HybridQuickBar({
           {(item.kind === 'drawing' || cap.fill) && (
             <Button
               ref={opacityTrigger}
-              aria-label="Quick opacity"
+              aria-label="Quick transparency"
               aria-expanded={menu === 'opacity'}
               aria-haspopup="dialog"
-              data-tip="Opacity"
+              data-tip="Transparency"
               disabled={!!item.locked}
               onClick={() => setMenu(menu === 'opacity' ? null : 'opacity')}
             >
@@ -217,7 +219,7 @@ export default function HybridQuickBar({
                   ? cap.fill
                     ? 'Border'
                     : 'Stroke'
-                  : 'Opacity'}
+                  : 'Transparency'}
             </strong>
             <IconButton
               aria-label="Close quick appearance control"

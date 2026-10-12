@@ -30,27 +30,29 @@ function TextSize({
   value,
   disabled,
   onCommit,
+  onCancel,
 }: {
   value: number;
   disabled: boolean;
   onCommit: (value: number) => void;
+  onCancel: () => void;
 }) {
-  const [draft, setDraft] = useState(String(value));
+  const [draft, setDraft] = useState(String(Math.round(value)));
   const cancel = useRef(false);
-  useEffect(() => setDraft(String(value)), [value]);
+  useEffect(() => setDraft(String(Math.round(value))), [value]);
   const commit = () => {
     if (cancel.current) {
       cancel.current = false;
-      setDraft(String(value));
+      setDraft(String(Math.round(value)));
       return;
     }
     const parsed = Number(draft);
     if (!draft.trim() || !Number.isFinite(parsed)) {
-      setDraft(String(value));
+      setDraft(String(Math.round(value)));
       return;
     }
     const clamped = Math.max(8, Math.min(240, Math.round(parsed)));
-    if (clamped !== value) onCommit(clamped);
+    if (clamped !== Math.round(value)) onCommit(clamped);
     setDraft(String(clamped));
   };
   return (
@@ -58,18 +60,33 @@ function TextSize({
       <input
         type="number"
         aria-label="Text size in points"
-        data-tip="Text size in points. Press Enter to apply."
+        data-tip="Text size in points. Changes apply immediately."
         min={8}
         max={240}
         step={1}
         disabled={disabled}
         value={draft}
-        onChange={(event) => setDraft(event.target.value)}
+        onChange={(event) => {
+          const raw = event.target.value;
+          const parsed = Number(raw);
+          const next = Math.round(parsed);
+          setDraft(raw && Number.isFinite(parsed) ? String(next) : raw);
+          if (
+            raw.trim() &&
+            Number.isFinite(parsed) &&
+            next >= 8 &&
+            next <= 240 &&
+            next !== Math.round(value)
+          ) {
+            onCommit(next);
+          }
+        }}
         onBlur={commit}
         onKeyDown={(event) => {
           if (event.key === 'Enter') event.currentTarget.blur();
           if (event.key === 'Escape') {
             cancel.current = true;
+            onCancel();
             event.stopPropagation();
             event.currentTarget.blur();
           }
@@ -145,6 +162,7 @@ export function SelectionToolbar({
             value={item.fontSize ?? 24}
             disabled={anyLocked}
             onCommit={(fontSize) => adapter.updateSelection({ fontSize })}
+            onCancel={() => adapter.cancelGesture()}
           />
           {!anyLocked && (
             <div className="vs-actionbar__color" data-tip="Change only the selected text color">
@@ -272,10 +290,20 @@ export function SelectionToolbar({
           disabled={anyLocked}
           onClick={() => adapter.startImageCrop()}
         >
-          Crop
+          {adapter.cropDraft ? 'Cropping' : 'Crop'}
         </Button>
       )}
-      {item && (
+      {adapter.cropDraft && (
+        <>
+          <Button className="vs-actionbar__button" onClick={() => adapter.applyCrop()}>
+            Apply crop
+          </Button>
+          <Button className="vs-actionbar__button" onClick={() => adapter.cancelCrop()}>
+            Cancel crop
+          </Button>
+        </>
+      )}
+      {item && item.kind !== 'text' && (
         <Button
           variant="plain"
           size="sm"
@@ -324,9 +352,8 @@ export function SelectionToolbar({
           variant="plain"
           size="sm"
           aria-expanded={formattingOpen}
-          aria-haspopup="dialog"
           className="vs-actionbar__button vs-actionbar__button--primary"
-          disabled={anyLocked}
+          disabledReason={anyLocked ? 'Unlock the selection to edit its appearance' : undefined}
           data-tip={
             anyLocked
               ? 'Unlock the selection to edit its appearance'
@@ -346,8 +373,7 @@ export function SelectionToolbar({
         <div className="vs-actionbar__menu">
           <Button
             className="vs-actionbar__button"
-            aria-haspopup="true"
-            aria-label="Object opacity"
+            aria-label="Object transparency"
             ref={opacityTrigger}
             aria-expanded={menu === 'opacity'}
             onClick={() => setMenu((current) => (current === 'opacity' ? null : 'opacity'))}
@@ -360,17 +386,17 @@ export function SelectionToolbar({
               onDismiss={() => setMenu(null)}
               className="vs-actionbar__popover vs-actionbar__popover--small"
               role="group"
-              aria-label="Opacity"
+              aria-label="Transparency"
             >
               <p>
                 {mixedOpacity
-                  ? 'Mixed opacity · moving the slider sets all selected objects'
-                  : 'Object opacity'}
+                  ? 'Mixed transparency · moving the slider sets all selected objects'
+                  : 'Object transparency'}
               </p>
               <div className="vs-actionbar__range">
                 <input
                   className="vs-range"
-                  aria-label="Set opacity for all selected objects"
+                  aria-label="Set transparency for all selected objects"
                   type="range"
                   min="0"
                   max="100"

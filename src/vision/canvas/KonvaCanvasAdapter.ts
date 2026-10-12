@@ -1,3 +1,4 @@
+import { libraryAsset } from '../../assets/libraryAsset';
 import { createAppearance } from '../appearance/defaults';
 import { appearancePersistenceEnabled } from '../appearance/activation';
 import { shapeGeometry } from '../shapeGeometry';
@@ -62,6 +63,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   readonly images = new Map<string, HTMLImageElement>();
   selectedIds: string[] = [];
   groupScope: string[] = [];
+  zoomView?: (scale: number) => void;
   cropDraft?: { id: string; crop: NonNullable<BoardItem['crop']> };
   updateCropDraft(crop: NonNullable<BoardItem['crop']>) {
     if (!this.cropDraft) return;
@@ -108,7 +110,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       if (this.history.revision !== revision) this.persist();
     } catch (error) {
       this.storageReady = true;
-      this.saveStatus = `Save failed: ${error instanceof Error ? error.message : String(error)}`;
+      this.saveStatus = `Save failed: ${error instanceof Error ? error.message : typeof error === 'string' ? error.replace(/^Error:\s*/i, '') : 'Could not save your board. Try again.'}`;
       this.changed();
     }
   }
@@ -173,6 +175,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           asset.id.startsWith('generated:')
         )
           canonical = { ...asset, previewUrl: asset.assetUrl };
+        else if (libraryAsset(asset)) canonical = libraryAsset(asset)!;
         else {
           if (asset.provider !== 'curated-v1')
             throw new Error('Backup contains media outside the curated library.');
@@ -1175,10 +1178,13 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.ownerWindow.setTimeout(() => this.ownerWindow.URL.revokeObjectURL(url), 1000);
   }
   async insertAsset(input: GratitudeAsset, position?: VisionPoint) {
-    if (input.provider !== 'curated-v1')
-      throw new Error('Only the uploaded curated pack is allowed.');
+    const remote =
+      input.provider === 'upload' && input.mediaId
+        ? mediaAsset(await loadMedia(this.ownerWindow, input.mediaId))
+        : libraryAsset(input);
+    if (input.provider !== 'curated-v1' && !remote) throw new Error('Invalid image library asset.');
     const revision = this.history.revision;
-    const asset = await curatedPackProvider.resolve(input.id, this.ownerWindow);
+    const asset = remote || (await curatedPackProvider.resolve(input.id, this.ownerWindow));
     await this.decode(asset);
     if (revision !== this.history.revision)
       throw new Error('The board changed while loading. Please insert the asset again.');

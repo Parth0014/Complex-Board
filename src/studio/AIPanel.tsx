@@ -1,3 +1,4 @@
+import { errorMessage } from './errors';
 import { Skeleton } from './ui/Skeleton';
 import { Button } from './ui/Button';
 import { useEffect, useRef, useState } from 'react';
@@ -85,7 +86,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
         });
       setResult(null);
     } catch (error) {
-      setError(String(error));
+      setError(errorMessage(error));
     } finally {
       setBusy(false);
     }

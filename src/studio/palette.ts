@@ -27,3 +27,15 @@ export const PALETTE: readonly PaletteSwatch[] = [
 
 /** Legacy alias – the raw hex array for callers that haven't migrated to PALETTE. */
 export const STUDIO_PALETTE = PALETTE.map((s) => s.hex);
+
+/** Curated board surfaces, preserved from the original background picker. */
+export const BACKGROUND_PALETTE: readonly PaletteSwatch[] = [
+  { hex: '#ffffff', name: 'White' },
+  { hex: '#fffaf6', name: 'Cream' },
+  { hex: '#fce4ec', name: 'Blush' },
+  { hex: '#efe8ff', name: 'Lavender' },
+  { hex: '#e6f4ec', name: 'Sage' },
+  { hex: '#e7efff', name: 'Sky' },
+  { hex: '#fff3cd', name: 'Butter' },
+  { hex: '#25263a', name: 'Midnight' },
+];

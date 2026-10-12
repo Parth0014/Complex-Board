@@ -85,11 +85,12 @@
     box-shadow: var(--gs-focus);
   }
   /* Press feedback: quick scale-in, ease-out (§4). */
-  .gs-button:active:not(:disabled) {
+  .gs-button:active:not(:disabled):not([aria-disabled='true']) {
     transform: scale(0.98);
     transition-duration: var(--gs-duration-press);
   }
-  .gs-button:disabled {
+  .gs-button:disabled,
+  .gs-button[aria-disabled='true'] {
     color: var(--gs-text-disabled);
     background: var(--gs-surface-muted);
     border-color: transparent;
@@ -150,7 +151,7 @@
     border-color: transparent;
     padding: var(--gs-space-2) var(--gs-space-3);
   }
-  .gs-button--primary:active:not(:disabled) {
+  .gs-button--primary:active:not(:disabled):not([aria-disabled='true']) {
     background: var(--gs-accent-pressed);
   }
 
@@ -171,16 +172,16 @@
   /* Hover styles live under the hover media query only (G6): no sticky
      hover on touch, no hover on keyboard-initiated focus. */
   @media (hover: hover) and (pointer: fine) {
-    .gs-button--primary:hover:not(:disabled) {
+    .gs-button--primary:hover:not(:disabled):not([aria-disabled='true']) {
       background: var(--gs-accent-hover);
     }
-    .gs-button--secondary:hover:not(:disabled) {
+    .gs-button--secondary:hover:not(:disabled):not([aria-disabled='true']) {
       border-color: var(--gs-control-line-hover);
     }
-    .gs-button--plain:hover:not(:disabled) {
+    .gs-button--plain:hover:not(.gs-swatch):not(:disabled):not([aria-disabled='true']) {
       background: var(--gs-hover);
     }
-    .gs-button--danger:hover:not(:disabled) {
+    .gs-button--danger:hover:not(:disabled):not([aria-disabled='true']) {
       background: var(--gs-danger);
       color: var(--gs-on-accent);
     }
@@ -206,7 +207,7 @@
       color var(--gs-duration-feedback) var(--gs-ease);
   }
   @media (hover: hover) and (pointer: fine) {
-    .gs-icon-button:hover:not(:disabled) {
+    .gs-icon-button:hover:not(:disabled):not([aria-disabled='true']) {
       background: var(--gs-hover);
       color: var(--gs-text);
     }
@@ -215,7 +216,8 @@
     outline: none;
     box-shadow: var(--gs-focus);
   }
-  .gs-icon-button:disabled {
+  .gs-icon-button:disabled,
+  .gs-icon-button[aria-disabled='true'] {
     color: var(--gs-text-disabled);
     cursor: not-allowed;
   }
@@ -373,7 +375,7 @@
     color: var(--gs-text-disabled);
   }
   @media (hover: hover) and (pointer: fine) {
-    .gs-submenu button:hover:not(:disabled) {
+    .gs-submenu button:hover:not(:disabled):not([aria-disabled='true']) {
       background: var(--gs-hover);
     }
   }
@@ -568,7 +570,7 @@
     cursor: not-allowed;
   }
   @media (hover: hover) and (pointer: fine) {
-    .gs-chip:hover:not(:disabled):not([aria-pressed='true']) {
+    .gs-chip:hover:not(:disabled):not([aria-disabled='true']):not([aria-pressed='true']) {
       border-color: var(--gs-control-line-hover);
       color: var(--gs-text);
     }
@@ -661,6 +663,19 @@
     .gs-toast,
     .gs-skeleton {
       animation: none;
+    }
+  }
+}
+
+@layer components {
+  .gs-button.gs-swatch:is(:active, [aria-pressed='true'], :focus-visible) {
+    background: var(--gs-swatch-color);
+  }
+  @media (hover: hover) {
+    .gs-button.gs-swatch:hover:not(:disabled) {
+      background: var(--gs-swatch-color);
+      outline: 2px solid var(--gs-focus-color);
+      outline-offset: 2px;
     }
   }
 }

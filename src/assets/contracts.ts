@@ -39,6 +39,7 @@ export interface GratitudeAsset {
     attributionRequired: boolean;
     shareAlike?: boolean;
     author?: string;
+    authorUrl?: string;
     sourceUrl?: string;
     licenseUrl?: string;
   };

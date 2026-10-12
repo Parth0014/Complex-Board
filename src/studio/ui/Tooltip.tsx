@@ -65,7 +65,7 @@ export function TooltipProvider({ ownerWindow }: { ownerWindow: Window }) {
     };
   }, [ownerWindow]);
   useEffect(() => {
-    if (!target) return;
+    if (!target || target.dataset.tip === target.getAttribute('aria-label')) return;
     const previous = target.getAttribute('aria-describedby');
     target.setAttribute('aria-describedby', [previous, id].filter(Boolean).join(' '));
     return () => {

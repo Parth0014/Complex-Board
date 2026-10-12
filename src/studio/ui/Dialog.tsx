@@ -1,3 +1,4 @@
+import { readDuration } from './motion';
 import {
   useCallback,
   useImperativeHandle,
@@ -9,12 +10,9 @@ import {
 } from 'react';
 
 export type DialogHandle = {
-  /** Play the 120ms exit animation, then fire onClose. */
+  /** Play the configured exit animation, then fire onClose. */
   requestClose: () => void;
 };
-
-/** Dialog exit duration (§4): keep in sync with --gs-duration-exit. */
-const EXIT_MS = 140;
 
 export function Dialog({
   onClose,
@@ -28,16 +26,18 @@ export function Dialog({
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
+  const exitTimer = useRef<number | null>(null);
   const [exiting, setExiting] = useState(false);
   useLayoutEffect(() => {
     close.current = onClose;
   });
 
   const requestClose = useCallback(() => {
-    setExiting((was) => {
-      if (!was) window.setTimeout(() => close.current(), EXIT_MS);
-      return true;
-    });
+    const node = dialogRef.current;
+    const ownerWindow = node?.ownerDocument.defaultView;
+    if (!node || !ownerWindow || exitTimer.current !== null) return;
+    setExiting(true);
+    exitTimer.current = ownerWindow.setTimeout(() => close.current(), readDuration(node));
   }, []);
   useImperativeHandle(ref, () => ({ requestClose }), [requestClose]);
 
@@ -76,6 +76,8 @@ export function Dialog({
     node.addEventListener('keydown', key);
     return () => {
       node.removeEventListener('keydown', key);
+      if (exitTimer.current !== null)
+        node.ownerDocument.defaultView?.clearTimeout(exitTimer.current);
       if (previous?.isConnected) previous.focus();
     };
   }, [requestClose]);

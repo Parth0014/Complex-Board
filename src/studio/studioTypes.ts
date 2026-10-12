@@ -31,5 +31,5 @@ export const STUDIO_TAB_LABELS: Record<StudioTab, string> = {
   uploads: 'Uploads',
   create: 'Create',
   background: 'Background',
-  ai: 'AI',
+  ai: 'Discover',
 };

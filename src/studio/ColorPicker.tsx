@@ -1,7 +1,7 @@
-import { PALETTE } from './palette';
+import { PALETTE, type PaletteSwatch } from './palette';
 import { Swatch } from './ui/Swatch';
 import { Button } from './ui/Button';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Popover } from './ui/Popover';
 
 function hsv(h: number, s: number, v: number) {
@@ -33,11 +33,14 @@ export function ColorPicker({
   label,
   value,
   onChange,
+  palette = PALETTE,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  palette?: readonly PaletteSwatch[];
 }) {
+  const errorId = `${useId()}-hex-error`;
   const [open, setOpen] = useState(false);
   const [hex, setHex] = useState(value);
   const [hexError, setHexError] = useState('');
@@ -93,8 +96,8 @@ export function ColorPicker({
               <span aria-hidden="true">&#215;</span>
             </Button>
           </div>
-          <div className="studio-color-swatches">
-            {PALETTE.map((swatch) => (
+          <div className="studio-color-swatches" role="group" aria-label="Quick colors">
+            {palette.map((swatch) => (
               <Swatch
                 key={swatch.hex}
                 swatch={swatch}
@@ -108,6 +111,33 @@ export function ColorPicker({
           </div>
           <div
             className="studio-color-plane"
+            tabIndex={0}
+            role="group"
+            aria-label={`${label} saturation and brightness`}
+            onKeyDown={(event) => {
+              if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+              event.preventDefault();
+              const step = event.shiftKey ? 0.1 : 0.01;
+              change({
+                ...tone,
+                s: Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    tone.s +
+                      (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0),
+                  ),
+                ),
+                v: Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    tone.v +
+                      (event.key === 'ArrowUp' ? step : event.key === 'ArrowDown' ? -step : 0),
+                  ),
+                ),
+              });
+            }}
             style={{ backgroundColor: hsv(tone.h, 1, 1) }}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId);
@@ -136,17 +166,18 @@ export function ColorPicker({
               type="range"
               min="0"
               max="360"
-              value={tone.h}
+              value={Math.round(tone.h)}
               onChange={(event) => change({ ...tone, h: Number(event.target.value) })}
             />
           </label>
           <label className="studio-color-hex">
+            <span className="studio-color-hex-label">Hex</span>
             <span className="studio-color-current" style={{ backgroundColor: value }} />
             <input
               className="vs-input"
               aria-label={`${label} hex`}
               aria-invalid={hexError ? true : undefined}
-              aria-describedby={hexError ? `${label}-hex-error` : undefined}
+              aria-describedby={hexError ? errorId : undefined}
               value={hex}
               maxLength={7}
               onChange={(event) => {
@@ -169,7 +200,7 @@ export function ColorPicker({
             />
           </label>
           {hexError && (
-            <p className="studio-color-hex-error" id={`${label}-hex-error`} role="alert">
+            <p className="studio-color-hex-error" id={errorId} role="alert">
               {hexError}
             </p>
           )}

@@ -34,7 +34,7 @@ export const TabIcon = ({ tab, size }: { tab: StudioTab; size?: number }) => (
   <Glyph name={TAB_GLYPHS[tab]} size={size} />
 );
 
-/* Brand: token-driven squircle with a "V" horizon and a saffron sun. */
+/* Brand: a custom, solid V with balanced tapered arms. */
 export const VisionMark = ({ size = 28 }: { size?: number }) => (
   <svg
     width={size}
@@ -44,15 +44,11 @@ export const VisionMark = ({ size = 28 }: { size?: number }) => (
     aria-hidden="true"
     focusable="false"
   >
-    <rect x="1.5" y="1.5" width="29" height="29" rx="9" style={{ fill: 'var(--gs-accent)' }} />
+    <rect x="1" y="1" width="30" height="30" rx="8" style={{ fill: 'var(--gs-accent)' }} />
     <path
-      d="M8.5 11.5 16 22l7.5-10.5"
-      style={{ stroke: 'var(--gs-surface)' }}
-      strokeWidth="2.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d="M7.5 8.5H11.8L16 20.2L20.2 8.5H24.5L18.2 23.5Q17.9 24.2 17.1 24.2H14.9Q14.1 24.2 13.8 23.5Z"
+      style={{ fill: 'var(--gs-on-accent)' }}
     />
-    <circle cx="23.2" cy="8.6" r="2.4" style={{ fill: 'var(--gs-saffron-500)' }} />
   </svg>
 );
 

@@ -139,7 +139,7 @@ describe('adapter commands', () => {
   it('rejects assets outside the uploaded pack', async () => {
     const { adapter } = environment();
     await expect(adapter.insertAsset({ ...testAsset, provider: 'pexels' })).rejects.toThrow(
-      'uploaded curated',
+      'Invalid image library asset.',
     );
   });
 });

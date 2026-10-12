@@ -1,3 +1,4 @@
+import { errorMessage } from '../errors';
 import { useRef, useState } from 'react';
 import { Button, IconButton } from '../ui/Button';
 import { Dialog, type DialogHandle } from '../ui/Dialog';
@@ -22,7 +23,7 @@ export function ExportDialog({
       id: 'png',
       extension: '.png',
       title: 'Original',
-      description: `${document.width * 2}\u00d7${document.height * 2} px \u00b7 For larger prints`,
+      description: `${Math.round(document.width * 2)}\u00d7${Math.round(document.height * 2)} px \u00b7 For larger prints`,
       run: () => adapter.downloadHighResolution(adapter.ownerWindow.document),
     },
     {
@@ -94,7 +95,7 @@ export function ExportDialog({
                 setBusyId(option.id);
                 void Promise.resolve()
                   .then(option.run)
-                  .catch((error) => onError(String(error)))
+                  .catch((error) => onError(errorMessage(error)))
                   .finally(() => setBusyId((id) => (id === option.id ? null : id)));
               }}
             >

@@ -104,7 +104,7 @@ export function technicalControls(item: EditableItem, area: InspectorArea): Bind
     } else list.push(control('stroke.color', 'Stroke color', colorBinding));
     if (cap.background && a.kind === 'text' && a.background !== null)
       list.push(control('background', 'Text background', colorBinding));
-    list.push(control('opacity', 'Opacity (%)', { min: 0, max: 100, step: 1 }));
+    list.push(control('opacity', 'Transparency (%)', { min: 0, max: 100, step: 1 }));
   }
   if (area === 'stroke') {
     const prefix =
@@ -142,7 +142,7 @@ export function technicalControls(item: EditableItem, area: InspectorArea): Bind
   if (area === 'effects' && cap.shadow) {
     list.push(control('shadowEnabled', 'Enable shadow'));
     list.push(control('shadow.color', 'Shadow color', colorBinding));
-    list.push(control('shadow.opacity', 'Shadow opacity (%)', { min: 0, max: 100, step: 1 }));
+    list.push(control('shadow.opacity', 'Shadow transparency (%)', { min: 0, max: 100, step: 1 }));
     list.push(
       control('shadow.blur', 'Shadow blur', { min: 0, max: Math.max(100, a.shadow.blur), step: 1 }),
     );

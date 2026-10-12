@@ -911,6 +911,38 @@
     font-weight: var(--gs-weight-medium);
     color: var(--gs-text-secondary);
   }
+  .vs-properties-section {
+    padding: var(--gs-space-4) 0;
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .vs-properties-section:last-child {
+    border-bottom: 0;
+  }
+  .vs-properties-section > h3 {
+    margin: 0 0 var(--gs-space-3);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    color: var(--gs-text);
+  }
+  .vs-properties-section__body {
+    display: grid;
+    gap: var(--gs-space-3);
+  }
+  .vs-properties-section__body .vs-field {
+    margin: 0;
+  }
+  .vs-properties-section__body > p {
+    margin: 0;
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
+  .vs-properties-section__body textarea {
+    min-height: 64px;
+  }
+  .vs-properties-section .vs-properties-section {
+    padding: var(--gs-space-3) 0 0;
+    border: 0;
+  }
   .gs-object-dock .vs-field > span {
     font-size: var(--gs-text-11);
     font-weight: var(--gs-weight-medium);
@@ -1163,7 +1195,7 @@
   .vs-check input {
     accent-color: var(--gs-accent);
     width: 16px;
-    height: 16px;
+    height: 12px;
     margin: 0;
   }
   .vs-inspector__empty {
@@ -1334,13 +1366,6 @@
     padding-left: var(--gs-space-4);
   }
   .studio-color-swatches .gs-swatch {
-    width: 24px;
-    height: 24px;
-    min-height: 24px;
-    padding: 0;
-    border-radius: var(--gs-radius-sm);
-  }
-  .background-color-grid .gs-swatch {
     width: 24px;
     height: 24px;
     min-height: 24px;
@@ -1663,10 +1688,6 @@
   .create-panel__section:last-child {
     border-bottom: 0;
     padding-bottom: 0;
-  }
-  .create-connect-action {
-    width: 100%;
-    justify-content: center;
   }
   .create-card-copy {
     margin-bottom: var(--gs-space-3);
@@ -2179,8 +2200,10 @@
       width: 60px;
     }
   }
+  /* The scrollable workspace is a keyboard target, not a bordered control. */
   .vs .gs-artboard:focus-visible {
-    box-shadow: var(--gs-focus);
+    outline: none;
+    box-shadow: none;
   }
   .vs-inspector[hidden] {
     display: none;
@@ -2725,34 +2748,39 @@
   }
   .background-color-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--gs-space-3);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gs-space-2);
     margin-bottom: var(--gs-space-5);
   }
-  .background-color-grid > .gs-swatch {
-    border: 1px solid var(--gs-line);
-    background: var(--gs-swatch-color);
-    width: 100%;
-    height: 44px;
-    padding: 0;
-    border-radius: var(--gs-radius-menu, 8px);
-    font-size: var(--gs-text-11);
-    font-weight: var(--gs-weight-medium);
-    color: var(--gs-text);
-    display: flex;
-    flex-direction: column;
+  .background-color-grid > .background-preset {
+    justify-content: flex-start;
     gap: var(--gs-space-2);
-    align-items: center;
-    transition:
-      background-color var(--gs-duration-overlay) var(--gs-ease),
-      color var(--gs-duration-overlay) var(--gs-ease);
-    cursor: pointer;
+    min-width: 0;
+    height: 52px;
+    padding: var(--gs-space-2);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu, 8px);
+    background: var(--gs-surface);
+    font-size: var(--gs-text-13);
   }
-  .background-color-grid > .gs-swatch--dark {
-    color: var(--gs-on-accent);
+  .background-preset__color {
+    display: grid;
+    place-items: center;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--gs-line);
+    border-radius: 6px;
+    background: var(--gs-swatch-color);
+  }
+  .background-preset__color > svg {
+    height: 14px;
+    width: 14px;
+    color: var(--gs-accent);
   }
   .background-color-grid > button[aria-pressed='true'] {
     border-color: var(--gs-accent);
+    background: var(--gs-accent-soft);
   }
   .background-gradient-card label {
     display: flex;
@@ -3318,35 +3346,40 @@
     border-radius: var(--gs-radius-menu);
   }
   .studio-color-popover .studio-color-plane {
-    height: 140px;
-    border-radius: var(--gs-radius-dialog);
+    height: 168px;
+    flex-shrink: 0;
+    border-radius: var(--gs-radius-menu);
+    order: 1;
   }
   .studio-color-popover .studio-color-plane span {
     width: 18px;
     height: 18px;
-    border: 3px solid var(--gs-line);
-    box-shadow: var(--gs-shadow-popup);
+    border: 2px solid var(--gs-on-accent);
+    box-shadow: var(--gs-picker-pointer-shadow);
   }
   .studio-color-popover .studio-color-swatches {
-    grid-template-columns: repeat(8, 1fr);
-    display: flex;
-    gap: var(--gs-space-2);
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--gs-space-3);
+    order: 3;
   }
   .studio-color-popover .studio-color-swatches button {
+    min-width: 0;
+    width: 100%;
+    height: 30px;
+    padding: 0;
+    border-radius: 6px;
     border: 1px solid var(--gs-line);
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
   }
   .studio-color-spectrum {
+    order: 2;
     display: block;
   }
   .studio-color-popover .studio-color-spectrum input {
     appearance: none;
     -webkit-appearance: none;
     width: 100%;
-    height: 16px;
+    height: 12px;
     margin: 0;
     padding: 0;
     border: 0;
@@ -3359,7 +3392,7 @@
     width: 20px;
     height: 20px;
     background: transparent;
-    border: 3px solid var(--gs-line);
+    border: 2px solid var(--gs-on-accent);
     border-radius: 50%;
     box-shadow: none;
   }
@@ -3367,16 +3400,18 @@
     width: 16px;
     height: 16px;
     background: transparent;
-    border: 3px solid var(--gs-line);
+    border: 2px solid var(--gs-on-accent);
     border-radius: 50%;
   }
   .studio-color-hex {
+    order: 4;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: var(--gs-space-3);
     padding: 7px 9px;
     border: 1px solid var(--gs-line);
-    border-radius: var(--gs-radius-dialog);
+    border-radius: var(--gs-radius-menu);
   }
   .studio-color-current {
     width: 24px;
@@ -3385,7 +3420,13 @@
     border: 1px solid var(--gs-line);
     flex-shrink: 0;
   }
+  .studio-color-hex-label {
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
   .studio-color-popover .studio-color-hex .vs-input {
+    min-width: 0;
+    text-transform: uppercase;
     border: 0;
     padding: 0;
     height: 28px;
@@ -3397,6 +3438,7 @@
     box-shadow: none;
   }
   .studio-color-hex-error {
+    order: 5;
     margin: var(--gs-space-1) 0 0;
     font-size: var(--gs-text-11);
     color: var(--gs-danger);
@@ -3698,7 +3740,10 @@
     flex-direction: column;
     animation: gs-pop var(--gs-duration-pop) var(--gs-ease-out);
     font-family: var(--gs-font);
+    box-sizing: border-box;
     width: 300px;
+    max-width: calc(100vw - 16px);
+    overflow-x: hidden;
     padding: var(--gs-space-4);
     gap: var(--gs-space-4);
     border-radius: var(--gs-radius-menu);
@@ -3726,6 +3771,17 @@
       appearance: base-select;
       background-image: none;
       padding-right: var(--gs-space-3);
+    }
+    .vs .gs-object-dock select {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-block: 0;
+      line-height: normal;
+    }
+    .vs .gs-object-dock select::picker-icon {
+      align-self: center;
+      margin-left: auto;
     }
     .vs select:open::picker-icon {
       rotate: 180deg;
@@ -4103,8 +4159,31 @@
     height: 32px;
     min-height: 32px;
     font-size: var(--gs-text-13);
-    max-width: 112px;
+    width: 148px;
+    max-width: 148px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     border-radius: var(--gs-radius-control);
+  }
+  .vs .vs-contextual-editing-bar select[aria-label='Text alignment'] {
+    width: 104px;
+    max-width: 104px;
+  }
+  .vs .vs-actionbar select {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .vs .vs-actionbar select option {
+    white-space: nowrap;
+  }
+  .vs-properties-section__body :is(.vs-row-2, .vs-row-3) > * {
+    min-width: 0;
+  }
+  .vs-properties-section__body .vs-field > span {
+    overflow-wrap: anywhere;
   }
   .vs .vs-contextual-editing-bar .vs-actionbar__size input {
     width: 54px;
@@ -4431,9 +4510,8 @@
       background: var(--gs-surface-muted);
       transform: translateY(-1px);
     }
-    .background-color-grid > .gs-swatch:hover:not(:disabled) {
-      background: var(--gs-swatch-color);
-      box-shadow: 0 0 0 2px var(--gs-control-line);
+    .background-color-grid > .background-preset:hover:not(:disabled) {
+      border-color: var(--gs-control-line);
     }
     .vs select:hover:not(:disabled) {
       border-color: var(--gs-control-line);
@@ -5048,5 +5126,240 @@
       opacity: 0;
       transform: translateX(calc(-1 * var(--gs-space-1)));
     }
+  }
+}
+
+@layer components {
+  .studio-color-swatches .gs-button.gs-swatch:is(:active, [aria-pressed='true']) {
+    background: var(--gs-swatch-color);
+    outline: 2px solid var(--gs-accent);
+    outline-offset: 2px;
+    transform: none;
+  }
+  .vs .gs-artboard {
+    scrollbar-width: auto;
+  }
+  .vs .gs-artboard::-webkit-scrollbar {
+    width: 6px;
+    height: 0;
+  }
+  .vs .gs-artboard::-webkit-scrollbar:horizontal {
+    display: none;
+  }
+  .vs .gs-artboard::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  .discover-panel {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+  }
+  .discover-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 10px;
+    background: var(--gs-surface-muted);
+  }
+  .discover-tabs > button {
+    flex: 1;
+    min-width: 0;
+  }
+  .discover-tabs > button[aria-pressed='true'] {
+    background: var(--gs-surface);
+    color: var(--gs-accent);
+  }
+  .discover-search {
+    display: flex;
+    gap: 8px;
+  }
+  .discover-search input {
+    min-width: 0;
+    flex: 1;
+  }
+  .discover-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+  }
+  .discover-photo {
+    min-width: 0;
+  }
+  .discover-photo > button {
+    position: relative;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--gs-surface-muted);
+    cursor: pointer;
+  }
+  .discover-photo img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+  .discover-photo button span {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 6px;
+    border-radius: 6px;
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    font-size: var(--gs-text-11);
+    opacity: 0;
+    transition: opacity var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .discover-photo button:is(:focus-visible, :disabled) span {
+    opacity: 1;
+  }
+  .discover-photo p {
+    margin: 6px 0 0;
+    font-size: var(--gs-text-11);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .discover-photo a {
+    color: var(--gs-text-secondary);
+  }
+}
+
+@layer components {
+  .discover-credits {
+    position: absolute;
+    left: 16px;
+    bottom: 8px;
+    z-index: var(--gs-z-float);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    max-width: 40%;
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
+  .discover-credits a {
+    color: inherit;
+  }
+}
+
+@layer components {
+  @media (hover: hover) {
+    .studio-color-swatches .gs-button.gs-swatch:hover:not(:disabled) {
+      background: var(--gs-swatch-color);
+      outline: 2px solid var(--gs-accent);
+      outline-offset: 2px;
+      transform: none;
+    }
+    .discover-photo button:hover span {
+      opacity: 1;
+    }
+  }
+}
+
+@layer components {
+  .vs .discover-grid {
+    gap: 10px;
+    align-items: start;
+  }
+  .vs .discover-photo {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--gs-surface-muted);
+  }
+  .vs .discover-photo > .gs-button {
+    display: block;
+    padding: 0;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    line-height: 0;
+  }
+  .vs .discover-photo img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+  .vs .discover-photo p {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px;
+    margin: 0;
+    padding: 7px 8px;
+    font-size: var(--gs-text-11);
+    line-height: 1.3;
+  }
+  .vs .discover-photo a {
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .vs .discover-photo button span {
+    line-height: 1.4;
+  }
+}
+
+@layer components {
+  .vs .discover-source {
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+    text-decoration: none;
+  }
+  .vs .discover-photo .discover-photo-credit {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 8px;
+    background: var(--gs-surface);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .vs .discover-photo:focus-within .discover-photo-credit {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .vs .discover-photo button span {
+    top: 8px;
+    bottom: auto;
+  }
+  @media (hover: hover) {
+    .vs .discover-photo:hover .discover-photo-credit {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+@layer components {
+  /* Hide the horizontal bar at the scroll-container level, independent of native scrollbar styling. */
+  .vs .vs-stage-fill > .gs-artboard {
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  .vs .snap-toggle:has(input:not(:checked)) {
+    color: var(--gs-text);
+  }
+  .vs .snap-toggle input:not(:checked) + .vs-switch__track {
+    background: var(--gs-control-line);
+    box-shadow: inset 0 0 0 1px var(--gs-control-line-hover);
+  }
+  .vs .snap-toggle input:not(:checked) + .vs-switch__track::after {
+    background: var(--gs-on-accent);
+    box-shadow: inset 0 0 0 1px var(--gs-line);
+  }
+  .vs .snap-toggle input:focus-visible + .vs-switch__track {
+    outline: 2px solid var(--gs-focus-color);
+    outline-offset: 3px;
   }
 }
