@@ -20,13 +20,19 @@ function opticalStroke(size: number, base: number) {
 
 export function Glyph({
   name,
-  size = 18,
+  size,
   strokeWidth = 1.5,
   duotone = true,
   className,
 }: GlyphProps) {
   const glyph: GlyphData = GLYPHS[name];
-  const sw = opticalStroke(size, strokeWidth) + (glyph.sw ? glyph.sw - 1.5 : 0);
+  // Optical stroke: use the explicit size when given, else the token size.
+  const resolved = size ?? 16;
+  const sw = opticalStroke(resolved, strokeWidth) + (glyph.sw ? glyph.sw - 1.5 : 0);
+  // Without an explicit size the icon sizes from --gs-icon-size via .gs-icon;
+  // an explicit size sets attributes (presentation attributes lose to the
+  // class, so the class is omitted then).
+  const cls = size == null ? 'gs-glyph gs-icon' : 'gs-glyph';
   return (
     <svg
       width={size}
@@ -39,7 +45,7 @@ export function Glyph({
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
-      className={className ? `gs-glyph ${className}` : 'gs-glyph'}
+      className={className ? `${cls} ${className}` : cls}
     >
       {duotone && glyph.t ? (
         <path

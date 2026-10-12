@@ -2,6 +2,34 @@
 
 The editor and home screen share the Microsoft Fluent light palette, one interface font, and one CSS entry point. Board artwork retains its own colors and fonts.
 
+## Phase G: Craft Pass (2026-10-12)
+
+**Contrast tokens** (corrected, see `src/studio/design-system/foundations.css` for values):
+- Text/surface, text-secondary/surface and /workspace, placeholder/surface and /surface-muted ≥ 4.5:1
+- Control borders, focus ring ≥ 3:1; UI icons ≥ 3:1 against their surface
+- Canvas tokens (`--gs-canvas-*`) consumed via `colors.ts` for Konva; locked by `foundations.contrast.test.ts`
+
+**Motion** (see `foundations.css`):
+- Durations: `--gs-duration-overlay`, `--gs-duration-pop` (160ms), `--gs-duration-toast`
+- Easing: `--gs-ease`, `--gs-ease-out`; `prefers-reduced-motion` disables animation
+- No `transition: all`; no width/height animations on layout
+
+**The 12 gates** (measured per phase, see final report):
+1. Contrast ≥ 4.5:1 (text), ≥ 3:1 (borders/focus)
+2. CSS rule count decreases (components.css + studio-v2.css)
+3. No `transition: all`
+4. Hover only under `(hover: hover)` media
+5. No `outline: none` without visible ring
+6. Type scale compliance (no off-scale font sizes)
+7. Spacing on 4pt scale
+8. Icon-only controls have `aria-label` + `data-tip`, no `title`
+9. Focus visible on all interactive elements
+10. Reduced motion respected
+11. Copy: sentence case, verbs first, errors say what+what-to-do
+12. No dead code (unused CSS rules removed)
+
+**CSS rule**: Every rule added to `components.css` must remove the older duplicate of the same selector — net rule count goes DOWN.
+
 ## Sources of truth
 
 - `src/studio/design-system/fluentTheme.ts` installs official Fluent tokens on the document root, including portals.

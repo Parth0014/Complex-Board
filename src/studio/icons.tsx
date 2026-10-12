@@ -14,7 +14,7 @@ export type { GlyphName } from './icon-set/glyphs';
  */
 type IconProps = { size?: number; strokeWidth?: number };
 
-function ic(name: GlyphName, defaultSize = 18) {
+function ic(name: GlyphName, defaultSize?: number) {
   return function StudioIcon({ size = defaultSize, strokeWidth = 1.5 }: IconProps) {
     return <Glyph name={name} size={size} strokeWidth={strokeWidth} />;
   };
@@ -30,7 +30,7 @@ const TAB_GLYPHS: Record<StudioTab, GlyphName> = {
   background: 'tab-background',
   ai: 'tab-ai',
 };
-export const TabIcon = ({ tab, size = 22 }: { tab: StudioTab; size?: number }) => (
+export const TabIcon = ({ tab, size }: { tab: StudioTab; size?: number }) => (
   <Glyph name={TAB_GLYPHS[tab]} size={size} />
 );
 

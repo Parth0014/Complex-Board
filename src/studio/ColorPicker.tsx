@@ -40,12 +40,14 @@ export function ColorPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [hex, setHex] = useState(value);
+  const [hexError, setHexError] = useState('');
   const [tone, setTone] = useState(() => fromHex(value));
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setHex(value);
+    setHexError('');
   }, [value]);
 
   const change = (next: typeof tone) => {
@@ -143,19 +145,34 @@ export function ColorPicker({
             <input
               className="vs-input"
               aria-label={`${label} hex`}
+              aria-invalid={hexError ? true : undefined}
+              aria-describedby={hexError ? `${label}-hex-error` : undefined}
               value={hex}
               maxLength={7}
               onChange={(event) => {
                 const next = event.target.value;
                 setHex(next);
                 if (/^#[0-9a-f]{6}$/i.test(next)) {
+                  setHexError('');
                   setTone(fromHex(next));
                   onChange(next);
+                } else if (next.trim()) {
+                  setHexError('Use a 6-digit hex like #7C5CD6.');
+                } else {
+                  setHexError('');
                 }
               }}
-              onBlur={() => setHex(value)}
+              onBlur={() => {
+                if (hexError) setHex(value);
+                setHexError('');
+              }}
             />
           </label>
+          {hexError && (
+            <p className="studio-color-hex-error" id={`${label}-hex-error`} role="alert">
+              {hexError}
+            </p>
+          )}
         </Popover>
       )}
     </div>

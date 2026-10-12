@@ -1,6 +1,6 @@
 import { Skeleton } from '../ui/Skeleton';
 import { Button, IconButton } from '../ui/Button';
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { TemplatesPanel } from '../TemplatesPanel';
 import { BackgroundPanel } from '../BackgroundPanel';
 import { TextPanel } from '../TextPanel';
@@ -39,6 +39,22 @@ export function StudioSidebar({
   onError: (message: string) => void;
 }) {
   const elementCategory = initialTheme;
+  /* Panel exit (item 18, §4): keep the panel mounted for the 160ms exit
+     animation instead of unmounting immediately (display:none can't animate). */
+  const [exitingTab, setExitingTab] = useState<StudioTab | null>(null);
+  const prevTab = useRef<StudioTab | null>(null);
+  useEffect(() => {
+    if (!tab && prevTab.current) {
+      const closed = prevTab.current;
+      prevTab.current = null;
+      setExitingTab(closed);
+      const t = window.setTimeout(() => setExitingTab(null), 180);
+      return () => window.clearTimeout(t);
+    }
+    prevTab.current = tab;
+    setExitingTab(null);
+  }, [tab]);
+  const visibleTab = tab ?? exitingTab;
   return (
     <div className={`vs-lib${tab ? '' : ' is-collapsed'}`}>
       <nav className="vs-rail" aria-label="Studio tools">
@@ -76,10 +92,13 @@ export function StudioSidebar({
         )}
       </nav>
 
-      {tab && (
-        <section className="vs-lib__panel" aria-label={`${STUDIO_TAB_LABELS[tab]} panel`}>
+      {visibleTab && (
+        <section
+          className={`vs-lib__panel${exitingTab ? ' is-exiting' : ''}`}
+          aria-label={`${STUDIO_TAB_LABELS[visibleTab]} panel`}
+        >
           <div className="vs-lib__head">
-            <h2 className="vs-lib__title">{STUDIO_TAB_LABELS[tab]}</h2>
+            <h2 className="vs-lib__title">{STUDIO_TAB_LABELS[visibleTab]}</h2>
             <IconButton
               type="button"
               className="vs-icon-btn"
@@ -91,19 +110,22 @@ export function StudioSidebar({
             </IconButton>
           </div>
           <div className="vs-lib__body">
-            {tab === 'templates' ? (
-              <TemplatesPanel onApplyTemplate={(template) => adapter.applyTemplate(template)} />
-            ) : tab === 'text' ? (
+            {visibleTab === 'templates' ? (
+              <TemplatesPanel
+                onApplyTemplate={(template) => adapter.applyTemplate(template)}
+                onClose={() => setTab(null)}
+              />
+            ) : visibleTab === 'text' ? (
               <TextPanel onInsertText={(preset) => adapter.createTextPreset(preset)} />
-            ) : tab === 'uploads' ? (
+            ) : visibleTab === 'uploads' ? (
               <UploadsPanel adapter={adapter} onError={onError} />
-            ) : tab === 'create' ? (
+            ) : visibleTab === 'create' ? (
               <CreatePanel adapter={adapter} />
-            ) : tab === 'ai' ? (
+            ) : visibleTab === 'ai' ? (
               <Suspense fallback={<Skeleton label="Opening AI tools" />}>
                 <AIPanel adapter={adapter} />
               </Suspense>
-            ) : tab === 'background' ? (
+            ) : visibleTab === 'background' ? (
               <BackgroundPanel adapter={adapter} />
             ) : (
               <CuratedPanel

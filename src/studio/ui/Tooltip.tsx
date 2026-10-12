@@ -4,14 +4,21 @@ import { createPortal } from 'react-dom';
 export function TooltipProvider({ ownerWindow }: { ownerWindow: Window }) {
   const id = useId();
   const [target, setTarget] = useState<HTMLElement | null>(null);
+  const [instant, setInstant] = useState(false);
   const tip = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
+  /** Warm-up (§4, item 10): a tooltip hidden less than 400ms ago makes the
+      next one appear instantly with no animation. */
+  const warmUntil = useRef(0);
   useEffect(() => {
     const document = ownerWindow.document;
     let timer = 0;
     const hide = () => {
       ownerWindow.clearTimeout(timer);
-      setTarget(null);
+      setTarget((was) => {
+        if (was) warmUntil.current = Date.now() + 400;
+        return null;
+      });
     };
     const show = (event: Event) => {
       const node =
@@ -25,7 +32,12 @@ export function TooltipProvider({ ownerWindow }: { ownerWindow: Window }) {
       )
         return;
       ownerWindow.clearTimeout(timer);
-      timer = ownerWindow.setTimeout(() => setTarget(node), event.type === 'focusin' ? 0 : 300);
+      const warm = Date.now() < warmUntil.current;
+      const delay = event.type === 'focusin' || warm ? 0 : 300;
+      timer = ownerWindow.setTimeout(() => {
+        setTarget(node);
+        setInstant(warm);
+      }, delay);
     };
     const leave = (event: Event) => {
       const node = (event.target as Element | null)?.closest?.('[data-tip]');
@@ -79,7 +91,13 @@ export function TooltipProvider({ ownerWindow }: { ownerWindow: Window }) {
   }, [target, ownerWindow]);
   return target
     ? createPortal(
-        <div id={id} ref={tip} className="vs-tooltip" role="tooltip" style={position}>
+        <div
+          id={id}
+          ref={tip}
+          className={`vs-tooltip${instant ? ' vs-tooltip--instant' : ''}`}
+          role="tooltip"
+          style={position}
+        >
           {target.dataset.tip}
         </div>,
         ownerWindow.document.body,

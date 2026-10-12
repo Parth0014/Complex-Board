@@ -11,8 +11,11 @@ export function UploadsPanel({
   onError: (message: string) => void;
 }) {
   const [busy, setBusy] = useState(false),
-    [message, setMessage] = useState('');
+    [message, setMessage] = useState(''),
+    [downloading, setDownloading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [error, setError] = useState('');
+  const [failedFiles, setFailedFiles] = useState<File[] | null>(null);
   const selected = adapter.history.document.items.find(
     (item) => item.id === adapter.selectedIds[0],
   );
@@ -23,12 +26,16 @@ export function UploadsPanel({
   const upload = async (files: File[]) => {
     setBusy(true);
     onError('');
+    setError('');
+    setFailedFiles(null);
     setMessage('Preparing your photos…');
     try {
       await adapter.uploadPhotos(files);
       setMessage(`${files.length} photo${files.length === 1 ? '' : 's'} added.`);
-    } catch (error) {
-      onError(error instanceof Error ? error.message : 'Unable to add photos.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unable to add photos.';
+      setError(msg);
+      setFailedFiles(files);
       setMessage('');
     } finally {
       setBusy(false);
@@ -82,13 +89,33 @@ export function UploadsPanel({
         </p>
       )}
 
+      {error && (
+        <div className="panel-inline-error" role="alert">
+          <p>{error}</p>
+          {failedFiles && (
+            <Button
+              type="button"
+              className="gs-button--sm"
+              onClick={() => void upload(failedFiles)}
+            >
+              Try again
+            </Button>
+          )}
+        </div>
+      )}
+
       {hasOriginal && (
         <div className="uploads-panel__actions">
           <Button
             className="panel-secondary-action"
+            loading={downloading}
             disabled={busy}
             onClick={() => {
-              void adapter.downloadOriginalPhoto().catch((error) => onError(String(error)));
+              setDownloading(true);
+              void adapter
+                .downloadOriginalPhoto()
+                .catch((error) => onError(String(error)))
+                .finally(() => setDownloading(false));
             }}
           >
             Download original

@@ -18,7 +18,7 @@ export function BoardSizeControl({ adapter }: { adapter: EditorAdapter }) {
         onChange={(event) => {
           const [width, height] = event.target.value.split('x').map(Number);
           const shrinking = width < document.width || height < document.height;
-          const outside = document.items.some((item) => {
+          const outsideCount = document.items.filter((item) => {
             const angle = (item.rotation * Math.PI) / 180;
             return [
               [0, 0],
@@ -30,12 +30,12 @@ export function BoardSizeControl({ adapter }: { adapter: EditorAdapter }) {
               const py = item.y + x * Math.sin(angle) + y * Math.cos(angle);
               return px < 0 || py < 0 || px > width || py > height;
             });
-          });
+          }).length;
           if (
             shrinking &&
-            outside &&
+            outsideCount > 0 &&
             !adapter.ownerWindow.confirm(
-              'Some objects will be outside the smaller board. Change size anyway?',
+              `${outsideCount} object${outsideCount === 1 ? '' : 's'} will fall outside the new size. Change size anyway?`,
             )
           )
             return;

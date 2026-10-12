@@ -3,6 +3,7 @@ import { Button } from './ui/Button';
 import { useEffect, useRef, useState } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
 import { requestAI } from '../vision/aiClient';
+import { useAIStatus } from './useAIStatus';
 
 const modeHelp = {
   image: {
@@ -31,6 +32,7 @@ type Result = {
   text?: string;
 };
 export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
+  const { status: aiStatus, checking: aiChecking } = useAIStatus(adapter.ownerWindow);
   const [prompt, setPrompt] = useState(''),
     [mode, setMode] = useState<'image' | 'quote'>('image');
   const [result, setResult] = useState<Result | null>(null),
@@ -90,6 +92,17 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
   };
   return (
     <div className="ai-panel">
+      {aiChecking && <Skeleton label="Checking AI availability" />}
+      {!aiChecking && aiStatus && !aiStatus.configured && (
+        <div className="gs-empty">
+          <h3 className="gs-empty__title">AI not configured</h3>
+          <p className="gs-empty__body">
+            Connect an AI provider to generate images and affirmations.
+          </p>
+        </div>
+      )}
+      {(!aiStatus || aiStatus.configured) && (
+        <>
       <label>
         Create
         <select
@@ -123,12 +136,12 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       <Button
         className="panel-action"
         aria-label="Generate"
-
         data-tip={help.action}
-        disabled={busy || !prompt.trim()}
+        loading={busy}
+        disabled={!prompt.trim()}
         onClick={() => void generate()}
       >
-        {busy ? 'Working…' : help.action}
+        {help.action}
       </Button>
       {busy && <Skeleton label="Generating" />}
       {busy && <Button onClick={() => controller.current?.abort()}>Cancel generation</Button>}
@@ -140,10 +153,16 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       {error && (
         <div className="panel-inline-error" role="alert">
           <p>{error}</p>
-          <p>
-            Review the connection and prompt, then try again. Existing board items are preserved.
-          </p>
+          <Button
+            type="button"
+            className="gs-button--sm"
+            onClick={() => void generate()}
+          >
+            Try again
+          </Button>
         </div>
+      )}
+        </>
       )}
       {result && (
         <section className="ai-result" aria-label="AI result">

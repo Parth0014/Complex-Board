@@ -29,7 +29,7 @@ export const TextPanel = ({ onInsertText }: TextPanelProps) => (
               {preset.sample}
             </span>
             <span className="text-panel__add" aria-hidden="true">
-              <PlusIcon />
+              <PlusIcon size={16} />
             </span>
           </Button>
         </li>

@@ -8,7 +8,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Dialog } from '../ui/Dialog';
+import { Dialog, type DialogHandle } from '../ui/Dialog';
 import { IconButton } from '../ui/Button';
 import { CloseIcon } from '../icons';
 import './hybrid.css';
@@ -32,6 +32,7 @@ export function AppearanceSurface({
   onCancel(): void;
 }) {
   const query = useRef(ownerWindow.matchMedia('(max-width: 768px)')).current;
+  const dialogRef = useRef<DialogHandle>(null);
   const mobile = useSyncExternalStore(
     (notify) => {
       query.addEventListener('change', notify);
@@ -111,10 +112,11 @@ export function AppearanceSurface({
         className="gs-appearance-backdrop"
         style={{ top: viewport.offset, height: viewport.height }}
         onPointerDown={(event) => {
-          if (event.target === event.currentTarget) onClose();
+          if (event.target === event.currentTarget) dialogRef.current?.requestClose();
         }}
       >
         <Dialog
+          ref={dialogRef}
           className="gs-appearance-sheet"
           aria-label="Appearance inspector"
           onClose={onClose}

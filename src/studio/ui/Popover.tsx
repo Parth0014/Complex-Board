@@ -35,10 +35,22 @@ export function Popover({
         b = node.getBoundingClientRect();
       let left = side === 'right' ? a.right : a.right - b.width;
       let top = side === 'right' ? a.top : a.bottom + 6;
-      if (side === 'right' && left + b.width > win.innerWidth - 8) left = a.left - b.width;
-      if (side === 'bottom' && top + b.height > win.innerHeight - 8) top = a.top - b.height - 6;
+      let flippedX = false,
+        flippedY = false;
+      if (side === 'right' && left + b.width > win.innerWidth - 8) {
+        left = a.left - b.width;
+        flippedX = true;
+      }
+      if (side === 'bottom' && top + b.height > win.innerHeight - 8) {
+        top = a.top - b.height - 6;
+        flippedY = true;
+      }
       node.style.left = Math.max(8, Math.min(left, win.innerWidth - b.width - 8)) + 'px';
       node.style.top = Math.max(8, Math.min(top, win.innerHeight - b.height - 8)) + 'px';
+      // Scale from the trigger side (item 9); flip the origin when clamped.
+      const originX = side === 'right' ? (flippedX ? 'right' : 'left') : 'center';
+      const originY = side === 'bottom' ? (flippedY ? 'bottom' : 'top') : 'center';
+      node.style.transformOrigin = `${originX} ${originY}`;
     };
     const outside = (event: PointerEvent) => {
       const target = event.target as Element;
@@ -78,7 +90,7 @@ export function Popover({
   const doc = anchor.current?.ownerDocument;
   return doc
     ? createPortal(
-        <div {...props} ref={surface} className={`gs-popover ${className}`}>
+        <div {...props} ref={surface} className={`gs-popover gs-pop-enter ${className}`}>
           {children}
         </div>,
         doc.body,

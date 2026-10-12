@@ -1,5 +1,6 @@
+import { useRef, useState } from 'react';
 import { Button, IconButton } from '../ui/Button';
-import { Dialog } from '../ui/Dialog';
+import { Dialog, type DialogHandle } from '../ui/Dialog';
 import { CloseIcon, DownloadIcon } from '../icons';
 import type { EditorAdapter } from '../../vision/contracts';
 export function ExportDialog({
@@ -14,6 +15,8 @@ export function ExportDialog({
   onClose: () => void;
 }) {
   const document = adapter.history.document;
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const dialogRef = useRef<DialogHandle>(null);
   const options = [
     {
       id: 'png',
@@ -53,13 +56,22 @@ export function ExportDialog({
   ];
   return (
     <div className="vs-veil">
-      <Dialog className="vs-dialog vs-export-dialog" aria-label="Export board" onClose={onClose}>
+      <Dialog
+        ref={dialogRef}
+        className="vs-dialog vs-export-dialog"
+        aria-label="Export board"
+        onClose={onClose}
+      >
         <div className="vs-dialog__head">
           <div>
             <h2>Download board</h2>
             <p className="vs-export-board-name">{document.title}</p>
           </div>
-          <IconButton className="vs-icon-btn" aria-label="Close export" onClick={onClose}>
+          <IconButton
+            className="vs-icon-btn"
+            aria-label="Close export"
+            onClick={() => dialogRef.current?.requestClose()}
+          >
             <CloseIcon />
           </IconButton>
         </div>
@@ -77,10 +89,13 @@ export function ExportDialog({
               aria-label={
                 option.id === 'png' ? 'Download PNG' : 'Download ' + option.id.toUpperCase()
               }
+              loading={busyId === option.id}
               onClick={() => {
+                setBusyId(option.id);
                 void Promise.resolve()
                   .then(option.run)
-                  .catch((error) => onError(String(error)));
+                  .catch((error) => onError(String(error)))
+                  .finally(() => setBusyId((id) => (id === option.id ? null : id)));
               }}
             >
               <span className="vs-export-extension">{option.extension}</span>

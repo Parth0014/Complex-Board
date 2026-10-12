@@ -40,9 +40,9 @@ export function BoardLibrary({
           ))}
         </div>
       ) : (
-        <div className="home-empty">
-          <h3>No boards yet.</h3>
-          <p>Create a board to get started.</p>
+        <div className="gs-empty">
+          <h3 className="gs-empty__title">No boards yet</h3>
+          <p className="gs-empty__body">Create a board to get started.</p>
           <Button variant="primary" disabled={busy} onClick={onCreate}>
             New board
           </Button>

@@ -8,6 +8,7 @@ import type { VisionTemplate } from '../vision/templates';
 
 export interface TemplatesPanelProps {
   onApplyTemplate: (template: VisionTemplate) => void | Promise<void>;
+  onClose?: () => void;
 }
 
 /** Schematic preview of a template's layout slots. */
@@ -106,7 +107,7 @@ const TemplatePreview = ({ template }: { template: VisionTemplate }) =>
  * Guided board structures. Applying a template re-themes the board and adds
  * new slots while preserving existing pieces.
  */
-export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
+export const TemplatesPanel = ({ onApplyTemplate, onClose }: TemplatesPanelProps) => {
   const [applied, setApplied] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -127,7 +128,21 @@ export const TemplatesPanel = ({ onApplyTemplate }: TemplatesPanelProps) => {
           {error}
         </p>
       )}
-      {VISION_TEMPLATES.length === 0 && <p>No templates available.</p>}
+      {VISION_TEMPLATES.length === 0 && (
+        <div className="gs-empty">
+          <h3 className="gs-empty__title">No templates yet</h3>
+          <p className="gs-empty__body">Start from a blank board and make it yours.</p>
+          {onClose && (
+            <Button
+              type="button"
+              className="gs-button--primary gs-button--sm"
+              onClick={onClose}
+            >
+              Start from a blank board
+            </Button>
+          )}
+        </div>
+      )}
       <ul className="templates-panel__list">
         {[
           ...VISION_TEMPLATES.filter((t) => t.elements),

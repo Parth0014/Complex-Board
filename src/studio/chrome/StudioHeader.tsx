@@ -11,6 +11,9 @@ import {
 } from '../icons';
 import type { EditorAdapter } from '../../vision/contracts';
 
+/** Maximum backup file size for restore (item 17). */
+const MAX_BACKUP_BYTES = 180 * 1024 * 1024;
+
 /**
  * Three zones, one job each:
  *   start  → where am I (brand, board name, save state)
@@ -66,6 +69,8 @@ export function StudioHeader({
           <input
             className="vs-title__input"
             aria-label="Board name"
+            data-tip={document.title}
+            data-tip-pos="below"
             value={document.title}
             maxLength={80}
             onChange={(event) => adapter.commit({ ...document, title: event.target.value })}
@@ -77,9 +82,9 @@ export function StudioHeader({
         </div>
       </div>
 
-      <div className="vs-header__center vs-history" role="group" aria-label="History">
+      <div className="vs-header__center gs-segmented" role="group" aria-label="History">
         <IconButton
-          className="vs-icon-btn"
+          className="gs-segmented__item"
           data-tip="Undo (Ctrl+Z)"
           data-tip-pos="below"
           aria-label="Undo"
@@ -89,7 +94,7 @@ export function StudioHeader({
           <UndoIcon />
         </IconButton>
         <IconButton
-          className="vs-icon-btn"
+          className="gs-segmented__item"
           data-tip="Redo (Ctrl+Shift+Z)"
           data-tip-pos="below"
           aria-label="Redo"
@@ -152,8 +157,8 @@ export function StudioHeader({
                   const file = event.target.files?.[0];
                   if (file)
                     try {
-                      if (file.size > 180 * 1024 * 1024)
-                        throw new Error('Backup is too large (maximum 180 MB).');
+                      if (file.size > MAX_BACKUP_BYTES)
+                        throw new Error('Backup is too large (maximum 180 MB). Choose a smaller backup file.');
                       await adapter.restore(await file.text());
                       onError('');
                     } catch (error) {

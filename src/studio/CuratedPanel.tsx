@@ -69,7 +69,22 @@ export function CuratedPanel({
         {assets.length} {search.trim() ? 'results' : 'elements'}
       </p>
       {error && <p role="alert">{error}</p>}
-      {assets.length === 0 && <p>No elements found. Try another theme or search.</p>}
+      {assets.length === 0 && (
+        <div className="gs-empty">
+          <h3 className="gs-empty__title">No elements found</h3>
+          <p className="gs-empty__body">Try another theme or search.</p>
+          <Button
+            type="button"
+            className="gs-button--primary gs-button--sm"
+            onClick={() => {
+              setSearch('');
+              setCategory('all');
+            }}
+          >
+            Clear search
+          </Button>
+        </div>
+      )}
       {(search.trim()
         ? [{ id: 'search-results', label: 'Search results' }]
         : ELEMENT_THEMES.filter((theme) => category === 'all' || theme.id === category)

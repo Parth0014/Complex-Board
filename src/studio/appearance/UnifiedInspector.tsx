@@ -107,7 +107,7 @@ function InspectorBody({ adapter, item }: { adapter: EditorAdapter; item: Editab
                   ))}
                 </div>
               )}
-              <h3>{cap.fill ? 'A color for your vision' : 'Stroke color'}</h3>
+              <h3 className="gs-kicker">{cap.fill ? 'A color for your vision' : 'Stroke color'}</h3>
               <CreativePalette
                 adapter={adapter}
                 id={item.id}
@@ -141,7 +141,7 @@ function InspectorBody({ adapter, item }: { adapter: EditorAdapter; item: Editab
           )}
           {area === 'effects' && (
             <>
-              <h3>Finishing touches</h3>
+              <h3 className="gs-kicker">Finishing touches</h3>
               {!cap.effects.includes(a.effect) && (
                 <p className="gs-appearance-note" role="status">
                   The saved {a.effect} effect is unavailable for this object's current formatting.
