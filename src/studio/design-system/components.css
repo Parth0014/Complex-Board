@@ -5540,7 +5540,29 @@
 }
 
 @layer components {
- .photo-layout-dialog { display: flex; flex-direction: column; }
- .photo-layout-dialog > * { flex-shrink: 0; }
- .photo-layout-preview { margin-inline: auto; }
+  .photo-layout-dialog {
+    display: flex;
+    flex-direction: column;
+  }
+  .photo-layout-dialog > * {
+    flex-shrink: 0;
+  }
+  .photo-layout-preview {
+    margin-inline: auto;
+  }
+}
+
+@layer components {
+  .photo-layout-choices > .gs-button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 8px;
+    border: 1px solid var(--gs-line);
+    border-radius: 8px;
+  }
+  .photo-layout-choices > .gs-button[aria-pressed='true'] {
+    border-color: var(--gs-accent);
+  }
 }

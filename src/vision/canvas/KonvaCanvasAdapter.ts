@@ -1239,9 +1239,16 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   async arrangePhotos(ids: string[], style: PhotoArrangement) {
     const board = this.history.document,
       revision = this.history.revision;
-    const slots = photoLayout(ids.length, style, board.width, board.height);
+
     if (new Set(ids).size !== ids.length) throw new Error('Choose different photos.');
     const records = await Promise.all(ids.map((id) => loadMedia(this.ownerWindow, id)));
+    const slots = photoLayout(
+      ids.length,
+      style,
+      board.width,
+      board.height,
+      records.map((record) => record.width / record.height),
+    );
     for (const record of records) await this.decode(mediaAsset(record), record);
     if (revision !== this.history.revision)
       throw new Error('The board changed. Preview the layout again.');

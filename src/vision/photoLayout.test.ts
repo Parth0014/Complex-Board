@@ -26,3 +26,22 @@ describe('photo arrangements', () => {
       expect(() => photoLayout(count, 'grid', 1920, 1080)).toThrow();
   });
 });
+
+it('uses photo proportions in gallery and mosaic without cropping', () => {
+  const ratios = [0.65, 1.9, 0.8, 1.6, 1.3, 0.7];
+  for (const style of ['grid', 'columns'] as const) {
+    const slots = photoLayout(ratios.length, style, 1920, 1080, ratios);
+    slots.forEach((slot, index) => expect(slot.width / slot.height).toBeCloseTo(ratios[index], 8));
+    for (let i = 0; i < slots.length; i++)
+      for (let j = i + 1; j < slots.length; j++) {
+        const a = slots[i],
+          b = slots[j];
+        expect(
+          a.x + a.width <= b.x ||
+            b.x + b.width <= a.x ||
+            a.y + a.height <= b.y ||
+            b.y + b.height <= a.y,
+        ).toBe(true);
+      }
+  }
+});

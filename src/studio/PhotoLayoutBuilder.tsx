@@ -27,7 +27,13 @@ export function PhotoLayoutBuilder({
   const chosen = photos.filter((photo) => selected.includes(photo.record.id));
   const board = adapter.history.document;
   const slots = selected.length
-    ? photoLayout(selected.length, style, board.width, board.height)
+    ? photoLayout(
+        selected.length,
+        style,
+        board.width,
+        board.height,
+        chosen.map((photo) => photo.record.width / photo.record.height),
+      )
     : [];
   const apply = async () => {
     setBusy(true);
@@ -91,11 +97,29 @@ export function PhotoLayoutBuilder({
               aria-pressed={style === value}
               onClick={() => setStyle(value)}
             >
-              {value === 'grid'
-                ? 'Balanced grid'
-                : value === 'hero'
-                  ? 'One highlight'
-                  : 'Clean columns'}
+              <svg
+                viewBox={`0 0 ${board.width} ${board.height}`}
+                width="72"
+                height="44"
+                aria-hidden="true"
+              >
+                {photoLayout(
+                  Math.max(1, selected.length),
+                  value,
+                  board.width,
+                  board.height,
+                  chosen.map((photo) => photo.record.width / photo.record.height),
+                ).map((slot, index) => (
+                  <rect
+                    key={index}
+                    {...slot}
+                    rx={Math.min(board.width, board.height) * 0.015}
+                    fill="currentColor"
+                    opacity={value === 'hero' && index === 0 ? 1 : 0.5}
+                  />
+                ))}
+              </svg>
+              {value === 'grid' ? 'Gallery' : value === 'hero' ? 'Spotlight' : 'Mosaic'}
             </Button>
           ))}
         </div>
