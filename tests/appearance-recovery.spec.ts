@@ -61,7 +61,7 @@ test('explicit storage rollback preserves media, snapshots v3 data and produces 
   expect(recovered.media).toEqual({ name: 'unchanged', contents: 'preserved photo' });
   expect(migrateDocument(recovered.board)).toEqual(canonical);
   await page.goto(process.env.APPEARANCE_LEGACY_URL!);
-  await page.getByRole('button', { name: '+ Create a vision board', exact: true }).click();
+  await page.getByRole('button', { name: '+ New board', exact: true }).click();
   await page.getByRole('button', { name: 'Create board', exact: true }).click();
   await page.getByLabel('File menu', { exact: true }).click();
   await page.getByLabel('Open board file', { exact: true }).setInputFiles({

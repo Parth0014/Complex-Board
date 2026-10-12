@@ -18,8 +18,9 @@
  * (rail tabs, menus, dialogs, file inputs).
  */
 import { test, expect, type Page } from '@playwright/test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { runtime } from './appearance-helpers';
+import { createBoard as setupBoard } from './helpers/board';
 
 const SHOT_DIR = `exports/craft/${process.env.CRAFT_PHASE || 'before'}`;
 mkdirSync(SHOT_DIR, { recursive: true });
@@ -45,10 +46,7 @@ async function settle(page: Page) {
 }
 
 async function createBoard(page: Page, name = 'Craft board'): Promise<string> {
-  await page.goto('/');
-  await page.getByRole('button', { name: '+ New board' }).click();
-  await page.getByLabel('Name').fill(name);
-  await page.getByRole('button', { name: 'Create board' }).click();
+  await setupBoard(page, { name });
   await expect(page).toHaveURL(/board=/);
   await expect(page.getByLabel('Editable vision board', { exact: true })).toBeVisible({
     timeout: 15000,
@@ -60,26 +58,29 @@ async function createBoard(page: Page, name = 'Craft board'): Promise<string> {
 /** Insert one item of the given kind via the adapter and leave it selected. */
 async function addItem(page: Page, kind: 'text' | 'shape' | 'image') {
   const h = await runtime(page);
-  await h.evaluate(async ({ adapter }, payload) => {
-    const { kind, png } = payload as { kind: string; png?: string };
-    if (kind === 'text') {
-      adapter.createTextPreset({
-        id: 'craft',
-        label: 'Craft',
-        sample: 'The moments I want to remember',
-        fontFamily: 'georgia',
-        fontSize: 48,
-        color: '#33272b',
-      });
-    } else if (kind === 'shape') {
-      adapter.createShape('rectangle');
-    } else {
-      const bytes = Uint8Array.from(atob(png!), (c) => c.charCodeAt(0));
-      await adapter.uploadPhotos([new File([bytes], 'tiny.png', { type: 'image/png' })]);
-    }
-    const items = adapter.history.document.items;
-    adapter.select([items[items.length - 1].id]);
-  }, { kind, png: TINY_B64 });
+  await h.evaluate(
+    async ({ adapter }, payload) => {
+      const { kind, png } = payload as { kind: string; png?: string };
+      if (kind === 'text') {
+        adapter.createTextPreset({
+          id: 'craft',
+          label: 'Craft',
+          sample: 'The moments I want to remember',
+          fontFamily: 'georgia',
+          fontSize: 48,
+          color: '#33272b',
+        });
+      } else if (kind === 'shape') {
+        adapter.createShape('rectangle');
+      } else {
+        const bytes = Uint8Array.from(atob(png!), (c) => c.charCodeAt(0));
+        await adapter.uploadPhotos([new File([bytes], 'tiny.png', { type: 'image/png' })]);
+      }
+      const items = adapter.history.document.items;
+      adapter.select([items[items.length - 1].id]);
+    },
+    { kind, png: TINY_B64 },
+  );
   await expect(page.getByRole('toolbar', { name: 'Selected object actions' })).toBeVisible();
 }
 
@@ -113,6 +114,33 @@ async function openInspector(page: Page) {
 }
 
 test.describe('craft invariants (item 44)', () => {
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 1920, height: 1080 },
+  ]) {
+    test(`desktop object dock stays in the workspace beside the canvas at ${viewport.width}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await createBoard(page);
+      await addItem(page, 'shape');
+      await openInspector(page);
+      await settle(page);
+      const canvas = await page.getByRole('main', { name: 'Vision board canvas' }).boundingBox();
+      const dock = await page.locator('.gs-object-dock').boundingBox();
+      const workspace = await page.locator('.vs-body').boundingBox();
+      expect(dock!.x).toBeGreaterThanOrEqual(canvas!.x + canvas!.width - 1);
+      expect(dock!.y).toBeCloseTo(workspace!.y, 0);
+      expect(dock!.y + dock!.height).toBeLessThanOrEqual(workspace!.y + workspace!.height + 1);
+      expect(
+        Number(
+          await page
+            .getByLabel('Editable vision board', { exact: true })
+            .getAttribute('data-scale'),
+        ),
+      ).toBeGreaterThan(0.25);
+    });
+  }
   test('no horizontal overflow at the four viewports, home and editor', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 768 });
     await page.goto('/');
@@ -182,62 +210,7 @@ test.describe('craft invariants (item 44)', () => {
     }
   });
 
-  test('the object dock pins to the right of the canvas (fix-brief item 1)', async ({
-    page,
-  }) => {
-    // Regression: the ObjectDock portals into .vs-body; it must occupy the
-    // third grid column (right of the canvas), not wrap under the library.
-    for (const viewport of [
-      { width: 1366, height: 768 },
-      { width: 1920, height: 1080 },
-    ]) {
-      await page.setViewportSize(viewport);
-      await createBoard(page);
-      await addItem(page, 'shape');
-      await openInspector(page);
-      await settle(page);
-      const layout = await page.evaluate(() => {
-        const dock = document.querySelector('.gs-object-dock');
-        const canvas = document.querySelector('.vs-canvas');
-        const body = document.querySelector('.vs-body');
-        if (!dock || !canvas || !body) return { missing: true };
-        const d = dock.getBoundingClientRect();
-        const c = canvas.getBoundingClientRect();
-        const b = body.getBoundingClientRect();
-        const zoomInput = document.querySelector<HTMLInputElement>(
-          'input[aria-label="Zoom"]',
-        );
-        return {
-          dockLeft: d.left,
-          canvasRight: c.right,
-          dockTop: d.top,
-          bodyTop: b.top,
-          bodyBottom: b.bottom,
-          zoom: zoomInput ? Number(zoomInput.value) : -1,
-        };
-      });
-      expect(layout, 'dock/canvas/body present').not.toHaveProperty('missing');
-      if (!('missing' in layout)) {
-        expect(
-          layout.dockLeft,
-          `dock left (${viewport.width}) >= canvas right`,
-        ).toBeGreaterThanOrEqual(layout.canvasRight - 1);
-        expect(
-          layout.dockTop,
-          `dock top (${viewport.width}) within workspace`,
-        ).toBeGreaterThanOrEqual(layout.bodyTop - 1);
-        expect(
-          layout.dockTop,
-          `dock top (${viewport.width}) within workspace`,
-        ).toBeLessThanOrEqual(layout.bodyBottom);
-        expect(layout.zoom, `artboard zoom (${viewport.width}) > 25%`).toBeGreaterThan(25);
-      }
-    }
-  });
-
-  test('every icon-only button has an accessible name and no native tooltip', async ({
-    page,
-  }) => {
+  test('every icon-only button has an accessible name and no native tooltip', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 768 });
     await createBoard(page);
     await addItem(page, 'text');
@@ -394,7 +367,7 @@ test.describe('before screenshots (G0 baseline)', () => {
     }
   });
 
-  test('editor: menu, toast and color picker', async ({ page }) => {
+  test('editor: menu, toast and color picker', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1366, height: 768 });
     await createBoard(page);
     // File menu open.
@@ -414,9 +387,13 @@ test.describe('before screenshots (G0 baseline)', () => {
     // Toast via the deterministic backup-too-large path (181 MB > 180 MB limit).
     // Playwright caps inline buffers at 50 MB, so the file is written to disk.
     await page.getByLabel('File menu', { exact: true }).click();
-    const bigBackupPath = '/tmp/craft-big-backup.visbo';
+    const bigBackupPath = testInfo.outputPath('craft-big-backup.visbo');
     writeFileSync(bigBackupPath, Buffer.alloc(181 * 1024 * 1024));
-    await page.locator('input[aria-label="Open board file"]').setInputFiles(bigBackupPath);
+    try {
+      await page.locator('input[aria-label="Open board file"]').setInputFiles(bigBackupPath);
+    } finally {
+      unlinkSync(bigBackupPath);
+    }
     await expect(page.locator('.gs-toast')).toBeVisible();
     await shot(page, 'editor-toast-visible-1366x768');
     await page.getByRole('button', { name: 'Dismiss' }).click();

@@ -1,5 +1,11 @@
 # V1 implementation
 
+## Current desktop craft status — 12 October 2026
+
+The active interface uses Atelier tokens, bundled DM Sans/Fraunces, shared primitives, consolidated `components.css`, and separate home styles. The inspector docks in an explicit third desktop grid column. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) and [DESKTOP_CRAFT_REPORT.md](DESKTOP_CRAFT_REPORT.md) for current behavior and verification. The notes below describe earlier milestones.
+
+The current production main JS chunk is 882.44 KB (338.33 KB gzipped), above Vite's 500 KB warning. The historical 422 KB figure below is not the current bundle size; this UI pass does not claim to resolve bundle growth.
+
 ## Release order
 
 1. Licensing/provenance, accurate font labels and consistent VisBo naming.
@@ -8,7 +14,7 @@
 4. Editor design, keyboard/mobile accessibility and photo-heavy performance.
 5. Optional per-board Plan and basic Track, off by default, with durable goal identities.
 
-Advanced snapshots/recaps, public AI, offline service workers and asset replacement are separate later decisions. The gallery stays exactly 250 uploaded SVGs; guides and artboard containment stay on by default; no collaboration.
+Advanced snapshots/recaps, public AI, offline service workers and asset replacement were separate later decisions at the original V1 milestone. The original gallery contained 250 uploaded SVGs; that figure is historical and does not describe the current expanded artwork catalog. Guides and artboard containment stay on by default; no collaboration.
 
 ## In progress
 
@@ -27,7 +33,7 @@ Optional Plan/Track is deferred and excluded from this release-fix scope.
 
 Local verification on 7 October 2026: lint, formatting, production build,
 39 unit/architecture tests, 14 server tests and the exact-250 asset check pass.
-The main production JS chunk is 882 KB, above Vite's 500 KB warning (it was 422 KB on 7 October; app source grew ~427 KB → ~592 KB across the audit-branch panels/inspectors and the Phase G craft-pass UI, so the growth is cumulative feature code, not a new dependency);
+The main production JS chunk is 422 KB (87 KB gzipped), below Vite's 500 KB warning;
 curated SVG sources load only when requested. The AI panel stays hidden unless
 the backend reports it is configured. All 59 Edge browser cases are verified:
 56 passed in the full run, and the final three passed after test corrections in
@@ -35,8 +41,8 @@ a focused rerun. Coverage includes selection/deselection geometry and artwork
 draw counts, uploads, original-byte downloads, independent-context backup
 restoration, PNG/PDF export, templates, clipboard and optional AI.
 
-The active app imports the v5 styles only. Older stylesheet generations are
-retained as historical files and are not stacked into the production CSS.
+At that milestone the app imported the v5 styles. The current style entry point is
+`src/studio/design-system/index.css`; the older statement is superseded.
 Deployment instructions are in [DEPLOY.md](../DEPLOY.md).
 
 Root-level UI preview PNGs have moved to `docs/previews/` as design references.

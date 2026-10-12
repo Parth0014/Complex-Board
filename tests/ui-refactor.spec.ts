@@ -1,21 +1,16 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import type { BoardDocument } from '../src/vision/document';
+import { createBoard as setupBoard } from './helpers/board';
 
 async function createBoard(page: Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: '+ Create a vision board', exact: true }).click();
-  await page.getByLabel('Board name', { exact: true }).fill('UI refactor check');
-  await page.getByLabel('Board type', { exact: true }).selectOption('topic');
-  await page.getByLabel('Board theme', { exact: true }).selectOption('health');
-  await page.getByLabel('Board orientation', { exact: true }).selectOption('1080x1080');
-  await page.getByRole('button', { name: 'Create board', exact: true }).click();
-  await expect(page.getByLabel('Editable vision board', { exact: true })).toBeVisible();
+  await setupBoard(page, { name: 'UI refactor check', topic: 'Health', layout: 'Square' });
 }
 async function addText(page: Page) {
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.locator('.text-panel__item').first().click();
   await page.getByRole('button', { name: 'Close panel', exact: true }).click();
+  await expect(page.locator('.vs-lib')).toHaveClass(/is-collapsed/);
 }
 
 test('marquee previews partial overlaps before release and clears when dragged away', async ({
@@ -103,7 +98,7 @@ test('formatting and nested color popovers edit the board, dismiss, and persist'
     0,
   );
   await toolbar.getByRole('button', { name: 'Formatting', exact: true }).click();
-  const formatting = page.getByRole('dialog', { name: 'Object formatting', exact: true });
+  const formatting = page.getByRole('complementary', { name: 'Object formatting', exact: true });
   await expect(formatting.getByLabel('Styled text', { exact: true })).toBeVisible();
   await formatting.getByLabel('Styled text', { exact: true }).fill('My healthy future');
   await formatting.getByRole('button', { name: 'Text color', exact: true }).first().click();
@@ -182,7 +177,7 @@ test('export dialog traps focus and returns it to Share', async ({ page }) => {
   const close = dialog.getByRole('button', { name: 'Close export', exact: true });
   await expect(close).toBeFocused();
   await page.keyboard.press('Shift+Tab');
-  await expect(dialog.getByRole('button', { name: /Print board/ })).toBeFocused();
+  await expect(dialog.getByRole('button', { name: 'Download PDF', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(close).toBeFocused();
   await page.keyboard.press('Escape');

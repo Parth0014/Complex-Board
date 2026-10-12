@@ -3,14 +3,13 @@ import { readFileSync } from 'node:fs';
 import type Konva from 'konva';
 import type { KonvaCanvasAdapter } from '../src/vision/canvas/KonvaCanvasAdapter';
 import type { BoardDocument } from '../src/vision/document';
+import { createBoard } from './helpers/board';
 
 export async function createAppearanceBoard(
   page: Page,
   fixture = 'tests/fixtures/appearance-phase-c-v2.json',
 ) {
-  await page.goto('/');
-  await page.getByRole('button', { name: '+ New board', exact: true }).click();
-  await page.getByRole('button', { name: 'Create board', exact: true }).click();
+  await createBoard(page);
   await page.getByLabel('File menu', { exact: true }).click();
   await page.getByLabel('Open board file', { exact: true }).setInputFiles(fixture);
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(

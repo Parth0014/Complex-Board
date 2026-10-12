@@ -13,7 +13,7 @@ const FALLBACK = {
   marqueeStroke: '#4a3fd8',
   highlighter: '#f6c453',
   pen: '#1e1a36',
-  dots: 'rgba(30, 26, 54, 0.16)',
+  dots: 'rgba(30, 26, 54, 0.11)',
   artboardStroke: '#c4bcdc',
   artboardShadow: 'rgba(30, 26, 54, 0.22)',
 } as const;

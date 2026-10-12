@@ -1,6 +1,6 @@
 import { Skeleton } from '../ui/Skeleton';
 import { Button, IconButton } from '../ui/Button';
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { TemplatesPanel } from '../TemplatesPanel';
 import { BackgroundPanel } from '../BackgroundPanel';
 import { TextPanel } from '../TextPanel';
@@ -39,24 +39,27 @@ export function StudioSidebar({
   onError: (message: string) => void;
 }) {
   const elementCategory = initialTheme;
-  /* Panel exit (item 18, §4): keep the panel mounted for the 160ms exit
-     animation instead of unmounting immediately (display:none can't animate). */
+  // Keep the panel and its column mounted until the content fade finishes.
   const [exitingTab, setExitingTab] = useState<StudioTab | null>(null);
   const prevTab = useRef<StudioTab | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!tab && prevTab.current) {
       const closed = prevTab.current;
       prevTab.current = null;
       setExitingTab(closed);
-      const t = window.setTimeout(() => setExitingTab(null), 180);
-      return () => window.clearTimeout(t);
+      if (adapter.ownerWindow.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setExitingTab(null);
+        return;
+      }
+      const t = adapter.ownerWindow.setTimeout(() => setExitingTab(null), 120);
+      return () => adapter.ownerWindow.clearTimeout(t);
     }
     prevTab.current = tab;
     setExitingTab(null);
-  }, [tab]);
+  }, [tab, adapter.ownerWindow]);
   const visibleTab = tab ?? exitingTab;
   return (
-    <div className={`vs-lib${tab ? '' : ' is-collapsed'}`}>
+    <div className={`vs-lib${visibleTab ? '' : ' is-collapsed'}`}>
       <nav className="vs-rail" aria-label="Studio tools">
         {ADD_TABS.map((id) => (
           <Button
@@ -94,8 +97,11 @@ export function StudioSidebar({
 
       {visibleTab && (
         <section
+          key={visibleTab}
           className={`vs-lib__panel${exitingTab ? ' is-exiting' : ''}`}
           aria-label={`${STUDIO_TAB_LABELS[visibleTab]} panel`}
+          inert={!!exitingTab}
+          aria-hidden={exitingTab ? true : undefined}
         >
           <div className="vs-lib__head">
             <h2 className="vs-lib__title">{STUDIO_TAB_LABELS[visibleTab]}</h2>

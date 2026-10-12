@@ -6,10 +6,10 @@
     --gs-ink-600: #716b8a; /* 4.96:1 on sheet, 4.70:1 on sheet-2. Placeholder and hint text */
     --gs-ink-700: #5f5a7a;
     --gs-ink-500: #8f8aa8;
-    --gs-paper: #f3f0fa;
+    --gs-paper: #f5f5f7;
     --gs-sheet: #fffdfc;
-    --gs-sheet-2: #f8f6fd;
-    --gs-line-200: #dcd6ec;
+    --gs-sheet-2: #f8f8fa;
+    --gs-line-200: #dedee6;
     --gs-line-300: #c4bcdc;
     --gs-line-400: #a79fc8;
     --gs-line-500: #8a84a8; /* 3.48:1 on sheet, 3.14:1 on paper. Control borders (WCAG 1.4.11) */
@@ -40,6 +40,7 @@
     --gs-control-line-hover: var(--gs-line-600);
     --gs-surface: var(--gs-sheet);
     --gs-surface-muted: var(--gs-sheet-2);
+    --gs-material: color-mix(in srgb, var(--gs-surface) 94%, transparent);
     --gs-workspace: var(--gs-paper);
     --gs-hover: var(--gs-violet-100);
     --gs-accent: var(--gs-violet-600);
@@ -100,9 +101,9 @@
 
     /* ── Elevation ──────────────────────────────── */
     --gs-shadow-float:
-      0 1px 2px rgba(var(--gs-ink-rgb), 0.08), 0 6px 20px rgba(var(--gs-ink-rgb), 0.1);
+      0 1px 3px rgba(var(--gs-ink-rgb), 0.04), 0 8px 24px -6px rgba(var(--gs-ink-rgb), 0.1);
     --gs-shadow-popup:
-      0 1px 2px rgba(var(--gs-ink-rgb), 0.08), 0 8px 24px rgba(var(--gs-ink-rgb), 0.12);
+      0 1px 3px rgba(var(--gs-ink-rgb), 0.06), 0 12px 32px -8px rgba(var(--gs-ink-rgb), 0.14);
     --gs-shadow-dialog: 0 24px 48px -12px rgba(var(--gs-ink-rgb), 0.28);
     --gs-shadow-artboard: 0 12px 32px -12px rgba(var(--gs-ink-rgb), 0.35);
     --gs-shadow-brand: 4px 4px 0 var(--gs-ink-900);
@@ -110,23 +111,25 @@
 
     /* ── Motion ─────────────────────────────────── */
     --gs-duration-feedback: 120ms;
-    --gs-duration-overlay: 200ms;
+    --gs-duration-overlay: 240ms;
     --gs-duration-slow: 320ms;
     --gs-duration-press: 100ms;
     --gs-duration-exit: 120ms;
-    --gs-duration-pop: 160ms; /* §4 menu/popover enter */
+    --gs-duration-pop: 180ms;
     --gs-ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* enter, hover, press */
-    --gs-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* on-screen movement */
+    --gs-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
     --gs-ease: var(--gs-ease-out); /* alias, so existing rules keep working */
 
     /* ── Layout ─────────────────────────────────── */
     --gs-header-height: 56px;
     --gs-footer-height: 40px;
     --gs-rail-width: 72px;
-    --gs-panel-width: clamp(264px, 22vw, 320px);
-    --gs-dock-width: clamp(272px, 22vw, 320px);
+    --gs-panel-width: clamp(264px, 20vw, 304px);
+    --gs-dock-width: clamp(272px, 21vw, 304px);
     --gs-scrollbar-size: 12px;
-    --gs-dock-offset: calc(var(--gs-space-4) + var(--gs-scrollbar-size)); /* bottom offset of the floating dock */
+    --gs-dock-offset: calc(
+      var(--gs-space-4) + var(--gs-scrollbar-size)
+    ); /* bottom offset of the floating dock */
 
     /* ── Canvas (Konva reads these via src/vision/canvas/colors.ts) ── */
     --gs-canvas-selection: var(--gs-violet-600);
@@ -135,7 +138,7 @@
     --gs-canvas-marquee-stroke: var(--gs-violet-600);
     --gs-canvas-highlighter: var(--gs-saffron-500);
     --gs-canvas-pen: var(--gs-ink-900);
-    --gs-canvas-dots: rgba(var(--gs-ink-rgb), 0.16); /* was 0.07: invisible. Tune by screenshot to visible-but-quiet */
+    --gs-canvas-dots: rgba(var(--gs-ink-rgb), 0.11);
     --gs-canvas-artboard-stroke: var(--gs-line-300);
     --gs-canvas-artboard-shadow: rgba(var(--gs-ink-rgb), 0.22);
 

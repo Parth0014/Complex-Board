@@ -75,9 +75,10 @@ export function Editor({
       const rect = drawButton.getBoundingClientRect();
       const palette = adapter.ownerWindow.document.querySelector('.vs-draw-pop');
       const height = palette?.getBoundingClientRect().height || 200;
+      const width = palette?.getBoundingClientRect().width || 176;
       const next = {
         top: Math.max(8, Math.min(rect.top, adapter.ownerWindow.innerHeight - height - 8)),
-        left: Math.max(8, Math.min(rect.right + 8, adapter.ownerWindow.innerWidth - 140)),
+        left: Math.max(8, Math.min(rect.right + 8, adapter.ownerWindow.innerWidth - width - 8)),
       };
       setDrawPalettePosition((current) =>
         current.top === next.top && current.left === next.left ? current : next,

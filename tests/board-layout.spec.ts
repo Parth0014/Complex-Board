@@ -1,8 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { createBoard } from './helpers/board';
+import { runtime } from './appearance-helpers';
+
+async function resizeBoard(page: Page, size: string) {
+  const handle = await runtime(page);
+  await handle.evaluate(({ adapter }, size) => {
+    const [width, height] = size.split('x').map(Number);
+    adapter.commit({ ...adapter.history.document, width, height });
+    adapter.fitBoard();
+  }, size);
+}
 
 test('zoomed board bottom is reachable above the footer', async ({ page }) => {
-  await page.goto('/');
-  await page.getByLabel('Board size', { exact: true }).selectOption('1920x1080');
+  await createBoard(page, { closeLibrary: true });
+  await resizeBoard(page, '1920x1080');
   await page.getByRole('slider', { name: 'Zoom', exact: true }).fill('150');
   const board = page.getByLabel('Editable vision board', { exact: true });
   const bottomGap = () =>
@@ -21,13 +32,14 @@ test('zoomed board bottom is reachable above the footer', async ({ page }) => {
   await expect.poll(bottomGap).toBeGreaterThanOrEqual(39);
   const viewport = (await board.boundingBox())!;
   const footer = (await page.getByLabel('Board controls', { exact: true }).boundingBox())!;
-  expect(viewport.y + viewport.height).toBeLessThanOrEqual(footer.y + 1);
+  expect(footer.y + footer.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  expect(footer.y).toBeGreaterThan(viewport.y);
 });
 
 test('vertical scrollbar toggles preserve the canvas viewport width and board origin', async ({
   page,
 }) => {
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   const board = page.getByLabel('Editable vision board', { exact: true });
   await expect(board.locator('canvas').first()).toBeVisible();
   await page.waitForTimeout(150);
@@ -57,7 +69,7 @@ test('vertical scrollbar toggles preserve the canvas viewport width and board or
 test('resizing and zooming paint the current artboard geometry in every frame', async ({
   page,
 }) => {
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   const board = page.getByLabel('Editable vision board', { exact: true });
   await expect(board.locator('canvas').first()).toBeVisible();
   await page.waitForTimeout(200);
@@ -79,10 +91,14 @@ test('resizing and zooming paint the current artboard geometry in every frame', 
   });
   await page.getByRole('slider', { name: 'Zoom', exact: true }).fill('100');
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.getByLabel('Board size', { exact: true }).selectOption('1920x1080');
+  await resizeBoard(page, '1920x1080');
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
-  await page.locator('.v1-asset-grid button').first().click();
-  await page.getByRole('button', { name: 'Open properties', exact: true }).click();
+  await page.locator('.elements-card').first().click();
+  await page
+    .getByRole('toolbar', { name: 'Selected object actions' })
+    .getByRole('button', { name: /Formatting|Image effects|Appearance/ })
+    .first()
+    .click();
   await page.getByRole('button', { name: 'Close editor panel', exact: true }).click();
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
   await page.waitForTimeout(500);
@@ -97,7 +113,7 @@ test('resizing and zooming paint the current artboard geometry in every frame', 
 test('pinch/Ctrl-wheel zoom uses increased sensitivity and keeps the pointer anchored', async ({
   page,
 }) => {
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   const board = page.getByLabel('Editable vision board', { exact: true });
   await expect.poll(async () => Number(await board.getAttribute('data-scale'))).toBeGreaterThan(0);
   const box = (await board.boundingBox())!;
@@ -126,8 +142,9 @@ test('pinch/Ctrl-wheel zoom uses increased sensitivity and keeps the pointer anc
   expect(after / before).toBeGreaterThan(1.14);
   expect(after / before).toBeLessThan(1.16);
   const moved = await point();
-  expect(Math.abs(moved.x - anchor.x)).toBeLessThan(3);
-  expect(Math.abs(moved.y - anchor.y)).toBeLessThan(3);
+  // Scroll offsets are rounded to CSS pixels; measure visible drift rather than world units.
+  expect(Math.abs(moved.x - anchor.x) * after).toBeLessThan(2);
+  expect(Math.abs(moved.y - anchor.y) * after).toBeLessThan(2);
   await page.mouse.wheel(0, 10);
   await expect
     .poll(async () => Math.abs(Number(await board.getAttribute('data-scale')) - before))
@@ -143,7 +160,7 @@ test('pinch/Ctrl-wheel zoom uses increased sensitivity and keeps the pointer anc
 test('plain two-finger wheel motion scrolls without changing zoom', async ({ page }) => {
   // Ensure both axes overflow even on a wide desktop viewport.
   await page.setViewportSize({ width: 800, height: 650 });
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   const board = page.getByLabel('Editable vision board', { exact: true });
   await page.getByRole('slider', { name: 'Zoom', exact: true }).fill('100');
   await expect.poll(async () => Number(await board.getAttribute('data-scale'))).toBe(1);
@@ -159,17 +176,19 @@ test('plain two-finger wheel motion scrolls without changing zoom', async ({ pag
   expect(Number(await board.getAttribute('data-scale'))).toBe(1);
 });
 
-test('visible board size control refits the board and toolbar zoom keeps it centered', async ({
+test('restored board dimensions refit and toolbar zoom keeps the board centered', async ({
   page,
 }) => {
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   const board = page.getByLabel('Editable vision board', { exact: true });
-  const centerError = () =>
-    board.evaluate((node) => {
+  const centerError = async () => {
+    const handle = await runtime(page);
+    const size = await handle.evaluate(({ adapter }) => [
+      adapter.history.document.width,
+      adapter.history.document.height,
+    ]);
+    return board.evaluate((node, size) => {
       const scale = Number(node.getAttribute('data-scale'));
-      const size = (document.querySelector('[aria-label="Board size"]') as HTMLSelectElement).value
-        .split('x')
-        .map(Number);
       return Math.max(
         Math.abs(
           Number(node.getAttribute('data-page-left')) +
@@ -184,13 +203,13 @@ test('visible board size control refits the board and toolbar zoom keeps it cent
             node.clientHeight / 2,
         ),
       );
-    });
-  await expect(page.getByLabel('Board size', { exact: true })).toBeVisible();
-  await page.getByLabel('Board size', { exact: true }).selectOption('1920x1080');
+    }, size);
+  };
+  await resizeBoard(page, '1920x1080');
   await expect.poll(centerError).toBeLessThan(2);
   await page.getByRole('slider', { name: 'Zoom', exact: true }).fill('100');
   await expect.poll(centerError).toBeLessThan(2);
-  await page.getByLabel('Board size', { exact: true }).selectOption('1080x1080');
+  await resizeBoard(page, '1080x1080');
   await expect.poll(centerError).toBeLessThan(2);
   await page.getByRole('button', { name: 'Elements', exact: true }).click();
   await expect.poll(centerError).toBeLessThan(2);

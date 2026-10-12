@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { createBoard } from './helpers/board';
 import { openProperties, openSection } from './helpers/editor';
 async function backup(page: Page) {
   if (!(await page.getByRole('button', { name: 'Save .visbo file', exact: true }).isVisible()))
@@ -15,7 +16,7 @@ test('rich text, custom shadows and multi-page PDF survive reload without changi
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.locator('.text-panel button').first().click();
   await openProperties(page);
@@ -55,7 +56,7 @@ test('rich text, custom shadows and multi-page PDF survive reload without changi
 test('connected objects move with their arrow and duplicate bindings independently', async ({
   page,
 }) => {
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'rectangle', exact: true }).click();
   await page.getByRole('button', { name: 'circle', exact: true }).click();
@@ -80,7 +81,7 @@ test('connected objects move with their arrow and duplicate bindings independent
 });
 test('native clipboard transfers editable groups across tabs', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'Add goal card', exact: true }).click();
   const original = await backup(page);
@@ -88,7 +89,7 @@ test('native clipboard transfers editable groups across tabs', async ({ page, co
   await page.keyboard.press('Control+c');
   await expect(page.locator('.vs-save[role="status"]')).toHaveText('Saved');
   const second = await context.newPage();
-  await second.goto('/');
+  await second.goto(page.url());
   await expect(
     second.getByText(`Board items (${original.items.length})`, { exact: true }),
   ).toBeVisible();
@@ -108,7 +109,7 @@ test('cutout edits preserve originals and stale responses cannot overwrite later
       json: { configured: true, backgroundConfigured: true, upscaleConfigured: true },
     }),
   );
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   const images = await page.evaluate(() => {
     const image = (color: string) => {
       const canvas = document.createElement('canvas');
@@ -164,7 +165,7 @@ test('shape-frame export clips pixels and layer extraction remains editable and 
       json: { configured: true, backgroundConfigured: true, upscaleConfigured: true },
     }),
   );
-  await page.goto('/');
+  await createBoard(page, { closeLibrary: true });
   const images = await page.evaluate(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 64;

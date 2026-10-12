@@ -1,82 +1,48 @@
-# VisBo design system
+﻿# VisBo design system
 
-The editor and home screen share the Atelier design tokens: warm paper surfaces, ink text, a violet accent, DM Sans for interface type and Fraunces for display type. Board artwork retains its own colors and fonts.
-
-## Phase G: Craft Pass (2026-10-12)
-
-**Contrast tokens** (corrected, see `src/studio/design-system/foundations.css` for values):
-- Text/surface, text-secondary/surface and /workspace, placeholder/surface and /surface-muted ≥ 4.5:1
-- Control borders, focus ring ≥ 3:1; UI icons ≥ 3:1 against their surface
-- Canvas tokens (`--gs-canvas-*`) consumed via `colors.ts` for Konva; locked by `foundations.contrast.test.ts`
-
-**Motion** (see `foundations.css`):
-- Durations: `--gs-duration-overlay`, `--gs-duration-pop` (160ms), `--gs-duration-toast`
-- Easing: `--gs-ease`, `--gs-ease-out`; `prefers-reduced-motion` disables animation
-- No `transition: all`; no width/height animations on layout
-
-**The 12 gates** (measured per phase):
-1. Contrast ≥ 4.5:1 (text), ≥ 3:1 (borders/focus)
-2. CSS rule count decreases (measured as `{` count across `src/**/*.css`; 1,218 → 1,150 on `muse/craft-pass`)
-3. No `transition: all`
-4. Hover only under `(hover: hover)` media
-5. No `outline: none` without visible ring
-6. Type scale compliance (no off-scale font sizes)
-7. Spacing on 4pt scale
-8. Icon-only controls have `aria-label` + `data-tip`, no `title`
-9. Focus visible on all interactive elements
-10. Reduced motion respected
-11. Copy: sentence case, verbs first, errors say what+what-to-do
-12. No dead code (unused CSS rules removed)
-
-**CSS rule**: Every rule added to `components.css` / `components-panels.css` must remove the older duplicate of the same selector — net rule count goes DOWN.
+The current interface uses Atelier: DM Sans controls, Fraunces display typography, warm white surfaces, and violet actions. The desktop craft pass adds quieter chrome and short, restrained motion. Board artwork keeps its own colors and fonts. Mobile refinement is outside this pass.
 
 ## Sources of truth
 
-- `src/studio/design-system/foundations.css` defines the Atelier tokens (`--gs-*`): ink text, paper surfaces, violet accent, DM Sans / Fraunces stacks, spacing, radii, elevation, and motion. (Fluent was removed; see `docs/ATELIER_CONTINUATION.md`.)
-- `src/studio/design-system/fonts.css` bundles DM Sans (400/500/700) and Fraunces (400/700/900, normal + italic); no external UI font download.
-- `foundations.css` maps tokens to application use. Palette literals belong here; the color-picker spectrum is intentionally color-accurate.
-- `index.css` declares the cascade: tokens, base, components, utilities.
-- `primitives.css` owns shared button and overlay presentation, focus, and reduced motion.
-- `components.css` (editor shell) and `components-panels.css` (workspace, inspector, contextual UI) own the layouts. The previous v5 sheets and interaction override stack have been removed.
+- `src/studio/design-system/foundations.css`: palette, typography, spacing, dimensions, elevation, motion, and Konva color tokens.
+- `index.css`: cascade order and imports. `components-b.css` has been consolidated into `components.css`.
+- `primitives.css`: shared controls, overlay animation, focus, and reduced motion.
+- `components.css`: editor, library, inspector, menus, and export presentation.
+- `src/studio/home/home.css`: home and board setup. `fonts.css` loads bundled DM Sans and Fraunces.
 
 ## Foundations
 
-| Foundation     | Rule                                                                                                          |
-| -------------- | ------------------------------------------------------------------------------------------------------------- |
-| Interface font | DM Sans (bundled), system-ui fallback; no external UI font download                                             |
-| Type scale     | 11px metadata, 13px controls, 15px subheadings, 18px titles, 24px main headings                               |
-| Display font   | Fraunces (bundled), Georgia fallback; board text presets remain independent                                 |
-| Palette        | Warm paper surfaces (`#fffdfc`), ink text (`#1e1a36`), violet accent (`#4a3fd8`); semantic success, warning, and error states |
-| Spacing        | 4, 8, 12, 16, 24, 32, 40px tokens                                                                             |
-| Corners        | Shared radius tokens (`--gs-radius-*`: 2/6/8/12/16px, pill 999px); pill and circular swatches are explicit exceptions |
-| Elevation      | Floating menus, toolbar, pickers, and dialogs; ordinary controls stay flat                                    |
-| Motion         | Shared feedback and overlay durations, one easing curve; reduced motion disables animation                    |
-| Layers         | Canvas 0, panels 10, toolbar 20, menus and formatting 30, nested picker 35, modal 40, tooltip 50              |
+| Foundation       | Current rule                                                                            |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| Interface type   | DM Sans, with system sans-serif fallback; mostly 400 and 500 weights                    |
+| Display type     | Fraunces for home headlines; inspector and library headings use interface type          |
+| Type scale       | 11, 13, 15, 18, 24, 32px; fluid hero type                                               |
+| Surfaces         | Workspace `#f5f5f7`, sheet `#fffdfc`, muted sheet `#f8f8fa`                             |
+| Text and actions | Ink `#1e1a36`, secondary `#5f5a7a`, violet `#4a3fd8`                                    |
+| Spacing          | 4, 8, 12, 16, 24, 32, 40px; 1px borders and optical adjustments are explicit exceptions |
+| Geometry         | 72px tool rail; bounded library and inspector widths; ordinary controls stay flat       |
+| Elevation        | Soft layered shadows for floating tools, menus, pickers, and dialogs                    |
+| Material         | 94% sheet color with 20px blur on floating chrome; sheet color remains the fallback     |
+| Motion           | Feedback 120ms, popovers 180ms, panel entry 240ms, exit 120ms; shared easing tokens     |
 
-## Shared controls
+The desktop workspace has three explicit columns and one row: library, flexible canvas, inspector. Closing the inspector releases its column. The inspector docks on the right and scrolls independently; it is not a floating formatting dialog on desktop. Its sections use hairlines instead of nested cards.
 
-`src/studio/ui/` supplies Button, IconButton, TooltipProvider, Menu/Submenu, Popover, and Dialog.
+The contextual toolbar stays within the canvas area. Typography controls, fill, flip, image operations, formatting, and opacity remain available. Clipboard, layer order, alignment, grouping, locking, and deletion live in the context menu. The floating footer contains canvas settings and zoom.
 
-Buttons preserve native disabled, keyboard, form, and ref behavior. Icon buttons require accessible names. One global tooltip provider reads `data-tip`, shows on hover and focus, connects through `aria-describedby`, and dismisses on activation or Escape.
+Library content fades and shifts slightly on entry. Closing preserves the column for the 120ms content fade, then releases it in one layout change. Width and height do not tween, keeping Konva geometry synchronized. Reduced motion removes animation and skips the sidebar exit delay. Popover animation uses individual scale/translate properties so viewport-positioning transforms remain intact.
 
-Popover owns viewport positioning, edge flipping, resizing, scroll tracking, outside dismissal, and Escape. Formatting, opacity, and the shared color picker use it. Formatting recognizes its owned color-picker portal so changing a color keeps formatting open.
+## Shared controls and accessibility
 
-Dialog owns focus entry, Tab containment, Escape, and focus restoration. Export uses it instead of a document-wide query for the first dialog.
+`src/studio/ui/` supplies Button, IconButton, TooltipProvider, Menu/Submenu, Popover, and Dialog. Buttons preserve native form, disabled, keyboard, and ref behavior. Tooltips use `data-tip` and `aria-describedby`; icon buttons require accessible names.
 
-Menu allows one active submenu at a time. Layer and alignment open on hover. Pointer movement between trigger and submenu is supported; Arrow Right opens, Up/Down/Home/End navigate, and Arrow Left or Escape returns to the parent. Touch users can tap the trigger. Menus flip at viewport edges.
+Popover handles viewport positioning, edge flipping, resize, scroll, outside dismissal, and Escape. A nested color picker belongs to its inspector and does not dismiss it. Dialog handles focus entry, Tab containment, Escape, and focus restoration. Menus support hover and arrow-key navigation.
 
-## Editor hierarchy
+All seven `outline: none` declarations have replacements: button, icon button, input/select, segmented item, swatch, board-title input, and page select receive a focus shadow. The editor's `:focus-visible` rule supplies a 2px violet outline. `UnifiedInspector` passes `title` to `AppearanceSurface` as its visible heading, not a native DOM tooltip attribute.
 
-The board is the focus against a neutral workspace. The floating selection toolbar changes with the selected object: text gets typography, shapes get fill, images get applicable crop/replace controls, and all selections get opacity. Clipboard, layer order, alignment, grouping, locking, and deletion live in the context menu.
+## Verification
 
-Formatting is a compact, scrollable popup with labeled fields. It does not resize the canvas. The footer contains zoom and canvas settings; page and board-item controls are absent.
+Run `node scripts/audit-css.mjs` for PostCSS rule-node counts (including keyframe steps) and the brief's literal opening-brace metric across all source CSS. They are different measurements; neither may be relabeled to improve the result. `--duplicates` lists repeated selector/context pairs for further consolidation.
 
-A new board opens theme artwork once. Reopening or reloading preserves the saved board URL and leaves the library closed. Home lists saved boards and provides topic/year and orientation setup.
+Lint checks token references and shared-control use. Unit tests lock token contrast and canvas colors. Desktop browser tests verify inspector placement for shape/text/image at 1366 and 1920 pixels, useful fitted zoom, compact toolbar height, scrolling, repainting, keyboard focus, nested pickers, and reduced motion. Screenshots provide the visual review that build and unit tests cannot.
 
-## Checks
-
-- `npm run lint` checks CSS token references, rejects competing palettes and `!important`, and requires shared buttons and tooltips in the editor UI.
-- `npm run format:check` checks formatting.
-- `tests/ui-refactor.spec.ts` covers board creation/search/reload, formatting and nested pickers, hover and keyboard menus, export focus, mocked AI affirmation insertion, and narrow-screen layout.
-
-The older v4/v5 design documents are historical proposals. This document describes the current implementation.
+See [Desktop craft report](DESKTOP_CRAFT_REPORT.md) for measured results, artifacts, and remaining test limitations. Older Fluent and v4/v5 design documents are historical proposals.

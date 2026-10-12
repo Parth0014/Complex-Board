@@ -1,13 +1,15 @@
-import { type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export async function openProperties(page: Page) {
   const inspector = page.getByLabel('Object inspector', { exact: true });
   if (await inspector.isHidden()) {
-    await page.getByLabel('Editable vision board', { exact: true }).focus();
-    await page.keyboard.press('Shift+F10');
-  } else {
-    await inspector.getByRole('button', { name: 'Style', exact: true }).click();
+    await page
+      .getByRole('toolbar', { name: 'Selected object actions' })
+      .getByRole('button', { name: /Formatting|Image effects|Appearance/ })
+      .first()
+      .click();
   }
+  await expect(inspector).toBeVisible();
 }
 
 export async function openSection(page: Page, title: string) {

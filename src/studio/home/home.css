@@ -31,11 +31,11 @@
     align-items: center;
     gap: 10px;
     color: var(--gs-text);
-    font-family: var(--gs-font-display);
     font-style: normal;
-    font-size: var(--gs-home-type-2);
-    font-weight: var(--gs-weight-strong);
     letter-spacing: -0.02em;
+    font-family: var(--gs-font);
+    font-size: var(--gs-text-24);
+    font-weight: var(--gs-weight-medium);
   }
   .home-brand svg {
     width: 32px;
@@ -78,12 +78,12 @@
     margin: 0 0 22px;
     max-width: 11em;
     font-family: var(--gs-font-display);
-    font-weight: var(--gs-weight-black);
     font-size: var(--gs-text-hero);
-    line-height: 1.02;
-    letter-spacing: -0.03em;
     color: var(--gs-text);
     text-wrap: balance;
+    font-weight: var(--gs-weight-regular);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
   }
   .home-intro p:last-of-type {
     margin: 0 0 34px;
@@ -109,36 +109,37 @@
   .home-page .home-primary {
     background: var(--gs-accent);
     color: var(--gs-home-palette-2);
-    border: 2px solid var(--gs-text);
-    border-radius: 999px;
-    padding: 15px 28px;
-    font-weight: var(--gs-weight-strong);
-    font-size: var(--gs-home-type-1);
     white-space: nowrap;
-    box-shadow: var(--gs-shadow-brand);
+    border: 1px solid transparent;
+    border-radius: var(--gs-radius-card);
+    padding: var(--gs-space-3) var(--gs-space-5);
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-medium);
+    box-shadow: var(--gs-shadow-float);
     transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
+      background-color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease),
+      transform var(--gs-duration-feedback) var(--gs-ease);
   }
   @media (hover: hover) and (pointer: fine) {
     .home-page .home-primary:hover:not(:disabled) {
-      background: var(--gs-accent);
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0 var(--gs-text);
+      background: var(--gs-accent-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--gs-shadow-popup);
     }
   }
   .home-page .home-primary:active:not(:disabled) {
-    transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--gs-text);
+    transform: scale(0.98);
+    box-shadow: none;
   }
 
   /* ---------- Hero collage (decorative) ---------- */
   .home-collage {
     position: relative;
     width: 100%;
-    max-width: 460px;
     aspect-ratio: 1;
     justify-self: end;
+    max-width: 400px;
   }
   .home-collage > span {
     position: absolute;
@@ -244,10 +245,10 @@
   }
   .home-section-heading h2 {
     margin: 0;
-    font-family: var(--gs-font-display);
-    font-weight: var(--gs-weight-medium);
-    font-size: var(--gs-home-type-6);
     letter-spacing: -0.02em;
+    font-family: var(--gs-font);
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-medium);
   }
   .home-section-heading span {
     padding: 4px 12px;
@@ -303,9 +304,9 @@
 
   /* ---------- Board library ---------- */
   .home-library .home-section-heading {
-    padding-bottom: 14px;
-    margin-bottom: 36px;
-    border-bottom: 1.5px solid var(--gs-text);
+    border-bottom: 1px solid var(--gs-line);
+    margin-bottom: var(--gs-space-5);
+    padding-bottom: var(--gs-space-4);
   }
   .home-board-grid {
     display: grid;
@@ -514,8 +515,9 @@
     max-width: 760px;
     margin: 0 0 48px;
     border: 1px solid var(--gs-line);
-    border-radius: 20px;
-    box-shadow: 0 6px 0 var(--gs-line);
+    border-radius: var(--gs-radius-dialog);
+    box-shadow: var(--gs-shadow-float);
+    animation: gs-dialog-in var(--gs-duration-overlay) var(--gs-ease-out);
   }
   .home-setup .home-section-heading {
     align-items: center;
@@ -524,8 +526,10 @@
   .home-setup .home-section-heading button {
     text-decoration: none;
     padding: 10px 14px;
-    border-radius: 999px;
-    background: var(--gs-workspace);
+    background: transparent;
+    border-radius: var(--gs-radius-control);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-regular);
   }
   .home-name-field {
     margin-bottom: 24px;

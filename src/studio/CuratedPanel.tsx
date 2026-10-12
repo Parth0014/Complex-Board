@@ -30,7 +30,7 @@ export function CuratedPanel({
         <input
           type="search"
           aria-label="Search elements"
-          placeholder="Search artwork, words, or feelings"
+          placeholder="Search artwork"
           value={search}
           onChange={(event) => {
             setSearch(event.target.value);
