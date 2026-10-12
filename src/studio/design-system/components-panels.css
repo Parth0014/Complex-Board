@@ -3041,7 +3041,9 @@
       top: auto;
       width: 100%;
       height: auto;
-      max-height: 85dvh;
+      /* Fix-brief item 4: cap the mobile sheet so the canvas and the
+         selection toolbar stay visible above it. */
+      max-height: 60dvh;
       border: 0;
       border-top: 1px solid var(--gs-line);
       border-radius: var(--v2-radius) var(--v2-radius) 0 0;
