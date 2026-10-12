@@ -252,8 +252,8 @@ export function Editor({
         event.preventDefault();
         void adapter.copyToSystem(true);
       } else if (command && event.key.toLowerCase() === 'v') {
-        event.preventDefault();
-        void adapter.pasteFromSystem();
+        // Native paste provides image bytes without clipboard permission prompts.
+        return;
       } else if (command && event.key.toLowerCase() === 'd') {
         event.preventDefault();
         adapter.duplicateSelection();
@@ -293,11 +293,20 @@ export function Editor({
         );
       }
     };
+    const paste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (isEditorInput(target) || target.closest('[role="dialog"]') || !event.clipboardData)
+        return;
+      event.preventDefault();
+      void adapter.pasteTransfer(event.clipboardData);
+    };
+    adapter.ownerWindow.document.addEventListener('paste', paste);
     adapter.ownerWindow.document.addEventListener('keydown', key);
     adapter.ownerWindow.document.addEventListener('focusin', focusIn);
     adapter.ownerWindow.document.addEventListener('focusout', focusOut);
     adapter.ownerWindow.document.addEventListener('pointerup', release);
     return () => {
+      adapter.ownerWindow.document.removeEventListener('paste', paste);
       adapter.ownerWindow.document.removeEventListener('keydown', key);
       adapter.ownerWindow.document.removeEventListener('focusin', focusIn);
       adapter.ownerWindow.document.removeEventListener('focusout', focusOut);

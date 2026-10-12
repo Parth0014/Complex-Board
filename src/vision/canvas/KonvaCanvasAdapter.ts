@@ -303,9 +303,67 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     }
     this.changed();
   }
+  async importExternalPhoto(url: string, position?: VisionPoint) {
+    const value = await requestAI(this.ownerWindow, '/api/images/external', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const blob = await (await this.ownerWindow.fetch(value.image)).blob();
+    await this.uploadPhotos(
+      [new this.ownerWindow.File([blob], 'Web photo', { type: blob.type })],
+      position,
+    );
+  }
+  async pasteTransfer(data: DataTransfer) {
+    try {
+      const files = Array.from(data.files).filter((file) => file.type.startsWith('image/'));
+      if (files.length) {
+        await this.uploadPhotos(files);
+        return;
+      }
+      const html = data.getData('text/html');
+      const source = new this.ownerWindow.DOMParser()
+        .parseFromString(html, 'text/html')
+        .querySelector('img')
+        ?.getAttribute('src');
+      if (source?.startsWith('https://')) {
+        await this.importExternalPhoto(source);
+        return;
+      }
+      await this.pasteFromSystem();
+    } catch (error) {
+      this.clipboardStatus = error instanceof Error ? error.message : 'Unable to paste image.';
+      this.changed();
+    }
+  }
   async pasteFromSystem() {
     const revision = this.history.revision;
     try {
+      if (this.ownerWindow.navigator.clipboard.read) {
+        const entries = await this.ownerWindow.navigator.clipboard.read();
+        for (const entry of entries) {
+          const type = entry.types.find((type) =>
+            ['image/png', 'image/jpeg', 'image/webp'].includes(type),
+          );
+          if (type) {
+            const blob = await entry.getType(type);
+            await this.uploadPhotos([new this.ownerWindow.File([blob], 'Pasted photo', { type })]);
+            return;
+          }
+          if (entry.types.includes('text/html')) {
+            const html = await (await entry.getType('text/html')).text();
+            const source = new this.ownerWindow.DOMParser()
+              .parseFromString(html, 'text/html')
+              .querySelector('img')
+              ?.getAttribute('src');
+            if (source?.startsWith('https://')) {
+              await this.importExternalPhoto(source);
+              return;
+            }
+          }
+        }
+      }
       const text = await this.ownerWindow.navigator.clipboard.readText();
       if (text.length > 32000000) throw new Error('Clipboard is too large.');
       let value;

@@ -1,3 +1,4 @@
+import { externalPhoto } from './external-photo.mjs';
 import { imageStatus, searchImages, importImage } from './images.mjs';
 import { generateAI } from './ai.mjs';
 import { removeBackground } from './background.mjs';
@@ -40,7 +41,11 @@ export async function handleRequest(req, res) {
             Number(route.searchParams.get('page') || 1),
           ),
         );
-      else if (route.pathname === '/api/images/import' && req.method === 'POST') {
+      else if (route.pathname === '/api/images/external' && req.method === 'POST') {
+        if (!String(req.headers['content-type']).startsWith('application/json'))
+          throw new Error('JSON required.');
+        respond(200, await externalPhoto((await readInput(req, 16000)).url));
+      } else if (route.pathname === '/api/images/import' && req.method === 'POST') {
         if (!String(req.headers['content-type']).startsWith('application/json'))
           throw new Error('JSON required.');
         respond(200, await importImage((await readInput(req, 16000)).token));

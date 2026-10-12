@@ -811,7 +811,9 @@ export function KonvaStage({
       onDragOver={(event) => {
         if (
           event.dataTransfer.types.includes(GRATITUDE_ASSET_DRAG_TYPE) ||
-          event.dataTransfer.types.includes('Files')
+          event.dataTransfer.types.includes('Files') ||
+          event.dataTransfer.types.includes('text/html') ||
+          event.dataTransfer.types.includes('text/uri-list')
         ) {
           event.preventDefault();
           event.dataTransfer.dropEffect = 'copy';
@@ -820,7 +822,18 @@ export function KonvaStage({
       onDrop={async (event) => {
         const files = Array.from(event.dataTransfer.files);
         const id = event.dataTransfer.getData(GRATITUDE_ASSET_DRAG_TYPE);
-        if (!id && !files.length) return;
+        const html = event.dataTransfer.getData('text/html');
+        const source =
+          new adapter.ownerWindow.DOMParser()
+            .parseFromString(html, 'text/html')
+            .querySelector('img')
+            ?.getAttribute('src') ||
+          event.dataTransfer
+            .getData('text/uri-list')
+            .split('\n')
+            .find((line) => line && !line.startsWith('#'))
+            ?.trim();
+        if (!id && !files.length && !source) return;
         event.preventDefault();
         setDropError('');
         const rect = stageRef.current?.container().getBoundingClientRect();
@@ -834,6 +847,10 @@ export function KonvaStage({
         try {
           if (files.length) {
             await adapter.uploadPhotos(files, point);
+            return;
+          }
+          if (source && !id) {
+            await adapter.importExternalPhoto(source, point);
             return;
           }
           const asset = await curatedPackProvider.resolve(id, adapter.ownerWindow);
