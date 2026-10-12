@@ -277,8 +277,11 @@ export function SelectionToolbar({
       )}
       {item && (
         <Button
+          variant="plain"
+          size="sm"
           className="vs-actionbar__button"
           disabled={anyLocked}
+          data-tip="Flip horizontally"
           onClick={() => adapter.patchItems([{ id: item.id, patch: { flipX: !item.flipX } }])}
         >
           Flip
@@ -318,6 +321,8 @@ export function SelectionToolbar({
       {item && (
         <Button
           ref={formattingTrigger}
+          variant="plain"
+          size="sm"
           aria-expanded={formattingOpen}
           aria-haspopup="dialog"
           className="vs-actionbar__button vs-actionbar__button--primary"
@@ -364,6 +369,7 @@ export function SelectionToolbar({
               </p>
               <div className="vs-actionbar__range">
                 <input
+                  className="vs-range"
                   aria-label="Set opacity for all selected objects"
                   type="range"
                   min="0"

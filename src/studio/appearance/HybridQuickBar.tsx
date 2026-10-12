@@ -111,7 +111,7 @@ export default function HybridQuickBar({
         aria-label={colorLabel}
         aria-expanded={menu === 'color'}
         aria-haspopup="dialog"
-        title={colorLabel}
+        data-tip={colorLabel}
         disabled={!!item.locked}
         onClick={() => setMenu(menu === 'color' ? null : 'color')}
       >
@@ -150,7 +150,7 @@ export default function HybridQuickBar({
             disabled={!!item.locked}
             onClick={() => setMenu(menu === 'stroke' ? null : 'stroke')}
             aria-label={cap.fill ? 'Quick border' : 'Quick stroke width'}
-            title={cap.fill ? 'Border color, width and style' : 'Stroke width and style'}
+            data-tip={cap.fill ? 'Border color, width and style' : 'Stroke width and style'}
           >
             {cap.fill ? 'Border' : `Width ${a.stroke.width}`}
           </Button>
@@ -174,7 +174,7 @@ export default function HybridQuickBar({
               aria-label="Quick opacity"
               aria-expanded={menu === 'opacity'}
               aria-haspopup="dialog"
-              title="Opacity"
+              data-tip="Opacity"
               disabled={!!item.locked}
               onClick={() => setMenu(menu === 'opacity' ? null : 'opacity')}
             >
@@ -190,7 +190,7 @@ export default function HybridQuickBar({
         className="gs-quick-more"
         aria-expanded={open}
         aria-haspopup="dialog"
-        title="More appearance options"
+        data-tip="More appearance options"
         disabled={!!item.locked}
         onClick={() => {
           setMenu(null);

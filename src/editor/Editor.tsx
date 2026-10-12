@@ -107,7 +107,7 @@ export function Editor({
         .querySelector('.vs-bottom-dock')
         ?.getBoundingClientRect();
       const canvas = adapter.ownerWindow.document
-        .querySelector('.v1-artboard')
+        .querySelector('.gs-artboard')
         ?.getBoundingClientRect();
       const bottom = Math.min(
         adapter.ownerWindow.innerHeight - 12,

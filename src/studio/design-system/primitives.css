@@ -6,6 +6,26 @@
   *::before,
   *::after {
     box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gs-control-line) transparent;
+  }
+  /* WebKit scrollbars: thin, token-colored, quiet track. */
+  ::-webkit-scrollbar {
+    width: var(--gs-scrollbar-size);
+    height: var(--gs-scrollbar-size);
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--gs-control-line);
+    border-radius: var(--gs-radius-pill);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: var(--gs-control-line-hover);
+    }
   }
   html,
   body,
@@ -55,19 +75,63 @@
     user-select: none;
     white-space: nowrap;
     transition:
-      background var(--gs-duration-feedback) var(--gs-ease),
+      background-color var(--gs-duration-feedback) var(--gs-ease),
       border-color var(--gs-duration-feedback) var(--gs-ease),
-      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+      box-shadow var(--gs-duration-feedback) var(--gs-ease),
+      transform var(--gs-duration-feedback) var(--gs-ease);
   }
   .gs-button:focus-visible {
     outline: none;
     box-shadow: var(--gs-focus);
+  }
+  /* Press feedback: quick scale-in, ease-out (§4). */
+  .gs-button:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: var(--gs-duration-press);
   }
   .gs-button:disabled {
     color: var(--gs-text-disabled);
     background: var(--gs-surface-muted);
     border-color: transparent;
     cursor: not-allowed;
+  }
+  /* Loading: spinner glyph, aria-busy + disabled set by the component, width held. */
+  .gs-button--loading {
+    position: relative;
+    pointer-events: none;
+  }
+  /* The label stays in flow but invisible so the button keeps its width. */
+  .gs-button--loading .gs-button__label {
+    visibility: hidden;
+  }
+  .gs-button__spinner {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+  }
+  .gs-spinner {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    border-radius: 50%;
+    border: var(--gs-space-0) solid currentColor;
+    border-top-color: transparent;
+    animation: gs-spin 0.8s linear infinite;
+  }
+  /* Icon sizing (item 38): icons size from --gs-icon-size (16px default);
+     the rail overrides it to 20px. Explicit size props still win. */
+  .gs-icon {
+    width: var(--gs-icon-size);
+    height: var(--gs-icon-size);
+    flex: none;
+  }
+  .vs-rail {
+    --gs-icon-size: 20px;
+  }
+  @keyframes gs-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   /* sizes */
@@ -86,9 +150,6 @@
     border-color: transparent;
     padding: var(--gs-space-2) var(--gs-space-3);
   }
-  .gs-button--primary:hover:not(:disabled) {
-    background: var(--gs-accent-hover);
-  }
   .gs-button--primary:active:not(:disabled) {
     background: var(--gs-accent-pressed);
   }
@@ -99,14 +160,6 @@
     border-color: var(--gs-control-line);
     padding: var(--gs-space-2) var(--gs-space-3);
   }
-  .gs-button--secondary:hover:not(:disabled) {
-    border-color: var(--gs-control-line-hover);
-  }
-
-  /* plain (ghost) */
-  .gs-button--plain:hover:not(:disabled) {
-    background: var(--gs-hover);
-  }
 
   /* danger */
   .gs-button--danger {
@@ -114,9 +167,23 @@
     color: var(--gs-danger);
     padding: var(--gs-space-2) var(--gs-space-3);
   }
-  .gs-button--danger:hover:not(:disabled) {
-    background: var(--gs-danger);
-    color: var(--gs-on-accent);
+
+  /* Hover styles live under the hover media query only (G6): no sticky
+     hover on touch, no hover on keyboard-initiated focus. */
+  @media (hover: hover) and (pointer: fine) {
+    .gs-button--primary:hover:not(:disabled) {
+      background: var(--gs-accent-hover);
+    }
+    .gs-button--secondary:hover:not(:disabled) {
+      border-color: var(--gs-control-line-hover);
+    }
+    .gs-button--plain:hover:not(:disabled) {
+      background: var(--gs-hover);
+    }
+    .gs-button--danger:hover:not(:disabled) {
+      background: var(--gs-danger);
+      color: var(--gs-on-accent);
+    }
   }
 
   /* ── Icon button ──────────────────────────────── */
@@ -138,9 +205,11 @@
       background var(--gs-duration-feedback) var(--gs-ease),
       color var(--gs-duration-feedback) var(--gs-ease);
   }
-  .gs-icon-button:hover:not(:disabled) {
-    background: var(--gs-hover);
-    color: var(--gs-text);
+  @media (hover: hover) and (pointer: fine) {
+    .gs-icon-button:hover:not(:disabled) {
+      background: var(--gs-hover);
+      color: var(--gs-text);
+    }
   }
   .gs-icon-button:focus-visible {
     outline: none;
@@ -181,11 +250,19 @@
       box-shadow var(--gs-duration-feedback) var(--gs-ease);
   }
   .gs-input::placeholder {
-    color: var(--gs-text-disabled);
+    color: var(--gs-text-placeholder);
   }
-  .gs-input:hover,
-  .gs-select:hover {
-    border-color: var(--gs-control-line-hover);
+  textarea.gs-input {
+    height: auto;
+    min-height: 64px; /* item 33e: Content textarea floor (documented exception) */
+    padding: var(--gs-space-2) var(--gs-space-3);
+    resize: vertical;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .gs-input:hover,
+    .gs-select:hover {
+      border-color: var(--gs-control-line-hover);
+    }
   }
   .gs-input:focus-visible,
   .gs-select:focus-visible {
@@ -211,6 +288,50 @@
   }
   .gs-popover.vs-actionbar__popover {
     transform: none;
+  }
+
+  /* ── Shared enter/exit motion (§4) ──────────────────────────────
+     gs-pop: menus and popovers scale from their trigger (transform-origin
+     is set toward the trigger by the component). Dialogs fade + scale from
+     center. Exits are faster than enters; keyboard-initiated actions and
+     reduced motion run no animation. */
+  @keyframes gs-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes gs-pop-out {
+    to {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes gs-dialog-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes gs-dialog-out {
+    to {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  .gs-pop-enter {
+    animation: gs-pop var(--gs-duration-pop) var(--gs-ease-out);
+  }
+  .gs-pop-exit {
+    animation: gs-pop-out var(--gs-duration-exit) var(--gs-ease-out);
+  }
+  .gs-dialog-enter {
+    transform-origin: center;
+    animation: gs-dialog-in var(--gs-duration-overlay) var(--gs-ease-out);
+  }
+  .gs-dialog-exit {
+    transform-origin: center;
+    animation: gs-dialog-out var(--gs-duration-exit) var(--gs-ease-out);
   }
 
   /* ── Submenu trigger & panel ──────────────────── */
@@ -241,11 +362,13 @@
     background: transparent;
     text-align: left;
   }
-  .gs-submenu button:hover:not(:disabled) {
-    background: var(--gs-hover);
-  }
   .gs-submenu button:disabled {
     color: var(--gs-text-disabled);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .gs-submenu button:hover:not(:disabled) {
+      background: var(--gs-hover);
+    }
   }
   .gs-submenu kbd {
     margin-left: auto;
@@ -258,6 +381,7 @@
     display: inline-flex;
     gap: 2px;
     background: var(--gs-surface-muted);
+    border: 1px solid var(--gs-control-line);
     border-radius: var(--gs-radius-control);
     padding: 2px;
   }
@@ -275,12 +399,14 @@
     color: var(--gs-text-secondary);
     cursor: pointer;
     transition:
-      background var(--gs-duration-feedback) var(--gs-ease),
+      background-color var(--gs-duration-feedback) var(--gs-ease),
       color var(--gs-duration-feedback) var(--gs-ease),
       box-shadow var(--gs-duration-feedback) var(--gs-ease);
   }
-  .gs-segmented__item:hover {
-    color: var(--gs-text);
+  @media (hover: hover) and (pointer: fine) {
+    .gs-segmented__item:hover {
+      color: var(--gs-text);
+    }
   }
   .gs-segmented__item[aria-pressed='true'],
   .gs-segmented__item[data-active] {
@@ -296,7 +422,9 @@
   /* ── Toast ────────────────────────────────────── */
   .gs-toast {
     position: fixed;
-    bottom: var(--gs-space-5);
+    /* Above the floating dock: dock offset + one control row + gap.
+       Item 20 owns the dock geometry; this assumes a single-row dock. */
+    bottom: calc(var(--gs-dock-offset) + var(--gs-control-height-lg) + var(--gs-space-2));
     left: 50%;
     transform: translateX(-50%);
     z-index: var(--gs-z-modal);
@@ -310,15 +438,29 @@
     box-shadow: var(--gs-shadow-float);
     font-size: var(--gs-text-13);
     color: var(--gs-text);
-    animation: gs-toast-in var(--gs-duration-overlay) var(--gs-ease);
+    max-width: min(560px, calc(100vw - var(--gs-space-6)));
+    animation: gs-toast-in var(--gs-duration-overlay) var(--gs-ease-out);
+  }
+  .gs-toast.is-exiting {
+    animation: gs-toast-out var(--gs-duration-exit) var(--gs-ease-out);
   }
   .gs-toast--error {
     border-color: var(--gs-danger);
+  }
+  .gs-toast--warning {
+    border-color: var(--gs-warning);
+    background: var(--gs-warning-soft);
   }
   @keyframes gs-toast-in {
     from {
       opacity: 0;
       transform: translateX(-50%) translateY(8px);
+    }
+  }
+  @keyframes gs-toast-out {
+    to {
+      opacity: 0;
+      transform: translateX(-50%) translateY(4px);
     }
   }
 
@@ -347,12 +489,29 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    border-radius: 6px;
+    border-radius: var(--gs-radius-sm);
     border: 0;
+    background: var(--gs-swatch-color, transparent);
+    color: var(--gs-text);
     box-shadow: inset 0 0 0 1px var(--gs-line);
     cursor: pointer;
     padding: 0;
     transition: box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  /* Dark swatches get a light check icon for contrast (item 12). */
+  .gs-swatch--dark {
+    color: var(--gs-on-accent);
+  }
+  /* 44px hit area on coarse pointers; the visual stays 24px (item 12). */
+  @media (pointer: coarse) {
+    .gs-swatch {
+      position: relative;
+    }
+    .gs-swatch::before {
+      content: '';
+      position: absolute;
+      inset: -10px;
+    }
   }
   .gs-swatch[aria-pressed='true'],
   .gs-swatch.is-selected {
@@ -367,6 +526,72 @@
     letter-spacing: var(--gs-tracking-kicker);
     color: var(--gs-text-secondary);
     margin: 0;
+  }
+
+  /* ── Chip (the only pill-radius control, with dots/avatars) ── */
+  .gs-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gs-space-2);
+    height: var(--gs-control-height);
+    padding: 0 var(--gs-space-4);
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-pill);
+    background: var(--gs-surface);
+    color: var(--gs-text-secondary);
+    font: inherit;
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color var(--gs-duration-feedback) var(--gs-ease),
+      border-color var(--gs-duration-feedback) var(--gs-ease),
+      color var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .gs-chip[aria-pressed='true'] {
+    background: var(--gs-accent-soft);
+    border-color: transparent;
+    color: var(--gs-accent);
+  }
+  .gs-chip:disabled {
+    color: var(--gs-text-disabled);
+    border-color: var(--gs-line);
+    cursor: not-allowed;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .gs-chip:hover:not(:disabled):not([aria-pressed='true']) {
+      border-color: var(--gs-control-line-hover);
+      color: var(--gs-text);
+    }
+  }
+
+  /* ── Empty state ──────────────────────────────────
+     Fraunces italic headline, secondary body, one primary action. */
+  .gs-empty {
+    display: grid;
+    gap: var(--gs-space-3);
+    justify-items: center;
+    align-content: center;
+    text-align: center;
+    padding: var(--gs-space-6) var(--gs-space-4);
+  }
+  .gs-empty__title {
+    margin: 0;
+    font-family: var(--gs-font-display);
+    font-style: italic;
+    font-weight: var(--gs-weight-regular);
+    font-size: var(--gs-text-24);
+    line-height: var(--gs-line-height-tight);
+    color: var(--gs-text);
+    text-wrap: balance;
+  }
+  .gs-empty__body {
+    margin: 0;
+    max-width: 32ch;
+    font-size: var(--gs-text-13);
+    color: var(--gs-text-secondary);
   }
 
   /* ── Visually hidden (a11y) ───────────────────── */
@@ -413,10 +638,6 @@
   }
   .gs-loading .gs-skeleton:last-child {
     height: calc(var(--gs-control-height) * 2);
-  }
-  .gs-toast {
-    bottom: calc(var(--gs-footer-height) + var(--gs-space-7));
-    max-width: min(560px, calc(100vw - var(--gs-space-6)));
   }
   .gs-toast > span {
     min-width: 0;

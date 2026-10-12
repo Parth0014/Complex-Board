@@ -34,7 +34,7 @@
     font-family: var(--gs-font-display);
     font-style: normal;
     font-size: var(--gs-home-type-2);
-    font-weight: 600;
+    font-weight: var(--gs-weight-strong);
     letter-spacing: -0.02em;
   }
   .home-brand svg {
@@ -78,11 +78,12 @@
     margin: 0 0 22px;
     max-width: 11em;
     font-family: var(--gs-font-display);
-    font-weight: 500;
-    font-size: var(--gs-home-type-4);
+    font-weight: var(--gs-weight-black);
+    font-size: var(--gs-text-hero);
     line-height: 1.02;
     letter-spacing: -0.03em;
     color: var(--gs-text);
+    text-wrap: balance;
   }
   .home-intro p:last-of-type {
     margin: 0 0 34px;
@@ -111,18 +112,20 @@
     border: 2px solid var(--gs-text);
     border-radius: 999px;
     padding: 15px 28px;
-    font-weight: 600;
+    font-weight: var(--gs-weight-strong);
     font-size: var(--gs-home-type-1);
     white-space: nowrap;
-    box-shadow: 4px 4px 0 var(--gs-text);
+    box-shadow: var(--gs-shadow-brand);
     transition:
       transform 0.15s ease,
       opacity 0.15s ease;
   }
-  .home-page .home-primary:hover:not(:disabled) {
-    background: var(--gs-accent);
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 var(--gs-text);
+  @media (hover: hover) and (pointer: fine) {
+    .home-page .home-primary:hover:not(:disabled) {
+      background: var(--gs-accent);
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 var(--gs-text);
+    }
   }
   .home-page .home-primary:active:not(:disabled) {
     transform: translate(3px, 3px);
@@ -211,6 +214,11 @@
       transform: translateY(-28px) rotate(calc(var(--r, 0deg) - 8deg));
     }
   }
+  @media (prefers-reduced-motion: reduce) {
+    .home-page .home-card {
+      animation: none;
+    }
+  }
 
   /* ---------- Errors ---------- */
   .home-error {
@@ -237,7 +245,7 @@
   .home-section-heading h2 {
     margin: 0;
     font-family: var(--gs-font-display);
-    font-weight: 500;
+    font-weight: var(--gs-weight-medium);
     font-size: var(--gs-home-type-6);
     letter-spacing: -0.02em;
   }
@@ -259,7 +267,7 @@
     background: transparent;
     border: 0;
     color: var(--gs-accent);
-    font-weight: 600;
+    font-weight: var(--gs-weight-strong);
     text-decoration: underline;
     text-underline-offset: 4px;
   }
@@ -273,7 +281,7 @@
     display: grid;
     gap: 8px;
     font-size: var(--gs-home-type-8);
-    font-weight: 500;
+    font-weight: var(--gs-weight-medium);
   }
   .home-setup input,
   .home-setup select {
@@ -286,9 +294,11 @@
     box-sizing: border-box;
     transition: border-color 0.15s ease;
   }
-  .home-setup input:hover,
-  .home-setup select:hover {
-    border-color: var(--gs-text-secondary);
+  @media (hover: hover) and (pointer: fine) {
+    .home-setup input:hover,
+    .home-setup select:hover {
+      border-color: var(--gs-text-secondary);
+    }
   }
 
   /* ---------- Board library ---------- */
@@ -320,7 +330,11 @@
   .home-board-card:nth-child(3n) {
     --tape: var(--gs-home-palette-7);
   }
-  .home-board-card:hover,
+  @media (hover: hover) and (pointer: fine) {
+    .home-board-card:hover {
+      transform: translateY(-2px);
+    }
+  }
   .home-board-card:focus-within {
     transform: translateY(-2px);
   }
@@ -352,10 +366,12 @@
       opacity 0.2s ease,
       border-color 0.25s ease;
   }
-  .home-page .home-board:hover:not(:disabled) {
-    background: var(--gs-surface);
-    border-color: var(--gs-accent);
-    box-shadow: 0 30px 40px -22px var(--gs-home-palette-9);
+  @media (hover: hover) and (pointer: fine) {
+    .home-page .home-board:hover:not(:disabled) {
+      background: var(--gs-surface);
+      border-color: var(--gs-accent);
+      box-shadow: 0 30px 40px -22px var(--gs-home-palette-9);
+    }
   }
   .home-board-preview {
     height: 190px;
@@ -380,7 +396,7 @@
   .home-board-info h3 {
     margin: 0 0 6px;
     font-family: var(--gs-font-display);
-    font-weight: 500;
+    font-weight: var(--gs-weight-medium);
     font-size: var(--gs-home-type-9);
     letter-spacing: -0.01em;
     overflow-wrap: anywhere;
@@ -400,9 +416,11 @@
     text-decoration: underline;
     text-underline-offset: 3px;
   }
-  .home-page .home-board-card > .gs-button--danger:hover:not(:disabled) {
-    background: transparent;
-    color: var(--gs-home-palette-12);
+  @media (hover: hover) and (pointer: fine) {
+    .home-page .home-board-card > .gs-button--danger:hover:not(:disabled) {
+      background: transparent;
+      color: var(--gs-home-palette-12);
+    }
   }
 
   /* ---------- Empty state ---------- */
@@ -426,7 +444,7 @@
   .home-empty h3 {
     margin: 0 0 8px;
     font-family: var(--gs-font-display);
-    font-weight: 500;
+    font-weight: var(--gs-weight-medium);
     font-size: var(--gs-home-type-10);
     color: var(--gs-text);
   }
@@ -608,7 +626,11 @@
     .home-choice > span {
       transition: none;
     }
-    .home-board-card:hover,
+    @media (hover: hover) and (pointer: fine) {
+      .home-board-card:hover {
+        transform: none;
+      }
+    }
     .home-board-card:focus-within {
       transform: none;
     }
