@@ -1,6 +1,6 @@
 # VisBo design system
 
-The editor and home screen share the Microsoft Fluent light palette, one interface font, and one CSS entry point. Board artwork retains its own colors and fonts.
+The editor and home screen share the Atelier design tokens: warm paper surfaces, ink text, a violet accent, DM Sans for interface type and Fraunces for display type. Board artwork retains its own colors and fonts.
 
 ## Phase G: Craft Pass (2026-10-12)
 
@@ -14,9 +14,9 @@ The editor and home screen share the Microsoft Fluent light palette, one interfa
 - Easing: `--gs-ease`, `--gs-ease-out`; `prefers-reduced-motion` disables animation
 - No `transition: all`; no width/height animations on layout
 
-**The 12 gates** (measured per phase, see final report):
+**The 12 gates** (measured per phase):
 1. Contrast ≥ 4.5:1 (text), ≥ 3:1 (borders/focus)
-2. CSS rule count decreases (components.css + studio-v2.css)
+2. CSS rule count decreases (measured as `{` count across `src/**/*.css`; 1,218 → 1,150 on `muse/craft-pass`)
 3. No `transition: all`
 4. Hover only under `(hover: hover)` media
 5. No `outline: none` without visible ring
@@ -28,26 +28,27 @@ The editor and home screen share the Microsoft Fluent light palette, one interfa
 11. Copy: sentence case, verbs first, errors say what+what-to-do
 12. No dead code (unused CSS rules removed)
 
-**CSS rule**: Every rule added to `components.css` must remove the older duplicate of the same selector — net rule count goes DOWN.
+**CSS rule**: Every rule added to `components.css` / `components-panels.css` must remove the older duplicate of the same selector — net rule count goes DOWN.
 
 ## Sources of truth
 
-- `src/studio/design-system/fluentTheme.ts` installs official Fluent tokens on the document root, including portals.
-- `foundations.css` maps them to application `--gs-*` tokens. Palette literals belong here; the color-picker spectrum is intentionally color-accurate.
+- `src/studio/design-system/foundations.css` defines the Atelier tokens (`--gs-*`): ink text, paper surfaces, violet accent, DM Sans / Fraunces stacks, spacing, radii, elevation, and motion. (Fluent was removed; see `docs/ATELIER_CONTINUATION.md`.)
+- `src/studio/design-system/fonts.css` bundles DM Sans (400/500/700) and Fraunces (400/700/900, normal + italic); no external UI font download.
+- `foundations.css` maps tokens to application use. Palette literals belong here; the color-picker spectrum is intentionally color-accurate.
 - `index.css` declares the cascade: tokens, base, components, utilities.
 - `primitives.css` owns shared button and overlay presentation, focus, and reduced motion.
-- `components.css` owns home, library, toolbar, formatting, and export layouts. The previous v5 sheets and interaction override stack have been removed.
+- `components.css` (editor shell) and `components-panels.css` (workspace, inspector, contextual UI) own the layouts. The previous v5 sheets and interaction override stack have been removed.
 
 ## Foundations
 
 | Foundation     | Rule                                                                                                          |
 | -------------- | ------------------------------------------------------------------------------------------------------------- |
-| Interface font | Fluent system sans-serif; no external UI font download                                                        |
+| Interface font | DM Sans (bundled), system-ui fallback; no external UI font download                                             |
 | Type scale     | 11px metadata, 13px controls, 15px subheadings, 18px titles, 24px main headings                               |
-| Display font   | Georgia for affirmation previews; board text presets remain independent                                       |
-| Palette        | Neutral surfaces and text; Fluent blue for actions and selection; semantic success, warning, and error states |
+| Display font   | Fraunces (bundled), Georgia fallback; board text presets remain independent                                 |
+| Palette        | Warm paper surfaces (`#fffdfc`), ink text (`#1e1a36`), violet accent (`#4a3fd8`); semantic success, warning, and error states |
 | Spacing        | 4, 8, 12, 16, 24, 32, 40px tokens                                                                             |
-| Corners        | Fluent control and surface radii; pill and circular swatches are explicit exceptions                          |
+| Corners        | Shared radius tokens (`--gs-radius-*`: 2/6/8/12/16px, pill 999px); pill and circular swatches are explicit exceptions |
 | Elevation      | Floating menus, toolbar, pickers, and dialogs; ordinary controls stay flat                                    |
 | Motion         | Shared feedback and overlay durations, one easing curve; reduced motion disables animation                    |
 | Layers         | Canvas 0, panels 10, toolbar 20, menus and formatting 30, nested picker 35, modal 40, tooltip 50              |

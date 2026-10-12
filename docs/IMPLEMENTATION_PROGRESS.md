@@ -27,7 +27,7 @@ Optional Plan/Track is deferred and excluded from this release-fix scope.
 
 Local verification on 7 October 2026: lint, formatting, production build,
 39 unit/architecture tests, 14 server tests and the exact-250 asset check pass.
-The main production JS chunk is 422 KB (87 KB gzipped), below Vite's 500 KB warning;
+The main production JS chunk is 882 KB, above Vite's 500 KB warning (it was 422 KB on 7 October; app source grew ~427 KB → ~592 KB across the audit-branch panels/inspectors and the Phase G craft-pass UI, so the growth is cumulative feature code, not a new dependency);
 curated SVG sources load only when requested. The AI panel stays hidden unless
 the backend reports it is configured. All 59 Edge browser cases are verified:
 56 passed in the full run, and the final three passed after test corrections in
