@@ -202,6 +202,8 @@ export function KonvaStage({
   const left = (stageWidth - document.width * scale) / 2;
   const top = (stageHeight - document.height * scale) / 2;
   const centeredView = useRef('');
+  const lastView = useRef({ left, top, scale, width: size.width, height: size.height });
+  const measured = useRef(false);
   useLayoutEffect(() => {
     const anchor = zoomAnchor.current;
     const viewKey = `${scale}:${document.width}:${document.height}:${size.width}:${size.height}:${fitRevision}`;
@@ -221,6 +223,9 @@ export function KonvaStage({
       );
     }
   }, [left, top, scale, document.width, document.height, size.width, size.height, fitRevision]);
+  useLayoutEffect(() => {
+    lastView.current = { left, top, scale, width: size.width, height: size.height };
+  }, [left, top, scale, size.width, size.height]);
   const zoomAt = useCallback(
     (clientX: number, clientY: number, nextScale: number) => {
       const node = container.current;
@@ -310,6 +315,19 @@ export function KonvaStage({
       const width = node.clientWidth,
         height = node.clientHeight;
       if (!width || !height) return;
+      const previous = lastView.current;
+      if (width === previous.width && height === previous.height) return;
+      if (measured.current) {
+        // A dock changes viewport geometry, not the user's camera.
+        zoomAnchor.current = {
+          x: (node.scrollLeft + previous.width / 2 - previous.left) / previous.scale,
+          y: (node.scrollTop + previous.height / 2 - previous.top) / previous.scale,
+          viewX: width / 2,
+          viewY: height / 2,
+        };
+        onZoomChange(previous.scale);
+      }
+      measured.current = true;
       setSize((current) =>
         current.width === width && current.height === height ? current : { width, height },
       );
