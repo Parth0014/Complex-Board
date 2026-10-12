@@ -11,7 +11,6 @@ import type { BoardItem } from '../vision/document';
 import { canonicalFontId, editorFonts } from '../vision/fonts';
 import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
-import { useAIStatus } from './useAIStatus';
 import {
   BringFrontIcon,
   CheckIcon,
@@ -24,12 +23,10 @@ import {
   LayersIcon,
   LockIcon,
   PenIcon,
-  ScissorsIcon,
   SlidersIcon,
   TypeIcon,
   UndoIcon,
   UnlockIcon,
-  WandIcon,
 } from './icons';
 
 export type EditorPanel = 'style' | 'layers' | null;
@@ -236,17 +233,12 @@ export function EditorFeatures({
 }) {
   const [assets, setAssets] = useState<GratitudeAsset[]>([]),
     [error, setError] = useState('');
-  const [mediaBusy, setMediaBusy] = useState(false);
-  const ai = useAIStatus(adapter.ownerWindow);
   const runMedia = async (action: () => Promise<void>) => {
-    setMediaBusy(true);
     setError('');
     try {
       await action();
     } catch (error) {
       setError(errorMessage(error));
-    } finally {
-      setMediaBusy(false);
     }
   };
   const item = adapter.history.document.items.find((item) => adapter.selectedIds.includes(item.id));
@@ -882,84 +874,6 @@ export function EditorFeatures({
                         Original
                       </Button>
                     </div>
-                  </Sec>
-
-                  <Sec title="AI tools" open={false} icon={<WandIcon />}>
-                    <p className="ai-tool-help">
-                      Remove the background to make a cutout. Resample enlarges locally; AI upscale
-                      adds detail using your configured service. Each change can be undone.
-                    </p>
-                    {(ai.error || !ai.status?.backgroundConfigured) && (
-                      <div className="ai-status" role="status">
-                        {ai.checking
-                          ? 'Checking image toolsâ€¦'
-                          : ai.error ||
-                            'Background removal needs rembg. Start rembg s, set REMBG_URL in .env, and restart the AI server.'}
-                        <Button
-                          className="panel-secondary-action"
-                          disabled={ai.checking}
-                          onClick={() => void ai.refresh()}
-                        >
-                          Check connection
-                        </Button>
-                      </div>
-                    )}
-                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                      <Button
-                        data-tip={
-                          ai.status?.backgroundConfigured
-                            ? 'Create a transparent cutout; keep the original for Undo'
-                            : 'Set up the background removal service first'
-                        }
-
-                        disabled={mediaBusy || ai.checking || !ai.status?.backgroundConfigured}
-                        onClick={() => void runMedia(() => adapter.removeBackground())}
-                      >
-                        <ScissorsIcon /> Remove bg
-                      </Button>
-                      <Button
-                        data-tip="Resample image at 2Ã—"
-                        disabled={mediaBusy}
-                        onClick={() => void runMedia(() => adapter.upscaleImage())}
-                      >
-                        Resample 2Ã—
-                      </Button>
-                      <Button
-                        data-tip="Add image detail using the configured AI upscaler"
-
-                        disabled={mediaBusy || !ai.status?.upscaleConfigured}
-                        onClick={() => void runMedia(() => adapter.upscaleAI())}
-                      >
-                        <WandIcon /> AI upscale 2Ã—
-                      </Button>
-                      <Button
-                        data-tip="Split into foreground and background layers"
-                        disabled={
-                          mediaBusy || !ai.status?.backgroundConfigured || !ai.status?.configured
-                        }
-                        onClick={() => void runMedia(() => adapter.splitImageLayers())}
-                      >
-                        Split foreground/background
-                      </Button>
-                      <Button
-                        data-tip="Match colors from a second selected image"
-                        disabled={mediaBusy || adapter.selectedIds.length !== 2}
-                        onClick={() => void runMedia(() => adapter.matchImageStyle())}
-                      >
-                        Match reference colors
-                      </Button>
-                      <Button
-                        data-tip="Reset all source edits"
-                        onClick={() => patch({ rendition: undefined, colorOverrides: undefined })}
-                      >
-                        <UndoIcon /> Reset source edits
-                      </Button>
-                    </div>
-                    {mediaBusy && (
-                      <p role="status" style={{ margin: 0, fontSize: 'var(--gs-text-13)' }}>
-                        Processing imageâ€¦
-                      </p>
-                    )}
                   </Sec>
 
                   {item.asset?.editable.colors &&
