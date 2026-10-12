@@ -79,8 +79,20 @@ function Content({
   useEffect(() => {
     const node = imageRef.current;
     if (!node || !image) return;
-    if (filtered) node.cache({ pixelRatio: 2 });
-    else node.clearCache();
+    if (filtered) {
+      // Shaped frames normalize image nodes to a 100-unit coordinate system.
+      // Cache at source resolution, not two pixels per normalized unit.
+      const crop = node.crop();
+      const nativeRatio = Math.max(
+        (crop.width || image.naturalWidth) / Math.max(1, node.width()),
+        (crop.height || image.naturalHeight) / Math.max(1, node.height()),
+      );
+      const limit = 4096 / Math.max(1, node.width(), node.height());
+      node.cache({
+        pixelRatio: Math.min(limit, Math.max(2, nativeRatio)),
+        imageSmoothingEnabled: false,
+      });
+    } else node.clearCache();
     node.getLayer()?.batchDraw();
   }, [
     image,
@@ -435,7 +447,7 @@ function Content({
           Konva.Filters.Brighten,
           Konva.Filters.Contrast,
           Konva.Filters.HSL,
-          Konva.Filters.Blur,
+          ...(item.blur && item.blur > 0 ? [Konva.Filters.Blur] : []),
           colorBalance,
           ...(item.filter === 'mono' ? [Konva.Filters.Grayscale] : []),
           ...(item.effect === 'glitch' ? [glitchFilter] : []),
