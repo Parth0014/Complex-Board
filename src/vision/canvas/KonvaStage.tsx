@@ -376,6 +376,20 @@ export function KonvaStage({
     transformer.current.getLayer()?.draw();
   }, [adapter, document.items, adapter.selectedIds, scale, left, top, editing, adapter.cropDraft]);
 
+  useLayoutEffect(() => {
+    const page = stageRef.current?.findOne('#artboard') as Konva.Group | undefined;
+    if (!page) return;
+    const nodes = document.items
+      .filter((item) => !item.hidden)
+      .map((item) => page.findOne(`#${item.id}`))
+      .filter((node): node is Konva.Node => !!node && node.getParent() === page);
+    if (!nodes.length) return;
+    const first = Math.min(...nodes.map((node) => node.zIndex()));
+    nodes.forEach((node, index) => node.zIndex(first + index));
+    // Commit both scene and hit order before paint, including unchanged memoized artwork.
+    page.getLayer()?.draw();
+  }, [document.items]);
+
   useEffect(() => {
     adapter.exporter = (ratio, selectedOnly, transparent) => {
       if (adapter.cropDraft || adapter.originalPreview)
