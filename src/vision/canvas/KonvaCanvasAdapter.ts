@@ -1097,6 +1097,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   private async decode(asset: GratitudeAsset, record?: MediaRecord) {
     if (this.images.has(asset.assetUrl)) return;
     const image = new this.ownerWindow.Image();
+    if (/^https?:/.test(asset.assetUrl)) image.crossOrigin = 'anonymous';
     const local = asset.assetUrl.startsWith('media:')
       ? this.ownerWindow.URL.createObjectURL(
           (record || (await loadMedia(this.ownerWindow, asset.mediaId!))).working,

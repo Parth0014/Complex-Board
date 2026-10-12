@@ -1,3 +1,4 @@
+import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
 import { listMedia, mediaAsset, type MediaRecord } from '../vision/media';
 import { errorMessage } from './errors';
 import { Button } from './ui/Button';
@@ -169,12 +170,19 @@ export function UploadsPanel({
             {library.map(({ record, url }) => (
               <article className="discover-photo" key={record.id}>
                 <Button
+                  draggable
+                  onDragStart={(event) =>
+                    event.dataTransfer.setData(
+                      GRATITUDE_ASSET_DRAG_TYPE,
+                      JSON.stringify(mediaAsset(record)),
+                    )
+                  }
                   aria-label={`Add uploaded photo ${record.name} to board`}
                   disabled={busy || Boolean(inserting)}
                   aria-busy={inserting === record.id}
                   onClick={() => void reuse(record)}
                 >
-                  <img src={url} alt="" loading="lazy" />
+                  <img src={url} alt="" loading="lazy" draggable={false} />
                 </Button>
               </article>
             ))}

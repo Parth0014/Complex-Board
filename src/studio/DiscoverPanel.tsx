@@ -195,10 +195,14 @@ export function DiscoverPanel({ adapter }: { adapter: EditorAdapter }) {
                 <Button
                   type="button"
                   disabled={Boolean(adding)}
+                  draggable
+                  onDragStart={(event) =>
+                    event.dataTransfer.setData('application/x-visbo-photo', item.token)
+                  }
                   aria-label={`Add ${item.title} to board`}
                   onClick={() => void insert(item)}
                 >
-                  <img src={item.thumb} alt="" loading="lazy" />
+                  <img src={item.thumb} alt="" loading="lazy" draggable={false} />
                 </Button>
               </article>
             ))}

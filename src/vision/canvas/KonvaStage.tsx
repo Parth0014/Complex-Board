@@ -1,3 +1,4 @@
+import { requestAI } from '../aiClient';
 import { CropOverlay } from './CropOverlay';
 import { canvasColors } from './colors';
 import { itemOpacity } from '../appearance/capabilities';
@@ -811,6 +812,7 @@ export function KonvaStage({
       onDragOver={(event) => {
         if (
           event.dataTransfer.types.includes(GRATITUDE_ASSET_DRAG_TYPE) ||
+          event.dataTransfer.types.includes('application/x-visbo-photo') ||
           event.dataTransfer.types.includes('Files') ||
           event.dataTransfer.types.includes('text/html') ||
           event.dataTransfer.types.includes('text/uri-list')
@@ -822,6 +824,7 @@ export function KonvaStage({
       onDrop={async (event) => {
         const files = Array.from(event.dataTransfer.files);
         const id = event.dataTransfer.getData(GRATITUDE_ASSET_DRAG_TYPE);
+        const photoToken = event.dataTransfer.getData('application/x-visbo-photo');
         const html = event.dataTransfer.getData('text/html');
         const source =
           new adapter.ownerWindow.DOMParser()
@@ -833,7 +836,7 @@ export function KonvaStage({
             .split('\n')
             .find((line) => line && !line.startsWith('#'))
             ?.trim();
-        if (!id && !files.length && !source) return;
+        if (!id && !files.length && !source && !photoToken) return;
         event.preventDefault();
         setDropError('');
         const rect = stageRef.current?.container().getBoundingClientRect();
@@ -845,6 +848,15 @@ export function KonvaStage({
         if (point.x < 0 || point.y < 0 || point.x > document.width || point.y > document.height)
           return;
         try {
+          if (photoToken) {
+            const asset = await requestAI(adapter.ownerWindow, '/api/images/import', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token: photoToken }),
+            });
+            await adapter.insertAsset(asset, point);
+            return;
+          }
           if (files.length) {
             await adapter.uploadPhotos(files, point);
             return;
@@ -853,7 +865,16 @@ export function KonvaStage({
             await adapter.importExternalPhoto(source, point);
             return;
           }
-          const asset = await curatedPackProvider.resolve(id, adapter.ownerWindow);
+          let payload;
+          try {
+            payload = JSON.parse(id);
+          } catch {
+            payload = { id };
+          }
+          const asset =
+            payload.provider === 'upload'
+              ? payload
+              : await curatedPackProvider.resolve(payload.id, adapter.ownerWindow);
           const width = Math.min(320, asset.width || 240),
             height = (width * (asset.height || 240)) / (asset.width || 240);
           await adapter.insertAsset(asset, {
