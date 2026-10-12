@@ -160,6 +160,8 @@ export const EMPTY_VISION_SELECTION: VisionSelection = {
 
 /** Studio uses only this product-facing interface; engine types stay in canvas/. */
 export interface StudioAdapter extends CanvasAdapter {
+  storePhotos(files: File[]): Promise<string[]>;
+  arrangePhotos(ids: string[], style: import('./photoLayout').PhotoArrangement): Promise<void>;
   saveStatus: string;
   backup(): Promise<void>;
   uploadPhotos(files: File[], position?: VisionPoint): Promise<void>;
@@ -184,6 +186,7 @@ export interface StudioAdapter extends CanvasAdapter {
   redo(): void;
 }
 export interface EditorAdapter extends StudioAdapter {
+  previewBoard(): string;
   readonly images: Map<string, HTMLImageElement>;
   readonly originalPreview: boolean;
   replaceAsset(id: string): Promise<string | null>;

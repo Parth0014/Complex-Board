@@ -1,8 +1,9 @@
+import { PhotoLayoutBuilder } from './PhotoLayoutBuilder';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
 import { listMedia, mediaAsset, type MediaRecord } from '../vision/media';
 import { errorMessage } from './errors';
 import { Button } from './ui/Button';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { StudioAdapter } from '../vision/contracts';
 import { UploadIcon } from './icons';
 
@@ -13,6 +14,9 @@ export function UploadsPanel({
   adapter: StudioAdapter;
   onError: (message: string) => void;
 }) {
+  const [arranging, setArranging] = useState(false);
+  const [layoutIds, setLayoutIds] = useState<string[] | undefined>();
+  const layoutUpload = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState(''),
     [downloading, setDownloading] = useState(false);
@@ -158,6 +162,52 @@ export function UploadsPanel({
         </div>
       )}
 
+      <Button
+        variant="secondary"
+        disabled={busy || !library.length}
+        onClick={() => {
+          setLayoutIds(undefined);
+          setArranging(true);
+        }}
+      >
+        Arrange photos
+      </Button>
+      <Button disabled={busy} onClick={() => layoutUpload.current?.click()}>
+        Upload &amp; arrange
+      </Button>
+      <input
+        ref={layoutUpload}
+        type="file"
+        hidden
+        accept="image/png,image/jpeg,image/webp"
+        multiple
+        aria-label="Upload photos for layout"
+        onChange={(event) => {
+          const files = Array.from(event.target.files || []);
+          event.target.value = '';
+          if (!files.length) return;
+          setBusy(true);
+          setError('');
+          void adapter
+            .storePhotos(files)
+            .then((ids) => {
+              setLayoutIds(ids);
+              setArranging(true);
+            })
+            .catch((e) => setError(errorMessage(e)))
+            .finally(() => setBusy(false));
+        }}
+      />
+      {arranging &&
+        (!layoutIds ||
+          layoutIds.every((id) => library.some((photo) => photo.record.id === id))) && (
+          <PhotoLayoutBuilder
+            adapter={adapter}
+            initialIds={layoutIds}
+            photos={library}
+            onClose={() => setArranging(false)}
+          />
+        )}
       <section aria-label="Your uploaded photos" className="uploads-library">
         <h3>Your photos</h3>
         <p className="ai-tool-help">Saved in this browser. Reuse on any board.</p>

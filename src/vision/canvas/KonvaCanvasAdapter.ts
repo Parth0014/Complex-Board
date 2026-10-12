@@ -1,3 +1,4 @@
+import { photoLayout, type PhotoArrangement } from '../photoLayout';
 import { libraryAsset } from '../../assets/libraryAsset';
 import { createAppearance } from '../appearance/defaults';
 import { appearancePersistenceEnabled } from '../appearance/activation';
@@ -1225,6 +1226,41 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.commit({ ...board, items: [...board.items, ...items] });
     this.select(items.map((item) => item.id));
     if (storage?.persist) void storage.persist().catch(() => {});
+  }
+  async storePhotos(files: File[]) {
+    if (!files.length || files.length > 20) throw new Error('Choose 1 to 20 photos.');
+    const records = [];
+    for (const file of files) records.push(await preparePhoto(this.ownerWindow, file));
+    await saveMedia(this.ownerWindow, records);
+    if (this.ownerWindow.navigator.storage?.persist)
+      void this.ownerWindow.navigator.storage.persist().catch(() => {});
+    return records.map((record) => record.id);
+  }
+  async arrangePhotos(ids: string[], style: PhotoArrangement) {
+    const board = this.history.document,
+      revision = this.history.revision;
+    const slots = photoLayout(ids.length, style, board.width, board.height);
+    if (new Set(ids).size !== ids.length) throw new Error('Choose different photos.');
+    const records = await Promise.all(ids.map((id) => loadMedia(this.ownerWindow, id)));
+    for (const record of records) await this.decode(mediaAsset(record), record);
+    if (revision !== this.history.revision)
+      throw new Error('The board changed. Preview the layout again.');
+    const items = records.map((record, index) => ({
+      id: this.id(),
+      kind: 'asset' as const,
+      asset: mediaAsset(record),
+      ...slots[index],
+      imageFit: 'fill' as const,
+      rotation: 0,
+      opacity: 1,
+    }));
+    this.commit({ ...board, items: [...board.items, ...items] });
+    this.select(items.map((item) => item.id));
+  }
+  previewBoard() {
+    return this.png(
+      Math.min(1, 2000 / Math.max(this.history.document.width, this.history.document.height)),
+    );
   }
   async downloadOriginalPhoto() {
     const item = this.history.document.items.find((item) => item.id === this.selectedIds[0]),

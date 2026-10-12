@@ -5451,3 +5451,96 @@
     height: 16px;
   }
 }
+
+@layer components {
+  .photo-layout-dialog {
+    width: min(680px, calc(100vw - 64px));
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    padding: 24px;
+    display: grid;
+    gap: 16px;
+  }
+  .photo-layout-dialog > p {
+    margin: 0;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-13);
+  }
+  .photo-layout-choices {
+    display: flex;
+    gap: 8px;
+  }
+  .photo-layout-choices button[aria-pressed='true'] {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+  .photo-layout-preview {
+    position: relative;
+    width: 100%;
+    max-height: 360px;
+    background: var(--gs-workspace);
+    border: 1px solid var(--gs-line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .photo-layout-preview img {
+    position: absolute;
+    object-fit: cover;
+  }
+  .photo-layout-selection {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .vs .photo-layout-selection > button {
+    padding: 3px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+  }
+  .photo-layout-selection > button[aria-pressed='true'] {
+    border-color: var(--gs-accent);
+  }
+  .photo-layout-selection img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  .board-preview {
+    background: var(--gs-workspace);
+  }
+  .board-preview-dialog {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .board-preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .board-preview-actions > span {
+    margin-right: auto;
+    font-size: var(--gs-text-15);
+  }
+  .board-preview-dialog > img {
+    display: block;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    object-fit: contain;
+  }
+}
+
+@layer components {
+ .photo-layout-dialog { display: flex; flex-direction: column; }
+ .photo-layout-dialog > * { flex-shrink: 0; }
+ .photo-layout-preview { margin-inline: auto; }
+}

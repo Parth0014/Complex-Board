@@ -1,3 +1,4 @@
+import { BoardPreview } from './BoardPreview';
 import { StudioHeader } from './chrome/StudioHeader';
 import { ExportDialog } from './export/ExportDialog';
 import { Toast } from './ui/Toast';
@@ -21,6 +22,7 @@ export function StudioShell({
   drawingTools?: ReactNode;
   onHome: () => void;
 }) {
+  const [preview, setPreview] = useState('');
   const [share, setShare] = useState(false);
   const [error, setError] = useState('');
   const dismissError = useCallback(() => setError(''), []);
@@ -38,6 +40,13 @@ export function StudioShell({
         onHome={onHome}
         onError={setError}
         shareDisabled={!hasContent}
+        onPreview={() => {
+          try {
+            setPreview(adapter.previewBoard());
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Preview could not be opened.');
+          }
+        }}
         onShare={() => {
           setError('');
           setShare(true);
@@ -90,6 +99,7 @@ export function StudioShell({
           </div>
         </main>
       </div>
+      {preview && <BoardPreview adapter={adapter} image={preview} onClose={() => setPreview('')} />}
       {share && (
         <ExportDialog
           adapter={adapter}

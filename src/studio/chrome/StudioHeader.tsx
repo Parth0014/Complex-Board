@@ -25,12 +25,14 @@ export function StudioHeader({
   adapter,
   onHome,
   onShare,
+  onPreview,
   onError,
   shareDisabled = false,
 }: {
   adapter: EditorAdapter;
   onHome: () => void;
   onShare: () => void;
+  onPreview: () => void;
   onError: (message: string) => void;
   shareDisabled?: boolean;
 }) {
@@ -107,6 +109,9 @@ export function StudioHeader({
       </div>
 
       <div className="vs-header__end">
+        <Button aria-label="Preview board" onClick={onPreview}>
+          Preview
+        </Button>
         <Button
           variant="primary"
           aria-label="Share"
