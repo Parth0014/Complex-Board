@@ -5433,3 +5433,21 @@
     border-color: var(--gs-accent);
   }
 }
+
+@layer components {
+  .vs-context-actions > .gs-button,
+  .gs-submenu > .gs-button,
+  .gs-button.gs-submenu-trigger {
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 36px;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+  .gs-submenu > .gs-button > svg,
+  .vs-context-actions > .gs-button > svg {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
