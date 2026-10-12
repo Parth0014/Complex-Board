@@ -1,3 +1,4 @@
+import { fitPhotoScale } from '../imageFit';
 import { ITEM_FILL_DEFAULT, ITEM_INK_DEFAULT, ITEM_WHITE, ITEM_BLACK } from './colors';
 import { appearanceToKonva } from './appearance';
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -37,7 +38,10 @@ function Content({
   imageToken?: HTMLImageElement;
   previewToken?: object | boolean;
 }) {
-  const input = raw.contentSize ? { ...raw, ...raw.contentSize } : raw;
+  const input =
+    raw.contentSize && !(raw.kind === 'asset' && raw.imageFit)
+      ? { ...raw, ...raw.contentSize }
+      : raw;
   const item =
     adapter.originalPreview && input.kind === 'asset'
       ? {
@@ -390,9 +394,24 @@ function Content({
         };
   const crop =
     item.crop || (item.imageFit === 'fill' ? cover : { x: 0, y: 0, width: 1, height: 1 });
-  const fit = item.imageFit === 'fit',
-    displayWidth = fit ? Math.min(item.width, item.height * sourceRatio) : item.width,
-    displayHeight = fit ? Math.min(item.height, item.width / sourceRatio) : item.height;
+  const fit = item.imageFit === 'fit';
+  const sourceWidth = (image?.naturalWidth || source?.width || 1) * crop.width;
+  const sourceHeight = (image?.naturalHeight || source?.height || 1) * crop.height;
+  const fitScale = fit
+    ? fitPhotoScale(
+        adapter.ownerWindow,
+        item.width,
+        item.height,
+        sourceWidth,
+        sourceHeight,
+        item.frameShape,
+        item.asset?.frameSlot ? item.asset.slotPath : undefined,
+        item.asset?.frameSlot ? item.asset.width : 100,
+        item.asset?.frameSlot ? item.asset.height : 100,
+      )
+    : 1;
+  const displayWidth = fit ? sourceWidth * fitScale : item.width;
+  const displayHeight = fit ? sourceHeight * fitScale : item.height;
   const imageProps = {
     ...common,
     fill: 'transparent',

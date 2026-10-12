@@ -1,3 +1,5 @@
+import { fitPhotoScale } from '../vision/imageFit';
+import { framePaths } from '../vision/frames';
 import { useEffect, useRef } from 'react';
 import type { BoardItem } from '../vision/document';
 import type { EditorAdapter } from '../vision/contracts';
@@ -23,18 +25,43 @@ function FitPreview({
       fy = (112 - fh) / 2;
     ctx.save();
     ctx.beginPath();
-    if (item.frameShape === 'circle') ctx.ellipse(72, 56, fw / 2, fh / 2, 0, 0, Math.PI * 2);
-    else ctx.rect(fx, fy, fw, fh);
-    ctx.clip();
+    const pathText = item.asset?.frameSlot
+      ? item.asset.slotPath
+      : item.frameShape
+        ? framePaths[item.frameShape]
+        : undefined;
+    if (pathText) {
+      const path = new Path2D(pathText);
+      ctx.translate(fx, fy);
+      ctx.scale(
+        fw / (item.asset?.frameSlot ? item.asset.width! : 100),
+        fh / (item.asset?.frameSlot ? item.asset.height! : 100),
+      );
+      ctx.clip(path);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    } else {
+      ctx.rect(fx, fy, fw, fh);
+      ctx.clip();
+    }
     const factor =
       mode === 'fill'
         ? Math.max(fw / image.naturalWidth, fh / image.naturalHeight)
-        : Math.min(fw / image.naturalWidth, fh / image.naturalHeight);
+        : fitPhotoScale(
+            ref.current!.ownerDocument.defaultView!,
+            fw,
+            fh,
+            image.naturalWidth,
+            image.naturalHeight,
+            item.frameShape,
+            item.asset?.frameSlot ? item.asset.slotPath : undefined,
+            item.asset?.frameSlot ? item.asset.width : 100,
+            item.asset?.frameSlot ? item.asset.height : 100,
+          );
     const w = image.naturalWidth * factor,
       h = image.naturalHeight * factor;
     ctx.drawImage(image, (144 - w) / 2, (112 - h) / 2, w, h);
     ctx.restore();
-  }, [image, item.width, item.height, item.frameShape, mode]);
+  }, [image, item.width, item.height, item.frameShape, item.asset, mode]);
   return <canvas ref={ref} width={144} height={112} aria-hidden="true" />;
 }
 export function ImageFitPresets({ adapter, item }: { adapter: EditorAdapter; item: BoardItem }) {
