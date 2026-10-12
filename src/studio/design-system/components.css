@@ -5395,3 +5395,41 @@
     color: var(--gs-accent);
   }
 }
+
+@layer components {
+  .image-fit-presets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .vs .image-fit-presets > .gs-button {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    padding: 5px;
+    border: 1px solid var(--gs-control-line);
+    border-radius: 8px;
+    white-space: normal;
+    text-align: center;
+  }
+  .image-fit-presets canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    background: var(--gs-surface-muted);
+  }
+  .image-fit-presets strong {
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+  }
+  .image-fit-presets span {
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
+  .vs .image-fit-presets > button[aria-pressed='true'] {
+    background: var(--gs-accent-soft);
+    border-color: var(--gs-accent);
+  }
+}

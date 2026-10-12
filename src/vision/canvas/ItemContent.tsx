@@ -43,6 +43,7 @@ function Content({
       ? {
           ...input,
           crop: undefined,
+          imageFit: 'fit' as const,
           brightness: 0,
           contrast: 0,
           saturation: 0,

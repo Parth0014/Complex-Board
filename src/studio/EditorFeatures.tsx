@@ -1,3 +1,4 @@
+import { ImageFitPresets } from './ImageFitPresets';
 import { ImageFilterPresets } from './ImageFilterPresets';
 // Canvas formatting and layer controls.
 import { errorMessage } from './errors';
@@ -753,30 +754,7 @@ export function EditorFeatures({
                   </label>
 
                   <Sec title="Fit & crop" icon={<CropIcon />}>
-                    <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                      <Button
-                        data-tip="Show the whole image inside its frame"
-                        aria-pressed={item.imageFit === 'fit'}
-                        onClick={() => adapter.setImageFit('fit')}
-                      >
-                        Fit image
-                      </Button>
-                      <Button
-                        data-tip="Fill the frame; crop edges when needed"
-                        aria-pressed={item.imageFit === 'fill'}
-                        onClick={() => adapter.setImageFit('fill')}
-                      >
-                        Fill image
-                      </Button>
-                      <Button
-                        data-tip="Hold to preview the original"
-                        onMouseDown={() => adapter.previewOriginalImage(true)}
-                        onMouseUp={() => adapter.previewOriginalImage(false)}
-                        onMouseLeave={() => adapter.previewOriginalImage(false)}
-                      >
-                        Hold for original
-                      </Button>
-                    </div>
+                    <ImageFitPresets adapter={adapter} item={item} />
                     {!crop ? (
                       <Button
                         variant="secondary"
