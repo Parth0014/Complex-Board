@@ -2100,16 +2100,17 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         }
         const selected = (unit: BoardItem[]) =>
           unit.some((item) => this.selectedIds.includes(item.id));
-        if (position === 'forward')
+        if (position === 'forward') {
           for (let i = units.length - 2; i >= 0; i--) {
             if (selected(units[i]) && !selected(units[i + 1]))
               [units[i], units[i + 1]] = [units[i + 1], units[i]];
           }
-        else
+        } else {
           for (let i = 1; i < units.length; i++) {
             if (selected(units[i]) && !selected(units[i - 1]))
               [units[i], units[i - 1]] = [units[i - 1], units[i]];
           }
+        }
         return merge(units.flat());
       }
       const chosen = scoped.filter((item) => this.selectedIds.includes(item.id));

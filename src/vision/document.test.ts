@@ -73,6 +73,35 @@ function environment() {
 }
 
 describe('adapter commands', () => {
+  it('moves selections backward and forward one layer per command', () => {
+    const { adapter } = environment();
+    for (const sample of ['A', 'B', 'C'])
+      adapter.createTextPreset({
+        id: sample,
+        label: sample,
+        sample,
+        category: 'minimal',
+        fontFamily: 'helvetica',
+        fontSize: 40,
+        color: '#33272b',
+      });
+    const [a, b, c] = adapter.history.document.items.map((item) => item.id);
+    const order = () => adapter.history.document.items.map((item) => item.id);
+    adapter.select([c]);
+    adapter.arrangeSelection('backward');
+    expect(order()).toEqual([a, c, b]);
+    adapter.arrangeSelection('backward');
+    expect(order()).toEqual([c, a, b]);
+    adapter.arrangeSelection('backward');
+    expect(order()).toEqual([c, a, b]);
+    adapter.arrangeSelection('forward');
+    expect(order()).toEqual([a, c, b]);
+    adapter.arrangeSelection('front');
+    expect(order()).toEqual([a, b, c]);
+    adapter.arrangeSelection('back');
+    expect(order()).toEqual([c, a, b]);
+  });
+
   it('drops an image insertion completed after undo', async () => {
     const { adapter, pending } = environment();
     adapter.createTextPreset({
