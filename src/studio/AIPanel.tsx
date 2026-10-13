@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
 import { requestAI } from '../vision/aiClient';
 import { useAIStatus } from './useAIStatus';
+import { startCreationDrag } from './canvasDrag';
 
 const modeHelp = {
   image: {
@@ -104,65 +105,61 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       )}
       {(!aiStatus || aiStatus.configured) && (
         <>
-      <label>
-        Create
-        <select
-          className="vs-select"
-          aria-label="AI generation type"
-          disabled={busy}
-          value={mode}
-          onChange={(event) => {
-            setMode(event.target.value as typeof mode);
-            setPrompt('');
-            setResult(null);
-            setError('');
-          }}
-        >
-          <option value="image">Image</option>
-          <option value="quote">Affirmation</option>
-        </select>
-      </label>
-      <p className="ai-tool-help" id="ai-mode-help">
-        {help.description}
-      </p>
-      <textarea
-        className="vs-textarea"
-        aria-label="AI prompt"
-        aria-describedby="ai-mode-help"
-        placeholder={help.example}
-        maxLength={2000}
-        value={prompt}
-        onChange={(event) => setPrompt(event.target.value)}
-      />
-      <Button
-        className="panel-action"
-        aria-label="Generate"
-        data-tip={help.action}
-        loading={busy}
-        disabled={!prompt.trim()}
-        onClick={() => void generate()}
-      >
-        {help.action}
-      </Button>
-      {busy && <Skeleton label="Generating" />}
-      {busy && <Button onClick={() => controller.current?.abort()}>Cancel generation</Button>}
-      {busy && (
-        <p className="ai-tool-help" role="status">
-          {progress}
-        </p>
-      )}
-      {error && (
-        <div className="panel-inline-error" role="alert">
-          <p>{error}</p>
+          <label>
+            Create
+            <select
+              className="vs-select"
+              aria-label="AI generation type"
+              disabled={busy}
+              value={mode}
+              onChange={(event) => {
+                setMode(event.target.value as typeof mode);
+                setPrompt('');
+                setResult(null);
+                setError('');
+              }}
+            >
+              <option value="image">Image</option>
+              <option value="quote">Affirmation</option>
+            </select>
+          </label>
+          <p className="ai-tool-help" id="ai-mode-help">
+            {help.description}
+          </p>
+          <textarea
+            className="vs-textarea"
+            aria-label="AI prompt"
+            aria-describedby="ai-mode-help"
+            placeholder={help.example}
+            maxLength={2000}
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+          />
           <Button
-            type="button"
-            className="gs-button--sm"
+            className="panel-action"
+            aria-label="Generate"
+            data-tip={help.action}
+            loading={busy}
+            disabled={!prompt.trim()}
             onClick={() => void generate()}
           >
-            Try again
+            {help.action}
           </Button>
-        </div>
-      )}
+          {busy && <Skeleton label="Generating" />}
+          {busy && <Button onClick={() => controller.current?.abort()}>Cancel generation</Button>}
+          {busy && (
+            <p className="ai-tool-help" role="status">
+              {progress}
+            </p>
+          )}
+          {error && (
+            <div className="panel-inline-error" role="alert">
+              <p>{error}</p>
+              <Button type="button" className="gs-button--sm" onClick={() => void generate()}>
+                Try again
+              </Button>
+            </div>
+          )}
         </>
       )}
       {result && (
@@ -171,8 +168,32 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
             <h4>{result.image ? 'Your image' : 'Your affirmation'}</h4>
             <span className="ai-result__badge">Preview</span>
           </header>
-          {result.image && <img src={result.image} alt="Generated preview" />}
-          {result.text && <blockquote className="ai-result__quote">{result.text}</blockquote>}
+          {result.image && (
+            <img
+              src={result.image}
+              alt="Generated preview"
+              draggable={!busy}
+              onDragStart={(event) => {
+                if (busy) return event.preventDefault();
+                startCreationDrag(event, { kind: 'generated-image', image: result.image!, prompt });
+              }}
+            />
+          )}
+          {result.text && (
+            <blockquote
+              className="ai-result__quote"
+              draggable={!busy}
+              onDragStart={(event) => {
+                if (busy) return event.preventDefault();
+                startCreationDrag(event, {
+                  kind: 'text',
+                  preset: { ...AFFIRMATION_STYLE, sample: result.text! },
+                });
+              }}
+            >
+              {result.text}
+            </blockquote>
+          )}
           <p className="ai-result__hint">
             {result.image
               ? 'Add this image to your board or use it as a background.'

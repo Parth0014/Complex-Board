@@ -136,7 +136,7 @@ export interface CanvasAdapter {
   duplicateSelection(): void;
   arrangeSelection(position: 'front' | 'back'): void;
   activateTool(tool: 'image' | 'note' | 'text'): void;
-  createTextPreset(preset: VisionTextPreset): void;
+  createTextPreset(preset: VisionTextPreset, position?: VisionPoint): void;
   applyLayout(layout: VisionLayout): void;
   applyTemplate(template: VisionTemplate): void;
   fitBoard(): void;
@@ -212,7 +212,12 @@ export interface EditorAdapter extends StudioAdapter {
   updateCropDraft(crop: NonNullable<BoardItem['crop']>): void;
   applyCrop(): void;
   cancelCrop(): void;
-  insertGeneratedImage(url: string, prompt: string, background?: boolean): Promise<void>;
+  insertGeneratedImage(
+    url: string,
+    prompt: string,
+    background?: boolean,
+    position?: VisionPoint,
+  ): Promise<void>;
   groupScope: string[];
   path(item: BoardItem): string[];
   unitKey(item: BoardItem): string;
@@ -220,7 +225,7 @@ export interface EditorAdapter extends StudioAdapter {
   enterGroup(id: string): void;
   exitGroup(): void;
   arrangeSelection(position: 'front' | 'back' | 'forward' | 'backward'): void;
-  createShape(shape: NonNullable<BoardItem['shape']>): void;
+  createShape(shape: NonNullable<BoardItem['shape']>, position?: VisionPoint): void;
   connectSelection(): void;
   attachFrameContent(assetId: string): Promise<void>;
   detachFrameContent(): void;

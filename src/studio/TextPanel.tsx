@@ -3,6 +3,7 @@ import { VISION_TEXT_PRESETS } from '../vision/typography';
 import type { VisionTextPreset } from '../vision/contracts';
 import { fontFamily } from '../vision/fonts';
 import { PlusIcon } from './icons';
+import { startCreationDrag } from './canvasDrag';
 
 export interface TextPanelProps {
   onInsertText: (preset: VisionTextPreset) => void;
@@ -17,6 +18,8 @@ export const TextPanel = ({ onInsertText }: TextPanelProps) => (
           <Button
             type="button"
             className="text-panel__item"
+            draggable
+            onDragStart={(event) => startCreationDrag(event, { kind: 'text', preset })}
             onClick={() => onInsertText(preset)}
             data-tip={`Add ${preset.label}`}
           >

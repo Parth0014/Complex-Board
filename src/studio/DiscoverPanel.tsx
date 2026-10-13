@@ -4,6 +4,7 @@ import { requestAI } from '../vision/aiClient';
 import { AIPanel } from './AIPanel';
 import { Button } from './ui/Button';
 import { errorMessage } from './errors';
+import { startCanvasDrag } from './canvasDrag';
 type Photo = {
   id: string;
   provider: string;
@@ -197,7 +198,7 @@ export function DiscoverPanel({ adapter }: { adapter: EditorAdapter }) {
                   disabled={Boolean(adding)}
                   draggable
                   onDragStart={(event) =>
-                    event.dataTransfer.setData('application/x-visbo-photo', item.token)
+                    startCanvasDrag(event, 'application/x-visbo-photo', item.token)
                   }
                   aria-label={`Add ${item.title} to board`}
                   onClick={() => void insert(item)}

@@ -6,6 +6,7 @@ import { matchesElementSearch } from '../assets/elementSearch';
 import { curatedAssets } from '../assets/curatedPack';
 import { ELEMENT_THEMES } from '../assets/elementThemes';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
+import { startCanvasDrag } from './canvasDrag';
 import type { EditorAdapter } from '../vision/contracts';
 export function CuratedPanel({
   adapter,
@@ -107,7 +108,11 @@ export function CuratedPanel({
                   data-tip={asset.title}
                   draggable
                   onDragStart={(event) =>
-                    event.dataTransfer.setData(GRATITUDE_ASSET_DRAG_TYPE, JSON.stringify(asset))
+                    startCanvasDrag(
+                      event,
+                      GRATITUDE_ASSET_DRAG_TYPE,
+                      JSON.stringify({ id: asset.id }),
+                    )
                   }
                   onClick={() => {
                     setError('');
@@ -118,6 +123,7 @@ export function CuratedPanel({
                     src={asset.previewUrl}
                     alt={asset.title}
                     loading="lazy"
+                    draggable={false}
                     className={loaded.has(asset.id) ? undefined : 'gs-skeleton'}
                     onLoad={() => setLoaded((current) => new Set(current).add(asset.id))}
                     onError={() => setLoaded((current) => new Set(current).add(asset.id))}

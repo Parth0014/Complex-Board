@@ -1,6 +1,7 @@
 import { Button } from './ui/Button';
 import type { EditorAdapter } from '../vision/contracts';
 import { ShapeIcon } from './icons';
+import { startCreationDrag } from './canvasDrag';
 
 const SHAPES = [
   'rectangle',
@@ -28,6 +29,8 @@ export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {
               key={shape}
               data-tip={`Add ${shape}`}
               aria-label={shape}
+              draggable
+              onDragStart={(event) => startCreationDrag(event, { kind: 'shape', shape })}
               onClick={() => adapter.createShape(shape)}
             >
               <ShapeIcon shape={shape} />

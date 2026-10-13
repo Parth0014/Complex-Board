@@ -6,6 +6,7 @@ import { Button } from './ui/Button';
 import { useEffect, useState } from 'react';
 import type { StudioAdapter } from '../vision/contracts';
 import { UploadIcon } from './icons';
+import { startCanvasDrag } from './canvasDrag';
 
 export function UploadsPanel({
   adapter,
@@ -190,7 +191,8 @@ export function UploadsPanel({
                 <Button
                   draggable
                   onDragStart={(event) =>
-                    event.dataTransfer.setData(
+                    startCanvasDrag(
+                      event,
                       GRATITUDE_ASSET_DRAG_TYPE,
                       JSON.stringify(mediaAsset(record)),
                     )

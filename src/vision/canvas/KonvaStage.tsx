@@ -13,6 +13,7 @@ import type { BoardItem } from '../document';
 import { boundsOf, unionBounds, snapMovement, snapResize, type Bounds } from './geometry';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../../assets/contracts';
 import { curatedPackProvider } from '../../assets/curatedPack';
+import { CANVAS_CREATION_DRAG_TYPE, type CanvasCreation } from '../../studio/canvasDrag';
 
 import { fontFamily } from '../fonts';
 import { ItemContent } from './ItemContent';
@@ -827,6 +828,7 @@ export function KonvaStage({
       onDragOver={(event) => {
         if (
           event.dataTransfer.types.includes(GRATITUDE_ASSET_DRAG_TYPE) ||
+          event.dataTransfer.types.includes(CANVAS_CREATION_DRAG_TYPE) ||
           event.dataTransfer.types.includes('application/x-visbo-photo') ||
           event.dataTransfer.types.includes('Files') ||
           event.dataTransfer.types.includes('text/html') ||
@@ -839,6 +841,7 @@ export function KonvaStage({
       onDrop={async (event) => {
         const files = Array.from(event.dataTransfer.files);
         const id = event.dataTransfer.getData(GRATITUDE_ASSET_DRAG_TYPE);
+        const creationData = event.dataTransfer.getData(CANVAS_CREATION_DRAG_TYPE);
         const photoToken = event.dataTransfer.getData('application/x-visbo-photo');
         const html = event.dataTransfer.getData('text/html');
         const source =
@@ -851,8 +854,9 @@ export function KonvaStage({
             .split('\n')
             .find((line) => line && !line.startsWith('#'))
             ?.trim();
-        if (!id && !files.length && !source && !photoToken) return;
+        if (!id && !files.length && !source && !photoToken && !creationData) return;
         event.preventDefault();
+        event.stopPropagation();
         setDropError('');
         const rect = stageRef.current?.container().getBoundingClientRect();
         if (!rect) return;
@@ -863,13 +867,27 @@ export function KonvaStage({
         if (point.x < 0 || point.y < 0 || point.x > document.width || point.y > document.height)
           return;
         try {
+          if (creationData) {
+            const creation: CanvasCreation = JSON.parse(creationData);
+            if (creation.kind === 'shape') adapter.createShape(creation.shape, point);
+            else if (creation.kind === 'text') adapter.createTextPreset(creation.preset, point);
+            else if (creation.kind === 'generated-image')
+              await adapter.insertGeneratedImage(creation.image, creation.prompt, false, point);
+            else throw new Error('Unsupported canvas item.');
+            return;
+          }
           if (photoToken) {
             const asset = await requestAI(adapter.ownerWindow, '/api/images/import', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ token: photoToken }),
             });
-            await adapter.insertAsset(asset, point);
+            const width = Math.min(320, asset.width || 240),
+              height = (width * (asset.height || 240)) / (asset.width || 240);
+            await adapter.insertAsset(asset, {
+              x: Math.max(0, Math.min(document.width - width, point.x - width / 2)),
+              y: Math.max(0, Math.min(document.height - height, point.y - height / 2)),
+            });
             return;
           }
           if (files.length) {

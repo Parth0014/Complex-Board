@@ -1316,7 +1316,12 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.select([id]);
     return id;
   }
-  async insertGeneratedImage(url: string, prompt: string, background = false) {
+  async insertGeneratedImage(
+    url: string,
+    prompt: string,
+    background = false,
+    position?: VisionPoint,
+  ) {
     if (!/^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(url) || url.length > 16000000)
       throw new Error('Invalid generated image.');
     const revision = this.history.revision,
@@ -1355,8 +1360,18 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         id,
         kind: 'asset',
         asset,
-        x: 100,
-        y: 160,
+        x: position
+          ? Math.max(0, Math.min(this.history.document.width - 400, position.x - 200))
+          : 100,
+        y: position
+          ? Math.max(
+              0,
+              Math.min(
+                this.history.document.height - (400 * asset.height!) / asset.width!,
+                position.y - (200 * asset.height!) / asset.width!,
+              ),
+            )
+          : 160,
         width: 400,
         height: (400 * asset.height!) / asset.width!,
         rotation: 0,
@@ -1788,7 +1803,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.items(() => []);
     this.select([]);
   }
-  createShape(shape: NonNullable<BoardItem['shape']>) {
+  createShape(shape: NonNullable<BoardItem['shape']>, position?: VisionPoint) {
     const id = this.id();
     const document = this.history.document;
     const baseWidth =
@@ -1816,8 +1831,12 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         id,
         kind: 'shape',
         shape,
-        x: (document.width - width) / 2,
-        y: (document.height - height) / 2,
+        x: position
+          ? Math.max(0, Math.min(document.width - width, position.x - width / 2))
+          : (document.width - width) / 2,
+        y: position
+          ? Math.max(0, Math.min(document.height - height, position.y - height / 2))
+          : (document.height - height) / 2,
         width,
         height,
         appearance:
@@ -2173,7 +2192,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       color: '#33272b',
     });
   }
-  createTextPreset(preset: VisionTextPreset) {
+  createTextPreset(preset: VisionTextPreset, position?: VisionPoint) {
     const id = this.id();
     const document = this.history.document;
     const text = new Konva.Text({
@@ -2202,8 +2221,12 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         align: preset.align || 'center',
         textPadding: 8,
         lineHeight: 1.2,
-        x: (document.width - width) / 2,
-        y: (document.height - height) / 2,
+        x: position
+          ? Math.max(0, Math.min(document.width - width, position.x - width / 2))
+          : (document.width - width) / 2,
+        y: position
+          ? Math.max(0, Math.min(document.height - height, position.y - height / 2))
+          : (document.height - height) / 2,
         width,
         height,
         rotation: 0,
