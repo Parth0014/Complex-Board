@@ -1,3 +1,5 @@
+import elementTopics from './elementTopics.json';
+
 export const ELEMENT_THEMES = [
   { id: 'love', label: 'Love & Connection' },
   { id: 'health', label: 'Health & Wellness' },
@@ -11,54 +13,8 @@ export const ELEMENT_THEMES = [
   { id: 'nature', label: 'Nature & Wonder' },
   { id: 'planning', label: 'Dreams & Goals' },
   { id: 'creative', label: 'Creative Essentials' },
+  { id: 'faith', label: 'Faith & Spirituality' },
 ] as const;
-
-const themeRules: [string, RegExp][] = [
-  [
-    'love',
-    /\b(love|kind|kindly|kindness|friend|friends|family|people|connection|heart|hearts|ring|letter)\b/,
-  ],
-  [
-    'health',
-    /\b(health|healthy|wellness|fitness|body|feed|food|care|self care|move|movement|dumbbell|dumbbells|yoga|sneaker|juice|salad|smoothie|avocado|strawberries|lemon)\b/,
-  ],
-  [
-    'growth',
-    /\b(growth|grow|growing|progress|learn|learning|skills|lesson|brave|scared|confident|proud|effort|step|steps|begin|start|small|pace|bloom|enough|perfection|control|feelings|space|setbacks|curious|worth|did it|on my way|little by little|steady)\b/,
-  ],
-  [
-    'calm',
-    /\b(calm|peace|rest|breath|breathe|slowly|soften|gentle|balance|meditation|sleep|sleeping|bed|bathtub|candle|nights|mornings|letting go|one day at a time|one task|less scrolling)\b/,
-  ],
-  [
-    'joy',
-    /\b(joy|happy|happiness|grateful|gratitude|thankful|thank|smile|good|pleasure|win|memories|memory|ordinary|glow|yes|celebrate|confetti)\b/,
-  ],
-  [
-    'career',
-    /\b(career|work|job|business|purpose|ideas|task|effort|skills|briefcase|laptop|diploma|graduation|trophy|wristwatch|show up)\b/,
-  ],
-  [
-    'money',
-    /\b(money|savings|saving|debt|cash|coin|coins|stacks|credit|piggy|worth|diamond|freedom)\b/,
-  ],
-  [
-    'travel',
-    /\b(travel|adventure|places|world|wander|arrived|next stop|boarding|pass|plane|airplane|globe|camera|suitcase|ticket|passport|map|mountains|beach|palm|tent|sunset|sunsets|sunglasses|balloon)\b/,
-  ],
-  [
-    'home',
-    /\b(home|house|cozy|armchair|bathtub|bed|teapot|latte|coffee|keys|key|photo frame|cat|mornings)\b/,
-  ],
-  [
-    'nature',
-    /\b(botanicals|flowers|flower|plant|leaf|blossom|fern|eucalyptus|ginkgo|gypsophila|grass|poppy|daisy|lavender|rose|tulip|violet|hydrangea|pansy|cosmos|camellia|butterfly|sky|cloud|clouds|moon|rainbow|saturn|star|stars|sun|sparkle|cherries|waves)\b/,
-  ],
-  [
-    'planning',
-    /\b(vision|dream|dreams|goal|goals|habit|2027|year|month|focus|hope|soon|looking forward)\b/,
-  ],
-];
 
 const decodeText = (text: string) =>
   text
@@ -96,17 +52,9 @@ export function describeElement(folder: string, name: string, svg: string) {
     title = name.replace(/^\d+-/, '') + ' 2027';
   }
   title = title.charAt(0).toUpperCase() + title.slice(1);
-  const content = (
-    words +
-    ' ' +
-    (folder === 'affirmations' ? '' : name.replace(/-/g, ' '))
-  ).toLowerCase();
-  const topics = themeRules.filter(([, rule]) => rule.test(content)).map(([id]) => id);
-  if (
-    folder.startsWith('letters-') ||
-    ['frames', 'patterns', 'washi-tape'].includes(folder) ||
-    !topics.length
-  )
-    topics.push('creative');
+  // Topic order is editorial: the first topic is the primary browse section.
+  // Filenames and isolated words cannot express the meaning of an affirmation.
+  const key = `${folder}/${name}` as keyof typeof elementTopics;
+  const topics = elementTopics[key] || ['creative'];
   return { title, topics: [...new Set(topics)] };
 }

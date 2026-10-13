@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { curatedAssets, curatedPackProvider } from './curatedPack';
 import { ELEMENT_THEMES } from './elementThemes';
+import elementTopics from './elementTopics.json';
 describe('user supplied SVG library', () => {
   it('includes every SVG and excludes raster media', () => {
     expect(curatedAssets).toHaveLength(330);
@@ -70,5 +71,36 @@ describe('user supplied SVG library', () => {
     await expect(
       curatedPackProvider.resolve('unknown', {} as Window & typeof globalThis),
     ).rejects.toThrow('Unknown vector asset');
+  });
+  it('has a reviewed assignment for every installed element and no retired entries', () => {
+    expect(Object.keys(elementTopics).sort()).toEqual(
+      curatedAssets.map((asset) => asset.id.replace('vision-svg:', '')).sort(),
+    );
+    for (const asset of curatedAssets) {
+      expect(asset.topics?.[0]).toBe(asset.category);
+      expect(new Set(asset.topics).size).toBe(asset.topics?.length);
+    }
+    const sections = ELEMENT_THEMES.flatMap((theme) =>
+      curatedAssets.filter((asset) => asset.category === theme.id),
+    );
+    expect(sections).toHaveLength(curatedAssets.length);
+    expect(new Set(sections.map((asset) => asset.id)).size).toBe(curatedAssets.length);
+  });
+  it.each([
+    ['affirmations/self-love-growth-02', ['growth']],
+    ['affirmations/work-money-01', ['career']],
+    ['affirmations/work-money-03', ['money']],
+    ['affirmations/work-money-05', ['money']],
+    ['affirmations/work-money-06', ['career']],
+    ['bubbles/worth-it', ['growth']],
+    ['phrases/read-more-books', ['growth']],
+    ['phrases/dream-job', ['career', 'planning']],
+    ['gratitude-notes/a-place-i-love', ['joy']],
+    ['letters-bold/excl', ['creative']],
+    ['patterns/hearts-pink', ['creative', 'love']],
+    ['patterns/clouds-sky', ['creative', 'nature']],
+    ['life-areas/torn-faith', ['faith']],
+  ])('classifies %s by its meaning instead of loose keywords', (id, topics) => {
+    expect(curatedAssets.find((asset) => asset.id === 'vision-svg:' + id)?.topics).toEqual(topics);
   });
 });

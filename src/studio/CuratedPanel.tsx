@@ -95,7 +95,9 @@ export function CuratedPanel({
         const themeAssets =
           theme.id === 'search-results'
             ? assets
-            : assets.filter((asset) => asset.topics?.includes(theme.id));
+            : assets.filter((asset) =>
+                category === 'all' ? asset.category === theme.id : asset.topics?.includes(theme.id),
+              );
         if (!themeAssets.length) return null;
         return (
           <section key={theme.id} aria-label={theme.label}>
