@@ -5,6 +5,7 @@ import { KonvaCanvasAdapter } from './vision/canvas/KonvaCanvasAdapter';
 import { HomePage } from './studio/HomePage';
 import { Editor } from './editor/Editor';
 import type { StudioTab } from './studio/studioTypes';
+import { AppUpdateNotice } from './studio/AppUpdateNotice';
 
 export default function App() {
   const [adapter, setAdapter] = useState<KonvaCanvasAdapter>();
@@ -47,6 +48,7 @@ export default function App() {
   }, []);
   return (
     <div className="vs-root">
+      <AppUpdateNotice save={() => (adapter ? adapter.flushSave() : Promise.resolve())} />
       {opening ? (
         <p role="status">Opening your board…</p>
       ) : adapter ? (

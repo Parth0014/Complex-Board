@@ -2,6 +2,19 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+const buildId = `${process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || 'local'}-${Date.now()}`;
+function deploymentVersion(): Plugin {
+  return {
+    name: 'deployment-version',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: JSON.stringify({ buildId }),
+      });
+    },
+  };
+}
 function distributionNotices(): Plugin {
   return {
     name: 'distribution-notices',
@@ -37,7 +50,8 @@ function distributionNotices(): Plugin {
   };
 }
 export default defineConfig({
-  plugins: [react(), distributionNotices()],
+  plugins: [react(), distributionNotices(), deploymentVersion()],
+  define: { __VISBO_BUILD_ID__: JSON.stringify(buildId) },
   publicDir: false,
   server: { proxy: { '/api/ai': 'http://127.0.0.1:8787', '/api/images': 'http://127.0.0.1:8787' } },
   preview: {

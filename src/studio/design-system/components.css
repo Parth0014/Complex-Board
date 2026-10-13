@@ -1007,6 +1007,26 @@
   .vs-lib__foot svg {
     color: var(--gs-accent);
   }
+  .app-update-notice {
+    position: fixed;
+    z-index: 1100;
+    bottom: 88px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    padding: 12px 16px;
+    border: 1px solid var(--gs-accent);
+    border-radius: 12px;
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    font-size: var(--gs-text-13);
+    box-shadow: 0 4px 16px var(--gs-accent-soft);
+  }
+
   .canvas-drag-ghost {
     position: fixed;
     left: -10000px;
