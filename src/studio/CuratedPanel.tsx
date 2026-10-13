@@ -7,6 +7,7 @@ import { curatedAssets } from '../assets/curatedPack';
 import { ELEMENT_THEMES } from '../assets/elementThemes';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
 import { startCanvasDrag } from './canvasDrag';
+import { assetDropSize } from '../vision/canvas/dropPlacement';
 import type { EditorAdapter } from '../vision/contracts';
 export function CuratedPanel({
   adapter,
@@ -112,6 +113,7 @@ export function CuratedPanel({
                       event,
                       GRATITUDE_ASSET_DRAG_TYPE,
                       JSON.stringify({ id: asset.id }),
+                      { size: () => assetDropSize(asset.width, asset.height) },
                     )
                   }
                   onClick={() => {

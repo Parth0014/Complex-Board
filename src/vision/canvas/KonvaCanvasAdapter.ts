@@ -31,6 +31,7 @@ import type { VisionTemplate } from '../templates';
 import { VISION_TEMPLATES, LEGACY_VISION_TEMPLATES } from '../templates';
 import { TEMPLATE_PHOTOS, fitCollageElements } from '../collageTemplates';
 import { boundsOf, unionBounds, constrainItems } from './geometry';
+import { centeredDropPosition, shapeDropSize, textDropSize } from './dropPlacement';
 import { loadBoard, saveBoard, validateBoard } from '../storage';
 import { imagePdf, imagesPdf } from '../pdf';
 import { renderPage } from './renderPage';
@@ -1215,8 +1216,14 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         id: this.id(),
         kind: 'asset' as const,
         asset,
-        x: (position?.x ?? board.width / 2) - width / 2 + index * 18,
-        y: (position?.y ?? board.height / 2) - height / 2 + index * 18,
+        ...centeredDropPosition(
+          {
+            x: (position?.x ?? board.width / 2) + index * 18,
+            y: (position?.y ?? board.height / 2) + index * 18,
+          },
+          { width, height },
+          board,
+        ),
         width,
         height,
         rotation: 0,
@@ -1360,18 +1367,13 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         id,
         kind: 'asset',
         asset,
-        x: position
-          ? Math.max(0, Math.min(this.history.document.width - 400, position.x - 200))
-          : 100,
-        y: position
-          ? Math.max(
-              0,
-              Math.min(
-                this.history.document.height - (400 * asset.height!) / asset.width!,
-                position.y - (200 * asset.height!) / asset.width!,
-              ),
+        ...(position
+          ? centeredDropPosition(
+              position,
+              { width: 400, height: (400 * asset.height!) / asset.width! },
+              this.history.document,
             )
-          : 160,
+          : { x: 100, y: 160 }),
         width: 400,
         height: (400 * asset.height!) / asset.width!,
         rotation: 0,
@@ -1806,37 +1808,18 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   createShape(shape: NonNullable<BoardItem['shape']>, position?: VisionPoint) {
     const id = this.id();
     const document = this.history.document;
-    const baseWidth =
-      shape === 'rectangle' || shape === 'cloud' || shape === 'line' || shape === 'arrow'
-        ? 240
-        : 200;
-    const baseHeight =
-      shape === 'line' || shape === 'arrow'
-        ? 30
-        : shape === 'cloud'
-          ? 156
-          : shape === 'rectangle'
-            ? 160
-            : 200;
-    const factor = Math.min(
-      1,
-      (document.width * 0.5) / baseWidth,
-      (document.height * 0.5) / baseHeight,
-    );
-    const width = baseWidth * factor,
-      height = baseHeight * factor;
+    const { width, height } = shapeDropSize(shape, document);
     this.items((items) => [
       ...items,
       {
         id,
         kind: 'shape',
         shape,
-        x: position
-          ? Math.max(0, Math.min(document.width - width, position.x - width / 2))
-          : (document.width - width) / 2,
-        y: position
-          ? Math.max(0, Math.min(document.height - height, position.y - height / 2))
-          : (document.height - height) / 2,
+        ...centeredDropPosition(
+          position || { x: document.width / 2, y: document.height / 2 },
+          { width, height },
+          document,
+        ),
         width,
         height,
         appearance:
@@ -2195,17 +2178,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   createTextPreset(preset: VisionTextPreset, position?: VisionPoint) {
     const id = this.id();
     const document = this.history.document;
-    const text = new Konva.Text({
-      text: preset.sample,
-      fontSize: preset.fontSize,
-      fontFamily: fontFamily(preset.fontFamily),
-      padding: 8,
-      lineHeight: 1.2,
-    });
-    const width = Math.min(document.width * 0.8, Math.max(40, Math.ceil(text.width())));
-    text.width(width);
-    const height = Math.ceil(text.height());
-    text.destroy();
+    const { width, height } = textDropSize(preset, document);
     this.items((items) => [
       ...items,
       {
@@ -2221,12 +2194,11 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         align: preset.align || 'center',
         textPadding: 8,
         lineHeight: 1.2,
-        x: position
-          ? Math.max(0, Math.min(document.width - width, position.x - width / 2))
-          : (document.width - width) / 2,
-        y: position
-          ? Math.max(0, Math.min(document.height - height, position.y - height / 2))
-          : (document.height - height) / 2,
+        ...centeredDropPosition(
+          position || { x: document.width / 2, y: document.height / 2 },
+          { width, height },
+          document,
+        ),
         width,
         height,
         rotation: 0,

@@ -13,6 +13,8 @@ import type { BoardItem } from '../document';
 import { boundsOf, unionBounds, snapMovement, snapResize, type Bounds } from './geometry';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../../assets/contracts';
 import { curatedPackProvider } from '../../assets/curatedPack';
+import { assetDropSize, centeredDropPosition } from './dropPlacement';
+import { useCanvasDropPreview } from './useCanvasDropPreview';
 import { CANVAS_CREATION_DRAG_TYPE, type CanvasCreation } from '../../studio/canvasDrag';
 
 import { fontFamily } from '../fonts';
@@ -204,6 +206,10 @@ export function KonvaStage({
     128;
   const left = (stageWidth - document.width * scale) / 2;
   const top = (stageHeight - document.height * scale) / 2;
+  const dropPreview = useCanvasDropPreview(adapter.ownerWindow, document, () => {
+    const rect = stageRef.current?.container().getBoundingClientRect();
+    return rect ? { rect, left, top, scale } : null;
+  });
   const centeredView = useRef('');
   const lastView = useRef({ left, top, scale, width: size.width, height: size.height });
   const measured = useRef(false);
@@ -835,8 +841,13 @@ export function KonvaStage({
           event.dataTransfer.types.includes('text/uri-list')
         ) {
           event.preventDefault();
-          event.dataTransfer.dropEffect = 'copy';
+          event.dataTransfer.dropEffect = dropPreview.move(event.clientX, event.clientY)
+            ? 'copy'
+            : 'none';
         }
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) dropPreview.leave();
       }}
       onDrop={async (event) => {
         const files = Array.from(event.dataTransfer.files);
@@ -857,6 +868,7 @@ export function KonvaStage({
         if (!id && !files.length && !source && !photoToken && !creationData) return;
         event.preventDefault();
         event.stopPropagation();
+        if (dropPreview.pending.current) return;
         setDropError('');
         const rect = stageRef.current?.container().getBoundingClientRect();
         if (!rect) return;
@@ -864,8 +876,12 @@ export function KonvaStage({
           x: (event.clientX - rect.left - left) / scale,
           y: (event.clientY - rect.top - top) / scale,
         };
-        if (point.x < 0 || point.y < 0 || point.x > document.width || point.y > document.height)
+        if (point.x < 0 || point.y < 0 || point.x > document.width || point.y > document.height) {
+          dropPreview.clear();
           return;
+        }
+        dropPreview.move(event.clientX, event.clientY);
+        dropPreview.begin();
         try {
           if (creationData) {
             const creation: CanvasCreation = JSON.parse(creationData);
@@ -882,12 +898,10 @@ export function KonvaStage({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ token: photoToken }),
             });
-            const width = Math.min(320, asset.width || 240),
-              height = (width * (asset.height || 240)) / (asset.width || 240);
-            await adapter.insertAsset(asset, {
-              x: Math.max(0, Math.min(document.width - width, point.x - width / 2)),
-              y: Math.max(0, Math.min(document.height - height, point.y - height / 2)),
-            });
+            await adapter.insertAsset(
+              asset,
+              centeredDropPosition(point, assetDropSize(asset.width, asset.height), document),
+            );
             return;
           }
           if (files.length) {
@@ -908,17 +922,21 @@ export function KonvaStage({
             payload.provider === 'upload'
               ? payload
               : await curatedPackProvider.resolve(payload.id, adapter.ownerWindow);
-          const width = Math.min(320, asset.width || 240),
-            height = (width * (asset.height || 240)) / (asset.width || 240);
-          await adapter.insertAsset(asset, {
-            x: Math.max(0, Math.min(document.width - width, point.x - width / 2)),
-            y: Math.max(0, Math.min(document.height - height, point.y - height / 2)),
-          });
+          await adapter.insertAsset(
+            asset,
+            centeredDropPosition(point, assetDropSize(asset.width, asset.height), document),
+          );
         } catch (error) {
           setDropError(error instanceof Error ? error.message : 'Asset insertion failed.');
+        } finally {
+          dropPreview.clear();
         }
       }}
     >
+      {createPortal(
+        <div ref={dropPreview.ref} className="canvas-drop-preview" hidden aria-hidden="true" />,
+        adapter.ownerWindow.document.body,
+      )}
       {dropError && <Toast message={dropError} error onDismiss={() => setDropError('')} />}
       {snappingContainer &&
         createPortal(
