@@ -1,47 +1,66 @@
 import { describe, it, expect } from 'vitest';
-import { photoLayout } from './photoLayout';
-describe('photo arrangements', () => {
-  it('keeps every photo inside landscape, square and portrait boards', () => {
+import { photoLayout, photoComposition, compositionItems, PHOTO_THEMES } from './photoLayout';
+import { boundsOf } from './canvas/geometry';
+const styles = ['scrapbook', 'collage', 'sticker'] as const;
+describe('Forge photo arrangements', () => {
+  it('uses each selected photo once, with rotated bounds inside every board orientation', () => {
     for (const [width, height] of [
       [1920, 1080],
       [1000, 1000],
       [1080, 1920],
     ])
-      for (const style of ['grid', 'hero', 'columns'] as const)
+      for (const style of styles)
         for (let count = 1; count <= 12; count++) {
-          const slots = photoLayout(count, style, width, height);
+          const slots = photoLayout(count, style, width, height, [0.65, 1.9, 0.8, 1.6, 1.3, 0.7]);
           expect(slots).toHaveLength(count);
+          expect(new Set(slots.map((s) => s.photoIndex)).size).toBe(count);
           slots.forEach((slot) => {
             expect(slot.width).toBeGreaterThan(0);
             expect(slot.height).toBeGreaterThan(0);
-            expect(slot.x).toBeGreaterThanOrEqual(0);
-            expect(slot.y).toBeGreaterThanOrEqual(0);
-            expect(slot.x + slot.width).toBeLessThanOrEqual(width);
-            expect(slot.y + slot.height).toBeLessThanOrEqual(height);
+            const b = boundsOf(slot);
+            expect(b.x).toBeGreaterThanOrEqual(0);
+            expect(b.y).toBeGreaterThanOrEqual(0);
+            expect(b.x + b.width).toBeLessThanOrEqual(width + 0.01);
+            expect(b.y + b.height).toBeLessThanOrEqual(height + 0.01);
           });
         }
   });
-  it('rejects empty, fractional and excessive selections', () => {
-    for (const count of [0, 2.5, 13])
-      expect(() => photoLayout(count, 'grid', 1920, 1080)).toThrow();
+  it('preserves mixed photo proportions in the two framed styles', () => {
+    const ratios = [0.65, 1.9, 0.8, 1.6, 1.3, 0.7];
+    for (const style of ['scrapbook', 'sticker'] as const)
+      photoLayout(6, style, 1920, 1080, ratios).forEach((slot, i) =>
+        expect(slot.width / slot.height).toBeCloseTo(ratios[i], 8),
+      );
   });
-});
-
-it('uses photo proportions in gallery and mosaic without cropping', () => {
-  const ratios = [0.65, 1.9, 0.8, 1.6, 1.3, 0.7];
-  for (const style of ['grid', 'columns'] as const) {
-    const slots = photoLayout(ratios.length, style, 1920, 1080, ratios);
-    slots.forEach((slot, index) => expect(slot.width / slot.height).toBeCloseTo(ratios[index], 8));
-    for (let i = 0; i < slots.length; i++)
-      for (let j = i + 1; j < slots.length; j++) {
-        const a = slots[i],
-          b = slots[j];
+  it('uses the supplied theme copy and produces editable native decorations', () => {
+    for (const theme of ['vision2027', 'travel', 'diaries'] as const)
+      for (const style of styles) {
+        const c = photoComposition(6, style, 1080, 1920, [], theme);
         expect(
-          a.x + a.width <= b.x ||
-            b.x + b.width <= a.x ||
-            a.y + a.height <= b.y ||
-            b.y + b.height <= a.y,
-        ).toBe(true);
+          c.layers
+            .filter((l) => l.kind === 'text')
+            .map((l) => l.text)
+            .join(' '),
+        ).toContain(PHOTO_THEMES[theme].copy.quotes[0].replace(/\n/g, ' '));
+        expect(c.layers.some((l) => l.kind === 'shape')).toBe(true);
       }
-  }
+  });
+  it('keeps previews deterministic and does not reuse photo indices when materializing', () => {
+    const c = photoComposition(6, 'scrapbook', 1080, 1920);
+    expect(c).toEqual(photoComposition(6, 'scrapbook', 1080, 1920));
+    let serial = 0;
+    const assets = Array.from({ length: 6 }, (_, i) => ({ id: `photo-${i}` }));
+    const items = compositionItems(
+      c,
+      assets as Parameters<typeof compositionItems>[1],
+      () => `item-${serial++}`,
+    );
+    expect(items.filter((i) => i.kind === 'asset').map((i) => i.asset?.id)).toEqual(
+      assets.map((a) => a.id),
+    );
+    expect(new Set(items.map((i) => i.id)).size).toBe(items.length);
+  });
+  it('rejects empty, fractional and excessive photo counts', () => {
+    for (const n of [0, 2.5, 13]) expect(() => photoLayout(n, 'scrapbook', 1920, 1080)).toThrow();
+  });
 });

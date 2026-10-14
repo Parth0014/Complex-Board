@@ -1,4 +1,9 @@
-import { photoLayout, type PhotoArrangement } from '../photoLayout';
+import {
+  photoComposition,
+  compositionItems,
+  type PhotoArrangement,
+  type PhotoTheme,
+} from '../photoLayout';
 import { libraryAsset } from '../../assets/libraryAsset';
 import { createAppearance } from '../appearance/defaults';
 import { appearancePersistenceEnabled } from '../appearance/activation';
@@ -1243,31 +1248,47 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       void this.ownerWindow.navigator.storage.persist().catch(() => {});
     return records.map((record) => record.id);
   }
-  async arrangePhotos(ids: string[], style: PhotoArrangement) {
-    const board = this.history.document,
-      revision = this.history.revision;
-
-    if (new Set(ids).size !== ids.length) throw new Error('Choose different photos.');
+  async previewPhotoArrangement(
+    ids: string[],
+    style: PhotoArrangement,
+    theme: PhotoTheme = 'vision2027',
+  ) {
+    const board = this.history.document;
     const records = await Promise.all(ids.map((id) => loadMedia(this.ownerWindow, id)));
-    const slots = photoLayout(
+    for (const record of records) await this.decode(mediaAsset(record), record);
+    const composition = photoComposition(
       ids.length,
       style,
       board.width,
       board.height,
       records.map((record) => record.width / record.height),
+      theme,
+    );
+    let serial = 0;
+    return renderPage(this, {
+      ...board,
+      id: 'arrangement-preview',
+      items: compositionItems(composition, records.map(mediaAsset), () => `preview-${serial++}`),
+    });
+  }
+  async arrangePhotos(ids: string[], style: PhotoArrangement, theme: PhotoTheme = 'vision2027') {
+    const board = this.history.document,
+      revision = this.history.revision;
+
+    if (new Set(ids).size !== ids.length) throw new Error('Choose different photos.');
+    const records = await Promise.all(ids.map((id) => loadMedia(this.ownerWindow, id)));
+    const composition = photoComposition(
+      ids.length,
+      style,
+      board.width,
+      board.height,
+      records.map((record) => record.width / record.height),
+      theme,
     );
     for (const record of records) await this.decode(mediaAsset(record), record);
     if (revision !== this.history.revision)
       throw new Error('The board changed. Preview the layout again.');
-    const items = records.map((record, index) => ({
-      id: this.id(),
-      kind: 'asset' as const,
-      asset: mediaAsset(record),
-      ...slots[index],
-      imageFit: 'fill' as const,
-      rotation: 0,
-      opacity: 1,
-    }));
+    const items = compositionItems(composition, records.map(mediaAsset), () => this.id());
     this.commit({ ...board, items: [...board.items, ...items] });
     this.select(items.map((item) => item.id));
   }

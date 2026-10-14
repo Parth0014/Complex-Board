@@ -1,0 +1,43 @@
+{
+  "title": "Dear Diary",
+  "subtitle": "READ ✦ WRITE ✦ DREAM",
+  "keywords": [
+    "open book coffee cozy",
+    "journal writing desk",
+    "stack of books aesthetic",
+    "bookstore shelves",
+    "flowers and notebook",
+    "candle reading blanket",
+    "pastel stationery flatlay",
+    "library window light",
+    "handwriting diary pen",
+    "tea and book rainy window"
+  ],
+  "palette": {
+    "colors": ["#e8a0bf", "#c9b6e4", "#f6d6a8", "#a8c5da", "#b7d3a8"],
+    "paper": "#f7efe6",
+    "ink": "#4a3b4f"
+  },
+  "copy": {
+    "quotes": [
+      "Reading is my\nlove language",
+      "One more chapter",
+      "Write your own story",
+      "Soft heart,\nstrong mind",
+      "Cozy nights,\ngood books",
+      "Main character energy",
+      "Dear future me,",
+      "Still writing\nmy story",
+      "Pages & peace",
+      "Books are my\nsafe place"
+    ],
+    "labels": ["Chapter one", "Plot twist", "Bookish", "Cozy era", "Pen & paper", "Happy ending"],
+    "checklist": [
+      "Finish 24 books",
+      "Journal every night",
+      "Try a new genre",
+      "Letter to future me",
+      "Visit a bookstore"
+    ]
+  }
+}
