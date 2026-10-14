@@ -20,6 +20,7 @@ export function ZoomControls({
   const owner = useRef<Window | null>(null);
   const pending = useRef<number | null>(null);
   const frame = useRef(0);
+  const dragging = useRef(false);
   const latest = useRef(onChange);
   useLayoutEffect(() => {
     latest.current = onChange;
@@ -66,13 +67,22 @@ export function ZoomControls({
           min={min}
           max={max}
           value={Math.round(value)}
-          onChange={(event) => change(Number(event.target.value) / 100, event.currentTarget)}
+          onPointerDown={() => (dragging.current = true)}
+          onPointerUp={() => (dragging.current = false)}
+          onPointerCancel={() => (dragging.current = false)}
+          onKeyDown={() => (dragging.current = false)}
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            const snapped = dragging.current && Math.abs(next - 100) <= 3 ? 100 : next;
+            change(snapped / 100, event.currentTarget);
+          }}
         />
-        <span
-          className="gs-zoom-notch"
-          aria-hidden="true"
-          style={{ left: `${((100 - min) / (max - min)) * 100}%` }}
-        />
+        <div className="gs-zoom-markers" aria-hidden="true">
+          <span
+            className="gs-zoom-notch"
+            style={{ left: `${((100 - min) / (max - min)) * 100}%` }}
+          />
+        </div>
       </div>
       <Button
         className="vs-zoom__pct"

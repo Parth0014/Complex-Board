@@ -61,6 +61,26 @@ export function Editor({
   initialTab: StudioTab | null;
 }) {
   const replacementInput = useRef<HTMLInputElement>(null);
+  const canvasSettings = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const doc = adapter.ownerWindow.document;
+    const close = (event: PointerEvent) => {
+      const settings = canvasSettings.current;
+      if (settings?.open && !settings.contains(event.target as Node)) settings.open = false;
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && canvasSettings.current?.open) {
+        canvasSettings.current.open = false;
+        canvasSettings.current.querySelector('summary')?.focus();
+      }
+    };
+    doc.addEventListener('pointerdown', close, true);
+    doc.addEventListener('keydown', escape);
+    return () => {
+      doc.removeEventListener('pointerdown', close, true);
+      doc.removeEventListener('keydown', escape);
+    };
+  }, [adapter]);
   const replacementId = useRef<string | null>(null);
   const [replacingImage, setReplacingImage] = useState(false);
   const [replacementError, setReplacementError] = useState('');
@@ -506,7 +526,7 @@ export function Editor({
           onScaleChange={setDisplayZoom}
         />
         <div className="vs-bottom-dock" role="group" aria-label="Board controls">
-          <details className="vs-menu vs-canvas-settings">
+          <details className="vs-menu vs-canvas-settings" ref={canvasSettings}>
             <summary className="vs-page-select" aria-label="Canvas settings">
               Canvas settings <ChevronDownIcon />
             </summary>
