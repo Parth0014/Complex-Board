@@ -2,6 +2,7 @@ import { itemOpacity } from '../vision/appearance/capabilities';
 import { primaryColor } from '../vision/appearance/capabilities';
 import { Popover } from './ui/Popover';
 import { Button, IconButton } from './ui/Button';
+import { CropActions } from './CropActions';
 import { editorFonts } from '../vision/fonts';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
@@ -128,6 +129,13 @@ export function SelectionToolbar({
           : item?.kind === 'asset'
             ? 'Image / graphic'
             : 'Drawing';
+
+  if (adapter.cropDraft)
+    return (
+      <div className="vs-actionbar vs-actionbar--cropping">
+        <CropActions onCancel={() => adapter.cancelCrop()} onApply={() => adapter.applyCrop()} />
+      </div>
+    );
 
   return (
     <div className="vs-actionbar">
@@ -290,18 +298,8 @@ export function SelectionToolbar({
           disabled={anyLocked}
           onClick={() => adapter.startImageCrop()}
         >
-          {adapter.cropDraft ? 'Cropping' : 'Crop'}
+          Crop
         </Button>
-      )}
-      {adapter.cropDraft && (
-        <>
-          <Button className="vs-actionbar__button" onClick={() => adapter.applyCrop()}>
-            Apply crop
-          </Button>
-          <Button className="vs-actionbar__button" onClick={() => adapter.cancelCrop()}>
-            Cancel crop
-          </Button>
-        </>
       )}
       {item && item.kind !== 'text' && (
         <Button

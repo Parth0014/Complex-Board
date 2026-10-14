@@ -15,7 +15,6 @@ import { curatedPackProvider } from '../assets/curatedPack';
 import type { GratitudeAsset } from '../assets/contracts';
 import {
   BringFrontIcon,
-  CheckIcon,
   CloseIcon,
   CropIcon,
   DropletIcon,
@@ -769,22 +768,10 @@ export function EditorFeatures({
                           Drag the image's crop edges or corners to choose the area. Drag inside the
                           boundary to move it.
                         </p>
-                        <div className="vs-row-2">
-                          <Button
-                            variant="primary"
-                            style={{ justifyContent: 'center' }}
-                            onClick={() => adapter.applyCrop()}
-                          >
-                            <CheckIcon /> Apply crop
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            style={{ justifyContent: 'center' }}
-                            onClick={() => adapter.cancelCrop()}
-                          >
-                            Cancel crop
-                          </Button>
-                        </div>
+                        <CropActions
+                          onCancel={() => adapter.cancelCrop()}
+                          onApply={() => adapter.applyCrop()}
+                        />
                       </>
                     )}
                     <Button
@@ -1104,3 +1091,4 @@ export function EditorFeatures({
     </div>
   );
 }
+import { CropActions } from './CropActions';
