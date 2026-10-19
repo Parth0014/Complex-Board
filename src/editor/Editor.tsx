@@ -2,7 +2,6 @@ import { ReplaceImageDialog } from '../studio/ReplaceImageDialog';
 import { selectableIds } from '../studio/selection';
 import { ZoomControls } from '../studio/chrome/ZoomControls';
 import { Button } from '../studio/ui/Button';
-import { Slider } from '../studio/ui/Slider';
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
@@ -485,42 +484,6 @@ export function Editor({
       }
     >
       <div className="vs-stage-fill" ref={setWorkspaceNode}>
-        {drawMode !== 'select' && drawMode !== 'eraser' && (
-          <div className="vs-drawing-options" role="toolbar" aria-label="Brush options">
-            <label>
-              Color{' '}
-              <input
-                aria-label="Brush color"
-                type="color"
-                value={brush.color}
-                onChange={(event) => setBrush({ ...brush, color: event.target.value })}
-              />
-            </label>
-            <label>
-              Size{' '}
-              <Slider
-                aria-label="Brush size"
-                min="1"
-                max="80"
-                value={brush.width}
-                onChange={(event) => setBrush({ ...brush, width: Number(event.target.value) })}
-              />
-            </label>
-            <output>{brush.width}</output>
-            <label>
-              Opacity{' '}
-              <Slider
-                aria-label="Brush opacity"
-                min="10"
-                max="100"
-                value={Math.round(brush.opacity * 100)}
-                onChange={(event) =>
-                  setBrush({ ...brush, opacity: Number(event.target.value) / 100 })
-                }
-              />
-            </label>
-          </div>
-        )}
         {replacementId && (
           <ReplaceImageDialog
             adapter={adapter}
