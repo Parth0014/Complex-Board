@@ -1,3 +1,4 @@
+import type { BoardDocument } from '../document';
 import { TEMPLATE_STUDY_PHOTOS } from '../templateStudyPhotos';
 import { interlockingDesigns } from '../interlockingGeometry';
 import {
@@ -372,6 +373,12 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       board.pages = pages;
     }
     return board;
+  }
+  /** Read-only thumbnail rendering; callers use a detached adapter, never the editor history. */
+  async previewSavedDocument(document: BoardDocument, maxDimension = 480) {
+    await loadEditorFonts(this.ownerWindow);
+    const page = await this.prepareBoard({ ...document, pages: undefined });
+    return renderPage(this, { ...page, id: 'home-thumbnail' }, { maxDimension });
   }
   async backup() {
     const board = structuredClone(this.history.document),
@@ -1543,8 +1550,8 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   cachedScrapbookTemplatePreviews(): Record<string, string> {
     return Object.fromEntries(
       [...(templatePreviewCaches.get(this.ownerWindow) || [])]
-        .filter(([, v]) => v.value)
-        .map(([key, v]) => [key, v.value!]),
+        .filter(([key, v]) => v.value && key.endsWith(':' + Number(this.snapToEdges)))
+        .map(([key, v]) => [key.slice(0, key.lastIndexOf(':')), v.value!]),
     );
   }
   previewScrapbookTemplate(presetId: string): Promise<string> {
@@ -1556,7 +1563,9 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       cache = new Map();
       templatePreviewCaches.set(this.ownerWindow, cache);
     }
-    const existing = cache.get(presetId);
+    const snapToEdges = this.snapToEdges;
+    const cacheKey = presetId + ':' + Number(snapToEdges);
+    const existing = cache.get(cacheKey);
     if (existing) return existing.promise;
     const entry: { promise: Promise<string>; value?: string } = { promise: Promise.resolve('') };
     entry.promise = this.finishedScrapbookItems(presetId)
@@ -1571,7 +1580,8 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
             background: undefined,
             gradient: undefined,
             color: '#fffaf6',
-            items,
+            // Match the same board-edge constraint used when these items are committed.
+            items: snapToEdges ? constrainItems(items, this.history.document) : items,
           },
           { maxDimension: 640 },
         ),
@@ -1581,10 +1591,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         return value;
       })
       .catch((error) => {
-        cache!.delete(presetId);
+        cache!.delete(cacheKey);
         throw error;
       });
-    cache.set(presetId, entry);
+    cache.set(cacheKey, entry);
     return entry.promise;
   }
   async applyScrapbookTemplate(presetId: string) {

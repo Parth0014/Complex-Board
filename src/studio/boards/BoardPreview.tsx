@@ -1,84 +1,65 @@
-import { memo, useEffect, useState } from 'react';
-import { loadPreviewMedia, previewAssetUrl } from './previewMedia';
-import { itemOpacity, primaryColor } from '../../vision/appearance/capabilities';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { BoardDocument } from '../../vision/document';
-export const BoardPreview = memo(function BoardPreview({
-  document,
-  maxItems = 100,
-}: {
-  document: BoardDocument;
-  maxItems?: number;
-}) {
-  const [media, setMedia] = useState<{ document: BoardDocument; urls: Record<string, string> }>();
-  useEffect(
-    () =>
-      loadPreviewMedia(
-        window,
-        [document.background, ...document.items.flatMap((item) => [item.asset, item.contentAsset])],
-        (urls) => setMedia({ document, urls }),
-      ),
-    [document],
-  );
-  const uploads = media?.document === document ? media.urls : {};
-  const background = previewAssetUrl(document.background, uploads);
+import { renderThumbnail } from './renderThumbnail';
+export const BoardPreview = memo(function BoardPreview({ document }: { document: BoardDocument }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const [result, setResult] = useState<{
+    document: BoardDocument;
+    url?: string;
+    failed?: boolean;
+  }>();
+  useEffect(() => {
+    let active = true,
+      started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      void renderThumbnail(document).then(
+        (url) => {
+          if (active) setResult({ document, url });
+        },
+        () => {
+          if (active) setResult({ document, failed: true });
+        },
+      );
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          start();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(ref.current!);
+    return () => {
+      active = false;
+      observer.disconnect();
+    };
+  }, [document]);
+  const current = result?.document === document ? result : undefined;
   return (
     <svg
+      ref={ref}
       viewBox={'0 0 ' + document.width + ' ' + document.height}
       aria-hidden="true"
+      data-preview-state={current?.url ? 'ready' : current?.failed ? 'error' : 'loading'}
       style={{ background: document.color }}
     >
       <rect width={document.width} height={document.height} fill={document.color} />
-      {background && (
-        <image
-          href={background}
-          width={document.width}
-          height={document.height}
-          preserveAspectRatio="xMidYMid slice"
-        />
+      {current?.url && <image href={current.url} width={document.width} height={document.height} />}
+      {!current?.url && (
+        <text
+          x="50%"
+          y="50%"
+          textAnchor="middle"
+          fontSize={Math.min(document.width, document.height) / 18}
+          fill="#625a72"
+        >
+          {current?.failed ? 'Preview unavailable' : 'Loading preview...'}
+        </text>
       )}
-      {document.items
-        .filter((item) => !item.hidden)
-        .slice(0, maxItems)
-        .map((item) => {
-          const image = previewAssetUrl(item.contentAsset || item.asset, uploads);
-          return (
-            <g
-              key={item.id}
-              transform={'translate(' + item.x + ' ' + item.y + ') rotate(' + item.rotation + ')'}
-              opacity={itemOpacity(item)}
-            >
-              {item.kind === 'text' ? (
-                <text
-                  y={item.fontSize || 34}
-                  fontSize={item.fontSize || 34}
-                  fill={primaryColor(item.appearance)}
-                >
-                  {item.text?.slice(0, 100)}
-                </text>
-              ) : image ? (
-                <image
-                  href={image}
-                  width={item.width}
-                  height={item.height}
-                  preserveAspectRatio="xMidYMid slice"
-                />
-              ) : (
-                <rect
-                  width={item.width}
-                  height={item.height}
-                  fill={
-                    item.kind === 'asset'
-                      ? item.color || '#d9d3e8'
-                      : 'fill' in item.appearance && !item.appearance.fill.enabled
-                        ? 'transparent'
-                        : primaryColor(item.appearance)
-                  }
-                  rx={item.radius || 0}
-                />
-              )}
-            </g>
-          );
-        })}
     </svg>
   );
 });
