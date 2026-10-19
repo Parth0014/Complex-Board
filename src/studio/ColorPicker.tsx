@@ -1,3 +1,4 @@
+import { Slider } from './ui/Slider';
 import { PALETTE, type PaletteSwatch } from './palette';
 import { Swatch } from './ui/Swatch';
 import { Button } from './ui/Button';
@@ -161,9 +162,11 @@ export function ColorPicker({
             <span style={{ left: `${tone.s * 100}%`, top: `${(1 - tone.v) * 100}%` }} />
           </div>
           <label className="vs-field studio-color-spectrum">
-            <input
+            <Slider
+              spectrum
               aria-label={`${label} hue`}
-              type="range"
+              aria-valuetext={`${Math.round(tone.h)} degrees`}
+
               min="0"
               max="360"
               value={Math.round(tone.h)}

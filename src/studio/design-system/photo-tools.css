@@ -1,0 +1,571 @@
+@layer components {
+  .scrapbook-dialog {
+    width: min(1180px, calc(100vw - 40px));
+    height: min(850px, calc(100dvh - 40px));
+  }
+  .scrapbook-dialog-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 24px 28px;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .scrapbook-browser-tools {
+    position: sticky;
+    top: -24px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: -24px -4px 20px;
+    padding: 16px 4px;
+    background: var(--gs-surface);
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .scrapbook-browser-tools .scrapbook-help {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .scrapbook-families {
+    display: flex;
+    padding: 3px;
+    gap: 2px;
+    border-radius: var(--gs-radius-control);
+    background: var(--gs-surface-muted);
+  }
+  .scrapbook-families .gs-button[aria-pressed='true'] {
+    color: var(--gs-accent);
+    background: var(--gs-accent-soft);
+  }
+  .scrapbook-help {
+    margin: 0 0 20px;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-13);
+    line-height: 1.5;
+  }
+  .scrapbook-selection-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .scrapbook-selection-tools .scrapbook-help {
+    margin: 0;
+  }
+  .scrapbook-selection-actions,
+  .scrapbook-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .scrapbook-touch-help {
+    display: none;
+  }
+  .scrapbook-photo-selection {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    max-height: none;
+    overflow: visible;
+    padding: 4px;
+    user-select: none;
+    touch-action: pan-y;
+  }
+  .scrapbook-photo-selection > .gs-button {
+    position: relative;
+    aspect-ratio: 1;
+    height: auto;
+    min-width: 0;
+    padding: 3px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+  }
+  .scrapbook-photo-selection > .gs-button[aria-pressed='true'] {
+    border-color: var(--gs-accent);
+  }
+  .scrapbook-photo-selection img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .photo-layout-photo-number {
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    width: 23px;
+    height: 23px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--gs-accent);
+    color: var(--gs-on-accent);
+    font-size: var(--gs-text-11);
+  }
+  .scrapbook-selection-status {
+    margin: 12px 0 0;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+  }
+  .scrapbook-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .scrapbook-preset-card {
+    position: relative;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-card);
+    background: var(--gs-surface);
+  }
+  .scrapbook-preset-card:has(.scrapbook-preset[aria-pressed='true']) {
+    border-color: var(--gs-accent);
+    outline: 1px solid var(--gs-accent);
+    outline-offset: -1px;
+  }
+  .vs .scrapbook-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    height: auto;
+    padding: 10px;
+    border: 0;
+    border-radius: var(--gs-radius-card);
+    text-align: left;
+    background: var(--gs-surface);
+    transition:
+      border-color var(--gs-duration-feedback) var(--gs-ease-out),
+      background-color var(--gs-duration-feedback) var(--gs-ease-out);
+  }
+  .vs .scrapbook-preset[aria-pressed='true'] {
+    background: var(--gs-surface);
+  }
+  .scrapbook-preset-art {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--gs-surface-muted);
+  }
+  .scrapbook-preset-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .scrapbook-preset-caption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 14px 0 5px;
+  }
+  .scrapbook-preset-caption svg {
+    color: var(--gs-accent);
+    flex-shrink: 0;
+  }
+  .scrapbook-preview-placeholder {
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+    text-align: center;
+  }
+  .scrapbook-preset small {
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+    line-height: 1.5;
+    white-space: normal;
+  }
+  .scrapbook-shuffle {
+    position: static;
+    align-self: flex-end;
+    margin: auto 10px 10px;
+  }
+  .templates-panel__placeholder {
+    display: grid;
+    place-items: center;
+    gap: 12px;
+    padding: 24px;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+  }
+  .templates-panel__placeholder .gs-skeleton {
+    width: 120px;
+    height: 200px;
+  }
+  .templates-panel__error {
+    margin-bottom: 16px;
+  }
+  .scrapbook-empty-message {
+    padding: 40px;
+    text-align: center;
+    color: var(--gs-text-secondary);
+  }
+  .uploads-photo-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 30px;
+    height: 30px;
+    background: var(--gs-surface);
+    box-shadow: var(--gs-shadow-popup);
+    border-radius: 8px;
+    z-index: 1;
+  }
+  .vs.uploads-delete-veil {
+    background: color-mix(in srgb, var(--gs-text) 18%, transparent);
+  }
+  .uploads-delete-dialog {
+    width: min(440px, calc(100vw - 32px));
+    padding: 24px;
+  }
+  .uploads-delete-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-block: 20px;
+  }
+  .uploads-delete-preview img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .uploads-delete-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .replace-image-veil {
+    background: color-mix(in srgb, var(--gs-text) 22%, transparent);
+  }
+  .replace-image-dialog {
+    width: min(1040px, calc(100vw - 40px));
+    height: min(760px, calc(100dvh - 40px));
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .replace-image-header,
+  .replace-image-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .replace-image-header {
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .replace-image-header h2 {
+    margin: 4px 0;
+  }
+  .replace-image-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    flex: 1;
+    min-height: 0;
+  }
+  .replace-image-library {
+    min-height: 0;
+    overflow: auto;
+    padding: 20px;
+  }
+  .replace-image-sources {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .replace-image-sources [aria-pressed='true'] {
+    color: var(--gs-accent);
+    background: var(--gs-accent-soft);
+  }
+  .replace-image-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .replace-image-grid > button {
+    padding: 3px;
+    height: auto;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 2px solid transparent;
+  }
+  .replace-image-grid > button[aria-pressed='true'] {
+    border-color: var(--gs-accent);
+  }
+  .replace-image-grid img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  .replace-image-preview {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    border-left: 1px solid var(--gs-line);
+    background: var(--gs-surface-muted);
+    overflow: auto;
+  }
+  .replace-image-preview-art {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+  }
+  .replace-image-preview-art img {
+    max-width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+  }
+  .replace-image-footer {
+    border-top: 1px solid var(--gs-line);
+  }
+  .vs-frame-adjust,
+  .vs-frame-adjust label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .vs-frame-adjust output {
+    min-width: 40px;
+  }
+  @media (min-width: 1100px) {
+    .scrapbook-preset-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 700px) {
+    .scrapbook-preset-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .scrapbook-selection-tools {
+      flex-direction: column;
+    }
+    .scrapbook-dialog-body {
+      padding: 16px;
+    }
+    .scrapbook-browser-tools {
+      top: -16px;
+      margin-top: -16px;
+    }
+    .scrapbook-dialog .photo-layout-footer {
+      flex-wrap: wrap;
+    }
+    .scrapbook-dialog .photo-layout-footer p {
+      display: block;
+      font-size: var(--gs-text-11);
+    }
+    .scrapbook-footer-actions {
+      margin-left: auto;
+      gap: 4px;
+    }
+    .scrapbook-photo-selection {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .replace-image-body {
+      grid-template-columns: 1fr;
+      overflow: auto;
+    }
+    .replace-image-preview {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vs .scrapbook-preset {
+      transition: none;
+    }
+  }
+  @media (hover: none) {
+    .scrapbook-pointer-help {
+      display: none;
+    }
+    .scrapbook-touch-help {
+      display: inline;
+    }
+  }
+}
+
+/* Layout adjustment lives on the collage; editor chrome stays quiet. */
+.vs-collage-toolbar {
+  gap: 12px;
+}
+.vs-collage-toolbar__label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.vs-collage-toolbar__hint {
+  color: var(--gs-text-secondary);
+  font-size: var(--gs-text-11);
+  padding-right: 12px;
+}
+.vs-collage-dividers {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: visible;
+}
+.vs-collage-divider__line {
+  fill: none;
+  stroke: var(--gs-accent);
+  stroke-width: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+.vs-collage-divider__grip {
+  pointer-events: all;
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+.vs-collage-divider__hit {
+  fill: transparent;
+}
+.vs-collage-divider__knob {
+  fill: var(--gs-surface);
+  stroke: var(--gs-accent);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--gs-text) 18%, transparent));
+}
+.vs-collage-divider__arrows {
+  fill: none;
+  stroke: var(--gs-accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.vs-collage-divider:focus-within .vs-collage-divider__line,
+.vs-collage-divider.is-active .vs-collage-divider__line {
+  opacity: 0.9;
+}
+.vs-collage-divider.is-active .vs-collage-divider__grip {
+  cursor: grabbing;
+}
+.vs-collage-divider.is-active .vs-collage-divider__knob,
+.vs-collage-divider__grip:focus-visible .vs-collage-divider__knob {
+  stroke-width: 3;
+}
+.vs-collage-divider.is-limited .vs-collage-divider__knob {
+  fill: var(--gs-warning-soft);
+  stroke: var(--gs-warning);
+}
+@media (max-width: 700px) {
+  .vs-collage-toolbar__hint {
+    display: none;
+  }
+}
+
+@media (hover: hover) {
+  .vs-collage-divider:hover .vs-collage-divider__line {
+    opacity: 0.9;
+  }
+}
+@layer components {
+  .vs .discover-photo > .uploads-photo-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--gs-surface);
+    line-height: 1;
+  }
+  .templates-panel__visual .templates-panel__preview {
+    max-height: 320px;
+    object-fit: contain;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vs .discover-photo > .uploads-photo-delete {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--gs-duration-feedback) var(--gs-ease-out);
+    }
+    .vs .discover-photo:hover > .uploads-photo-delete,
+    .vs .discover-photo:focus-within > .uploads-photo-delete {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vs .discover-photo > .uploads-photo-delete {
+      transition: none;
+    }
+  }
+}
+@layer components {
+  .vs .vs-font-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid var(--gs-control-line);
+  }
+  .vs-font-trigger span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vs.vs-font-picker {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    height: auto;
+    max-height: min(360px, 70dvh);
+    overflow-y: auto;
+    padding: 5px;
+    gap: 2px;
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu);
+    box-shadow: var(--gs-shadow-popup);
+  }
+  .vs-font-picker .vs-font-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 36px;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: var(--gs-text-13);
+  }
+  .vs-font-picker .vs-font-option[aria-selected='true'] {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+  .vs-font-option:focus-visible {
+    outline: 2px solid var(--gs-accent);
+    outline-offset: -2px;
+  }
+  @media (hover: hover) {
+    .vs-font-picker .vs-font-option:hover {
+      background: var(--gs-hover);
+    }
+  }
+}
+@layer components {
+  .vs .vs-lib__panel[data-panel='templates'] .vs-lib__body {
+    animation: none;
+    transition: none;
+  }
+}

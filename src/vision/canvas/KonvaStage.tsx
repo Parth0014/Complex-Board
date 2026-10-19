@@ -1,3 +1,4 @@
+import { CollageDividerOverlay } from './CollageDividerOverlay';
 import { Toast } from '../../studio/ui/Toast';
 import { requestAI } from '../aiClient';
 import { CropOverlay } from './CropOverlay';
@@ -15,18 +16,28 @@ import { GRATITUDE_ASSET_DRAG_TYPE } from '../../assets/contracts';
 import { curatedPackProvider } from '../../assets/curatedPack';
 import { assetDropSize, centeredDropPosition } from './dropPlacement';
 import { useCanvasDropPreview } from './useCanvasDropPreview';
-import { CANVAS_CREATION_DRAG_TYPE, type CanvasCreation } from '../../studio/canvasDrag';
+import {
+  CANVAS_CREATION_DRAG_TYPE,
+  canvasDragPreview,
+  type CanvasCreation,
+} from '../../studio/canvasDrag';
 
 import { fontFamily } from '../fonts';
 import { ItemContent } from './ItemContent';
-import { dragCrop } from '../crop';
+import { dragCrop, photoAperture, gestureCrop } from '../crop';
 import { updateConnectors } from '../connectors';
 
 // A new hitFunc identity makes React-Konva redraw the artwork layer even when
 // only selection changes. Keep this geometry-only callback stable.
 const itemHitRegion = (context: Konva.Context, shape: Konva.Shape) => {
   context.beginPath();
-  context.rect(0, 0, shape.width(), shape.height());
+  const clip = shape.getAttr('photoClip') as number[] | undefined;
+  if (clip?.length) {
+    context.moveTo((clip[0] * shape.width()) / 100, (clip[1] * shape.height()) / 100);
+    for (let i = 2; i < clip.length; i += 2)
+      context.lineTo((clip[i] * shape.width()) / 100, (clip[i + 1] * shape.height()) / 100);
+    context.closePath();
+  } else context.rect(0, 0, shape.width(), shape.height());
   context.fillShape(shape);
 };
 
@@ -126,6 +137,7 @@ export function KonvaStage({
     y: number;
     crop: NonNullable<BoardItem['crop']>;
     item: BoardItem;
+    photoPoint?: { x: number; y: number };
   } | null>(null);
   const colors = useMemo(() => canvasColors(adapter.ownerWindow.document), [adapter.ownerWindow]);
   const document = adapter.history.document;
@@ -151,7 +163,7 @@ export function KonvaStage({
     }
   };
   const hoveredItem =
-    drawMode === 'select' && !adapter.cropDraft && !selectionRect
+    drawMode === 'select' && !adapter.cropDraft && !adapter.adjustingCollage && !selectionRect
       ? document.items.find(
           (item) =>
             item.id === hoveredId &&
@@ -197,7 +209,11 @@ export function KonvaStage({
   // Object movement must never resize the scroll surface or move the board origin.
   // Grow backing buffers in small buckets instead of reallocating both scene
   // and hit canvases at every fractional zoom step.
-  const stageWidth = Math.ceil(Math.max(size.width, document.width * scale + 96) / 128) * 128;
+  // Reserve camera travel on both sides, as we do vertically. Without it, a
+  // fitted board can sit at scrollLeft=0 and pointer zoom asks for a negative
+  // scroll offset, so the browser clamps it and the photo jumps sideways.
+  const stageWidth =
+    Math.ceil((Math.max(size.width, document.width * scale + 96) + 256) / 128) * 128;
   // Keep room to scroll edge artwork clear of the floating toolbar and footer,
   // even when the whole board already fits in the viewport.
   const verticalScrollSpace = 240;
@@ -206,10 +222,18 @@ export function KonvaStage({
     128;
   const left = (stageWidth - document.width * scale) / 2;
   const top = (stageHeight - document.height * scale) / 2;
-  const dropPreview = useCanvasDropPreview(adapter.ownerWindow, document, () => {
-    const rect = stageRef.current?.container().getBoundingClientRect();
-    return rect ? { rect, left, top, scale } : null;
-  });
+  const dropPreview = useCanvasDropPreview(
+    adapter.ownerWindow,
+    document,
+    () => {
+      const rect = stageRef.current?.container().getBoundingClientRect();
+      return rect ? { rect, left, top, scale } : null;
+    },
+    (point) => {
+      const item = adapter.photoPlaceholderAt(point);
+      return item ? { ...boundsOf(item), id: item.id } : undefined;
+    },
+  );
   const centeredView = useRef('');
   const lastView = useRef({ left, top, scale, width: size.width, height: size.height });
   const measured = useRef(false);
@@ -235,6 +259,44 @@ export function KonvaStage({
   useLayoutEffect(() => {
     lastView.current = { left, top, scale, width: size.width, height: size.height };
   }, [left, top, scale, size.width, size.height]);
+  const zoomSnapshot = useRef<Konva.Group | null>(null);
+  const zoomIdle = useRef(0);
+  const releaseZoomSnapshot = useCallback(() => {
+    adapter.ownerWindow.clearTimeout(zoomIdle.current);
+    zoomIdle.current = 0;
+    const page = zoomSnapshot.current;
+    zoomSnapshot.current = null;
+    if (page) {
+      page.clearCache();
+      page.getLayer()?.batchDraw();
+    }
+  }, [adapter]);
+  // A snapshot belongs to one document revision only. Editing, media replacement,
+  // crop and unmount must never leave stale artwork on screen.
+  useLayoutEffect(() => {
+    releaseZoomSnapshot();
+    return releaseZoomSnapshot;
+  }, [document, editing, adapter.cropDraft, adapter.originalPreview, releaseZoomSnapshot]);
+  const prepareZoomSnapshot = useCallback(() => {
+    const page = stageRef.current?.findOne<Konva.Group>('#artboard');
+    if (!page) return;
+    if (!zoomSnapshot.current && !page.isCached()) {
+      const bounds = page.getClientRect({ skipTransform: true });
+      if (bounds.width > 0 && bounds.height > 0) {
+        // Bound temporary bitmap memory for large boards. The uncached artwork
+        // is restored after the gesture; exports and stored images are untouched.
+        const ratio = Math.min(
+          1,
+          Math.sqrt(4_000_000 / (bounds.width * bounds.height)),
+          8192 / Math.max(bounds.width, bounds.height),
+        );
+        page.cache({ ...bounds, pixelRatio: ratio, hitCanvasPixelRatio: ratio });
+        zoomSnapshot.current = page;
+      }
+    }
+    adapter.ownerWindow.clearTimeout(zoomIdle.current);
+    zoomIdle.current = adapter.ownerWindow.setTimeout(releaseZoomSnapshot, 160);
+  }, [adapter, releaseZoomSnapshot]);
   const zoomAt = useCallback(
     (clientX: number, clientY: number, nextScale: number) => {
       const node = container.current;
@@ -242,15 +304,18 @@ export function KonvaStage({
       const rect = node.getBoundingClientRect(),
         viewX = clientX - rect.left,
         viewY = clientY - rect.top;
+      const clamped = Math.max(0.1, Math.min(1.5, nextScale));
+      if (Math.abs(clamped - scale) < 0.000001) return;
+      prepareZoomSnapshot();
       zoomAnchor.current = {
         x: (node.scrollLeft + viewX - left) / scale,
         y: (node.scrollTop + viewY - top) / scale,
         viewX,
         viewY,
       };
-      onZoomChange(Math.max(0.1, Math.min(1.5, nextScale)));
+      onZoomChange(clamped);
     },
-    [left, top, scale, onZoomChange],
+    [left, top, scale, onZoomChange, prepareZoomSnapshot],
   );
   useLayoutEffect(() => {
     adapter.zoomView = (next) => {
@@ -372,17 +437,28 @@ export function KonvaStage({
     const stage = stageRef.current;
     if (!stage || !transformer.current) return;
     const locked = document.items.some(
-      (item) => adapter.selectedIds.includes(item.id) && item.locked,
+      (item) =>
+        adapter.selectedIds.includes(item.id) && (item.locked || adapter.isCollageFrame(item.id)),
     );
     transformer.current.nodes(
-      locked || editing || adapter.cropDraft
+      locked || editing || adapter.cropDraft || adapter.adjustingCollage
         ? []
         : adapter.selectedIds
             .map((id) => stage.findOne(`#${id}`))
             .filter((node): node is Konva.Node => !!node),
     );
     transformer.current.getLayer()?.draw();
-  }, [adapter, document.items, adapter.selectedIds, scale, left, top, editing, adapter.cropDraft]);
+  }, [
+    adapter,
+    document.items,
+    adapter.selectedIds,
+    scale,
+    left,
+    top,
+    editing,
+    adapter.cropDraft,
+    adapter.adjustingCollage,
+  ]);
 
   useLayoutEffect(() => {
     const page = stageRef.current?.findOne('#artboard') as Konva.Group | undefined;
@@ -451,6 +527,11 @@ export function KonvaStage({
   }, [adapter]);
 
   const choose = (id: string, shift = false) => {
+    if (
+      adapter.adjustingCollage &&
+      !adapter.collageAdjustment?.members.some((item) => item.id === id)
+    )
+      return;
     const item = document.items.find((item) => item.id === id);
     if (item && !adapter.inScope(item)) return;
     const unit = item
@@ -468,7 +549,27 @@ export function KonvaStage({
       );
     else if (!adapter.selectedIds.includes(id)) adapter.select(unit);
   };
+  const photoGesturePoint = (clientX: number, clientY: number) => {
+    const stage = stageRef.current,
+      draft = adapter.cropDraft;
+    const item = adapter.history.document.items.find((item) => item.id === draft?.id);
+    if (!stage || !item) return null;
+    const image = adapter.images.get(
+      item.rendition || (item.contentAsset || item.asset)?.assetUrl || '',
+    );
+    const original = stage.findOne<Konva.Group>(`#${item.id}`);
+    const photo = original?.find<Konva.Image>('Image').find((node) => node.image() === image);
+    if (!photo) return null;
+    const rect = stage.getContent().getBoundingClientRect();
+    const screenPoint = {
+      x: ((clientX - rect.left) * stage.width()) / rect.width,
+      y: ((clientY - rect.top) * stage.height()) / rect.height,
+    };
+    const point = photo.getAbsoluteTransform().copy().invert().point(screenPoint);
+    return { x: point.x / photo.width(), y: point.y / photo.height() };
+  };
   const startMarquee = (event: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (adapter.adjustingCollage) return;
     const start = stageRef.current?.getPointerPosition();
     if (!start || ('button' in event.evt && event.evt.button !== 0)) return;
     const outside =
@@ -476,7 +577,7 @@ export function KonvaStage({
       start.y < top ||
       start.x > left + document.width * scale ||
       start.y > top + document.height * scale;
-    if (outside && (drawMode !== 'select' || adapter.cropDraft)) {
+    if (outside && (drawMode !== 'select' || (adapter.cropDraft && !adapter.cropDraft.base))) {
       if (
         start &&
         event.target === event.target.getStage() &&
@@ -489,7 +590,12 @@ export function KonvaStage({
     }
     if ('touches' in event.evt && event.evt.touches.length === 2) {
       const [a, b] = event.evt.touches;
-      pinch.current = { distance: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), scale };
+      event.evt.preventDefault();
+      pinch.current = {
+        distance: Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)),
+        scale,
+      };
+      cropDrag.current = null;
       marquee.current = null;
       stroke.current = [];
       stageRef.current?.find('Group').forEach((node) => node.stopDrag());
@@ -499,7 +605,17 @@ export function KonvaStage({
       const point = stageRef.current?.getPointerPosition(),
         item = document.items.find((item) => item.id === adapter.cropDraft?.id);
       if (point && item) {
-        cropDrag.current = { x: point.x, y: point.y, crop: { ...adapter.cropDraft.crop }, item };
+        const pointer = 'touches' in event.evt ? event.evt.touches[0] : event.evt;
+        cropDrag.current = {
+          x: point.x,
+          y: point.y,
+          crop: { ...adapter.cropDraft.crop },
+          item,
+          photoPoint:
+            adapter.cropDraft.base && pointer
+              ? photoGesturePoint(pointer.clientX, pointer.clientY) || undefined
+              : undefined,
+        };
       }
       return;
     }
@@ -541,9 +657,24 @@ export function KonvaStage({
     if (cropDrag.current) {
       const point = stageRef.current?.getPointerPosition(),
         start = cropDrag.current;
+      const pointer = 'touches' in event.evt ? event.evt.touches[0] : event.evt;
+      const photoPoint =
+        start.photoPoint && pointer && photoGesturePoint(pointer.clientX, pointer.clientY);
+      if (photoPoint && start.photoPoint && adapter.cropDraft?.base) {
+        adapter.updateCropDraft(
+          gestureCrop(start.crop, adapter.cropDraft.base, 1, start.photoPoint, photoPoint),
+        );
+        return;
+      }
       if (point)
         adapter.updateCropDraft(
-          dragCrop(start.crop, start.item, point.x - start.x, point.y - start.y, scale),
+          dragCrop(
+            start.crop,
+            adapter.cropDraft?.base ? { ...start.item, ...photoAperture(start.item) } : start.item,
+            point.x - start.x,
+            point.y - start.y,
+            scale,
+          ),
         );
       return;
     }
@@ -654,6 +785,18 @@ export function KonvaStage({
       ownerDocument?.removeEventListener('touchcancel', cancel);
     };
   });
+  const photoInput = useRef<HTMLInputElement>(null);
+  const photoTarget = useRef<string | null>(null);
+  const activateItem = (item: BoardItem) => {
+    if (adapter.adjustingCollage) return;
+    if (item.scrapbookPhoto && item.templatePlaceholder && !item.locked) {
+      photoTarget.current = item.id;
+      if (photoInput.current) {
+        photoInput.current.value = '';
+        photoInput.current.click();
+      }
+    } else editText(item);
+  };
   const props = (item: BoardItem) => ({
     id: item.id,
     x: item.x,
@@ -663,6 +806,8 @@ export function KonvaStage({
     rotation: item.rotation,
     opacity: itemOpacity(item),
     draggable:
+      !adapter.isCollageFrame(item.id) &&
+      !adapter.adjustingCollage &&
       !adapter.cropDraft &&
       drawMode === 'select' &&
       adapter.inScope(item) &&
@@ -682,8 +827,8 @@ export function KonvaStage({
       choose(item.id);
       onObjectContextMenu?.(event.evt.clientX, event.evt.clientY);
     },
-    onDblClick: () => editText(item),
-    onDblTap: () => editText(item),
+    onDblClick: () => activateItem(item),
+    onDblTap: () => activateItem(item),
     onMouseDown: () => {
       const pointer = stageRef.current?.getPointerPosition();
       dragPointer.current = pointer ? { ...pointer } : null;
@@ -698,7 +843,7 @@ export function KonvaStage({
       const items = adapter.history.document.items.filter((other) =>
         adapter.selectedIds.includes(other.id),
       );
-      if (items.some((other) => other.locked)) {
+      if (items.some((other) => other.locked || adapter.isCollageFrame(other.id))) {
         stageRef.current?.findOne(`#${item.id}`)?.stopDrag();
         return;
       }
@@ -841,7 +986,14 @@ export function KonvaStage({
           event.dataTransfer.types.includes('text/uri-list')
         ) {
           event.preventDefault();
-          event.dataTransfer.dropEffect = dropPreview.move(event.clientX, event.clientY)
+          const photo =
+            canvasDragPreview(adapter.ownerWindow)?.photo ||
+            event.dataTransfer.types.includes('Files');
+          event.dataTransfer.dropEffect = dropPreview.move(
+            event.clientX,
+            event.clientY,
+            !!photo && !event.altKey,
+          )
             ? 'copy'
             : 'none';
         }
@@ -880,7 +1032,9 @@ export function KonvaStage({
           dropPreview.clear();
           return;
         }
-        dropPreview.move(event.clientX, event.clientY);
+        const photo = canvasDragPreview(adapter.ownerWindow)?.photo || files.length === 1;
+        dropPreview.move(event.clientX, event.clientY, !!photo && !event.altKey);
+        const replaceId = dropPreview.target.current?.id;
         dropPreview.begin();
         try {
           if (creationData) {
@@ -905,7 +1059,9 @@ export function KonvaStage({
             return;
           }
           if (files.length) {
-            await adapter.uploadPhotos(files, point);
+            if (replaceId && files.length === 1)
+              await adapter.replaceImageFile(replaceId, files[0]);
+            else await adapter.uploadPhotos(files, point);
             return;
           }
           if (source && !id) {
@@ -925,6 +1081,7 @@ export function KonvaStage({
           await adapter.insertAsset(
             asset,
             centeredDropPosition(point, assetDropSize(asset.width, asset.height), document),
+            asset.type === 'photo' ? replaceId : undefined,
           );
         } catch (error) {
           setDropError(error instanceof Error ? error.message : 'Asset insertion failed.');
@@ -933,6 +1090,26 @@ export function KonvaStage({
         }
       }}
     >
+      <input
+        ref={photoInput}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        hidden
+        aria-label="Upload photo into placeholder"
+        onChange={async (event) => {
+          const file = event.currentTarget.files?.[0];
+          const target = photoTarget.current;
+          event.currentTarget.value = '';
+          photoTarget.current = null;
+          if (!file || !target) return;
+          try {
+            setDropError('');
+            await adapter.replaceImageFile(target, file);
+          } catch (error) {
+            setDropError(error instanceof Error ? error.message : 'Photo upload failed.');
+          }
+        }}
+      />
       {createPortal(
         <div ref={dropPreview.ref} className="canvas-drop-preview" hidden aria-hidden="true" />,
         adapter.ownerWindow.document.body,
@@ -1004,7 +1181,7 @@ export function KonvaStage({
             pending.frame = 0;
             if (delta)
               flushSync(() =>
-                zoomAt(pending.clientX, pending.clientY, scale * Math.exp(-delta * 0.014)),
+                zoomAt(pending.clientX, pending.clientY, scale * Math.exp(-delta * 0.0035)),
               );
           });
         }}
@@ -1116,6 +1293,7 @@ export function KonvaStage({
                       height={item.height}
                       fill="rgba(0,0,0,0.001)"
                       hitFunc={itemHitRegion}
+                      photoClip={item.scrapbookPhoto?.clip}
                       listening={true}
                     />
                   )}
@@ -1129,7 +1307,7 @@ export function KonvaStage({
                     )}
                     previewToken={
                       adapter.originalPreview ||
-                      (adapter.cropDraft?.id === item.id ? adapter.cropDraft.crop : false)
+                      (adapter.cropDraft?.id === item.id ? adapter.cropDraft : false)
                     }
                   />
                 </Group>
@@ -1225,22 +1403,65 @@ export function KonvaStage({
               listening={false}
             />
           ))}
-          <Transformer
-            ref={transformer}
-            visible={!adapter.cropDraft}
-            listening={!adapter.cropDraft}
-            rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
-            rotationSnapTolerance={5}
-            borderStroke={colors.selection}
-            anchorStroke={colors.selection}
-            anchorFill="white"
-            anchorSize={9}
-            anchorCornerRadius={4}
-            rotateAnchorOffset={25}
-            flipEnabled={false}
-            keepRatio={keepRatio}
-            enabledAnchors={
-              keepRatio
+          {!adapter.cropDraft &&
+            document.items
+              .filter(
+                (item) => adapter.selectedIds.includes(item.id) && adapter.isCollageFrame(item.id),
+              )
+              .map((item) => (
+                <Line
+                  key={`collage-selection-${item.id}`}
+                  name="collage-selection-outline"
+                  points={(item.scrapbookPhoto?.clip || [0, 0, 100, 0, 100, 100, 0, 100]).map(
+                    (v, i) =>
+                      i % 2
+                        ? top + (item.y + (v * item.height) / 100) * scale
+                        : left + (item.x + (v * item.width) / 100) * scale,
+                  )}
+                  closed
+                  stroke={colors.selection}
+                  strokeWidth={2}
+                  listening={false}
+                />
+              ))}
+          {!adapter.cropDraft &&
+            (() => {
+              const items = document.items.filter((item) => adapter.selectedIds.includes(item.id));
+              if (items.length < 2 || !items.every((item) => adapter.isCollageFrame(item.id)))
+                return null;
+              const box = unionBounds(items.map(boundsOf));
+              return (
+                <Rect
+                  name="collage-group-selection-outline"
+                  x={left + box.x * scale}
+                  y={top + box.y * scale}
+                  width={box.width * scale}
+                  height={box.height * scale}
+                  stroke={colors.selection}
+                  strokeWidth={1}
+                  dash={[5, 4]}
+                  listening={false}
+                />
+              );
+            })()}
+          {(() => {
+            const selectedItems = document.items.filter((item) =>
+              adapter.selectedIds.includes(item.id),
+            );
+            const onlyLineOrArrow =
+              selectedItems.length > 0 &&
+              selectedItems.every((item) => item.shape === 'line' || item.shape === 'arrow');
+
+            const enabledAnchors = onlyLineOrArrow
+              ? [
+                  'middle-left',
+                  'middle-right',
+                  'top-left',
+                  'top-right',
+                  'bottom-left',
+                  'bottom-right',
+                ]
+              : keepRatio
                 ? ['top-left', 'top-right', 'bottom-left', 'bottom-right']
                 : [
                     'top-left',
@@ -1251,82 +1472,111 @@ export function KonvaStage({
                     'bottom-left',
                     'bottom-center',
                     'bottom-right',
-                  ]
-            }
-            boundBoxFunc={(previous, next) => {
-              if (snapping && !altHeld.current && Math.abs(next.rotation) < 0.001) {
-                const local = {
-                  x: (next.x - left) / scale,
-                  y: (next.y - top) / scale,
-                  width: next.width / scale,
-                  height: next.height / scale,
-                };
-                const others = document.items
-                  .filter((item) => !item.hidden && !adapter.selectedIds.includes(item.id))
-                  .map(boundsOf);
-                const snap = snapResize(
-                  local,
-                  transformer.current?.getActiveAnchor() || '',
-                  others,
-                  document,
-                  6 / scale,
-                  keepRatio,
-                );
-                next = {
-                  ...next,
-                  x: left + snap.box.x * scale,
-                  y: top + snap.box.y * scale,
-                  width: snap.box.width * scale,
-                  height: snap.box.height * scale,
-                };
-                setGuides((current) =>
-                  current.vertical === snap.vertical && current.horizontal === snap.horizontal
-                    ? current
-                    : { vertical: snap.vertical, horizontal: snap.horizontal },
-                );
-              }
-              const box = boundsOf({ ...next, rotation: (next.rotation * 180) / Math.PI });
-              return Math.abs(next.width) < 10 ||
-                Math.abs(next.height) < 10 ||
-                (adapter.snapToEdges &&
-                  (box.x < left - 0.01 ||
-                    box.y < top - 0.01 ||
-                    box.x + box.width > left + document.width * scale + 0.01 ||
-                    box.y + box.height > top + document.height * scale + 0.01))
-                ? previous
-                : next;
-            }}
-            onTransformEnd={() => {
-              if (adapter.cropDraft) return;
-              setGuides({});
-              const patches = (transformer.current?.nodes() || []).map((node) => {
-                const item = document.items.find((item) => item.id === node.id());
-                const patch = {
-                  x: node.x(),
-                  y: node.y(),
-                  width: Math.max(10, node.width() * node.scaleX()),
-                  height: Math.max(10, node.height() * node.scaleY()),
-                  rotation: node.rotation(),
-                  ...(item?.contentSize
-                    ? {
-                        contentSize: {
-                          width: item.contentSize.width * node.scaleX(),
-                          height: item.contentSize.height * node.scaleY(),
-                        },
-                      }
-                    : {}),
-                  ...(item?.kind === 'text'
-                    ? { fontSize: Math.max(8, (item.fontSize || 40) * node.scaleY()) }
-                    : {}),
-                };
-                node.scale({ x: 1, y: 1 });
-                return { id: node.id(), patch };
-              });
-              if (patches.length) adapter.patchItems(patches);
-            }}
-          />
+                  ];
+
+            return (
+              <Transformer
+                ref={transformer}
+                visible={!adapter.cropDraft && !adapter.adjustingCollage}
+                listening={!adapter.cropDraft && !adapter.adjustingCollage}
+                rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
+                rotationSnapTolerance={5}
+                borderStroke={colors.selection}
+                anchorStroke={colors.selection}
+                anchorFill="white"
+                anchorSize={10}
+                anchorCornerRadius={4}
+                rotateAnchorOffset={25}
+                rotateAnchorCursor="grab"
+                flipEnabled={false}
+                keepRatio={onlyLineOrArrow ? false : keepRatio}
+                enabledAnchors={enabledAnchors}
+                boundBoxFunc={(previous, next) => {
+                  if (snapping && !altHeld.current && Math.abs(next.rotation) < 0.001) {
+                    const local = {
+                      x: (next.x - left) / scale,
+                      y: (next.y - top) / scale,
+                      width: next.width / scale,
+                      height: next.height / scale,
+                    };
+                    const others = document.items
+                      .filter((item) => !item.hidden && !adapter.selectedIds.includes(item.id))
+                      .map(boundsOf);
+                    const snap = snapResize(
+                      local,
+                      transformer.current?.getActiveAnchor() || '',
+                      others,
+                      document,
+                      6 / scale,
+                      keepRatio,
+                    );
+                    next = {
+                      ...next,
+                      x: left + snap.box.x * scale,
+                      y: top + snap.box.y * scale,
+                      width: snap.box.width * scale,
+                      height: snap.box.height * scale,
+                    };
+                    setGuides((current) =>
+                      current.vertical === snap.vertical && current.horizontal === snap.horizontal
+                        ? current
+                        : { vertical: snap.vertical, horizontal: snap.horizontal },
+                    );
+                  }
+                  const box = boundsOf({ ...next, rotation: (next.rotation * 180) / Math.PI });
+                  return Math.abs(next.width) < 10 ||
+                    Math.abs(next.height) < 10 ||
+                    (adapter.snapToEdges &&
+                      (box.x < left - 0.01 ||
+                        box.y < top - 0.01 ||
+                        box.x + box.width > left + document.width * scale + 0.01 ||
+                        box.y + box.height > top + document.height * scale + 0.01))
+                    ? previous
+                    : next;
+                }}
+                onTransformEnd={() => {
+                  if (adapter.cropDraft) return;
+                  setGuides({});
+                  const patches = (transformer.current?.nodes() || []).map((node) => {
+                    const item = document.items.find((item) => item.id === node.id());
+                    const patch = {
+                      x: node.x(),
+                      y: node.y(),
+                      width: Math.max(10, node.width() * node.scaleX()),
+                      height: Math.max(10, node.height() * node.scaleY()),
+                      rotation: node.rotation(),
+                      ...(item?.contentSize
+                        ? {
+                            contentSize: {
+                              width: item.contentSize.width * node.scaleX(),
+                              height: item.contentSize.height * node.scaleY(),
+                            },
+                          }
+                        : {}),
+                      ...(item?.kind === 'text'
+                        ? { fontSize: Math.max(8, (item.fontSize || 40) * node.scaleY()) }
+                        : {}),
+                    };
+                    node.scale({ x: 1, y: 1 });
+                    return { id: node.id(), patch };
+                  });
+                  if (patches.length) adapter.patchItems(patches);
+                }}
+              />
+            );
+          })()}
         </Layer>
       </Stage>
+      {adapter.adjustingCollage && (
+        <CollageDividerOverlay
+          adapter={adapter}
+          left={left}
+          top={top}
+          scale={scale}
+          width={stageWidth}
+          height={stageHeight}
+        />
+      )}
       {editing && editingItem && (
         <textarea
           ref={textEditor}

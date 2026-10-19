@@ -9,7 +9,9 @@ test('menu arrow-key navigation and Escape', async ({ page }) => {
   await page.waitForURL(/board=/);
   await page.getByLabel('Editable vision board', { exact: true }).waitFor({ timeout: 15000 });
   const h = await runtime(page);
-  await h.evaluate(async ({ adapter }) => { adapter.createShape('rectangle'); });
+  await h.evaluate(async ({ adapter }) => {
+    adapter.createShape('rectangle');
+  });
   // right-click the canvas to open the context menu
   const canvas = page.getByLabel('Editable vision board', { exact: true });
   await canvas.click({ button: 'right', position: { x: 100, y: 100 } });

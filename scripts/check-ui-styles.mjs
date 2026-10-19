@@ -16,7 +16,8 @@ for (const file of walk(root).filter((file) => file.endsWith('.css'))) {
   const report = (message) => errors.push(name + ': ' + message);
   if (css.includes('!important')) report('Remove the override and resolve its cascade.');
   if (/--vs-/.test(css)) report('Use the shared --gs-* tokens.');
-  if (/transition\s*:\s*[^;{}]*\ball\b/.test(css)) report('Forbid transition: all; list properties explicitly.');
+  if (/transition\s*:\s*[^;{}]*\ball\b/.test(css))
+    report('Forbid transition: all; list properties explicitly.');
   checkHoverGating(css, report);
   for (const [, token] of css.matchAll(/var\((--gs-[\w-]+)/g)) {
     if (!tokens.has(token)) report('Undefined token ' + token);
@@ -41,7 +42,10 @@ function checkHoverGating(css, report) {
       const brace = stripped.indexOf('{', i + 6);
       if (brace === -1) break;
       const condition = stripped.slice(i + 6, brace);
-      mediaStack.push({ bodyDepth: depth + 1, gated: /\(\s*hover\s*:\s*hover\s*\)/.test(condition) });
+      mediaStack.push({
+        bodyDepth: depth + 1,
+        gated: /\(\s*hover\s*:\s*hover\s*\)/.test(condition),
+      });
       i = brace;
       continue;
     }
@@ -49,7 +53,8 @@ function checkHoverGating(css, report) {
     if (ch === '{') depth++;
     else if (ch === '}') {
       depth--;
-      while (mediaStack.length && mediaStack[mediaStack.length - 1].bodyDepth > depth) mediaStack.pop();
+      while (mediaStack.length && mediaStack[mediaStack.length - 1].bodyDepth > depth)
+        mediaStack.pop();
     } else if (stripped.startsWith(':hover', i)) {
       const lineStart = stripped.lastIndexOf('\n', i) + 1;
       const lineEnd = stripped.indexOf('\n', i);

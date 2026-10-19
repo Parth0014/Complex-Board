@@ -13,6 +13,10 @@ export interface BoardItem {
   rotation: number;
   opacity: number;
   fixedBounds?: boolean;
+  scrapbookEmoji?: boolean;
+  collageLayout?: import('../collageAdjustment').CollageLayout;
+  scrapbookPhoto?: import('../scrapbookPresets').ScrapbookPhoto;
+  scrapbookPaper?: { width: number; height: number };
   contentSize?: { width: number; height: number };
   text?: string;
   fontFamily?: VisionFontFamily;
@@ -63,6 +67,12 @@ export interface BoardItem {
     | 'cloud'
     | 'blob'
     | 'burst'
+    | 'diamond'
+    | 'hexagon'
+    | 'octagon'
+    | 'badge'
+    | 'flower'
+    | 'arch'
     | 'line'
     | 'arrow';
   connector?: { from: string; to: string };
@@ -71,6 +81,7 @@ export interface BoardItem {
   strokeWidth?: number;
   crop?: { x: number; y: number; width: number; height: number };
   imageFit?: 'fit' | 'fill';
+  imageRotation?: number;
   rendition?: string;
   colorOverrides?: Record<string, string>;
   brightness?: number;

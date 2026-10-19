@@ -1,0 +1,11 @@
+{
+  "vision_title": "MY NEXT CHAPTER",
+  "affirmation": "I am building a life that feels like mine.",
+  "goals": [
+    {"id": "travel", "label": "WANDER", "weight": 2},
+    {"id": "wellness", "label": "BREATHE", "weight": 2},
+    {"id": "career", "label": "CREATE", "weight": 2},
+    {"id": "family", "label": "BELONG", "weight": 1},
+    {"id": "home", "label": "ROOTED", "weight": 1}
+  ]
+}

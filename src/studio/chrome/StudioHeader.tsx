@@ -98,7 +98,7 @@ export function StudioHeader({
         </IconButton>
         <IconButton
           className="gs-segmented__item"
-          data-tip="Redo (Ctrl+Shift+Z)"
+          data-tip="Redo (Ctrl+Y)"
           data-tip-pos="below"
           aria-label="Redo"
           disabled={!adapter.history.canRedo}

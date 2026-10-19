@@ -38,11 +38,7 @@ function resolveToken(name: string, seen = new Set<string>()): string {
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
   const full = h.length === 3 ? [...h].map((c) => c + c).join('') : h;
-  return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255) as [
-    number,
-    number,
-    number,
-  ];
+  return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255) as [number, number, number];
 }
 
 function luminance(hex: string): number {

@@ -1,3 +1,4 @@
+import { ReplaceImageDialog } from '../studio/ReplaceImageDialog';
 import { selectableIds } from '../studio/selection';
 import { ZoomControls } from '../studio/chrome/ZoomControls';
 import { Button } from '../studio/ui/Button';
@@ -60,7 +61,6 @@ export function Editor({
   onHome: () => void;
   initialTab: StudioTab | null;
 }) {
-  const replacementInput = useRef<HTMLInputElement>(null);
   const canvasSettings = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const doc = adapter.ownerWindow.document;
@@ -81,9 +81,7 @@ export function Editor({
       doc.removeEventListener('keydown', escape);
     };
   }, [adapter]);
-  const replacementId = useRef<string | null>(null);
-  const [replacingImage, setReplacingImage] = useState(false);
-  const [replacementError, setReplacementError] = useState('');
+  const [replacementId, setReplacementId] = useState<string | null>(null);
   useMenuPlacement(adapter.ownerWindow);
   useSyncExternalStore(adapter.subscribe, adapter.getSnapshot);
   const [drawMode, setDrawMode] = useState('select');
@@ -240,28 +238,61 @@ export function Editor({
     const release = (event: PointerEvent) => {
       if ((event.target as HTMLInputElement)?.type === 'range') adapter.endGesture();
     };
+    const arrowKeys = new Set<string>();
+    let nudging = false;
+    const finishNudge = () => {
+      if (nudging) {
+        nudging = false;
+        arrowKeys.clear();
+        adapter.endGesture();
+      }
+    };
+    const keyUp = (event: KeyboardEvent) => {
+      arrowKeys.delete(event.key);
+      if (!arrowKeys.size) finishNudge();
+    };
     const key = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (
-        event.defaultPrevented ||
-        target.closest(
-          '[role="dialog"], [role="menu"], [data-appearance-surface], .gs-hybrid-quickbar',
-        )
-      )
-        return;
+      if (event.defaultPrevented || target.closest('[role="dialog"], [role="menu"]')) return;
       if (event.key === 'Escape' && /INPUT|TEXTAREA/.test(target.tagName)) {
         adapter.cancelGesture();
         target.blur();
         return;
       }
-      if (target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
       const command = event.ctrlKey || event.metaKey;
+      const input = target as HTMLInputElement;
+      const nativeField = /INPUT|TEXTAREA|SELECT/.test(target.tagName);
+      const textEntry =
+        target.isContentEditable ||
+        target.tagName === 'TEXTAREA' ||
+        (target.tagName === 'INPUT' &&
+          !['number', 'range', 'checkbox', 'radio', 'color', 'button'].includes(input.type));
+      // Text editing owns its clipboard and undo. Inspector numeric/range edits
+      // belong to document history; commit their gesture before undo/redo.
+      if (textEntry) return;
+      const editorCommand = command && ['z', 'y', 'd', 'g'].includes(event.key.toLowerCase());
+      if (nativeField && !editorCommand) return;
+      if (nativeField && editorCommand) {
+        target.blur();
+        adapter.endGesture();
+      }
+      // Roving tabs, listboxes and sliders keep their own navigation keys.
+      if (
+        !command &&
+        event.key.startsWith('Arrow') &&
+        target.closest('[role="tablist"], [role="listbox"], [role="slider"]')
+      )
+        return;
+      if (!event.key.startsWith('Arrow')) finishNudge();
       if (command && event.key.toLowerCase() === 'a') {
         event.preventDefault();
         adapter.select(selectableIds(adapter.history.document.items));
       } else if (command && event.key.toLowerCase() === 'g') {
         event.preventDefault();
         event.shiftKey ? adapter.ungroupSelection() : adapter.groupSelection();
+      } else if (command && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        adapter.redo();
       } else if (command && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         event.shiftKey ? adapter.redo() : adapter.undo();
@@ -288,7 +319,12 @@ export function Editor({
       } else if (!command && event.key.toLowerCase() === 'v') setDrawMode('select');
       else if (event.key === '[') adapter.arrangeSelection(command ? 'back' : 'backward');
       else if (event.key === ']') adapter.arrangeSelection(command ? 'front' : 'forward');
-      else if (event.key.startsWith('Arrow') && adapter.selectedIds.length) {
+      else if (
+        !command &&
+        !event.altKey &&
+        event.key.startsWith('Arrow') &&
+        adapter.selectedIds.length
+      ) {
         event.preventDefault();
         const step = event.shiftKey ? 10 : 1;
         if (
@@ -297,9 +333,15 @@ export function Editor({
           )
         )
           return;
+        if (!nudging) {
+          nudging = true;
+          adapter.beginKeyboardGesture();
+        }
+        arrowKeys.add(event.key);
+        const selectedIds = new Set(adapter.selectedIds);
         adapter.patchItems(
           adapter.history.document.items
-            .filter((item) => adapter.selectedIds.includes(item.id))
+            .filter((item) => selectedIds.has(item.id))
             .map((item) => ({
               id: item.id,
               patch: {
@@ -315,19 +357,29 @@ export function Editor({
     };
     const paste = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement;
-      if (isEditorInput(target) || target.closest('[role="dialog"]') || !event.clipboardData)
+      if (
+        target.isContentEditable ||
+        isEditorInput(target) ||
+        target.closest('[role="dialog"]') ||
+        !event.clipboardData
+      )
         return;
       event.preventDefault();
       void adapter.pasteTransfer(event.clipboardData);
     };
     adapter.ownerWindow.document.addEventListener('paste', paste);
     adapter.ownerWindow.document.addEventListener('keydown', key);
+    adapter.ownerWindow.document.addEventListener('keyup', keyUp);
+    adapter.ownerWindow.addEventListener('blur', finishNudge);
     adapter.ownerWindow.document.addEventListener('focusin', focusIn);
     adapter.ownerWindow.document.addEventListener('focusout', focusOut);
     adapter.ownerWindow.document.addEventListener('pointerup', release);
     return () => {
       adapter.ownerWindow.document.removeEventListener('paste', paste);
+      finishNudge();
       adapter.ownerWindow.document.removeEventListener('keydown', key);
+      adapter.ownerWindow.document.removeEventListener('keyup', keyUp);
+      adapter.ownerWindow.removeEventListener('blur', finishNudge);
       adapter.ownerWindow.document.removeEventListener('focusin', focusIn);
       adapter.ownerWindow.document.removeEventListener('focusout', focusOut);
       adapter.ownerWindow.document.removeEventListener('pointerup', release);
@@ -404,34 +456,12 @@ export function Editor({
       }
     >
       <div className="vs-stage-fill" ref={setWorkspaceNode}>
-        <input
-          ref={replacementInput}
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          aria-label="Replacement image file"
-          hidden
-          onChange={async (event) => {
-            const file = event.target.files?.[0],
-              id = replacementId.current;
-            event.target.value = '';
-            if (!file || !id) return;
-            setReplacingImage(true);
-            setReplacementError('');
-            try {
-              await adapter.replaceImageFile(id, file);
-            } catch (error) {
-              setReplacementError(
-                error instanceof Error ? error.message : 'Unable to replace image.',
-              );
-            } finally {
-              setReplacingImage(false);
-            }
-          }}
-        />
-        {replacementError && (
-          <p className="canvas-message" role="alert">
-            {replacementError}
-          </p>
+        {replacementId && (
+          <ReplaceImageDialog
+            adapter={adapter}
+            targetId={replacementId}
+            onClose={() => setReplacementId(null)}
+          />
         )}
         {selection.count > 0 && (
           <div
@@ -462,14 +492,13 @@ export function Editor({
                   formattingTrigger={formattingTrigger}
                   formattingOpen={editorPanel === 'style'}
                   appearanceInspector={!!quickShape}
-                  replacingImage={replacingImage}
+                  replacingImage={false}
                   onReplaceImage={() => {
                     const selected = adapter.history.document.items.find((entry) =>
                       adapter.selectedIds.includes(entry.id),
                     );
                     if (!selected) return;
-                    replacementId.current = selected.id;
-                    replacementInput.current?.click();
+                    setReplacementId(selected.id);
                   }}
                   onEditStyle={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
                 />

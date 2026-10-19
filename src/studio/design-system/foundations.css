@@ -89,6 +89,9 @@
     --gs-control-height: 32px;
     --gs-control-height-lg: 40px;
     --gs-touch-target: 44px;
+    --gs-range-thumb-size: 18px;
+    --gs-range-track-size: 4px;
+    --gs-range-fill: 0%;
     --gs-icon-size: 16px;
     --gs-swatch-color: transparent; /* overridden per-swatch via inline style */
     --gs-radius-xs: 2px; /* slider track, thin bars */

@@ -8,6 +8,8 @@ const types = new Set(['image/png', 'image/jpeg', 'image/webp']);
 export interface MediaRecord {
   id: string;
   name: string;
+  /** Library removal keeps blobs available to saved boards, undo and exports. */
+  hiddenFromLibrary?: boolean;
   original: Blob;
   working: Blob;
   width: number;
@@ -15,7 +17,10 @@ export interface MediaRecord {
   originalWidth: number;
   originalHeight: number;
 }
-export interface PortableMedia extends Omit<MediaRecord, 'original' | 'working'> {
+export interface PortableMedia extends Omit<
+  MediaRecord,
+  'original' | 'working' | 'hiddenFromLibrary'
+> {
   original: string;
   working: string;
 }
@@ -70,7 +75,8 @@ export async function listMedia(ownerWindow: Window & typeof globalThis): Promis
   try {
     return await new Promise<MediaRecord[]>((resolve, reject) => {
       const request = db.transaction('media', 'readonly').objectStore('media').getAll();
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () =>
+        resolve(request.result.filter((record: MediaRecord) => !record.hiddenFromLibrary));
       request.onerror = () => reject(request.error);
     });
   } finally {
@@ -90,8 +96,38 @@ export async function saveMedia(
         const request = store.get(record.id);
         request.onsuccess = () => {
           if (!request.result) store.add(record);
+          else if (request.result.hiddenFromLibrary)
+            store.put({ ...request.result, name: record.name, hiddenFromLibrary: false });
         };
       }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+    ownerWindow.dispatchEvent(new ownerWindow.Event('studio-media-changed'));
+  } finally {
+    db.close();
+  }
+}
+/** Remove only the library entry; board references and undo snapshots still need its media. */
+export async function setMediaLibraryVisibility(
+  ownerWindow: Window & typeof globalThis,
+  id: string,
+  visible: boolean,
+): Promise<void> {
+  const db = await openBoardStore(ownerWindow);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('media', 'readwrite'),
+        store = tx.objectStore('media');
+      const request = store.get(id);
+      request.onsuccess = () => {
+        if (!request.result) {
+          reject(new Error('This photo is no longer available.'));
+          return;
+        }
+        store.put({ ...request.result, hiddenFromLibrary: !visible });
+      };
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
@@ -189,7 +225,12 @@ export async function portableMedia(
     if (size > MAX_BACKUP_BYTES)
       throw new Error('Photo backup exceeds 100 MB. Use fewer or smaller photos.');
     result.push({
-      ...record,
+      id: record.id,
+      name: record.name,
+      width: record.width,
+      height: record.height,
+      originalWidth: record.originalWidth,
+      originalHeight: record.originalHeight,
       original: await dataUrl(ownerWindow, record.original),
       working: await dataUrl(ownerWindow, record.working),
     });

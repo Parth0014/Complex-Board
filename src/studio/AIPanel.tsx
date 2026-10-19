@@ -33,7 +33,13 @@ type Result = {
   image?: string;
   text?: string;
 };
-export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
+export function AIPanel({
+  adapter,
+  onChooseImage,
+}: {
+  adapter: EditorAdapter;
+  onChooseImage?: (image: string, prompt: string) => void;
+}) {
   const { status: aiStatus, checking: aiChecking } = useAIStatus(adapter.ownerWindow);
   const [prompt, setPrompt] = useState(''),
     [mode, setMode] = useState<'image' | 'quote'>('image');
@@ -79,7 +85,8 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
     setProgress('Adding your creation to the board…');
     setError('');
     try {
-      if (result.image) await adapter.insertGeneratedImage(result.image, prompt, background);
+      if (result.image && onChooseImage) onChooseImage(result.image, prompt);
+      else if (result.image) await adapter.insertGeneratedImage(result.image, prompt, background);
       else if (result.text)
         adapter.createTextPreset({
           ...AFFIRMATION_STYLE,
@@ -105,24 +112,26 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
       )}
       {(!aiStatus || aiStatus.configured) && (
         <>
-          <label>
-            Create
-            <select
-              className="vs-select"
-              aria-label="AI generation type"
-              disabled={busy}
-              value={mode}
-              onChange={(event) => {
-                setMode(event.target.value as typeof mode);
-                setPrompt('');
-                setResult(null);
-                setError('');
-              }}
-            >
-              <option value="image">Image</option>
-              <option value="quote">Affirmation</option>
-            </select>
-          </label>
+          {!onChooseImage && (
+            <label>
+              Create
+              <select
+                className="vs-select"
+                aria-label="AI generation type"
+                disabled={busy}
+                value={mode}
+                onChange={(event) => {
+                  setMode(event.target.value as typeof mode);
+                  setPrompt('');
+                  setResult(null);
+                  setError('');
+                }}
+              >
+                <option value="image">Image</option>
+                <option value="quote">Affirmation</option>
+              </select>
+            </label>
+          )}
           <p className="ai-tool-help" id="ai-mode-help">
             {help.description}
           </p>
@@ -137,7 +146,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           />
           <Button
             className="panel-action"
-            aria-label="Generate"
+            aria-label={onChooseImage ? 'Generate replacement preview' : 'Generate'}
             data-tip={help.action}
             loading={busy}
             disabled={!prompt.trim()}
@@ -172,7 +181,7 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
             <img
               src={result.image}
               alt="Generated preview"
-              draggable={!busy}
+              draggable={!busy && !onChooseImage}
               onDragStart={(event) => {
                 if (busy) return event.preventDefault();
                 startCreationDrag(event, { kind: 'generated-image', image: result.image!, prompt });
@@ -196,14 +205,16 @@ export function AIPanel({ adapter }: { adapter: EditorAdapter }) {
           )}
           <p className="ai-result__hint">
             {result.image
-              ? 'Add this image to your board or use it as a background.'
+              ? onChooseImage
+                ? 'Choose this image to preview your replacement.'
+                : 'Add this image to your board or use it as a background.'
               : 'Add to your board as editable text.'}
           </p>
           <div className="ai-result__actions">
             <Button className="panel-action" disabled={busy} onClick={() => void insert()}>
-              Add to board
+              {onChooseImage ? 'Choose this image' : 'Add to board'}
             </Button>
-            {result.image && (
+            {result.image && !onChooseImage && (
               <Button
                 className="panel-secondary-action"
                 disabled={busy}

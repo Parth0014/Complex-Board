@@ -22,7 +22,7 @@ export function StudioShell({
   drawingTools?: ReactNode;
   onHome: () => void;
 }) {
-  const [preview, setPreview] = useState('');
+  const [preview, setPreview] = useState(false);
   const [share, setShare] = useState(false);
   const [error, setError] = useState('');
   const dismissError = useCallback(() => setError(''), []);
@@ -40,13 +40,7 @@ export function StudioShell({
         onHome={onHome}
         onError={setError}
         shareDisabled={!hasContent}
-        onPreview={() => {
-          try {
-            setPreview(adapter.previewBoard());
-          } catch (e) {
-            setError(e instanceof Error ? e.message : 'Preview could not be opened.');
-          }
-        }}
+        onPreview={() => setPreview(true)}
         onShare={() => {
           setError('');
           setShare(true);
@@ -99,7 +93,7 @@ export function StudioShell({
           </div>
         </main>
       </div>
-      {preview && <BoardPreview adapter={adapter} image={preview} onClose={() => setPreview('')} />}
+      {preview && <BoardPreview adapter={adapter} onClose={() => setPreview(false)} />}
       {share && (
         <ExportDialog
           adapter={adapter}

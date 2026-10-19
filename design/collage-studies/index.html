@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>VisBo · 18 collage studies</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { color-scheme: light; --ink:#26362f; --muted:#627168; --line:#d7ded7; --paper:#f5f6f1; --accent:#315e4c; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,Arial,sans-serif; }
+    button,select,input { font:inherit; }
+    button { cursor:pointer; }
+    button:focus-visible,select:focus-visible,input:focus-visible { outline:3px solid #bf8251; outline-offset:4px; }
+    header { max-width:1440px; margin:auto; padding:56px 48px 32px; display:flex; justify-content:space-between; gap:48px; align-items:end; }
+    .eyebrow { font:600 11px/1.3 Arial,sans-serif; letter-spacing:.17em; text-transform:uppercase; color:var(--accent); margin:0 0 16px; }
+    h1 { font:400 clamp(36px,4.2vw,64px)/1 Georgia,serif; letter-spacing:-.04em; margin:0 0 18px; }
+    header p { font-size:14px; line-height:1.6; margin:0; max-width:540px; color:var(--muted); }
+    .principles { padding-left:24px; border-left:1px solid var(--line); min-width:215px; }
+    .principles p { font-size:12px; margin:5px 0; }
+    .toolbar { border-block:1px solid var(--line); background:rgba(245,246,241,.96); position:sticky; top:0; z-index:5; backdrop-filter:blur(12px); }
+    .tools { max-width:1440px; margin:auto; padding:18px 48px; display:flex; gap:30px; align-items:center; flex-wrap:wrap; }
+    label { display:flex; align-items:center; gap:12px; font-size:12px; color:var(--muted); }
+    input[type=range] { accent-color:var(--accent); width:120px; }
+    output { min-width:58px; font-weight:600; color:var(--ink); }
+    select { max-width:160px; border:1px solid var(--line); background:#fff; border-radius:5px; padding:8px 26px 8px 9px; color:var(--ink); font-size:12px; }
+    .segmented { display:flex; gap:3px; padding:3px; border:1px solid var(--line); border-radius:6px; margin-left:auto; }
+    .segmented button { border:0; background:transparent; padding:7px 12px; color:var(--muted); border-radius:3px; font-size:12px; }
+    .segmented [aria-pressed=true] { background:var(--accent); color:#fff; }
+    main { max-width:1440px; margin:auto; padding:0 48px 56px; }
+    .review-note { min-height:20px; font-size:12px; line-height:1.5; color:var(--muted); padding:20px 0; margin:0; }
+    .designs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:44px 32px; }
+    .design { min-width:0; }
+    .open-study { display:block; width:100%; border:0; padding:0; background:transparent; }
+    .board { width:100%; position:relative; background:#fff; overflow:hidden; isolation:isolate; }
+    .board > svg { display:block; }
+    .frame-number { display:none; }
+    .board.blueprint .photo { display:none; }
+    .board.blueprint .frame-number { display:block; }
+    .tile { position:absolute; border-style:solid; border-color:#fff; background:hsl(151 10% var(--tone)); overflow:hidden; }
+    .tile img { width:100%; height:100%; object-fit:cover; display:block; }
+    .tile span { display:none; }
+    .board.blueprint .tile img { visibility:hidden; }
+    .board.blueprint .tile span { display:flex; position:absolute; inset:0; align-items:center; justify-content:center; color:#375344; font:400 clamp(10px,1.5vw,19px)/1 Georgia,serif; }
+    .card-title { display:flex; align-items:center; gap:10px; margin:15px 0 5px; }
+    .number { font:11px/1 monospace; color:#7b8b80; }
+    h2 { margin:0; font-size:15px; font-weight:600; letter-spacing:-.015em; }
+    .shortlist { margin-left:auto; font:25px/1 Georgia,serif; border:0; background:transparent; color:#718678; padding:0 2px; }
+    .shortlist[aria-pressed=true] { color:#b67b3a; }
+    .design p { font-size:12px; line-height:1.5; margin:0; color:var(--muted); }
+    footer { border-top:1px solid var(--line); max-width:1344px; margin:auto; padding:24px 0 40px; display:flex; gap:32px; font-size:11px; line-height:1.7; color:var(--muted); }
+    footer p { max-width:650px; margin:0; }
+    a { color:var(--accent); }
+    dialog { border:0; background:var(--paper); color:var(--ink); border-radius:12px; padding:30px; width:min(1120px,94vw); max-height:94dvh; overflow:auto; }
+    dialog::backdrop { background:#15231ec9; }
+    .dialog-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .dialog-heading h2 { font:36px/1.2 Georgia,serif; }
+    #close-inspect { border:1px solid var(--line); background:transparent; border-radius:50%; width:32px; height:32px; font-size:21px; }
+    #inspect-rule { color:var(--muted); font-size:13px; line-height:1.5; margin:12px 0 26px; max-width:680px; }
+    #variants { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+    figure { margin:0; }
+    figcaption { font-size:10px; letter-spacing:.15em; margin-bottom:10px; color:var(--muted); }
+    body.sheet header { padding-top:30px; padding-bottom:24px; }
+    body.sheet header h1 { font-size:46px; }
+    body.sheet .toolbar,body.sheet .review-note,body.sheet footer,body.sheet .shortlist { display:none; }
+    body.sheet main,body.sheet header { max-width:none; padding-inline:36px; }
+    body.sheet .designs { grid-template-columns:repeat(6,minmax(0,1fr)); gap:26px 22px; }
+    body.sheet .card-title { margin-top:10px; }
+    body.sheet .design p { font-size:10px; }
+    @media(max-width:950px) { header { gap:20px; } .principles { display:none; } .tools { gap:16px; } .segmented { margin-left:0; } .designs { gap:32px 20px; } header,main,.tools { padding-inline:24px; } footer { margin-inline:24px; } }
+    @media(max-width:600px) { header { padding-top:32px; } header p { font-size:13px; } .designs { grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px 16px; } .tools { padding-block:12px; gap:12px 18px; } label { gap:6px; } input[type=range] { width:90px; } .segmented { margin-left:0; } .card-title { gap:6px; } h2 { font-size:13px; } .design p { font-size:11px; } #variants { grid-template-columns:1fr; } dialog { padding:20px; } footer { flex-direction:column; gap:16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <p style="margin-bottom:18px"><a href="interlocking/index.html">New: interlocking collage studies — no covering layer →</a></p>
+      <p class="eyebrow">VisBo / Shape & layer studies / 02</p>
+      <h1>Memories, with a little more character.</h1>
+      <p>Eighteen collages with hearts, circles, arches, torn edges and playful overlaps. Composed for five to ten images, with photos filling every edge.</p>
+    </div>
+    <div class="principles">
+      <p>01 — Photos reach every edge</p>
+      <p>02 — Shapes & considered overlaps</p>
+      <p>03 — Each photo appears once</p>
+      <p>04 — Crop to fit, never stretch</p>
+    </div>
+  </header>
+  <div class="toolbar">
+    <div class="tools">
+      <label>Count <input id="photo-count" type="range" min="5" max="10" value="10" step="1"><output id="count-display">10 photos</output></label>
+      <label>Format <select id="format"><option value="0.5625">Portrait · 9:16</option><option value="1">Square · 1:1</option><option value="1.7777777777777777">Landscape · 16:9</option></select></label>
+      <a href="photos/index.html" style="font-size:12px">View your 10 photos ↗</a>
+      <div class="segmented" aria-label="Preview mode"><button data-view="photos" aria-pressed="true">Photos</button><button data-view="blueprint" aria-pressed="false">Frame diagram</button></div>
+    </div>
+  </div>
+  <main>
+    <p class="review-note" id="shortlisted">Select a design to compare 5, 7 and 10 photos. Star your favorites.</p>
+    <div class="designs" id="designs"></div>
+  </main>
+  <footer>
+    <p>Design study only. These compositions are not connected to the editor. Previews use your 10 selected photos. <a href="photos/index.html">See your photographs.</a> Large panoramas crop more than near-square frames.</p>
+    <p>Direction informed by <a href="https://www.nngroup.com/articles/principles-visual-design/">scale, hierarchy and balance</a> and <a href="https://flickr.github.io/justified-layout/">aspect-aware photo layout</a>. These are design principles, not a claim of scientifically optimal aesthetics.</p>
+  </footer>
+  <dialog id="inspect" aria-labelledby="inspect-title" aria-describedby="inspect-rule">
+    <div class="dialog-heading"><h2 id="inspect-title"></h2><button id="close-inspect" aria-label="Close comparison">×</button></div>
+    <p id="inspect-rule"></p><div id="variants"></div>
+  </dialog>
+  <script src="creative.js"></script>
+  <script src="studies.js"></script>
+</body>
+</html>

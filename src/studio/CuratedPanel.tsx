@@ -7,7 +7,7 @@ import { curatedAssets } from '../assets/curatedPack';
 import { ELEMENT_THEMES } from '../assets/elementThemes';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
 import { startCanvasDrag } from './canvasDrag';
-import { assetDropSize } from '../vision/canvas/dropPlacement';
+import { assetDropSize } from '../vision/dropPlacement';
 import type { EditorAdapter } from '../vision/contracts';
 export function CuratedPanel({
   adapter,

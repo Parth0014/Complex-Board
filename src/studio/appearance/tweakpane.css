@@ -81,6 +81,45 @@
 }
 .gs-tweakpane .tp-sldv_t {
   touch-action: none;
+  margin-inline: calc(var(--gs-range-thumb-size) / 2);
+  min-height: var(--gs-control-height);
+}
+.gs-tweakpane .tp-sldv_t::before,
+.gs-tweakpane .tp-sldv_k::before {
+  height: var(--gs-range-track-size);
+  border-radius: var(--gs-radius-pill);
+}
+.gs-tweakpane .tp-sldv_t::before {
+  background-color: var(--gs-control-line);
+}
+.gs-tweakpane .tp-sldv_k::before {
+  background-color: var(--gs-accent);
+}
+.gs-tweakpane .tp-sldv_t .tp-sldv_k::after {
+  box-sizing: border-box;
+  width: var(--gs-range-thumb-size);
+  height: var(--gs-range-thumb-size);
+  right: calc(var(--gs-range-thumb-size) / -2);
+  border: 2px solid var(--gs-accent);
+  border-radius: 50%;
+  background-color: var(--gs-surface);
+  transition: transform var(--gs-duration-press) var(--gs-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .gs-tweakpane .tp-sldv_t:hover .tp-sldv_k::after {
+    background-color: var(--gs-surface);
+    transform: scale(1.12);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-tweakpane .tp-sldv_t .tp-sldv_k::after {
+    transition: none;
+  }
+}
+@media (pointer: coarse) {
+  .gs-tweakpane .tp-sldv_t {
+    min-height: var(--gs-touch-target);
+  }
 }
 .gs-tweakpane .tp-ckbv_i {
   width: 100%;

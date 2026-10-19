@@ -5,6 +5,7 @@ import { AIPanel } from './AIPanel';
 import { Button } from './ui/Button';
 import { errorMessage } from './errors';
 import { startCanvasDrag } from './canvasDrag';
+import type { GratitudeAsset } from '../assets/contracts';
 type Photo = {
   id: string;
   provider: string;
@@ -15,7 +16,13 @@ type Photo = {
   source: string;
   token: string;
 };
-export function DiscoverPanel({ adapter }: { adapter: EditorAdapter }) {
+export function DiscoverPanel({
+  adapter,
+  onChoosePhoto,
+}: {
+  adapter: EditorAdapter;
+  onChoosePhoto?: (asset: GratitudeAsset) => void;
+}) {
   const [mode, setMode] = useState('photos');
   const cursors = useRef<Record<string, { page: number; more: boolean }>>({});
   const [query, setQuery] = useState('');
@@ -125,8 +132,13 @@ export function DiscoverPanel({ adapter }: { adapter: EditorAdapter }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: item.token }),
       });
-      await adapter.insertAsset(asset);
-      setNotice('Image added to your board.');
+      if (onChoosePhoto) onChoosePhoto(asset);
+      else await adapter.insertAsset(asset);
+      setNotice(
+        onChoosePhoto
+          ? 'Photo selected. Review it before replacing.'
+          : 'Image added to your board.',
+      );
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -135,13 +147,15 @@ export function DiscoverPanel({ adapter }: { adapter: EditorAdapter }) {
   }
   return (
     <div className="discover-panel">
-      <div className="discover-tabs" role="group" aria-label="Discover tools">
-        {['photos', 'generate'].map((id) => (
-          <Button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
-            {id === 'photos' ? 'Photos' : 'Generate'}
-          </Button>
-        ))}
-      </div>
+      {!onChoosePhoto && (
+        <div className="discover-tabs" role="group" aria-label="Discover tools">
+          {['photos', 'generate'].map((id) => (
+            <Button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
+              {id === 'photos' ? 'Photos' : 'Generate'}
+            </Button>
+          ))}
+        </div>
+      )}
       {mode === 'generate' ? (
         <AIPanel adapter={adapter} />
       ) : (
@@ -196,11 +210,11 @@ export function DiscoverPanel({ adapter }: { adapter: EditorAdapter }) {
                 <Button
                   type="button"
                   disabled={Boolean(adding)}
-                  draggable
+                  draggable={!onChoosePhoto}
                   onDragStart={(event) =>
                     startCanvasDrag(event, 'application/x-visbo-photo', item.token)
                   }
-                  aria-label={`Add ${item.title} to board`}
+                  aria-label={onChoosePhoto ? `Choose ${item.title}` : `Add ${item.title} to board`}
                   onClick={() => void insert(item)}
                 >
                   <img src={item.thumb} alt="" loading="lazy" draggable={false} />

@@ -8,7 +8,14 @@ import type { KonvaCanvasAdapter } from './KonvaCanvasAdapter';
 import { ItemContent } from './ItemContent';
 
 /** Render archived pages without switching the editor or adding history commands. */
-export async function renderPage(adapter: KonvaCanvasAdapter, page: BoardPage) {
+export async function renderPage(
+  adapter: KonvaCanvasAdapter,
+  page: BoardPage,
+  options: { maxDimension?: number } = {},
+) {
+  const renderScale = options.maxDimension
+    ? Math.min(1, options.maxDimension / Math.max(page.width, page.height))
+    : 1;
   const owner = adapter.ownerWindow,
     node = owner.document.createElement('div');
   node.style.cssText = 'position:fixed;left:-30000px;top:0;pointer-events:none';
@@ -23,8 +30,10 @@ export async function renderPage(adapter: KonvaCanvasAdapter, page: BoardPage) {
           ref={(value) => {
             stage = value;
           }}
-          width={page.width}
-          height={page.height}
+          width={Math.ceil(page.width * renderScale)}
+          height={Math.ceil(page.height * renderScale)}
+          scaleX={renderScale}
+          scaleY={renderScale}
         >
           <Layer>
             <Group clipWidth={page.width} clipHeight={page.height}>

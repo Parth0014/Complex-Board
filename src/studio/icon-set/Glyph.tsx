@@ -18,13 +18,7 @@ function opticalStroke(size: number, base: number) {
   return base + 0.3;
 }
 
-export function Glyph({
-  name,
-  size,
-  strokeWidth = 1.5,
-  duotone = true,
-  className,
-}: GlyphProps) {
+export function Glyph({ name, size, strokeWidth = 1.5, duotone = true, className }: GlyphProps) {
   const glyph: GlyphData = GLYPHS[name];
   // Optical stroke: use the explicit size when given, else the token size.
   const resolved = size ?? 16;

@@ -5,6 +5,11 @@ import type { BoardDocument, BoardItem, DocumentHistory } from './document';
 
 export type VisionTheme = 'light' | 'dark';
 export type VisionFontFamily =
+  | 'scrapbook-caveat'
+  | 'scrapbook-poppins'
+  | 'scrapbook-playfair'
+  | 'impact'
+  | 'courier-new'
   | 'fraunces'
   | 'caveat-brush'
   | 'dm-sans'
@@ -27,6 +32,8 @@ export type VisionFontFamily =
   | 'caveat'
   | 'dancing-script'
   | 'patrick-hand'
+  | 'cinzel'
+  | 'outfit'
   | 'kalam'
   | 'fredoka'
   | 'pacifico';
@@ -160,6 +167,9 @@ export const EMPTY_VISION_SELECTION: VisionSelection = {
 
 /** Studio uses only this product-facing interface; engine types stay in canvas/. */
 export interface StudioAdapter extends CanvasAdapter {
+  cachedScrapbookTemplatePreviews?(): Record<string, string>;
+  previewScrapbookTemplate(preset: string): Promise<string>;
+  applyScrapbookTemplate(preset: string): Promise<void>;
   storePhotos(files: File[]): Promise<string[]>;
   arrangePhotos(
     ids: string[],
@@ -175,6 +185,7 @@ export interface StudioAdapter extends CanvasAdapter {
   backup(): Promise<void>;
   uploadPhotos(files: File[], position?: VisionPoint): Promise<void>;
   replaceImageFile(id: string, file: File): Promise<void>;
+  replaceImageAsset(id: string, asset: GratitudeAsset): Promise<void>;
   downloadOriginalPhoto(): Promise<void>;
   restore(text: string): Promise<void>;
   exportFormat(format: 'jpeg' | 'transparent' | 'pdf' | '4k' | 'pdf-all'): Promise<void>;
@@ -195,6 +206,7 @@ export interface StudioAdapter extends CanvasAdapter {
   redo(): void;
 }
 export interface EditorAdapter extends StudioAdapter {
+  alignSelection(alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'): void;
   previewBoard(): string;
   readonly images: Map<string, HTMLImageElement>;
   readonly originalPreview: boolean;
@@ -217,7 +229,15 @@ export interface EditorAdapter extends StudioAdapter {
   applyEditedImage(id: string, revision: number, url: string): Promise<void>;
   splitImageLayers(): Promise<void>;
   matchImageStyle(): Promise<void>;
-  cropDraft?: { id: string; crop: NonNullable<BoardItem['crop']> };
+  cropDraft?: {
+    id: string;
+    imageRotation?: number;
+    crop: NonNullable<BoardItem['crop']>;
+    base?: NonNullable<BoardItem['crop']>;
+  };
+  zoomImageCrop(zoom: number): void;
+  rotateImageCrop(degrees: number): void;
+  resetImageCrop(): void;
   updateCropDraft(crop: NonNullable<BoardItem['crop']>): void;
   applyCrop(): void;
   cancelCrop(): void;
@@ -226,6 +246,7 @@ export interface EditorAdapter extends StudioAdapter {
     prompt: string,
     background?: boolean,
     position?: VisionPoint,
+    replaceId?: string,
   ): Promise<void>;
   groupScope: string[];
   path(item: BoardItem): string[];

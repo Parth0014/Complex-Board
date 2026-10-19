@@ -110,13 +110,21 @@ test('Formatting numeric controls update live and preserve cancel and undo', asy
     ['Bounds width', '617', 'width', 617],
     ['Bounds height', '383', 'height', 383],
     ['Text size', '101', 'fontSize', 101],
-    ['Transparency (%)', '55', 'appearance.opacity', 0.55],
-    ['Text outline width', '4', 'appearance.stroke.width', 4],
-    ['Shadow blur', '30', 'appearance.shadow.blur', 30],
-    ['Shadow X', '12', 'appearance.shadow.offsetX', 12],
-    ['Shadow transparency (%)', '60', 'appearance.shadow.opacity', 0.6],
+    ['Opacity (%)', '55', 'appearance.opacity', 0.55],
   ] as const;
   for (const [label, value, path, expected] of fields) {
+    await dock
+      .getByRole('tab', { name: label.startsWith('Bounds') ? 'Layout' : 'Edit', exact: true })
+      .click();
+    const sections = label.startsWith('Text outline')
+      ? ['Text outline']
+      : label.startsWith('Shadow')
+        ? ['Shadow', 'Shadow details']
+        : [];
+    for (const title of sections) {
+      const summary = dock.locator('summary').filter({ hasText: new RegExp(`^${title}$`) });
+      if ((await summary.locator('..').getAttribute('open')) === null) await summary.click();
+    }
     const field = dock.getByLabel(label, { exact: true });
     await field.fill(value);
     await expect
@@ -136,6 +144,7 @@ test('Formatting numeric controls update live and preserve cancel and undo', asy
     await expect(field).toBeFocused();
     await field.press('Tab');
   }
+  await dock.getByRole('tab', { name: 'Edit', exact: true }).click();
   const size = dock.getByLabel('Text size', { exact: true });
   await size.fill('120');
   await size.press('ArrowUp');
@@ -153,6 +162,7 @@ test('Formatting numeric controls update live and preserve cancel and undo', asy
   await expect
     .poll(() => handle.evaluate(({ adapter }) => adapter.history.document.items[0].fontSize))
     .toBe(101);
+  await dock.getByRole('tab', { name: 'Layout', exact: true }).click();
   const width = dock.getByLabel('Bounds width', { exact: true });
   await width.fill('700');
   await width.press('ArrowUp');

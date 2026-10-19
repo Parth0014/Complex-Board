@@ -1,0 +1,56 @@
+{
+  "linen": {
+    "bg": "#EDE5D8",
+    "paper": "#FFF9ED",
+    "ink": "#2D3330",
+    "muted": "#69736A",
+    "accent": "#BD6B54",
+    "light": "#E6CEAC",
+    "line": "#F4E8D6"
+  },
+  "sage": {
+    "bg": "#CDD9C8",
+    "paper": "#F6F6E9",
+    "ink": "#283C36",
+    "muted": "#526C61",
+    "accent": "#B7775D",
+    "light": "#AFC4AE",
+    "line": "#DFE5D6"
+  },
+  "rose": {
+    "bg": "#F0D8D0",
+    "paper": "#FFF5EC",
+    "ink": "#4B313B",
+    "muted": "#936F73",
+    "accent": "#B25473",
+    "light": "#D7A6AA",
+    "line": "#F9E7E0"
+  },
+  "nocturne": {
+    "bg": "#29363F",
+    "paper": "#F5E9D9",
+    "ink": "#F9F1DC",
+    "muted": "#C9C7B9",
+    "accent": "#E8AC7C",
+    "light": "#596671",
+    "line": "#334852"
+  },
+  "lilac": {
+    "bg": "#DAD2E7",
+    "paper": "#FCF7F1",
+    "ink": "#3D3651",
+    "muted": "#736481",
+    "accent": "#9D698A",
+    "light": "#C6B0D9",
+    "line": "#E9E2F0"
+  },
+  "sun": {
+    "bg": "#EED39F",
+    "paper": "#FFF6DD",
+    "ink": "#4B352A",
+    "muted": "#8C6C50",
+    "accent": "#C45E44",
+    "light": "#E8AD69",
+    "line": "#F6E5BC"
+  }
+}

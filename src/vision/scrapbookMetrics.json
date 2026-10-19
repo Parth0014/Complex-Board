@@ -1,0 +1,928 @@
+[
+  [
+    {
+      "height": 400,
+      "textHeight": 400
+    },
+    {
+      "height": 430,
+      "textHeight": 430
+    },
+    {
+      "height": 340,
+      "textHeight": 340
+    },
+    {
+      "height": 420,
+      "textHeight": 420
+    },
+    {
+      "height": 640,
+      "textHeight": 640
+    },
+    {
+      "height": 400,
+      "textHeight": 400
+    },
+    {
+      "height": 380,
+      "textHeight": 380
+    },
+    {
+      "height": 300,
+      "textHeight": 300
+    },
+    {
+      "height": 330,
+      "textHeight": 330
+    },
+    {
+      "height": 380,
+      "textHeight": 380
+    },
+    {
+      "height": 580,
+      "textHeight": 580
+    },
+    {
+      "height": 420,
+      "textHeight": 420
+    },
+    {
+      "height": 470,
+      "textHeight": 470
+    },
+    {
+      "height": 190,
+      "textHeight": 190
+    },
+    {
+      "height": 76,
+      "textHeight": 63
+    },
+    {
+      "height": 84,
+      "textHeight": 58
+    },
+    {
+      "height": 150,
+      "textHeight": 114
+    },
+    {
+      "height": 200,
+      "textHeight": 164
+    },
+    {
+      "height": 230,
+      "textHeight": 164
+    },
+    {
+      "height": 270,
+      "textHeight": 155
+    },
+    {
+      "height": 68,
+      "textHeight": 68
+    },
+    {
+      "height": 141,
+      "textHeight": 141
+    },
+    {
+      "height": 86,
+      "textHeight": 86
+    },
+    {
+      "height": 94,
+      "textHeight": 94
+    },
+    {
+      "height": 82,
+      "textHeight": 82
+    },
+    {
+      "height": 43,
+      "textHeight": 43
+    },
+    {
+      "height": 35,
+      "textHeight": 35
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 40,
+      "textHeight": 40
+    },
+    {
+      "height": 28,
+      "textHeight": 28
+    },
+    {
+      "height": 30,
+      "textHeight": 30
+    },
+    {
+      "height": 60,
+      "textHeight": 60
+    },
+    {
+      "height": 64,
+      "textHeight": 64
+    },
+    {
+      "height": 50,
+      "textHeight": 50
+    },
+    {
+      "height": 76,
+      "textHeight": 76
+    },
+    {
+      "height": 60,
+      "textHeight": 60
+    },
+    {
+      "height": 120,
+      "textHeight": 120
+    },
+    {
+      "height": 40,
+      "textHeight": 40
+    },
+    {
+      "height": 56,
+      "textHeight": 56
+    },
+    {
+      "height": 44,
+      "textHeight": 44
+    },
+    {
+      "height": 140,
+      "textHeight": 140
+    },
+    {
+      "height": 23.5938,
+      "textHeight": 23.5938
+    },
+    {
+      "height": 34.6406,
+      "textHeight": 34.6406
+    },
+    {
+      "height": 40.2812,
+      "textHeight": 40.2812
+    },
+    {
+      "height": 40.1406,
+      "textHeight": 40.1406
+    },
+    {
+      "height": 40.0781,
+      "textHeight": 40.0781
+    },
+    {
+      "height": 32.4688,
+      "textHeight": 32.4688
+    },
+    {
+      "height": 25.9844,
+      "textHeight": 25.9844
+    },
+    {
+      "height": 34.0938,
+      "textHeight": 34.0938
+    },
+    {
+      "height": 24.1719,
+      "textHeight": 24.1719
+    },
+    {
+      "height": 43.9219,
+      "textHeight": 43.9219
+    },
+    {
+      "height": 40.4844,
+      "textHeight": 40.4844
+    },
+    {
+      "height": 37.0938,
+      "textHeight": 37.0938
+    },
+    {
+      "height": 29.3438,
+      "textHeight": 29.3438
+    },
+    {
+      "height": 42.1875,
+      "textHeight": 42.1875
+    },
+    {
+      "height": 26.2656,
+      "textHeight": 26.2656
+    },
+    {
+      "height": 33.9531,
+      "textHeight": 33.9531
+    },
+    {
+      "height": 42.2031,
+      "textHeight": 42.2031
+    },
+    {
+      "height": 28.5781,
+      "textHeight": 28.5781
+    },
+    {
+      "height": 27.75,
+      "textHeight": 27.75
+    },
+    {
+      "height": 38.3438,
+      "textHeight": 38.3438
+    },
+    {
+      "height": 42.2812,
+      "textHeight": 42.2812
+    },
+    {
+      "height": 31.7969,
+      "textHeight": 31.7969
+    },
+    {
+      "height": 45.0625,
+      "textHeight": 45.0625
+    },
+    {
+      "height": 37.625,
+      "textHeight": 37.625
+    },
+    {
+      "height": 26.875,
+      "textHeight": 26.875
+    },
+    {
+      "height": 31.8438,
+      "textHeight": 31.8438
+    },
+    {
+      "height": 30.7656,
+      "textHeight": 30.7656
+    },
+    {
+      "height": 32.8438,
+      "textHeight": 32.8438
+    },
+    {
+      "height": 43.8125,
+      "textHeight": 43.8125
+    }
+  ],
+  [
+    {
+      "height": 520,
+      "textHeight": 520
+    },
+    {
+      "height": 430,
+      "textHeight": 430
+    },
+    {
+      "height": 420,
+      "textHeight": 420
+    },
+    {
+      "height": 410,
+      "textHeight": 410
+    },
+    {
+      "height": 560,
+      "textHeight": 560
+    },
+    {
+      "height": 660,
+      "textHeight": 660
+    },
+    {
+      "height": 200,
+      "textHeight": 200
+    },
+    {
+      "height": 170,
+      "textHeight": 170
+    },
+    {
+      "height": 340,
+      "textHeight": 340
+    },
+    {
+      "height": 284,
+      "textHeight": 284
+    },
+    {
+      "height": 33,
+      "textHeight": 33
+    },
+    {
+      "height": 250,
+      "textHeight": 172
+    },
+    {
+      "height": 380,
+      "textHeight": 243
+    },
+    {
+      "height": 230,
+      "textHeight": 188
+    },
+    {
+      "height": 120,
+      "textHeight": 82
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 86,
+      "textHeight": 86
+    },
+    {
+      "height": 86,
+      "textHeight": 86
+    },
+    {
+      "height": 86,
+      "textHeight": 86
+    },
+    {
+      "height": 86,
+      "textHeight": 86
+    },
+    {
+      "height": 86,
+      "textHeight": 86
+    },
+    {
+      "height": 86,
+      "textHeight": 86
+    },
+    {
+      "height": 34,
+      "textHeight": 34
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 34,
+      "textHeight": 34
+    },
+    {
+      "height": 110,
+      "textHeight": 110
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 40,
+      "textHeight": 40
+    },
+    {
+      "height": 28,
+      "textHeight": 28
+    },
+    {
+      "height": 30,
+      "textHeight": 30
+    },
+    {
+      "height": 80,
+      "textHeight": 80
+    },
+    {
+      "height": 40,
+      "textHeight": 40
+    },
+    {
+      "height": 26,
+      "textHeight": 26
+    },
+    {
+      "height": 26,
+      "textHeight": 26
+    },
+    {
+      "height": 25.2031,
+      "textHeight": 25.2031
+    },
+    {
+      "height": 23.2812,
+      "textHeight": 23.2812
+    },
+    {
+      "height": 34.5781,
+      "textHeight": 34.5781
+    },
+    {
+      "height": 34.2969,
+      "textHeight": 34.2969
+    },
+    {
+      "height": 34.1562,
+      "textHeight": 34.1562
+    },
+    {
+      "height": 42.9375,
+      "textHeight": 42.9375
+    },
+    {
+      "height": 29.9844,
+      "textHeight": 29.9844
+    },
+    {
+      "height": 22.2031,
+      "textHeight": 22.2031
+    },
+    {
+      "height": 26.3438,
+      "textHeight": 26.3438
+    },
+    {
+      "height": 41.8594,
+      "textHeight": 41.8594
+    },
+    {
+      "height": 34.9688,
+      "textHeight": 34.9688
+    },
+    {
+      "height": 28.2031,
+      "textHeight": 28.2031
+    },
+    {
+      "height": 36.7031,
+      "textHeight": 36.7031
+    },
+    {
+      "height": 38.3906,
+      "textHeight": 38.3906
+    },
+    {
+      "height": 30.5469,
+      "textHeight": 30.5469
+    },
+    {
+      "height": 45.9219,
+      "textHeight": 45.9219
+    },
+    {
+      "height": 38.4062,
+      "textHeight": 38.4062
+    },
+    {
+      "height": 35.1719,
+      "textHeight": 35.1719
+    },
+    {
+      "height": 33.5156,
+      "textHeight": 33.5156
+    },
+    {
+      "height": 30.7031,
+      "textHeight": 30.7031
+    },
+    {
+      "height": 38.5781,
+      "textHeight": 38.5781
+    },
+    {
+      "height": 41.6094,
+      "textHeight": 41.6094
+    },
+    {
+      "height": 44.125,
+      "textHeight": 44.125
+    },
+    {
+      "height": 29.25,
+      "textHeight": 29.25
+    },
+    {
+      "height": 31.75,
+      "textHeight": 31.75
+    },
+    {
+      "height": 41.6875,
+      "textHeight": 41.6875
+    },
+    {
+      "height": 39.5312,
+      "textHeight": 39.5312
+    },
+    {
+      "height": 43.7031,
+      "textHeight": 43.7031
+    },
+    {
+      "height": 41.625,
+      "textHeight": 41.625
+    },
+    {
+      "height": 37.2344,
+      "textHeight": 37.2344
+    },
+    {
+      "height": 37.5781,
+      "textHeight": 37.5781
+    },
+    {
+      "height": 35.875,
+      "textHeight": 35.875
+    },
+    {
+      "height": 40.0625,
+      "textHeight": 40.0625
+    },
+    {
+      "height": 31.9062,
+      "textHeight": 31.9062
+    },
+    {
+      "height": 25.125,
+      "textHeight": 25.125
+    },
+    {
+      "height": 41.9844,
+      "textHeight": 41.9844
+    },
+    {
+      "height": 45.4844,
+      "textHeight": 45.4844
+    },
+    {
+      "height": 43.0938,
+      "textHeight": 43.0938
+    }
+  ],
+  [
+    {
+      "height": 600,
+      "textHeight": 600
+    },
+    {
+      "height": 472.312,
+      "textHeight": 472.312
+    },
+    {
+      "height": 467.688,
+      "textHeight": 467.688
+    },
+    {
+      "height": 427.656,
+      "textHeight": 427.656
+    },
+    {
+      "height": 432.297,
+      "textHeight": 432.297
+    },
+    {
+      "height": 256.938,
+      "textHeight": 256.938
+    },
+    {
+      "height": 472.312,
+      "textHeight": 472.312
+    },
+    {
+      "height": 427.656,
+      "textHeight": 427.656
+    },
+    {
+      "height": 467.688,
+      "textHeight": 467.688
+    },
+    {
+      "height": 306.984,
+      "textHeight": 306.984
+    },
+    {
+      "height": 432.297,
+      "textHeight": 432.297
+    },
+    {
+      "height": 293,
+      "textHeight": 293
+    },
+    {
+      "height": 343.062,
+      "textHeight": 343.062
+    },
+    {
+      "height": 343.062,
+      "textHeight": 343.062
+    },
+    {
+      "height": 230,
+      "textHeight": 230
+    },
+    {
+      "height": 240,
+      "textHeight": 240
+    },
+    {
+      "height": 200,
+      "textHeight": 200
+    },
+    {
+      "height": 250,
+      "textHeight": 250
+    },
+    {
+      "height": 230,
+      "textHeight": 230
+    },
+    {
+      "height": 200,
+      "textHeight": 200
+    },
+    {
+      "height": 500,
+      "textHeight": 500
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 118,
+      "textHeight": 118
+    },
+    {
+      "height": 84,
+      "textHeight": 84
+    },
+    {
+      "height": 84,
+      "textHeight": 84
+    },
+    {
+      "height": 84,
+      "textHeight": 84
+    },
+    {
+      "height": 84,
+      "textHeight": 84
+    },
+    {
+      "height": 44,
+      "textHeight": 44
+    },
+    {
+      "height": 84,
+      "textHeight": 84
+    },
+    {
+      "height": 84,
+      "textHeight": 84
+    },
+    {
+      "height": 84,
+      "textHeight": 84
+    },
+    {
+      "height": 80,
+      "textHeight": 80
+    },
+    {
+      "height": 110,
+      "textHeight": 110
+    },
+    {
+      "height": 120,
+      "textHeight": 102
+    },
+    {
+      "height": 120,
+      "textHeight": 102
+    },
+    {
+      "height": 150,
+      "textHeight": 127.5
+    },
+    {
+      "height": 120,
+      "textHeight": 102
+    },
+    {
+      "height": 130,
+      "textHeight": 110.5
+    },
+    {
+      "height": 100,
+      "textHeight": 85
+    },
+    {
+      "height": 130,
+      "textHeight": 110.5
+    },
+    {
+      "height": 100,
+      "textHeight": 85
+    },
+    {
+      "height": 80,
+      "textHeight": 68
+    },
+    {
+      "height": 70,
+      "textHeight": 59.5
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 32,
+      "textHeight": 32
+    },
+    {
+      "height": 33.5,
+      "textHeight": 33.5
+    },
+    {
+      "height": 22.2031,
+      "textHeight": 22.2031
+    },
+    {
+      "height": 35.0156,
+      "textHeight": 35.0156
+    },
+    {
+      "height": 25.7656,
+      "textHeight": 25.7656
+    },
+    {
+      "height": 40.4844,
+      "textHeight": 40.4844
+    },
+    {
+      "height": 32.2031,
+      "textHeight": 32.2031
+    },
+    {
+      "height": 31.0625,
+      "textHeight": 31.0625
+    },
+    {
+      "height": 42.75,
+      "textHeight": 42.75
+    },
+    {
+      "height": 24.0312,
+      "textHeight": 24.0312
+    },
+    {
+      "height": 31.4375,
+      "textHeight": 31.4375
+    },
+    {
+      "height": 40.2188,
+      "textHeight": 40.2188
+    },
+    {
+      "height": 32.2344,
+      "textHeight": 32.2344
+    },
+    {
+      "height": 40,
+      "textHeight": 40
+    },
+    {
+      "height": 28.4062,
+      "textHeight": 28.4062
+    },
+    {
+      "height": 23.5938,
+      "textHeight": 23.5938
+    },
+    {
+      "height": 36.6875,
+      "textHeight": 36.6875
+    },
+    {
+      "height": 29.6719,
+      "textHeight": 29.6719
+    },
+    {
+      "height": 27.3906,
+      "textHeight": 27.3906
+    }
+  ]
+]

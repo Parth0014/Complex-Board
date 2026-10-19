@@ -158,6 +158,10 @@ const SHAPE_GLYPHS: Record<string, GlyphName> = {
   arrow: 'shape-arrow',
   diamond: 'shape-diamond',
   hexagon: 'shape-hexagon',
+  octagon: 'shape-octagon',
+  badge: 'shape-badge',
+  flower: 'shape-flower',
+  arch: 'shape-arch',
 };
 
 export const ShapeIcon = ({ shape, size = 22 }: { shape: string; size?: number }) => {

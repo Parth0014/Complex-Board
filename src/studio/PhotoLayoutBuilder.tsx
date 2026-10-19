@@ -1,17 +1,40 @@
-import { useEffect, useRef, useState } from 'react';
+import { PhotoSelectionGrid } from './PhotoSelectionGrid';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { StudioAdapter } from '../vision/contracts';
 import type { MediaRecord } from '../vision/media';
+import { type CollagePresetId } from '../vision/photoCollages';
 import {
-  photoLayout,
-  PHOTO_STYLES,
-  type PhotoArrangement,
-  type PhotoTheme,
-} from '../vision/photoLayout';
+  collageLayoutsForBoard,
+  COLLAGE_LAYOUT_VERSION,
+  COLLAGE_MIN_PHOTOS,
+  COLLAGE_MAX_PHOTOS,
+} from '../vision/collagePresets';
 import { Button } from './ui/Button';
 import { Dialog } from './ui/Dialog';
 import { CloseIcon, CheckIcon } from './icons';
 import { errorMessage } from './errors';
+
+type SavedSelection = {
+  ids?: string[];
+  key?: string;
+  orders?: Record<string, string[]>;
+  preset?: string;
+};
+
+// Keep the user's photo batch and its immutable previews across modal/sidebar remounts.
+// Each board adapter owns its own session; closing a board allows it to be collected.
+const arrangementSessions = new WeakMap<
+  StudioAdapter,
+  {
+    ids: string[];
+    key: string;
+    previews?: Record<string, string>;
+    orders?: Record<string, string[]>;
+    pending?: Map<string, Promise<string>>;
+  }
+>();
+
 export function PhotoLayoutBuilder({
   adapter,
   photos,
@@ -23,35 +46,184 @@ export function PhotoLayoutBuilder({
   onClose: () => void;
   initialIds?: string[];
 }) {
-  const [selected, setSelected] = useState(
-    (initialIds ? photos.filter((p) => initialIds.includes(p.record.id)) : photos)
-      .slice(0, 6)
-      .map((p) => p.record.id),
+  const { width, height } = adapter.history.document;
+  const storageKey = `visbo-arrange:${new URL(adapter.ownerWindow.location.href).searchParams.get('board') || 'current'}`;
+  const [savedSelection] = useState<SavedSelection>(() => {
+    try {
+      const saved = JSON.parse(adapter.ownerWindow.localStorage.getItem(storageKey) || '{}');
+      if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return {};
+      const ids: string[] = Array.isArray(saved.ids)
+        ? saved.ids.filter((id: unknown): id is string => typeof id === 'string')
+        : [];
+      const orders =
+        saved.orders && typeof saved.orders === 'object'
+          ? (Object.fromEntries(
+              Object.entries(saved.orders).filter(
+                ([, order]) =>
+                  Array.isArray(order) &&
+                  order.length === ids.length &&
+                  new Set(order).size === ids.length &&
+                  order.every((id) => ids.includes(id)),
+              ),
+            ) as Record<string, string[]>)
+          : {};
+      return {
+        ids,
+        orders,
+        key: typeof saved.key === 'string' ? saved.key : undefined,
+        preset: typeof saved.preset === 'string' ? saved.preset : undefined,
+      };
+    } catch {
+      return {};
+    }
+  });
+  const resolution = useMemo(() => ({ width, height }), [width, height]);
+  const [selected, setSelected] = useState<string[]>(() => {
+    const available = new Set(photos.map((photo) => photo.record.id));
+    return [
+      ...new Set(initialIds ?? arrangementSessions.get(adapter)?.ids ?? savedSelection.ids ?? []),
+    ]
+      .filter((id) => available.has(id))
+      .slice(0, COLLAGE_MAX_PHOTOS);
+  });
+  const [step, setStep] = useState<'photos' | 'presets'>(
+    !initialIds && selected.length >= COLLAGE_MIN_PHOTOS ? 'presets' : 'photos',
   );
-  const [style, setStyle] = useState<PhotoArrangement>('scrapbook'),
-    [theme, setTheme] = useState<PhotoTheme>('vision2027');
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState(''),
-    [preview, setPreview] = useState(''),
-    [previewing, setPreviewing] = useState(false);
+  const availablePresets = useMemo(
+    () => collageLayoutsForBoard(resolution.width, resolution.height),
+    [resolution],
+  );
+  const hasPresets = availablePresets.length > 0;
+  const [preset, setPreset] = useState<CollagePresetId>(
+    availablePresets.find((p) => p.id === savedSelection.preset)?.id || availablePresets[0]?.id,
+  );
+  const previewKey = JSON.stringify({
+    version: COLLAGE_LAYOUT_VERSION,
+    ids: selected,
+    resolution,
+    presets: availablePresets.map((preset) => preset.id),
+  });
+  const [previews, setPreviews] = useState<Record<string, string>>(() => {
+    const saved = arrangementSessions.get(adapter);
+    return saved?.key === previewKey ? saved.previews || {} : {};
+  });
+  const [previewing, setPreviewing] = useState(false);
+  const [failedPreviews, setFailedPreviews] = useState<Record<string, string>>({});
+  const [retry, setRetry] = useState(0);
+  const [family, setFamily] = useState('All');
+  const [orders, setOrders] = useState<Record<string, string[]>>(() =>
+    arrangementSessions.get(adapter)?.key === previewKey
+      ? arrangementSessions.get(adapter)?.orders || {}
+      : savedSelection.key === previewKey
+        ? savedSelection.orders || {}
+        : {},
+  );
+  const [ordersKey, setOrdersKey] = useState(previewKey);
+  const activeOrders = useMemo(
+    () => (ordersKey === previewKey ? orders : {}),
+    [ordersKey, previewKey, orders],
+  );
+  const [shuffling, setShuffling] = useState<string[]>([]);
+  const activePreviewKey = useRef(previewKey);
+  activePreviewKey.current = previewKey;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const applying = useRef(false);
-  const chosen = selected.map((id) => photos.find((p) => p.record.id === id)!).filter(Boolean),
-    board = adapter.history.document;
   const idsKey = JSON.stringify(selected);
   useEffect(() => {
-    let live = true;
-    const ids: string[] = JSON.parse(idsKey);
-    setPreview('');
-    setError('');
-    if (!ids.length) {
+    const previous = arrangementSessions.get(adapter);
+    arrangementSessions.set(adapter, {
+      ids: JSON.parse(idsKey),
+      key: previewKey,
+      previews: previous?.key === previewKey ? previous.previews : undefined,
+      orders: previous?.key === previewKey ? previous.orders : undefined,
+      pending: previous?.key === previewKey ? previous.pending : undefined,
+    });
+  }, [adapter, idsKey, previewKey]);
+  useEffect(() => {
+    try {
+      adapter.ownerWindow.localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          ids: selected,
+          key: previewKey,
+          orders: activeOrders,
+          preset,
+        }),
+      );
+    } catch {
+      // Storage can be unavailable; the in-memory session still works.
+    }
+  }, [adapter, storageKey, selected, previewKey, activeOrders, preset]);
+  useEffect(() => {
+    if (
+      step !== 'presets' ||
+      selected.length < COLLAGE_MIN_PHOTOS ||
+      selected.length > COLLAGE_MAX_PHOTOS ||
+      !availablePresets.length
+    )
+      return;
+    const cached = arrangementSessions.get(adapter);
+    if (
+      cached?.key === previewKey &&
+      availablePresets.every((option) => cached.previews?.[option.id])
+    ) {
+      setPreviews(cached.previews || {});
+      setOrders(cached.orders || {});
+      setOrdersKey(previewKey);
       setPreviewing(false);
+      setError('');
       return;
     }
+    let live = true;
+    const session = cached?.key === previewKey ? cached : { ids: selected, key: previewKey };
+    session.previews ||= {};
+    session.orders ||= savedSelection.key === previewKey ? savedSelection.orders || {} : {};
+    session.pending ||= new Map();
+    arrangementSessions.set(adapter, session);
+    setOrders(session.orders);
+    setOrdersKey(previewKey);
+    setShuffling([]);
+    setPreviews({ ...session.previews });
+    setFailedPreviews({});
+    setError('');
     setPreviewing(true);
-    void adapter
-      .previewPhotoArrangement(ids, style, theme)
-      .then((url) => {
-        if (live) setPreview(url);
+    const ids: string[] = JSON.parse(idsKey);
+    let cursor = 0;
+    const worker = async () => {
+      while (live && cursor < availablePresets.length) {
+        const option = availablePresets[cursor++];
+        if (session.previews![option.id]) continue;
+        let pending = session.pending!.get(option.id);
+        if (!pending) {
+          pending = Promise.resolve()
+            .then(() =>
+              adapter.previewPhotoArrangement(
+                session.orders![option.id] || ids,
+                option.id as CollagePresetId,
+              ),
+            )
+            .then((preview) => {
+              session.previews![option.id] = preview;
+              return preview;
+            })
+            .finally(() => session.pending!.delete(option.id));
+          session.pending!.set(option.id, pending);
+        }
+        try {
+          const preview = await pending;
+          if (live) setPreviews((old) => ({ ...old, [option.id]: preview }));
+        } catch (e) {
+          // One unavailable image must not stop the queue or discard ready work.
+          if (live) setFailedPreviews((old) => ({ ...old, [option.id]: errorMessage(e) }));
+        }
+      }
+    };
+    void Promise.all([worker(), worker(), worker()])
+      .then(() => {
+        if (live) {
+          setPreviews({ ...session.previews });
+        }
       })
       .catch((e) => {
         if (live) setError(errorMessage(e));
@@ -62,14 +234,53 @@ export function PhotoLayoutBuilder({
     return () => {
       live = false;
     };
-  }, [adapter, idsKey, style, theme, board.width, board.height]);
+  }, [adapter, idsKey, previewKey, availablePresets, step, savedSelection, selected, retry]);
+  const current = availablePresets.find((p) => p.id === preset) || availablePresets[0];
+  const shuffle = async (id: CollagePresetId) => {
+    if (busy || !previews[id] || shuffling.includes(id) || selected.length < 2) return;
+    const previous = activeOrders[id] || selected;
+    const next = [...previous];
+    for (let i = next.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [next[i], next[j]] = [next[j], next[i]];
+    }
+    if (next.every((value, index) => value === previous[index])) {
+      next.push(next.shift()!);
+    }
+    const key = previewKey;
+    setShuffling((old) => [...old, id]);
+    setError('');
+    try {
+      const preview = await adapter.previewPhotoArrangement(next, id);
+      if (activePreviewKey.current !== key) return;
+      setOrders((old) => ({ ...old, [id]: next }));
+      setPreviews((old) => ({ ...old, [id]: preview }));
+      const saved = arrangementSessions.get(adapter);
+      if (saved?.key === key) {
+        saved.orders = { ...saved.orders, [id]: next };
+        saved.previews = { ...saved.previews, [id]: preview };
+      }
+    } catch (e) {
+      if (activePreviewKey.current === key) setError(errorMessage(e));
+    } finally {
+      if (activePreviewKey.current === key)
+        setShuffling((old) => old.filter((value) => value !== id));
+    }
+  };
   const apply = async () => {
-    if (applying.current || !preview) return;
+    if (
+      !current ||
+      applying.current ||
+      selected.length < COLLAGE_MIN_PHOTOS ||
+      selected.length > COLLAGE_MAX_PHOTOS ||
+      !previews[current.id]
+    )
+      return;
     applying.current = true;
     setBusy(true);
     setError('');
     try {
-      await adapter.arrangePhotos(selected, style, theme);
+      await adapter.arrangePhotos(activeOrders[current.id] || selected, current.id);
       onClose();
     } catch (e) {
       setError(errorMessage(e));
@@ -81,16 +292,29 @@ export function PhotoLayoutBuilder({
   return createPortal(
     <div className="vs vs-veil photo-layout-veil">
       <Dialog
-        className="vs-dialog photo-layout-dialog"
-        aria-label="Arrange uploaded photos"
+        className={`vs-dialog photo-layout-dialog scrapbook-dialog${hasPresets ? '' : ' scrapbook-dialog--empty'}`}
+        aria-label="Arrange photos"
+        dismissible={!busy}
         onClose={() => {
           if (!applying.current) onClose();
         }}
       >
         <header className="photo-layout-header">
           <div>
-            <p className="photo-layout-eyebrow">Your photos, a new story</p>
-            <h2>Arrange photos</h2>
+            <p className="photo-layout-eyebrow">
+              {!hasPresets
+                ? 'Photo layouts'
+                : step === 'photos'
+                  ? '1 · Your photos'
+                  : '2 · Your collages'}
+            </p>
+            <h2>
+              {!hasPresets
+                ? 'Arrange photos'
+                : step === 'photos'
+                  ? 'Select your photos'
+                  : 'Choose a collage'}
+            </h2>
           </div>
           <Button
             className="gs-icon-button"
@@ -101,175 +325,144 @@ export function PhotoLayoutBuilder({
             <CloseIcon size={20} />
           </Button>
         </header>
-        <div className="photo-layout-body">
-          <div className="photo-layout-settings">
-            <div className="photo-layout-fields">
-              <label className="vs-field">
-                <span>Theme</span>
-                <select
-                  className="vs-select"
-                  aria-label="Collage theme"
-                  value={theme}
-                  disabled={busy}
-                  onChange={(e) => setTheme(e.target.value as PhotoTheme)}
-                >
-                  <option value="vision2027">Dreams &amp; goals</option>
-                  <option value="travel">Travel &amp; adventure</option>
-                  <option value="diaries">Reading &amp; journaling</option>
-                </select>
-              </label>
-              <label className="vs-field">
-                <span>Number of photos</span>
-                <select
-                  className="vs-select"
-                  aria-label="Number of photos"
-                  value={selected.length}
-                  disabled={busy}
-                  onChange={(e) => {
-                    const count = Number(e.target.value);
-                    setSelected(
-                      [
-                        ...selected,
-                        ...photos.map((p) => p.record.id).filter((id) => !selected.includes(id)),
-                      ].slice(0, count),
-                    );
-                  }}
-                >
-                  {!selected.length && <option value={0}>Choose photos</option>}
-                  {Array.from({ length: Math.min(12, photos.length) }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {i + 1} {i === 0 ? 'photo' : 'photos'}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <h3>Choose a style</h3>
-            <div className="photo-layout-choices" role="group" aria-label="Layout style">
-              {PHOTO_STYLES.map((option) => (
-                <Button
-                  key={option.id}
-                  disabled={busy}
-                  aria-pressed={style === option.id}
-                  onClick={() => setStyle(option.id)}
-                >
-                  <svg viewBox={`0 0 ${board.width} ${board.height}`} aria-hidden="true">
-                    {photoLayout(
-                      Math.max(1, selected.length),
-                      option.id,
-                      board.width,
-                      board.height,
-                      chosen.map((p) => p.record.width / p.record.height),
-                    ).map((slot, i) => (
-                      <rect
-                        key={i}
-                        x={slot.x}
-                        y={slot.y}
-                        width={slot.width}
-                        height={slot.height}
-                        transform={`rotate(${slot.rotation} ${slot.x} ${slot.y})`}
-                        rx={Math.min(board.width, board.height) * 0.006}
-                        fill="currentColor"
-                        opacity={i % 2 ? 0.55 : 0.85}
-                      />
-                    ))}
-                  </svg>
-                  <span>
-                    <strong>{option.label}</strong>
-                    <small>{option.description}</small>
-                  </span>
-                  {style === option.id && <CheckIcon size={16} />}
-                </Button>
-              ))}
-            </div>
-            <div className="photo-layout-selection-heading">
-              <h3>Your photos</h3>
-              <span>{selected.length} / 12 selected</span>
-            </div>
-            <div className="photo-layout-selection" role="group" aria-label="Choose photos">
-              {photos.map((p) => (
-                <Button
-                  key={p.record.id}
-                  disabled={busy || (!selected.includes(p.record.id) && selected.length >= 12)}
-                  aria-label={`Use ${p.record.name}`}
-                  aria-pressed={selected.includes(p.record.id)}
-                  onClick={() =>
-                    setSelected((old) =>
-                      old.includes(p.record.id)
-                        ? old.filter((id) => id !== p.record.id)
-                        : [...old, p.record.id],
-                    )
-                  }
-                >
-                  <img src={p.url} alt="" loading="lazy" draggable={false} />
-                  {selected.includes(p.record.id) && (
-                    <span className="photo-layout-photo-number">
-                      {selected.indexOf(p.record.id) + 1}
-                    </span>
-                  )}
-                </Button>
-              ))}
-            </div>
-          </div>
-          <section className="photo-layout-preview-area" aria-label="Composition preview">
-            <div className="photo-layout-preview-label">
-              <span>Live preview</span>
-              <span>
-                {board.width} × {board.height}
-              </span>
-            </div>
-            <div
-              className="photo-layout-preview"
-              style={{
-                aspectRatio: `${board.width}/${board.height}`,
-                width: `min(100%, calc(var(--photo-preview-height) * ${board.width / board.height}))`,
-              }}
-              aria-label="Layout preview"
-              aria-busy={previewing}
-            >
-              {preview ? (
-                <img
-                  src={preview}
-                  alt={`${PHOTO_STYLES.find((p) => p.id === style)!.label} composition preview`}
-                  draggable={false}
-                />
-              ) : (
-                <p role="status">
-                  {previewing
-                    ? 'Preparing your composition…'
-                    : selected.length
-                      ? 'Preview unavailable'
-                      : 'Choose photos to begin'}
-                </p>
-              )}
-            </div>
-            <p className="photo-layout-preview-hint">
-              Photos, lettering and decorations stay editable.
+        <div className="scrapbook-dialog-body">
+          {!hasPresets ? (
+            <p className="scrapbook-empty-message" role="status">
+              No presets available for this board size.
             </p>
-          </section>
+          ) : step === 'photos' ? (
+            <>
+              <PhotoSelectionGrid photos={photos} selected={selected} setSelected={setSelected} />
+              {!photos.length && <p>No photos yet. Upload photos to begin.</p>}
+            </>
+          ) : (
+            <>
+              <div className="scrapbook-browser-tools">
+                <div className="scrapbook-families" role="group" aria-label="Collage families">
+                  {['All', 'Flow', 'Cut', 'Inlay'].map((name) => (
+                    <Button
+                      key={name}
+                      aria-pressed={family === name}
+                      onClick={() => setFamily(name)}
+                    >
+                      {name === 'Cut' ? 'Cuts' : name}
+                    </Button>
+                  ))}
+                </div>
+                <p className="scrapbook-help" role="status">
+                  {previewing
+                    ? `${Object.keys(previews).length} of ${availablePresets.length} previews ready`
+                    : `${availablePresets.length} layouts · ${selected.length} photos`}
+                </p>
+              </div>
+              <div className="scrapbook-preset-grid" role="group" aria-label="Photo collages">
+                {availablePresets
+                  .filter((option) => family === 'All' || option.family === family)
+                  .map((option) => (
+                    <div key={option.id} className="scrapbook-preset-card">
+                      <Button
+                        key={option.id}
+                        className="scrapbook-preset"
+                        aria-label={option.label}
+                        aria-pressed={current?.id === option.id}
+                        disabled={busy}
+                        onClick={() => setPreset(option.id as CollagePresetId)}
+                      >
+                        <span
+                          className="scrapbook-preset-art"
+                          style={{
+                            aspectRatio: `${option.resolution.width}/${option.resolution.height}`,
+                          }}
+                        >
+                          {previews[option.id] ? (
+                            <img
+                              src={previews[option.id]}
+                              alt={`${option.label} with your photos`}
+                              draggable={false}
+                              decoding="async"
+                            />
+                          ) : (
+                            <span className="scrapbook-preview-placeholder">
+                              {failedPreviews[option.id]
+                                ? 'Preview unavailable'
+                                : 'Preparing preview…'}
+                            </span>
+                          )}
+                        </span>
+                        <span className="scrapbook-preset-caption">
+                          <strong>{option.label}</strong>
+                          {current?.id === option.id && <CheckIcon size={18} />}
+                        </span>
+                        <small>{option.description}</small>
+                      </Button>
+                      {failedPreviews[option.id] ? (
+                        <Button
+                          className="scrapbook-shuffle"
+                          size="sm"
+                          aria-label={`Retry ${option.label} preview`}
+                          onClick={() => setRetry((value) => value + 1)}
+                        >
+                          Retry preview
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="scrapbook-shuffle"
+                          aria-label={`Shuffle photos in ${option.label}`}
+                          loading={shuffling.includes(option.id)}
+                          disabled={busy || selected.length < 2 || !previews[option.id]}
+                          onClick={() => void shuffle(option.id as CollagePresetId)}
+                        >
+                          Shuffle
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </>
+          )}
         </div>
         <footer className="photo-layout-footer">
-          <div>
-            {error ? (
-              <p className="panel-inline-error" role="alert">
-                {error}
-              </p>
-            ) : (
-              <p>One composition. One step to undo.</p>
-            )}
-            <span>
-              {selected.length} {selected.length === 1 ? 'photo' : 'photos'} ·{' '}
-              {PHOTO_STYLES.find((p) => p.id === style)!.label}
-            </span>
-          </div>
-          <Button
-            variant="primary"
-            loading={busy}
-            disabled={!selected.length || previewing || !preview}
-            onClick={() => void apply()}
-          >
-            Add layout to board
-          </Button>
+          {!hasPresets ? (
+            <Button onClick={onClose}>Close</Button>
+          ) : (
+            <>
+              <div>
+                {error ? (
+                  <p className="panel-inline-error" role="alert">
+                    {error}
+                  </p>
+                ) : (
+                  <p>
+                    {step === 'photos'
+                      ? `${selected.length} ${selected.length === 1 ? 'photo' : 'photos'} selected`
+                      : `${current?.label} · All photos stay editable`}
+                  </p>
+                )}
+                {step === 'photos' && <span>Choose 5 to 10 photos.</span>}
+              </div>
+              <div className="scrapbook-footer-actions">
+                {step === 'presets' && (
+                  <Button disabled={busy} onClick={() => setStep('photos')}>
+                    Back to photos
+                  </Button>
+                )}
+                <Button
+                  variant="primary"
+                  loading={busy}
+                  disabled={
+                    selected.length < COLLAGE_MIN_PHOTOS ||
+                    selected.length > COLLAGE_MAX_PHOTOS ||
+                    (step === 'presets' &&
+                      (shuffling.includes(current?.id || '') || !previews[current?.id || '']))
+                  }
+                  onClick={() => (step === 'photos' ? setStep('presets') : void apply())}
+                >
+                  {step === 'photos' ? 'Next' : 'Add to canvas'}
+                </Button>
+              </div>
+            </>
+          )}
         </footer>
       </Dialog>
     </div>,

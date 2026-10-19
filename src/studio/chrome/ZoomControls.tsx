@@ -1,3 +1,4 @@
+import { Slider } from '../ui/Slider';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Button, IconButton } from '../ui/Button';
@@ -60,10 +61,10 @@ export function ZoomControls({
         <MinusIcon />
       </IconButton>
       <div className="gs-zoom-track">
-        <input
+        <Slider
           className="vs-range"
           aria-label="Zoom"
-          type="range"
+          aria-valuetext={`${Math.round(value)}%`}
           min={min}
           max={max}
           value={Math.round(value)}

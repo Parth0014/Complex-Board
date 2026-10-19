@@ -94,11 +94,7 @@ export function shiftRuns(runs: TextRun[], oldText: string, newText: string): Te
 
   let oldSuffix = oldText.length - 1;
   let newSuffix = newText.length - 1;
-  while (
-    oldSuffix >= prefix &&
-    newSuffix >= prefix &&
-    oldText[oldSuffix] === newText[newSuffix]
-  ) {
+  while (oldSuffix >= prefix && newSuffix >= prefix && oldText[oldSuffix] === newText[newSuffix]) {
     oldSuffix--;
     newSuffix--;
   }

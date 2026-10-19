@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 127.0.0.1",
-    "test": "vitest run",
+    "dev": "vite --host 127.0.0.1 --configLoader runner",
+    "build": "tsc --noEmit && vite build --configLoader runner",
+    "preview": "vite preview --host 127.0.0.1 --configLoader runner",
+    "test": "vitest run --configLoader runner",
     "ai:server": "node --env-file-if-exists=.env server/index.mjs",
     "ai:vision:agree": "node --env-file-if-exists=.env scripts/agree-vision-model.mjs",
     "lint": "node scripts/check-ui-styles.mjs && eslint src server api tests scripts *.ts --max-warnings=0",
     "format:check": "prettier --check src server tests scripts *.ts *.mjs *.json .github/workflows",
-    "format": "prettier --write src server tests scripts *.ts *.mjs *.json .github/workflows"
+    "format": "prettier --write src server tests scripts *.ts *.mjs *.json .github/workflows",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "konva": "^10.0.0",

@@ -1,3 +1,31 @@
+import { TEMPLATE_STUDY_PHOTOS } from '../templateStudyPhotos';
+import { interlockingDesigns } from '../interlockingGeometry';
+import {
+  resolveCollage,
+  adjustedCollageItems,
+  legacyCollage,
+  copyCollageLayouts,
+} from '../collageAdjustment';
+import {
+  create as createDividers,
+  move as moveDivider,
+  build as buildDividers,
+  type Divider,
+  type Params,
+} from '../structuredDividers';
+import { coverCrop, photoAperture, zoomCrop } from '../crop';
+import {
+  isScrapbookPreset,
+  scrapbookItems,
+  fillScrapbookEdges,
+  SCRAPBOOK_PHOTO_PLACEHOLDER,
+  SCRAPBOOK_PRESETS,
+  matchesResolution,
+} from '../scrapbookPresets';
+import { isPhotoCollage, photoCollageItems } from '../photoCollages';
+import { isAuthoredLayout, authoredItems } from '../authoredLayouts';
+import { isDesignedCollage, COLLAGE_MIN_PHOTOS, COLLAGE_MAX_PHOTOS } from '../collagePresets';
+import { designedCollageItems } from '../designedCollages';
 import {
   photoComposition,
   compositionItems,
@@ -35,6 +63,7 @@ import { getLayoutSlotBounds, fitTemplateLayout, type VisionLayout } from '../la
 import type { VisionTemplate } from '../templates';
 import { VISION_TEMPLATES, LEGACY_VISION_TEMPLATES } from '../templates';
 import { TEMPLATE_PHOTOS, fitCollageElements } from '../collageTemplates';
+import { PINTEREST_TEMPLATE_PHOTOS, photosForScrapbookTemplate } from '../templatePinterestPhotos';
 import { boundsOf, unionBounds, constrainItems } from './geometry';
 import { centeredDropPosition, shapeDropSize, textDropSize } from './dropPlacement';
 import { loadBoard, saveBoard, validateBoard } from '../storage';
@@ -54,6 +83,17 @@ import {
   type MediaRecord,
 } from '../media';
 
+const templatePhotoById = new Map(
+  [
+    ...Object.values(TEMPLATE_PHOTOS),
+    ...Object.values(PINTEREST_TEMPLATE_PHOTOS),
+    ...TEMPLATE_STUDY_PHOTOS,
+  ].map((p) => [p.id, p]),
+);
+const templatePreviewCaches = new WeakMap<
+  Window,
+  Map<string, { promise: Promise<string>; value?: string }>
+>();
 const deferred = () => {
   throw new Error('This operation belongs to a later v1 milestone.');
 };
@@ -69,9 +109,107 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   readonly history = new DocumentHistory();
   readonly images = new Map<string, HTMLImageElement>();
   selectedIds: string[] = [];
+  adjustingCollage = false;
+  get collageAdjustment() {
+    return resolveCollage(this.history.document.items, this.selectedIds[0]);
+  }
+  isCollageFrame(id: string) {
+    const item = this.history.document.items.find((i) => i.id === id);
+    return (
+      !!item?.collageLayout ||
+      (!!item?.scrapbookPhoto?.clip && !!legacyCollage(this.history.document.items, id))
+    );
+  }
+  get canAdjustCollage() {
+    return (
+      !!this.collageAdjustment || !!legacyCollage(this.history.document.items, this.selectedIds[0])
+    );
+  }
+  startCollageAdjustment() {
+    if (!this.collageAdjustment) {
+      const legacy = legacyCollage(this.history.document.items, this.selectedIds[0]);
+      if (!legacy) return;
+      const meta = legacy[0].collageLayout!;
+      const model = createDividers(
+        interlockingDesigns.find((d) => `interlocking:${d.id}` === meta.preset)!,
+        meta.count,
+        meta.width / meta.height,
+      );
+      const updates = new Map(
+        adjustedCollageItems(legacy, meta.params, buildDividers(model, meta.params).polygons).map(
+          (i) => [i.id, i],
+        ),
+      );
+      this.commit({
+        ...this.history.document,
+        items: this.history.document.items.map((i) => updates.get(i.id) || i),
+      });
+    }
+    this.cropDraft = undefined;
+    this.adjustingCollage = true;
+    this.changed();
+  }
+  finishCollageAdjustment() {
+    this.endGesture();
+    this.adjustingCollage = false;
+    this.changed();
+  }
+  moveCollageDivider(
+    base: NonNullable<ReturnType<typeof resolveCollage>>,
+    divider: Divider,
+    distance: number,
+  ) {
+    if (!this.adjustingCollage) return;
+    const result = moveDivider(base.model, base.meta.params, divider, distance);
+    const updates = new Map(
+      adjustedCollageItems(base.members, result.params, result.polygons).map((i) => [i.id, i]),
+    );
+    this.commit({
+      ...this.history.document,
+      items: this.history.document.items.map((i) => updates.get(i.id) || i),
+    });
+    return result;
+  }
+  resetCollageAdjustment() {
+    const base = this.collageAdjustment;
+    if (!base) return;
+    const params: Params = structuredClone(base.model.initialParams);
+    const initial = buildDividers(base.model, params);
+    const updates = new Map(
+      adjustedCollageItems(base.members, params, initial.polygons).map((i) => [i.id, i]),
+    );
+    this.commit({
+      ...this.history.document,
+      items: this.history.document.items.map((i) => updates.get(i.id) || i),
+    });
+  }
+
   groupScope: string[] = [];
   zoomView?: (scale: number) => void;
-  cropDraft?: { id: string; crop: NonNullable<BoardItem['crop']> };
+  cropDraft?: {
+    id: string;
+    imageRotation?: number;
+    crop: NonNullable<BoardItem['crop']>;
+    base?: NonNullable<BoardItem['crop']>;
+  };
+  zoomImageCrop(zoom: number) {
+    const draft = this.cropDraft;
+    if (draft?.base) this.updateCropDraft(zoomCrop(draft.crop, draft.base, zoom));
+  }
+  resetImageCrop() {
+    if (this.cropDraft?.base) {
+      this.cropDraft.imageRotation = 0;
+      this.updateCropDraft({ ...this.cropDraft.base });
+    }
+  }
+  rotateImageCrop(degrees: number) {
+    if (!this.cropDraft?.base || !Number.isFinite(degrees)) return;
+    this.cropDraft = {
+      ...this.cropDraft,
+      imageRotation: ((((degrees + 180) % 360) + 360) % 360) - 180,
+    };
+    this.changed();
+  }
   updateCropDraft(crop: NonNullable<BoardItem['crop']>) {
     if (!this.cropDraft) return;
     this.cropDraft = { ...this.cropDraft, crop };
@@ -85,6 +223,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       {
         id: draft.id,
         patch: {
+          ...(draft.base ? { imageRotation: draft.imageRotation || 0 } : {}),
           crop: {
             ...draft.crop,
             x: Math.min(draft.crop.x, 1 - draft.crop.width),
@@ -167,11 +306,20 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           canonical = mediaAsset(
             mediaRecords.get(asset.mediaId!) || (await loadMedia(this.ownerWindow, asset.mediaId!)),
           );
+        else if (asset.provider === 'template-photo' && templatePhotoById.has(asset.id))
+          canonical = templatePhotoById.get(asset.id)!;
+        // Preserve boards made during the reference-art iteration after its backgrounds were removed.
         else if (
-          asset.provider === 'template-photo' &&
-          Object.values(TEMPLATE_PHOTOS).some((photo) => photo.id === asset.id)
+          asset.provider === 'collage-reference' &&
+          /^collage-reference:(?:[1-9]|10)$/.test(asset.id)
         )
-          canonical = Object.values(TEMPLATE_PHOTOS).find((photo) => photo.id === asset.id)!;
+          canonical = {
+            ...asset,
+            assetUrl: SCRAPBOOK_PHOTO_PLACEHOLDER.assetUrl,
+            previewUrl: SCRAPBOOK_PHOTO_PLACEHOLDER.previewUrl,
+          };
+        else if (asset.provider === 'template-photo' && asset.id === SCRAPBOOK_PHOTO_PLACEHOLDER.id)
+          canonical = SCRAPBOOK_PHOTO_PLACEHOLDER;
         else if (asset.provider === 'template-sticker') canonical = resolveTemplateSticker(asset);
         else if (asset.provider === 'template-photo' && asset.id === 'reference-placeholder')
           canonical = { ...asset, assetUrl: placeholderUrl, previewUrl: placeholderUrl };
@@ -210,6 +358,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         if (!asset) throw new Error('Edited image has no original.');
         await this.decode({ ...asset, assetUrl: item.rendition });
       }
+    board.items = fillScrapbookEdges(board.items, board.width, board.height);
     if (board.background) board.background = resolved.get(board.background.id);
     if (board.pages) {
       const pages = [];
@@ -534,7 +683,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     const offset = 24 * ++this.pasteCount,
       groups = new Map<string, string>();
     const identities = new Map(this.clipboard.map((item) => [item.id, this.id()]));
-    const copies = this.clipboard.map((source) => {
+    let copies: BoardItem[] = this.clipboard.map((source) => {
       const item = structuredClone(source);
       if (item.groupId && !groups.has(item.groupId)) groups.set(item.groupId, this.id());
       const path = [
@@ -560,6 +709,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         groupId: path[0],
       };
     });
+    copies = copyCollageLayouts(this.clipboard, copies, this.history.document);
     this.items((items) => [...items, ...copies]);
     this.select(copies.map((item) => item.id));
   }
@@ -626,6 +776,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     readonly boardId = 'current',
   ) {}
   async flushSave() {
+    if (this.keyboardGesture) this.endGesture();
     await this.saveQueue;
   }
   subscribe = (listener: () => void) => {
@@ -645,14 +796,24 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.serial++;
     this.emit();
   }
+  private keyboardGesture = false;
+  beginKeyboardGesture() {
+    this.keyboardGesture = true;
+    this.beginGesture();
+  }
   beginGesture() {
     this.history.beginGesture();
   }
   endGesture() {
     this.history.endGesture();
+    if (this.keyboardGesture) {
+      this.keyboardGesture = false;
+      this.persist();
+    }
     this.changed();
   }
   cancelGesture() {
+    this.keyboardGesture = false;
     this.history.cancelGesture();
     this.persist();
     this.changed();
@@ -743,9 +904,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         };
       }
     }
+    const oldItemsById = new Map(previous.items.map((item) => [item.id, item]));
     const measured = document.items.map((item) => {
       if (item.kind !== 'text' || item.curve || item.fixedBounds) return item;
-      const old = previous.items.find((entry) => entry.id === item.id);
+      const old = oldItemsById.get(item.id);
       if (
         old &&
         [
@@ -820,7 +982,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       );
     }
     this.history.commit(next);
-    this.persist();
+    if (!this.keyboardGesture) this.persist();
     this.changed();
   }
   addPage() {
@@ -892,7 +1054,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       this.groupScope = [];
     this.cropDraft = undefined;
     this.persist();
+    const adjusting = this.adjustingCollage;
     this.select(this.selectedIds);
+    this.adjustingCollage = adjusting && !!this.collageAdjustment;
+    this.changed();
   }
   undo() {
     this.history.undo();
@@ -940,11 +1105,17 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     return this.groupScope.every((id, index) => this.path(item)[index] === id);
   }
   select(ids: string[]) {
+    if (this.adjustingCollage) {
+      const members = this.collageAdjustment?.members;
+      this.adjustingCollage =
+        !!members && ids.length > 0 && ids.every((id) => members.some((item) => item.id === id));
+    }
     if (this.cropDraft && !ids.includes(this.cropDraft.id)) this.cropDraft = undefined;
     const items = this.history.document.items;
+    const requestedIds = new Set(ids);
     const keys = new Set(
       items
-        .filter((item) => ids.includes(item.id) && this.inScope(item))
+        .filter((item) => requestedIds.has(item.id) && this.inScope(item))
         .map((item) => this.unitKey(item)),
     );
     this.selectedIds = items
@@ -988,8 +1159,27 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   patchItems(patches: Array<{ id: string; patch: Partial<BoardItem> }>) {
     if (!patches.length) return;
     const current = this.history.document.items;
+    const patchesById = new Map(patches.map((p) => [p.id, p.patch]));
     const next = current.map((item) => {
-      const patch: Partial<BoardItem> = { ...patches.find((patch) => patch.id === item.id)?.patch };
+      const requested = patchesById.get(item.id);
+      if (!requested) return item;
+      const patch: Partial<BoardItem> = { ...requested };
+      // Layout geometry belongs to the shared divider engine, even when other
+      // editing entry points (keyboard, inspector, alignment) submit patches.
+      if (Object.keys(patch).length && this.isCollageFrame(item.id)) {
+        for (const key of [
+          'x',
+          'y',
+          'width',
+          'height',
+          'rotation',
+          'contentSize',
+          'scrapbookPhoto',
+          'collageLayout',
+        ] as const)
+          delete patch[key];
+      }
+
       if (
         item.kind !== 'asset' &&
         patch.kind !== 'asset' &&
@@ -1101,7 +1291,18 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       if (ownGesture) this.endGesture();
     }
   }
-  private async decode(asset: GratitudeAsset, record?: MediaRecord) {
+  private readonly pendingImageDecodes = new Map<string, Promise<void>>();
+  private decode(asset: GratitudeAsset, record?: MediaRecord): Promise<void> {
+    if (this.images.has(asset.assetUrl)) return Promise.resolve();
+    const existing = this.pendingImageDecodes.get(asset.assetUrl);
+    if (existing) return existing;
+    const pending = this.decodeImage(asset, record).finally(() =>
+      this.pendingImageDecodes.delete(asset.assetUrl),
+    );
+    this.pendingImageDecodes.set(asset.assetUrl, pending);
+    return pending;
+  }
+  private async decodeImage(asset: GratitudeAsset, record?: MediaRecord) {
     if (this.images.has(asset.assetUrl)) return;
     const image = new this.ownerWindow.Image();
     if (/^https?:/.test(asset.assetUrl)) image.crossOrigin = 'anonymous';
@@ -1145,6 +1346,44 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     if (this.cropDraft || this.originalPreview)
       throw new Error('Apply or cancel image editing before replacing an image.');
     await this.uploadPhotos([file], undefined, id);
+  }
+  async replaceImageAsset(id: string, input: GratitudeAsset) {
+    const revision = this.history.revision;
+    const asset =
+      input.provider === 'upload' && input.mediaId
+        ? mediaAsset(await loadMedia(this.ownerWindow, input.mediaId))
+        : libraryAsset(input) ||
+          this.history.document.items
+            .flatMap((item) => [item.asset, item.contentAsset])
+            .find((asset) => asset?.id === input.id && asset.provider === 'generated');
+    if (!asset || asset.type !== 'photo') throw new Error('Choose a supported photo.');
+    await this.decode(asset);
+    if (revision !== this.history.revision)
+      throw new Error('The board changed while loading. Choose the photo again.');
+    this.replacePhotoContent(id, asset);
+  }
+  private replacePhotoContent(id: string, asset: GratitudeAsset) {
+    const target = this.history.document.items.find((item) => item.id === id);
+    if (!target || target.kind !== 'asset' || target.locked)
+      throw new Error('This image is no longer available for replacement.');
+    if (this.cropDraft || this.originalPreview)
+      throw new Error('Finish image editing before replacing an image.');
+    this.patchItems([
+      {
+        id,
+        patch: {
+          ...(target.asset?.frameSlot
+            ? { contentAsset: asset }
+            : { asset, contentAsset: undefined }),
+          templatePlaceholder: false,
+          crop: undefined,
+          rendition: undefined,
+          colorOverrides: undefined,
+          imageFit: 'fill',
+        },
+      },
+    ]);
+    this.select([id]);
   }
   async uploadPhotos(files: File[], position?: VisionPoint, replaceId?: string) {
     if (!files.length) return;
@@ -1248,13 +1487,183 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       void this.ownerWindow.navigator.storage.persist().catch(() => {});
     return records.map((record) => record.id);
   }
+  private readonly finishedTemplates = new Map<string, Promise<BoardItem[]>>();
+  private finishedScrapbookItems(presetId: string) {
+    const preset = SCRAPBOOK_PRESETS.find((p) => p.id === presetId);
+    if (!preset || !matchesResolution(preset.resolution, this.history.document))
+      return Promise.reject(new Error('This template is for a 1080 ? 1920 board.'));
+    let pending = this.finishedTemplates.get(presetId);
+    if (!pending) {
+      pending = this.buildFinishedScrapbookItems(presetId).catch((error) => {
+        this.finishedTemplates.delete(presetId);
+        throw error;
+      });
+      this.finishedTemplates.set(presetId, pending);
+    }
+    return pending;
+  }
+  private async buildFinishedScrapbookItems(presetId: string) {
+    const preset = SCRAPBOOK_PRESETS.find((preset) => preset.id === presetId);
+    if (!preset || !matchesResolution(preset.resolution, this.history.document))
+      throw new Error('This template is for a 1080 × 1920 board.');
+    await loadEditorFonts(this.ownerWindow);
+    const photos = photosForScrapbookTemplate(presetId);
+    if (photos.length !== preset.slots) throw new Error('Template photo set is incomplete.');
+    const assets = Array.from({ length: preset.slots }, (_, index) => photos[index]);
+    await Promise.all(
+      [...new Map(photos.map((asset) => [asset.assetUrl, asset])).values()].map((asset) =>
+        this.decode(asset),
+      ),
+    );
+    const items = scrapbookItems(
+      preset.id,
+      assets,
+      () => this.id(),
+      preset.resolution.width,
+      preset.resolution.height,
+    );
+    const labels: Record<string, string> = {
+      'Your Title': preset.id === 'soft-life-collage' ? 'My soft life' : 'Vision board',
+      'Your Name': 'Little joys',
+      'Your Place': 'New places',
+      'Add a caption': 'Keep this moment',
+    };
+    return items.map((item) =>
+      item.text
+        ? {
+            ...item,
+            text: Object.entries(labels).reduce(
+              (text, [before, after]) => text.replaceAll(before, after),
+              item.text,
+            ),
+          }
+        : item,
+    );
+  }
+  cachedScrapbookTemplatePreviews(): Record<string, string> {
+    return Object.fromEntries(
+      [...(templatePreviewCaches.get(this.ownerWindow) || [])]
+        .filter(([, v]) => v.value)
+        .map(([key, v]) => [key, v.value!]),
+    );
+  }
+  previewScrapbookTemplate(presetId: string): Promise<string> {
+    const preset = SCRAPBOOK_PRESETS.find((p) => p.id === presetId);
+    if (!preset || !matchesResolution(preset.resolution, this.history.document))
+      return Promise.reject(new Error('Unsupported template size.'));
+    let cache = templatePreviewCaches.get(this.ownerWindow);
+    if (!cache) {
+      cache = new Map();
+      templatePreviewCaches.set(this.ownerWindow, cache);
+    }
+    const existing = cache.get(presetId);
+    if (existing) return existing.promise;
+    const entry: { promise: Promise<string>; value?: string } = { promise: Promise.resolve('') };
+    entry.promise = this.finishedScrapbookItems(presetId)
+      .then((items) =>
+        renderPage(
+          this,
+          {
+            ...this.history.document,
+            width: preset.resolution.width,
+            height: preset.resolution.height,
+            id: 'template-preview',
+            background: undefined,
+            gradient: undefined,
+            color: '#fffaf6',
+            items,
+          },
+          { maxDimension: 640 },
+        ),
+      )
+      .then((value) => {
+        entry.value = value;
+        return value;
+      })
+      .catch((error) => {
+        cache!.delete(presetId);
+        throw error;
+      });
+    cache.set(presetId, entry);
+    return entry.promise;
+  }
+  async applyScrapbookTemplate(presetId: string) {
+    const revision = this.history.revision;
+    const items = (await this.finishedScrapbookItems(presetId)).map((item) => ({
+      ...structuredClone(item),
+      id: this.id(),
+    }));
+    if (revision !== this.history.revision)
+      throw new Error('The board changed. Try adding the template again.');
+    this.commit({ ...this.history.document, items: [...this.history.document.items, ...items] });
+    this.select(items.map((item) => item.id));
+  }
   async previewPhotoArrangement(
     ids: string[],
     style: PhotoArrangement,
     theme: PhotoTheme = 'vision2027',
   ) {
     const board = this.history.document;
+    if (
+      isDesignedCollage(style) &&
+      (ids.length < COLLAGE_MIN_PHOTOS ||
+        ids.length > COLLAGE_MAX_PHOTOS ||
+        new Set(ids).size !== ids.length)
+    )
+      throw new Error('Select 5 to 10 different photos.');
+    const preset = SCRAPBOOK_PRESETS.find((preset) => preset.id === style);
+    if (preset && !matchesResolution(preset.resolution, board))
+      throw new Error('No presets available for this board size.');
     const records = await Promise.all(ids.map((id) => loadMedia(this.ownerWindow, id)));
+    if (isDesignedCollage(style) || isPhotoCollage(style) || isAuthoredLayout(style)) {
+      if (isAuthoredLayout(style)) await loadEditorFonts(this.ownerWindow);
+      const assets = records.map(mediaAsset);
+      await Promise.all(assets.map((asset) => this.decode(asset)));
+      let serial = 0;
+      const items = isDesignedCollage(style)
+        ? designedCollageItems(
+            style,
+            assets,
+            board.width,
+            board.height,
+            () => `preview-${serial++}`,
+          )
+        : isAuthoredLayout(style)
+          ? authoredItems(style, assets, board.width, board.height, () => `preview-${serial++}`)
+          : photoCollageItems(
+              style,
+              assets,
+              board.width,
+              board.height,
+              () => `preview-${serial++}`,
+            );
+      await Promise.all(items.filter((item) => item.asset).map((item) => this.decode(item.asset!)));
+      return renderPage(this, {
+        ...board,
+        id: 'collage-preview',
+        items,
+      });
+    }
+    if (isScrapbookPreset(style) && preset) {
+      await loadEditorFonts(this.ownerWindow);
+      let serial = 0;
+      const items = scrapbookItems(
+        style,
+        records.map(mediaAsset),
+        () => `preview-${serial++}`,
+        preset.resolution.width,
+        preset.resolution.height,
+      );
+      for (const item of items)
+        if (item.kind === 'asset' && item.asset) await this.decode(item.asset);
+      return renderPage(this, {
+        id: 'scrapbook-preview',
+        width: preset.resolution.width,
+        height: preset.resolution.height,
+        color: '#ffffff',
+        items,
+      });
+    }
     for (const record of records) await this.decode(mediaAsset(record), record);
     const composition = photoComposition(
       ids.length,
@@ -1276,6 +1685,52 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       revision = this.history.revision;
 
     if (new Set(ids).size !== ids.length) throw new Error('Choose different photos.');
+    if (
+      isDesignedCollage(style) &&
+      (ids.length < COLLAGE_MIN_PHOTOS || ids.length > COLLAGE_MAX_PHOTOS)
+    )
+      throw new Error('Select 5 to 10 photos.');
+    if (isDesignedCollage(style) || isPhotoCollage(style) || isAuthoredLayout(style)) {
+      if (!ids.length || ids.length > 20) throw new Error('Select 1 to 20 photos.');
+      if (isAuthoredLayout(style)) await loadEditorFonts(this.ownerWindow);
+      const assets = await Promise.all(
+        ids.map(async (id) => mediaAsset(await loadMedia(this.ownerWindow, id))),
+      );
+      await Promise.all(assets.map((asset) => this.decode(asset)));
+      const items = isDesignedCollage(style)
+        ? designedCollageItems(style, assets, board.width, board.height, () => this.id())
+        : isAuthoredLayout(style)
+          ? authoredItems(style, assets, board.width, board.height, () => this.id())
+          : photoCollageItems(style, assets, board.width, board.height, () => this.id());
+      await Promise.all(items.filter((item) => item.asset).map((item) => this.decode(item.asset!)));
+      if (revision !== this.history.revision)
+        throw new Error('The board changed. Preview the layout again.');
+      this.commit({ ...board, items: [...board.items, ...items] });
+      this.select([]);
+      return;
+    }
+    if (isScrapbookPreset(style)) {
+      const preset = SCRAPBOOK_PRESETS.find((preset) => preset.id === style)!;
+      if (!matchesResolution(preset.resolution, board))
+        throw new Error('No presets available for this board size.');
+      if (!ids.length || ids.length > 20) throw new Error('Select photos first.');
+      const records = await Promise.all(ids.map((id) => loadMedia(this.ownerWindow, id)));
+      await loadEditorFonts(this.ownerWindow);
+      const items = scrapbookItems(
+        style,
+        records.map(mediaAsset),
+        () => this.id(),
+        board.width,
+        board.height,
+      );
+      for (const item of items)
+        if (item.kind === 'asset' && item.asset) await this.decode(item.asset);
+      if (revision !== this.history.revision)
+        throw new Error('The board changed. Preview the layout again.');
+      this.commit({ ...board, items: [...board.items, ...items] });
+      this.select([]);
+      return;
+    }
     const records = await Promise.all(ids.map((id) => loadMedia(this.ownerWindow, id)));
     const composition = photoComposition(
       ids.length,
@@ -1290,7 +1745,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       throw new Error('The board changed. Preview the layout again.');
     const items = compositionItems(composition, records.map(mediaAsset), () => this.id());
     this.commit({ ...board, items: [...board.items, ...items] });
-    this.select(items.map((item) => item.id));
+    this.select([]);
   }
   previewBoard() {
     return this.png(
@@ -1307,7 +1762,40 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.download(url, record.name);
     this.ownerWindow.setTimeout(() => this.ownerWindow.URL.revokeObjectURL(url), 1000);
   }
-  async insertAsset(input: GratitudeAsset, position?: VisionPoint) {
+  photoPlaceholderAt(point: VisionPoint) {
+    const photo = [...this.history.document.items].reverse().find((item) => {
+      if (!item.scrapbookPhoto || item.hidden) return false;
+      const angle = (item.rotation * Math.PI) / 180;
+      const dx = point.x - item.x,
+        dy = point.y - item.y;
+      const x = dx * Math.cos(angle) + dy * Math.sin(angle);
+      const y = -dx * Math.sin(angle) + dy * Math.cos(angle);
+      const clip = item.scrapbookPhoto.clip;
+      if (clip?.length) {
+        const px = (x / item.width) * 100,
+          py = (y / item.height) * 100;
+        let inside = false;
+        for (let i = 0, j = clip.length - 2; i < clip.length; j = i, i += 2) {
+          const ax = clip[i],
+            ay = clip[i + 1],
+            bx = clip[j],
+            by = clip[j + 1];
+          if (ay > py !== by > py && px < ((bx - ax) * (py - ay)) / (by - ay) + ax)
+            inside = !inside;
+        }
+        return inside;
+      }
+      if (item.scrapbookPhoto.style === 'round')
+        return (
+          ((x - item.width / 2) / (item.width / 2)) ** 2 +
+            ((y - item.height / 2) / (item.height / 2)) ** 2 <=
+          1
+        );
+      return x >= 0 && y >= 0 && x <= item.width && y <= item.height;
+    });
+    return photo?.templatePlaceholder && !photo.locked ? photo : undefined;
+  }
+  async insertAsset(input: GratitudeAsset, position?: VisionPoint, replaceId?: string) {
     const remote =
       input.provider === 'upload' && input.mediaId
         ? mediaAsset(await loadMedia(this.ownerWindow, input.mediaId))
@@ -1318,6 +1806,29 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     await this.decode(asset);
     if (revision !== this.history.revision)
       throw new Error('The board changed while loading. Please insert the asset again.');
+    if (replaceId) {
+      const target = this.history.document.items.find((item) => item.id === replaceId);
+      if (!target?.scrapbookPhoto || !target.templatePlaceholder || target.locked)
+        throw new Error('This photo placeholder is no longer available.');
+      if (asset.type !== 'photo') throw new Error('Choose a photo for this placeholder.');
+      this.items((items) =>
+        items.map((item) =>
+          item.id === replaceId
+            ? {
+                ...item,
+                asset,
+                contentAsset: undefined,
+                templatePlaceholder: false,
+                crop: undefined,
+                rendition: undefined,
+                imageFit: 'fill',
+              }
+            : item,
+        ),
+      );
+      this.select([replaceId]);
+      return replaceId;
+    }
     if (asset.tags.includes('background')) {
       this.commit({ ...this.history.document, background: asset });
       return asset.id;
@@ -1349,6 +1860,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     prompt: string,
     background = false,
     position?: VisionPoint,
+    replaceId?: string,
   ) {
     if (!/^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(url) || url.length > 16000000)
       throw new Error('Invalid generated image.');
@@ -1377,6 +1889,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     const image = this.images.get(url)!;
     asset.width = image.naturalWidth;
     asset.height = image.naturalHeight;
+    if (replaceId) {
+      this.replacePhotoContent(replaceId, asset);
+      return;
+    }
     if (background) {
       this.commit({ ...this.history.document, background: asset });
       this.select([]);
@@ -1780,7 +2296,29 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       (item) => this.selectedIds.includes(item.id) && item.kind === 'asset',
     );
     if (item) {
-      this.cropDraft = { id: item.id, crop: item.crop || { x: 0, y: 0, width: 1, height: 1 } };
+      if (item.locked || item.templatePlaceholder) return;
+      const framed = !!(
+        item.scrapbookPhoto ||
+        item.frameShape ||
+        item.asset?.frameSlot ||
+        item.imageFit === 'fill'
+      );
+      const source = item.contentAsset || item.asset;
+      const image = this.images.get(item.rendition || source?.assetUrl || '');
+      const aperture = photoAperture(item);
+      const base = framed
+        ? coverCrop(
+            (image?.naturalWidth || source?.width || 1) /
+              (image?.naturalHeight || source?.height || 1),
+            aperture.width / aperture.height,
+          )
+        : undefined;
+      this.cropDraft = {
+        id: item.id,
+        imageRotation: item.imageRotation || 0,
+        base,
+        crop: item.crop || base || { x: 0, y: 0, width: 1, height: 1 },
+      };
       this.changed();
     }
   }
@@ -2009,9 +2547,12 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   duplicateSelection() {
     const groups = new Map<string, string>();
     const identities = new Map(this.selectedIds.map((id) => [id, this.id()]));
-    const copies = this.history.document.items
-      .filter((item) => this.selectedIds.includes(item.id))
-      .map((item) => {
+    const sources = this.history.document.items.filter((item) =>
+      this.selectedIds.includes(item.id),
+    );
+    const copies = copyCollageLayouts(
+      sources,
+      sources.map((item) => {
         if (item.groupId && !groups.has(item.groupId)) groups.set(item.groupId, this.id());
         const path = this.path(item).map((id, index) => {
           if (index < this.groupScope.length) return id;
@@ -2036,7 +2577,9 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
           groupPath: path,
           groupId: path[0],
         };
-      });
+      }),
+      this.history.document,
+    );
     // Place copies directly above the topmost original, not above the whole board.
     this.items((items) => {
       let at = -1;

@@ -1,0 +1,244 @@
+@layer components {
+  .gs-object-dock:has(.object-inspector) {
+    overflow: hidden;
+  }
+  .gs-formatting-popover .object-inspector.vs-inspector--inline {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .object-inspector-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 16px 16px;
+    flex-shrink: 0;
+  }
+  .object-inspector-header > div {
+    min-width: 0;
+  }
+  .object-inspector-header h2 {
+    margin: 0;
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-strong);
+    line-height: var(--gs-line-height-tight);
+  }
+  .object-inspector-header p {
+    margin: 6px 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+  }
+  .object-inspector-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-inline: 16px;
+    border-bottom: 1px solid var(--gs-line);
+    flex-shrink: 0;
+  }
+  .object-inspector-tabs .gs-button {
+    height: 40px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--gs-text-secondary);
+    background: transparent;
+  }
+  .object-inspector-tabs .gs-button[aria-selected='true'] {
+    color: var(--gs-accent);
+    border-bottom-color: var(--gs-accent);
+    font-weight: var(--gs-weight-strong);
+    background: transparent;
+  }
+  .object-inspector .object-inspector-body {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding: 0 16px 20px;
+  }
+  .object-inspector-fields {
+    min-width: 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .object-inspector .vs-properties-section {
+    padding: 0;
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .object-inspector .vs-properties-section > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding-block: 12px;
+    list-style: none;
+    cursor: pointer;
+    color: var(--gs-text);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-strong);
+  }
+  .object-inspector summary::-webkit-details-marker {
+    display: none;
+  }
+  .object-inspector .vs-properties-section > summary::after {
+    content: '+';
+    font-weight: var(--gs-weight-regular);
+    color: var(--gs-text-secondary);
+  }
+  .object-inspector .vs-properties-section[open] > summary::after {
+    content: '−';
+  }
+  .object-inspector .vs-properties-section__body {
+    padding: 0 0 16px;
+    gap: 12px;
+  }
+  .object-inspector .vs-properties-section .vs-properties-section {
+    border: 0;
+    border-top: 1px solid var(--gs-line);
+  }
+  .object-inspector .vs-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .object-inspector .vs-field > .vs-font-trigger {
+    width: 100%;
+    max-width: none;
+  }
+  .object-inspector-alignment {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .object-inspector-range {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 76px;
+    align-items: end;
+    gap: 12px;
+  }
+  .object-inspector-alignment .gs-button {
+    background: var(--gs-surface-muted);
+    font-size: var(--gs-text-11);
+  }
+  .object-inspector-notice {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    margin-top: 16px;
+    background: var(--gs-warning-soft);
+    color: var(--gs-text);
+    border-radius: var(--gs-radius-control);
+    font-size: var(--gs-text-11);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .object-inspector .vs-properties-section > summary:hover {
+      color: var(--gs-accent);
+    }
+  }
+  @media (max-width: 768px) {
+    .gs-formatting-popover .object-inspector.vs-inspector--inline {
+      height: min(620px, 75dvh);
+    }
+  }
+
+  .object-inspector-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .object-inspector-section-title svg {
+    width: 16px;
+    height: 16px;
+  }
+  .object-inspector-image-fit {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .object-inspector .vs-layers,
+  .object-inspector .vs-layer-group,
+  .object-inspector .vs-layer-group__kids {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .object-inspector .vs-layer {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 28px 28px;
+    gap: 4px;
+    padding: 4px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .object-inspector .vs-layer__name {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    padding: 8px 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .object-inspector .vs-layer > .vs-icon-btn {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    padding: 0;
+  }
+  .object-inspector .vs-layer__thumb {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+  }
+  .object-inspector .vs-layer-group__kids {
+    padding-inline: 4px 0;
+    border-left: 1px solid var(--gs-line);
+  }
+  .object-inspector .vs-layer-group > summary {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* The dock is narrow even on desktop; do not inherit the toolbar's single row. */
+  .object-inspector .vs-crop-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+  .object-inspector .vs-crop-actions .vs-frame-adjust {
+    display: grid;
+    min-width: 0;
+    width: 100%;
+    gap: 8px;
+  }
+  .object-inspector .vs-frame-adjust label {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    min-width: 0;
+    align-items: center;
+  }
+  .object-inspector .vs-frame-adjust .gs-slider {
+    width: 100%;
+    min-width: 0;
+  }
+  .object-inspector .vs-crop-actions .gs-button {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}

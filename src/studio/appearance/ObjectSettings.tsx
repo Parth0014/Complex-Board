@@ -1,3 +1,4 @@
+import { Slider } from '../ui/Slider';
 import { errorMessage } from '../errors';
 import { FlipHIcon } from '../icons';
 import { useEffect, useState } from 'react';
@@ -105,9 +106,9 @@ export function ObjectSettings({ adapter, item }: { adapter: EditorAdapter; item
         <div className="gs-radius-controls">
           <label>
             Corner radius
-            <input
-              type="range"
+            <Slider
               aria-label="Corner radius slider"
+              aria-valuetext={`${item.radius || 0} pixels`}
               min={0}
               max={150}
               value={item.radius || 0}

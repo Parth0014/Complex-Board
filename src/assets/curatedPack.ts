@@ -34,7 +34,12 @@ export const curatedAssets: GratitudeAsset[] = Object.entries(bundledSvgSources)
       .match(/viewBox="([^"]+)"/)![1]
       .split(/\s+/)
       .map(Number);
-    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(withEmbeddedFonts(svg));
+    // Catalog/search needs metadata only. Embedding fonts and encoding all 330
+    // SVGs at module startup creates a large main-thread and memory spike even
+    // when the library is closed. Share each URL once it is actually requested.
+    let url: string | undefined;
+    const source = () =>
+      (url ??= 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(withEmbeddedFonts(svg)));
     return {
       id: 'vision-svg:' + category + '/' + name,
       provider: 'curated-v1',
@@ -46,8 +51,12 @@ export const curatedAssets: GratitudeAsset[] = Object.entries(bundledSvgSources)
         ...topics,
         ...ELEMENT_THEMES.filter((theme) => topics.includes(theme.id)).map((theme) => theme.label),
       ],
-      previewUrl: url,
-      assetUrl: url,
+      get previewUrl() {
+        return source();
+      },
+      get assetUrl() {
+        return source();
+      },
       mimeType: 'image/svg+xml',
       width: dimensions[2],
       height: dimensions[3],

@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import Konva from 'konva';
 import type { BoardItem } from '../vision/document';
 import { Button } from './ui/Button';
 const presets = [
@@ -18,38 +17,27 @@ function Preview({
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (!image || !canvas.current) return;
+    const ctx = canvas.current.getContext('2d');
+    if (!ctx) return;
     const width = 144,
       height = 112,
       ratio = width / height,
-      source = image.naturalWidth / image.naturalHeight;
+      source = image.naturalWidth / (image.naturalHeight || 1);
     const cw = source > ratio ? image.naturalHeight * ratio : image.naturalWidth;
     const ch = source > ratio ? image.naturalHeight : image.naturalWidth / ratio;
-    const node = new Konva.Image({
-      image,
-      width,
-      height,
-      crop: {
-        x: (image.naturalWidth - cw) / 2,
-        y: (image.naturalHeight - ch) / 2,
-        width: cw,
-        height: ch,
-      },
-      brightness: preset.brightness,
-      contrast: preset.contrast,
-      saturation: preset.saturation,
-      filters: [
-        Konva.Filters.Brighten,
-        Konva.Filters.Contrast,
-        Konva.Filters.HSL,
-        ...(preset.filter === 'mono' ? [Konva.Filters.Grayscale] : []),
-      ],
-    });
-    try {
-      node.cache({ pixelRatio: 1 });
-      canvas.current.getContext('2d')?.drawImage(node.toCanvas({ pixelRatio: 1 }), 0, 0);
-    } finally {
-      node.destroy();
-    }
+    const sx = (image.naturalWidth - cw) / 2;
+    const sy = (image.naturalHeight - ch) / 2;
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    // Build canvas filter string equivalent to preset
+    const brightnessPct = Math.round((1 + preset.brightness) * 100);
+    const contrastPct = Math.round((1 + preset.contrast / 100) * 100);
+    const saturatePct = Math.round(Math.max(0, (1 + preset.saturation) * 100));
+    const grayscale = preset.filter === 'mono' ? ' grayscale(100%)' : '';
+    ctx.filter = `brightness(${brightnessPct}%) contrast(${contrastPct}%) saturate(${saturatePct}%)${grayscale}`;
+    ctx.drawImage(image, sx, sy, cw, ch, 0, 0, width, height);
+    ctx.restore();
   }, [image, preset]);
   return <canvas ref={canvas} width={144} height={112} aria-hidden="true" />;
 }

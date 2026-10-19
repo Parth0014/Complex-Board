@@ -1,9 +1,10 @@
+import { Slider } from './ui/Slider';
+import { FontPicker } from './FontPicker';
 import { itemOpacity } from '../vision/appearance/capabilities';
 import { primaryColor } from '../vision/appearance/capabilities';
 import { Popover } from './ui/Popover';
 import { Button, IconButton } from './ui/Button';
 import { CropActions } from './CropActions';
-import { editorFonts } from '../vision/fonts';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
 import { ColorPicker } from './ColorPicker';
@@ -130,10 +131,28 @@ export function SelectionToolbar({
             ? 'Image / graphic'
             : 'Drawing';
 
+  if (adapter.adjustingCollage)
+    return (
+      <div className="vs-actionbar vs-collage-toolbar">
+        <span className="vs-collage-toolbar__label">Adjust layout</span>
+        <span className="vs-collage-toolbar__hint">Drag a divider to share space</span>
+        <Button variant="plain" onClick={() => adapter.resetCollageAdjustment()}>
+          Reset layout
+        </Button>
+        <Button variant="primary" onClick={() => adapter.finishCollageAdjustment()}>
+          Done
+        </Button>
+      </div>
+    );
+
   if (adapter.cropDraft)
     return (
       <div className="vs-actionbar vs-actionbar--cropping">
-        <CropActions onCancel={() => adapter.cancelCrop()} onApply={() => adapter.applyCrop()} />
+        <CropActions
+          adapter={adapter}
+          onCancel={() => adapter.cancelCrop()}
+          onApply={() => adapter.applyCrop()}
+        />
       </div>
     );
 
@@ -142,29 +161,19 @@ export function SelectionToolbar({
       <span className="vs-actionbar__identity" aria-label={`Selected: ${type}`}>
         {type}
       </span>
+      {adapter.canAdjustCollage && (
+        <Button variant="plain" onClick={() => adapter.startCollageAdjustment()}>
+          Adjust layout
+        </Button>
+      )}
       <span className="vs-actionbar__separator" aria-hidden="true" />
       {item?.kind === 'text' && (
         <>
-          <select
-            className="vs-actionbar__font"
-            aria-label="Font family"
-            value={item.fontFamily || 'assistant'}
+          <FontPicker
+            value={item.fontFamily}
             disabled={anyLocked}
-            onChange={(event) =>
-              adapter.patchItems([
-                {
-                  id: item.id,
-                  patch: { fontFamily: event.target.value as typeof item.fontFamily },
-                },
-              ])
-            }
-          >
-            {Object.entries(editorFonts).map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
-              </option>
-            ))}
-          </select>
+            onChange={(fontFamily) => adapter.patchItems([{ id: item.id, patch: { fontFamily } }])}
+          />
           <TextSize
             key={item.id}
             value={item.fontSize ?? 24}
@@ -298,7 +307,12 @@ export function SelectionToolbar({
           disabled={anyLocked}
           onClick={() => adapter.startImageCrop()}
         >
-          Crop
+          {item.scrapbookPhoto ||
+          item.frameShape ||
+          item.asset?.frameSlot ||
+          item.imageFit === 'fill'
+            ? 'Adjust photo'
+            : 'Crop'}
         </Button>
       )}
       {item && item.kind !== 'text' && (
@@ -392,10 +406,10 @@ export function SelectionToolbar({
                   : 'Object transparency'}
               </p>
               <div className="vs-actionbar__range">
-                <input
+                <Slider
                   className="vs-range"
                   aria-label="Set transparency for all selected objects"
-                  type="range"
+                  aria-valuetext={mixedOpacity ? 'Mixed' : `${opacity}%`}
                   min="0"
                   max="100"
                   disabled={anyLocked}

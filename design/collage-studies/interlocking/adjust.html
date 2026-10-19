@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VisBo · Smart dividers experiment</title><link rel="icon" href="data:,"><link rel="stylesheet" href="study.css"><link rel="stylesheet" href="adjust.css"></head>
+<body>
+  <header class="adjust-header"><nav><a href="index.html">← All collage studies</a><span>HTML EXPERIMENT / SMART DIVIDERS</span></nav><div class="intro"><div><p class="eyebrow">A little more room</p><h1>Move the seam.<br>Keep the balance.</h1></div><div class="explanation"><p>Drag a white divider or its handle. Connected photos reshape together inside the same board.</p><p class="small">Try Flow, Cut and Inlay. Each family adjusts in its own way.</p></div></div></header>
+  <div class="toolbar"><div class="tools">
+    <label>Layout <select id="layout"></select></label>
+    <label>Photos <input id="count" type="range" min="5" max="10" value="7"><output id="count-value">7</output></label>
+    <label>Format <select id="format"><option value="0.5625">Portrait · 9:16</option><option value="1">Square · 1:1</option><option value="1.7777777777777777">Landscape · 16:9</option></select></label>
+    <button id="undo" disabled>Undo</button><button id="reset" disabled>Reset layout</button>
+    <div class="views"><button id="diagram" aria-pressed="false">Frame diagram</button></div>
+  </div></div>
+  <main class="adjust-main"><div class="workbench"><div id="board"></div></div><aside><p class="eyebrow">Space, shared</p><h2>Every move stays connected.</h2><p id="status" role="status" aria-live="polite">Drag any divider handle to give a photo more room.</p><div id="areas" aria-label="Photo areas"></div><p class="small">Focus a handle and use arrow keys for precise adjustments. Hold Shift for smaller steps.</p><p class="small">Photo proportions stay fixed. Crops move only as needed to fill the adjusted frame.</p><p class="small">Changing the layout, count or format starts a fresh experiment.</p></aside></main>
+  <script src="layouts.js"></script><script src="divider-engine.js"></script><script src="family-dividers.js"></script><script src="adjust.js"></script>
+</body></html>

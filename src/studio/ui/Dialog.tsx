@@ -18,24 +18,29 @@ export function Dialog({
   onClose,
   children,
   ref,
+  dismissible = true,
   ...props
 }: Omit<ComponentProps<'div'>, 'ref'> & {
   onClose: () => void;
   'aria-label': string;
   ref?: Ref<DialogHandle>;
+  /** Keep an in-flight operation visible until it settles. */
+  dismissible?: boolean;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
+  const canDismiss = useRef(dismissible);
   const exitTimer = useRef<number | null>(null);
   const [exiting, setExiting] = useState(false);
   useLayoutEffect(() => {
     close.current = onClose;
+    canDismiss.current = dismissible;
   });
 
   const requestClose = useCallback(() => {
     const node = dialogRef.current;
     const ownerWindow = node?.ownerDocument.defaultView;
-    if (!node || !ownerWindow || exitTimer.current !== null) return;
+    if (!node || !ownerWindow || !canDismiss.current || exitTimer.current !== null) return;
     setExiting(true);
     exitTimer.current = ownerWindow.setTimeout(() => close.current(), readDuration(node));
   }, []);
@@ -49,8 +54,24 @@ export function Dialog({
         ...node.querySelectorAll<HTMLElement>(
           'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]',
         ),
-      ].filter((el) => el.getClientRects().length);
+      ].filter((el) => el.getClientRects().length && !el.closest('[inert], [hidden]'));
     (focusable()[0] ?? node).focus();
+    const containFocus = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
+      // A nested dialog owns focus until it closes. Portaled menus have their own
+      // keyboard handling and are owned by the control that opened them.
+      const dialogs = node.ownerDocument.querySelectorAll('[role="dialog"]');
+      if (dialogs[dialogs.length - 1] !== node || node.contains(target)) return;
+      const popover = target.closest('.gs-popover');
+      if (
+        popover?.id &&
+        [...node.querySelectorAll('[aria-controls]')].some(
+          (trigger) => trigger.getAttribute('aria-controls') === popover.id,
+        )
+      )
+        return;
+      (focusable()[0] ?? node).focus();
+    };
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !(event.target as HTMLElement).closest('.gs-popover')) {
         event.preventDefault();
@@ -74,8 +95,10 @@ export function Dialog({
       }
     };
     node.addEventListener('keydown', key);
+    node.ownerDocument.addEventListener('focusin', containFocus);
     return () => {
       node.removeEventListener('keydown', key);
+      node.ownerDocument.removeEventListener('focusin', containFocus);
       if (exitTimer.current !== null)
         node.ownerDocument.defaultView?.clearTimeout(exitTimer.current);
       if (previous?.isConnected) previous.focus();

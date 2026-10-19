@@ -1,11 +1,18 @@
+import { createPortal } from 'react-dom';
+import { Dialog } from './ui/Dialog';
 import { PhotoLayoutBuilder } from './PhotoLayoutBuilder';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
-import { listMedia, mediaAsset, type MediaRecord } from '../vision/media';
+import {
+  listMedia,
+  mediaAsset,
+  setMediaLibraryVisibility,
+  type MediaRecord,
+} from '../vision/media';
 import { errorMessage } from './errors';
 import { Button } from './ui/Button';
 import { useEffect, useState } from 'react';
 import type { StudioAdapter } from '../vision/contracts';
-import { UploadIcon } from './icons';
+import { UploadIcon, TrashIcon } from './icons';
 import { startCanvasDrag } from './canvasDrag';
 
 export function UploadsPanel({
@@ -25,11 +32,15 @@ export function UploadsPanel({
   const [library, setLibrary] = useState<Array<{ record: MediaRecord; url: string }>>([]);
   const [loadingLibrary, setLoadingLibrary] = useState(true);
   const [inserting, setInserting] = useState('');
+  const [deleting, setDeleting] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<{ record: MediaRecord; url: string } | null>(
+    null,
+  );
   useEffect(() => {
     const win = adapter.ownerWindow;
     let live = true,
       serial = 0;
-    let urls: string[] = [];
+    let urls = new Map<string, string>();
     const refresh = async () => {
       const request = ++serial;
       try {
@@ -37,10 +48,11 @@ export function UploadsPanel({
         if (!live || request !== serial) return;
         const next = records.map((record) => ({
           record,
-          url: win.URL.createObjectURL(record.working),
+          url: urls.get(record.id) || win.URL.createObjectURL(record.working),
         }));
-        urls.forEach((url) => win.URL.revokeObjectURL(url));
-        urls = next.map((item) => item.url);
+        const nextUrls = new Map(next.map((item) => [item.record.id, item.url]));
+        for (const [id, url] of urls) if (!nextUrls.has(id)) win.URL.revokeObjectURL(url);
+        urls = nextUrls;
         setLibrary(next);
       } catch (error) {
         if (live) setError(errorMessage(error));
@@ -73,6 +85,22 @@ export function UploadsPanel({
       setInserting('');
     }
   };
+  const deletePhoto = async () => {
+    if (!pendingDelete || deleting) return;
+    const record = pendingDelete.record;
+    setDeleting(record.id);
+    setError('');
+    setMessage('');
+    try {
+      await setMediaLibraryVisibility(adapter.ownerWindow, record.id, false);
+      setPendingDelete(null);
+      setMessage('Photo deleted from Uploads.');
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setDeleting('');
+    }
+  };
   const selected = adapter.history.document.items.find(
     (item) => item.id === adapter.selectedIds[0],
   );
@@ -87,8 +115,12 @@ export function UploadsPanel({
     setFailedFiles(null);
     setMessage('Preparing your photos…');
     try {
-      await adapter.uploadPhotos(files);
-      setMessage(`${files.length} photo${files.length === 1 ? '' : 's'} added.`);
+      if (files.length === 1 && selected?.asset?.provider === 'template-photo')
+        await adapter.uploadPhotos(files);
+      else await adapter.storePhotos(files);
+      setMessage(
+        `${files.length} photo${files.length === 1 ? '' : 's'} saved. Select photos to arrange them.`,
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unable to add photos.';
       setError(msg);
@@ -163,7 +195,7 @@ export function UploadsPanel({
 
       <Button
         variant="secondary"
-        disabled={busy || !library.length}
+        disabled={busy || loadingLibrary || Boolean(deleting)}
         onClick={() => {
           setArranging(true);
         }}
@@ -198,17 +230,75 @@ export function UploadsPanel({
                     )
                   }
                   aria-label={`Add uploaded photo ${record.name} to board`}
-                  disabled={busy || Boolean(inserting)}
+                  disabled={busy || Boolean(inserting) || Boolean(deleting)}
                   aria-busy={inserting === record.id}
                   onClick={() => void reuse(record)}
                 >
                   <img src={url} alt="" loading="lazy" draggable={false} />
+                </Button>
+                <Button
+                  className="uploads-photo-delete"
+                  aria-label={`Delete uploaded photo ${record.name}`}
+                  data-tip="Delete from Uploads"
+                  disabled={busy || Boolean(inserting) || Boolean(deleting)}
+                  aria-busy={deleting === record.id}
+                  onClick={() => {
+                    setError('');
+                    setPendingDelete({ record, url });
+                  }}
+                >
+                  <TrashIcon size={16} />
                 </Button>
               </article>
             ))}
           </div>
         )}
       </section>
+
+      {pendingDelete &&
+        createPortal(
+          <div
+            className="vs vs-veil uploads-delete-veil"
+            onPointerDown={(event) => {
+              if (event.target === event.currentTarget && !deleting) setPendingDelete(null);
+            }}
+          >
+            <Dialog
+              className="vs-dialog uploads-delete-dialog"
+              aria-label="Delete uploaded photo"
+              dismissible={!deleting}
+              onClose={() => {
+                if (!deleting) setPendingDelete(null);
+              }}
+            >
+              <h2>Delete this photo?</h2>
+              <div className="uploads-delete-preview">
+                <img src={pendingDelete.url} alt="" />
+                <strong>{pendingDelete.record.name}</strong>
+              </div>
+              <p>This removes it from Uploads. Photos already on your boards will stay.</p>
+              {error && (
+                <p className="panel-inline-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="uploads-delete-actions">
+                <Button disabled={Boolean(deleting)} onClick={() => setPendingDelete(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  disabled={Boolean(deleting)}
+                  aria-busy={Boolean(deleting)}
+                  onClick={() => void deletePhoto()}
+                >
+                  {deleting ? 'Deleting…' : 'Delete photo'}
+                </Button>
+              </div>
+            </Dialog>
+          </div>,
+          adapter.ownerWindow.document.body,
+        )}
 
       {hasOriginal && (
         <div className="uploads-panel__actions">

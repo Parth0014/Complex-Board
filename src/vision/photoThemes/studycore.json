@@ -1,0 +1,45 @@
+{
+  "title": "Study Hard\nShine Bright",
+  "subtitle": "FOCUS ✦ LEARN ✦ ACHIEVE",
+  "keywords": [
+    "study desk aesthetic notes",
+    "library books reading",
+    "coffee study session",
+    "planner stationery flatlay",
+    "student studying laptop",
+    "bookshelf organized aesthetic",
+    "highlighter notes textbook",
+    "morning study routine",
+    "graduation cap celebration",
+    "motivational desk setup",
+    "study journal handwriting",
+    "campus university life"
+  ],
+  "palette": {
+    "colors": ["#d4a0b0", "#c4b8a8", "#b0c4b8", "#e0c8a0", "#c0b0d0"],
+    "paper": "#f5ede4",
+    "ink": "#3c3034"
+  },
+  "copy": {
+    "quotes": [
+      "Dream big,\nstudy hard,\nshine bright",
+      "Girl, make it happen.\nFor you.",
+      "Progress over\nperfection",
+      "Pretty girls\nstudy hard",
+      "If not you,\nthen who?",
+      "More books,\nless screens",
+      "Brains, books,\nand better boundaries",
+      "Main character\nin my own story",
+      "100/100",
+      "She believed\nshe could,\nso she did"
+    ],
+    "labels": ["A+", "Study time", "Goals", "Focus", "Chapter 1", "Level up"],
+    "checklist": [
+      "Finish all assignments early",
+      "Read 30 books this year",
+      "Get that scholarship",
+      "Journal every night",
+      "Master a new subject"
+    ]
+  }
+}

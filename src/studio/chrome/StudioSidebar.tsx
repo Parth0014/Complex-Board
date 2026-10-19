@@ -50,6 +50,10 @@ export function StudioSidebar({
     if (!tab && prevTab.current) {
       const closed = prevTab.current;
       prevTab.current = null;
+      if (closed === 'templates') {
+        setExitingTab(null);
+        return;
+      }
       setExitingTab(closed);
       if (adapter.ownerWindow.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         setExitingTab(null);
@@ -106,6 +110,7 @@ export function StudioSidebar({
         <section
           ref={panelRef}
           key={visibleTab}
+          data-panel={visibleTab}
           className={`vs-lib__panel${exitingTab ? ' is-exiting' : ''}`}
           aria-label={`${STUDIO_TAB_LABELS[visibleTab]} panel`}
           inert={!!exitingTab}
@@ -126,6 +131,7 @@ export function StudioSidebar({
           <div className="vs-lib__body">
             {visibleTab === 'templates' ? (
               <TemplatesPanel
+                adapter={adapter}
                 onApplyTemplate={(template) => adapter.applyTemplate(template)}
                 onClose={() => setTab(null)}
               />

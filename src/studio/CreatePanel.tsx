@@ -12,8 +12,12 @@ const SHAPES = [
   'cloud',
   'blob',
   'burst',
-  'line',
-  'arrow',
+  'diamond',
+  'hexagon',
+  'octagon',
+  'badge',
+  'flower',
+  'arch',
 ] as const;
 
 export function CreatePanel({ adapter }: { adapter: EditorAdapter }) {

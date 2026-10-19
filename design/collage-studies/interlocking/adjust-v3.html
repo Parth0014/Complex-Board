@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>VisBo · Structured divider study</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="study.css" />
+    <link rel="stylesheet" href="adjust.css" />
+    <link rel="stylesheet" href="adjust-v3.css" />
+  </head>
+  <body>
+    <header class="adjust-header">
+      <nav>
+        <a href="adjust-v2.html">← Compare version 2</a><span>HTML EXPERIMENT / VERSION 3</span>
+      </nav>
+      <div class="intro">
+        <div>
+          <p class="eyebrow">Make room with intention</p>
+          <h1>Resize the space.<br />Keep the composition.</h1>
+        </div>
+        <div class="explanation">
+          <p>
+            Shared dividers follow the structure of the layout. Rows resize together, straight cuts
+            stay straight, and shapes stay recognisable.
+          </p>
+          <p class="small">Hover a white seam to reveal its handle, then drag.</p>
+        </div>
+      </div>
+    </header>
+    <div class="toolbar">
+      <div class="tools">
+        <label
+          >Layout
+          <select id="layout"></select
+        ></label>
+        <label
+          >Photos <input id="count" type="range" min="5" max="10" value="7" /><output
+            id="count-value"
+            >7</output
+          ></label
+        >
+        <label
+          >Format
+          <select id="format">
+            <option value="0.5625">Portrait · 9:16</option>
+            <option value="1">Square · 1:1</option>
+            <option value="1.7777777777777777">Landscape · 16:9</option>
+          </select></label
+        >
+        <button id="undo" disabled>Undo</button><button id="reset" disabled>Reset</button>
+        <div class="views"><button id="diagram" aria-pressed="false">Frame diagram</button></div>
+      </div>
+    </div>
+    <main class="adjust-main">
+      <div class="workbench"><div id="board"></div></div>
+      <aside>
+        <p class="eyebrow" id="family"></p>
+        <h2 id="principle"></h2>
+        <p id="status" role="status" aria-live="polite"></p>
+        <div id="areas" aria-label="Photo areas"></div>
+        <div class="legend"><span></span> Changes in this adjustment</div>
+        <p class="small">
+          Use arrow keys on a focused handle. Shift makes smaller adjustments. Escape cancels a
+          drag.
+        </p>
+        <p class="small">
+          Photos keep their proportions and their centre anchor. Extra zoom is added only if the new
+          frame needs it.
+        </p>
+      </aside>
+    </main>
+    <script src="layouts.js"></script>
+    <script src="structured-dividers.js"></script>
+    <script src="adjust-v3.js"></script>
+  </body>
+</html>

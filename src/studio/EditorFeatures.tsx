@@ -1,5 +1,6 @@
 import { ImageFitPresets } from './ImageFitPresets';
 import { ImageFilterPresets } from './ImageFilterPresets';
+import { Slider } from './ui/Slider';
 // Canvas formatting and layer controls.
 import { errorMessage } from './errors';
 import { appearanceValue, type AppearanceField } from '../vision/appearance/controls';
@@ -7,14 +8,21 @@ import { capabilities } from '../vision/appearance/capabilities';
 import { Button, IconButton } from './ui/Button';
 import { ColorPicker } from './ColorPicker';
 import { svgColors, svgColorValue } from '../vision/svgColors';
-import { useEffect, useState, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useState, useRef, type ReactNode } from 'react';
 import type { EditorAdapter } from '../vision/contracts';
 import type { BoardItem } from '../vision/document';
-import { canonicalFontId, editorFonts } from '../vision/fonts';
-import { curatedPackProvider } from '../assets/curatedPack';
-import type { GratitudeAsset } from '../assets/contracts';
+import { canonicalFontId } from '../vision/fonts';
+import { FontPicker } from './FontPicker';
 import {
   BringFrontIcon,
+  AlignIcon,
+  FitIcon,
+  AlignLeftIcon,
+  AlignCenterHIcon,
+  AlignRightIcon,
+  AlignTopIcon,
+  AlignMiddleIcon,
+  AlignBottomIcon,
   CloseIcon,
   CropIcon,
   DropletIcon,
@@ -32,10 +40,12 @@ import {
 
 export type EditorPanel = 'style' | 'layers' | null;
 
-/** A disclosure only opens when clicked or activated with the keyboard. */
+/** Secondary tools stay available without competing with the primary controls. */
 function Sec({
   title,
   children,
+  open = false,
+  icon,
 }: {
   title: string;
   children: ReactNode;
@@ -43,10 +53,15 @@ function Sec({
   icon?: ReactNode;
 }) {
   return (
-    <section className="vs-properties-section" aria-label={title}>
-      <h3>{title === 'Object bounds' ? 'Size' : title === 'Appearance' ? 'Style' : title}</h3>
+    <details className="vs-properties-section" open={open}>
+      <summary>
+        <span className="object-inspector-section-title">
+          {['Object bounds', 'Alignment', 'Position & rotation'].includes(title) && icon}
+          {title === 'Object bounds' ? 'Size' : title}
+        </span>
+      </summary>
       <div className="vs-properties-section__body">{children}</div>
-    </section>
+    </details>
   );
 }
 function BoundsInput({
@@ -232,8 +247,9 @@ export function EditorFeatures({
   inline?: boolean;
   setPanel: (panel: EditorPanel) => void;
 }) {
-  const [assets, setAssets] = useState<GratitudeAsset[]>([]),
-    [error, setError] = useState('');
+  const [error, setError] = useState('');
+  const [inspectorPage, setInspectorPage] = useState<'edit' | 'layout'>('edit');
+  const inspectorId = useId();
   const runMedia = async (action: () => Promise<void>) => {
     setError('');
     try {
@@ -243,19 +259,6 @@ export function EditorFeatures({
     }
   };
   const item = adapter.history.document.items.find((item) => adapter.selectedIds.includes(item.id));
-  const boardMedia = [
-    ...new Map(
-      [
-        ...assets,
-        ...adapter.history.document.items.flatMap((item) =>
-          [item.asset, item.contentAsset].filter(
-            (asset): asset is GratitudeAsset =>
-              !!asset && (asset.provider === 'generated' || asset.provider === 'upload'),
-          ),
-        ),
-      ].map((asset) => [asset.id, asset]),
-    ).values(),
-  ];
   const patch = (patch: Partial<BoardItem>) =>
     adapter.patchItems(adapter.selectedIds.map((id) => ({ id, patch })));
   const crop = adapter.cropDraft?.id === item?.id ? adapter.cropDraft?.crop : null;
@@ -275,32 +278,24 @@ export function EditorFeatures({
       /* unrelated drop */
     }
   };
-  useEffect(() => {
-    if (panel !== 'style') return;
-    let cancelled = false;
-    void curatedPackProvider
-      .search({ limit: 250 }, adapter.ownerWindow)
-      .then((result) => {
-        if (!cancelled) setAssets(result.items);
-      })
-      .catch((error) => {
-        if (!cancelled) setError(errorMessage(error));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [adapter, panel]);
-
   const selected = adapter.history.document.items.filter((item) =>
     adapter.selectedIds.includes(item.id),
   );
+  const allText = selected.every((entry) => entry.kind === 'text');
+  const allAssets = selected.every((entry) => entry.kind === 'asset');
+  const allDrawings = selected.every((entry) => entry.kind === 'drawing');
+  const sharedFill = selected.every((entry) => entry.kind !== 'asset' && capabilities(entry)?.fill);
+  const locked = selected.some((entry) => entry.locked);
+  const sharedLayout = selected.some((entry) => entry.collageLayout);
   const selectionTitle =
     selected.length > 1
       ? `${selected.length} items`
       : item?.kind === 'text'
         ? 'Text'
         : item?.kind === 'asset'
-          ? 'Media'
+          ? item.asset?.provider === 'curated-v1'
+            ? 'Artwork'
+            : 'Photo'
           : item?.kind === 'shape'
             ? 'Shape'
             : item?.kind === 'drawing'
@@ -399,8 +394,8 @@ export function EditorFeatures({
           step={Math.max(1, step * scale)}
           placeholder={mixed(key) ? 'Mixed' : undefined}
           disabled={
-            ['rotation', 'width', 'height'].includes(key) &&
-            selected.some((entry) => entry.locked || entry.connector)
+            ['rotation', 'width', 'height', 'x', 'y'].includes(key) &&
+            (sharedLayout || selected.some((entry) => entry.locked || entry.connector))
           }
           onCommit={(next) => set(key, next / scale)}
           onCancel={() => adapter.cancelGesture()}
@@ -519,68 +514,90 @@ export function EditorFeatures({
   return (
     <div
       role="group"
-      className={`vs-inspector${inline ? ' vs-inspector--inline' : ''}${panel ? '' : ' is-collapsed'}`}
+      className={`vs-inspector object-inspector${inline ? ' vs-inspector--inline' : ''}${panel ? '' : ' is-collapsed'}`}
       aria-label="Object inspector"
       hidden={!panel}
     >
-      <div className="vs-inspector__tabs">
-        <div className="vs-segmented" role="toolbar" aria-label="Editor panels">
-          {(['style', 'layers'] as const).map((id) => (
-            <Button
-              key={id}
-              data-tip={id === 'style' ? 'Style the selected object' : 'Arrange layers'}
-              aria-pressed={(panel ?? 'style') === id}
-              className={(panel ?? 'style') === id ? 'is-active' : ''}
-              onClick={() => setPanel(id)}
-            >
-              {id === 'style' ? <SlidersIcon /> : <LayersIcon />}
-              {id[0].toUpperCase() + id.slice(1)}
-            </Button>
-          ))}
+      <header className="object-inspector-header">
+        <div>
+          <h2>{panel === 'layers' ? 'Layers' : selectionTitle}</h2>
+          <p>{selectionMeta}</p>
         </div>
-      </div>
-
-      <div className="vs-inspector__body">
-        <div className="vs-insp-head">
-          <div>
-            <span className="vs-eyebrow">
-              {(panel ?? 'style') === 'style' ? 'Properties' : 'Board'}
-            </span>
-            <h3>{(panel ?? 'style') === 'style' ? selectionTitle : 'Layers'}</h3>
-            <p>
-              {(panel ?? 'style') === 'style'
-                ? selectionMeta
-                : 'Organize what is in front, behind, grouped or locked.'}
-            </p>
-          </div>
-          <IconButton
-            className="vs-icon-btn"
-            data-tip="Close panel"
-            aria-label="Close editor panel"
-            onClick={() => setPanel(null)}
+        <IconButton aria-label="Close editor panel" onClick={() => setPanel(null)}>
+          <CloseIcon />
+        </IconButton>
+      </header>
+      <div className="object-inspector-tabs" role="tablist" aria-label="Object tools">
+        {(['edit', 'layout', 'layers'] as const).map((id, index) => (
+          <Button
+            key={id}
+            role="tab"
+            id={`${inspectorId}-${id}`}
+            aria-controls={`${inspectorId}-panel`}
+            aria-selected={
+              id === 'layers' ? panel === 'layers' : panel === 'style' && inspectorPage === id
+            }
+            tabIndex={
+              (id === 'layers' ? panel === 'layers' : panel === 'style' && inspectorPage === id)
+                ? 0
+                : -1
+            }
+            onClick={() => {
+              setPanel(id === 'layers' ? 'layers' : 'style');
+              if (id !== 'layers') setInspectorPage(id);
+            }}
+            onKeyDown={(event) => {
+              if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+              event.preventDefault();
+              const tabs = Array.from(
+                event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>(
+                  '[role="tab"]',
+                ),
+              );
+              const next =
+                event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? 2
+                    : (index + (event.key === 'ArrowRight' ? 1 : 2)) % 3;
+              tabs[next].click();
+              tabs[next].focus();
+            }}
           >
-            <CloseIcon />
-          </IconButton>
-        </div>
-
+            {id === 'edit' ? 'Edit' : id === 'layout' ? 'Layout' : 'Layers'}
+          </Button>
+        ))}
+      </div>
+      <div
+        className="vs-inspector__body object-inspector-body"
+        id={`${inspectorId}-panel`}
+        role="tabpanel"
+        aria-labelledby={`${inspectorId}-${panel === 'layers' ? 'layers' : inspectorPage}`}
+      >
         {error && (
           <p className="vs-alert vs-alert--error" role="alert">
             {error}
           </p>
         )}
 
-        {panel === 'style' && (
-          <p
-            className={`vs-style-tip${selected.some((entry) => entry.locked) ? ' vs-style-locked' : ''}`}
-          >
-            {selected.some((entry) => entry.locked)
-              ? 'One or more selected objects are locked. Unlock them before editing.'
-              : `Edit individual properties below. Changes apply to ${selected.length} selected ${selected.length === 1 ? 'object' : 'objects'}.`}
-          </p>
+        {panel === 'style' && locked && (
+          <div className="object-inspector-notice" role="status">
+            Unlock the selection to edit its properties.
+            <Button
+              size="sm"
+              onClick={() =>
+                adapter.patchItems(
+                  selected.map((entry) => ({ id: entry.id, patch: { locked: false } })),
+                )
+              }
+            >
+              Unlock selection
+            </Button>
+          </div>
         )}
         {(panel ?? 'style') === 'layers' && (
           <>
-            <Sec title="Layer stack" open={selected.length > 0} icon={<LayersIcon />}>
+            <Sec title="Layer stack" open icon={<LayersIcon />}>
               <p
                 style={{
                   margin: 0,
@@ -588,8 +605,7 @@ export function EditorFeatures({
                   color: 'var(--gs-text-secondary)',
                 }}
               >
-                Top layers appear first. Expand a group to edit its members. Drag a member or group
-                to reorder among its siblings.
+                Drag layers to reorder.
               </p>
               <div className="vs-layers">{groups([])}</div>
               <div
@@ -605,7 +621,7 @@ export function EditorFeatures({
                 Background
               </div>
             </Sec>
-            <Sec title="Arrange" icon={<BringFrontIcon />}>
+            <Sec title="Arrange" open icon={<BringFrontIcon />}>
               <div className="shape-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
                 {(['forward', 'backward', 'front', 'back'] as const).map((position) => (
                   <Button
@@ -640,21 +656,49 @@ export function EditorFeatures({
               <p>Choose an item on the canvas to edit it.</p>
             </div>
           ) : (
-            <>
-              {!item.connector && (
-                <Sec title="Object bounds" icon={<SlidersIcon />}>
-                  <p>
-                    Resize the frame without scaling the content. Smaller bounds can clip content.
-                  </p>
+            <fieldset className="object-inspector-fields" disabled={locked}>
+              {inspectorPage === 'layout' && (
+                <Sec title="Alignment" open icon={<AlignIcon />}>
+                  {' '}
+                  <div
+                    className="object-inspector-alignment"
+                    role="group"
+                    aria-label="Align selection"
+                  >
+                    {(
+                      [
+                        ['left', 'Left', AlignLeftIcon],
+                        ['center', 'Horizontal center', AlignCenterHIcon],
+                        ['right', 'Right', AlignRightIcon],
+                        ['top', 'Top', AlignTopIcon],
+                        ['middle', 'Vertical center', AlignMiddleIcon],
+                        ['bottom', 'Bottom', AlignBottomIcon],
+                      ] as const
+                    ).map(([alignment, label, Icon]) => (
+                      <Button
+                        key={alignment}
+                        disabled={sharedLayout || locked}
+                        aria-label={`Align ${alignment}`}
+                        data-tip={label}
+                        onClick={() => adapter.alignSelection(alignment)}
+                      >
+                        <Icon />
+                      </Button>
+                    ))}
+                  </div>
+                </Sec>
+              )}
+              {inspectorPage === 'layout' && !item.connector && (
+                <Sec title="Object bounds" open icon={<FitIcon />}>
                   <div className="vs-row-2">
                     {(['width', 'height'] as const).map((key) => (
                       <label className="vs-field" key={key}>
-                        <span>Bounds {key}</span>
+                        <span>{key === 'width' ? 'Width' : 'Height'}</span>
                         <BoundsInput
                           key={item.id + key}
                           label={`Bounds ${key}`}
                           onCancel={() => adapter.cancelGesture()}
-                          disabled={!!item.locked || selected.length !== 1}
+                          disabled={!!item.locked || sharedLayout || selected.length !== 1}
                           value={item[key]}
                           onCommit={(value) =>
                             adapter.resizeObjectBounds(
@@ -671,401 +715,263 @@ export function EditorFeatures({
                     variant="secondary"
                     disabled={
                       item.locked ||
+                      sharedLayout ||
                       selected.length !== 1 ||
                       (item.kind !== 'text' && !item.contentSize)
                     }
                     onClick={() => adapter.fitObjectBounds(item.id)}
                   >
-                    Fit bounds to content
+                    Fit to content
                   </Button>
                 </Sec>
               )}
-              {item.kind === 'text' && (
-                <Sec title="Text">
-                  <label className="vs-field">
-                    <span>Content</span>
-                    <textarea
-                      className="vs-textarea"
-                      aria-label="Styled text"
-                      value={item.text || ''}
-                      onChange={(event) => patch({ text: event.target.value })}
-                    />
-                  </label>
+              {inspectorPage === 'edit' && allText && item.kind === 'text' && (
+                <Sec title="Text" open>
+                  {selected.length === 1 && (
+                    <label className="vs-field">
+                      <span>Content</span>
+                      <textarea
+                        className="vs-textarea"
+                        aria-label="Styled text"
+                        value={item.text || ''}
+                        onChange={(event) => patch({ text: event.target.value })}
+                      />
+                    </label>
+                  )}
                   <label className="vs-field">
                     <span>Font</span>
-                    <select
-                      className="vs-select"
-                      aria-label="Font"
+                    <FontPicker
                       value={canonicalFontId(item.fontFamily)}
-                      onChange={(event) =>
-                        patch({ fontFamily: event.target.value as BoardItem['fontFamily'] })
-                      }
-                    >
-                      {Object.entries(editorFonts).map(([id, name]) => (
-                        <option value={id} key={id}>
-                          {name}
-                        </option>
-                      ))}
-                    </select>
+                      disabled={locked}
+                      onChange={(fontFamily) => patch({ fontFamily })}
+                    />
                   </label>
                   {number('Text size', 'fontSize', 8, 240)}
                 </Sec>
               )}
-              {item.kind === 'asset' && item.asset?.provider !== 'curated-v1' && (
-                <Sec title="Image" open icon={<ImageIcon />}>
-                  <label className="vs-field">
-                    <span>Replace media</span>
-                    <select
-                      className="vs-select"
-                      aria-label="Replace media"
-                      value={item.asset?.id || ''}
-                      onChange={(event) =>
-                        void runMedia(async () => {
-                          await adapter.replaceAsset(event.target.value);
-                        })
-                      }
-                    >
-                      {boardMedia.map((asset) => (
-                        <option key={asset.id} value={asset.id}>
-                          {asset.title}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="vs-field">
-                    <span>Shape frame</span>
-                    <select
-                      className="vs-select"
-                      aria-label="Shape frame"
-                      value={item.frameShape || ''}
-                      disabled={!!item.asset?.frameSlot}
-                      onChange={(event) =>
-                        patch({
-                          frameShape: (event.target.value || undefined) as BoardItem['frameShape'],
-                        })
-                      }
-                    >
-                      <option value="">Rectangle</option>
-                      {['circle', 'heart', 'triangle', 'hexagon', 'star', 'cloud'].map((shape) => (
-                        <option key={shape}>{shape}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <Sec title="Fit & crop" icon={<CropIcon />}>
-                    <ImageFitPresets adapter={adapter} item={item} />
-                    {!crop ? (
-                      <Button
-                        variant="secondary"
-                        style={{ justifyContent: 'center' }}
-                        onClick={() => adapter.startImageCrop()}
+              {inspectorPage === 'edit' &&
+                allAssets &&
+                selected.length === 1 &&
+                item.kind === 'asset' &&
+                item.asset?.provider !== 'curated-v1' && (
+                  <Sec title="Image" open icon={<ImageIcon />}>
+                    <label className="vs-field">
+                      <span>Frame shape</span>
+                      <select
+                        className="vs-select"
+                        aria-label="Shape frame"
+                        value={item.frameShape || ''}
+                        disabled={!!item.asset?.frameSlot || sharedLayout}
+                        onChange={(event) =>
+                          patch({
+                            frameShape: (event.target.value ||
+                              undefined) as BoardItem['frameShape'],
+                          })
+                        }
                       >
-                        <CropIcon /> Edit crop
-                      </Button>
-                    ) : (
+                        <option value="">Rectangle</option>
+                        {['circle', 'heart', 'triangle', 'hexagon', 'star', 'cloud'].map(
+                          (shape) => (
+                            <option key={shape}>{shape}</option>
+                          ),
+                        )}
+                      </select>
+                    </label>
+
+                    <Sec title="Fit & crop" open icon={<CropIcon />}>
+                      <ImageFitPresets adapter={adapter} item={item} />
+                      {!crop ? (
+                        <Button
+                          variant="secondary"
+                          style={{ justifyContent: 'center' }}
+                          onClick={() => adapter.startImageCrop()}
+                        >
+                          <CropIcon /> Edit crop
+                        </Button>
+                      ) : (
+                        <>
+                          <p className="ai-tool-help">
+                            {adapter.cropDraft?.base
+                              ? 'Zoom and drag the photo inside its frame.'
+                              : 'Drag the crop edges to choose the area. Drag inside to reposition.'}
+                          </p>
+                          <CropActions
+                            adapter={adapter}
+                            onCancel={() => adapter.cancelCrop()}
+                            onApply={() => adapter.applyCrop()}
+                          />
+                        </>
+                      )}
+                      {item.crop && (
+                        <Button
+                          variant="secondary"
+                          style={{ justifyContent: 'center' }}
+                          onClick={() => patch({ crop: undefined })}
+                        >
+                          Reset crop
+                        </Button>
+                      )}
+                    </Sec>
+
+                    <Sec title="Filters" open icon={<SlidersIcon />}>
+                      {' '}
+                      <ImageFilterPresets
+                        image={adapter.images.get(
+                          item.rendition || (item.contentAsset || item.asset)?.assetUrl || '',
+                        )}
+                        value={item.filter}
+                        onChange={patch}
+                      />
+                    </Sec>
+                    {item.asset?.editable.colors &&
+                      item.asset.assetUrl.startsWith('data:image/svg+xml,') && (
+                        <Sec title="Graphic colors" icon={<DropletIcon />}>
+                          {svgColors(item.asset.assetUrl).map((from) => (
+                            <div className="vs-field" key={from}>
+                              <span>
+                                Replace <code>{from}</code>
+                              </span>
+                              <ColorPicker
+                                label={`Replace color ${from}`}
+                                value={item.colorOverrides?.[from] || svgColorValue(from)}
+                                onChange={(value) =>
+                                  void runMedia(() => adapter.recolorAsset(from, value))
+                                }
+                              />
+                            </div>
+                          ))}
+                        </Sec>
+                      )}
+                  </Sec>
+                )}{' '}
+              {inspectorPage === 'edit' &&
+                sharedFill &&
+                item.kind !== 'asset' &&
+                capabilities(item)?.fill && (
+                  <Sec title={allText ? 'Color' : 'Fill'} open icon={<DropletIcon />}>
+                    {color(
+                      allText
+                        ? 'Text color'
+                        : selected.length === 1
+                          ? 'Shape fill color'
+                          : 'Fill color',
+                      'fill.color',
+                      '#b48ce3',
+                    )}
+                    {item.kind === 'shape' && (
                       <>
-                        <p className="ai-tool-help">
-                          Drag the image's crop edges or corners to choose the area. Drag inside the
-                          boundary to move it.
-                        </p>
-                        <CropActions
-                          onCancel={() => adapter.cancelCrop()}
-                          onApply={() => adapter.applyCrop()}
-                        />
+                        <label className="vs-check">
+                          <input
+                            type="checkbox"
+                            checked={!!read(item, 'fill.disabled')}
+                            onChange={(event) => set('fill.disabled', event.target.checked)}
+                          />
+                          No fill (outline only)
+                        </label>
                       </>
                     )}
-                    <Button
-                      variant="secondary"
-                      style={{ justifyContent: 'center' }}
-                      onClick={() => patch({ crop: undefined })}
-                    >
-                      Reset crop
+                  </Sec>
+                )}
+              {inspectorPage === 'edit' && allDrawings && item.kind === 'drawing' && (
+                <Sec title="Stroke" open icon={<PenIcon />}>
+                  {number('Pen width', 'stroke.width', 1, 50)}
+                  {color('Stroke color', 'stroke.color', '#573575')}
+                </Sec>
+              )}
+              {inspectorPage === 'edit' && (
+                <>
+                  {selected.some(
+                    (entry) => read(entry, 'effect') && read(entry, 'effect') !== 'none',
+                  ) && (
+                    <Button size="sm" onClick={() => set('effect', 'none')}>
+                      Clear saved effect
                     </Button>
-                  </Sec>
-
-                  <Sec title="Adjustments" open icon={<SlidersIcon />}>
-                    <div className="vs-row-2">
-                      {number('Brightness (%)', 'brightness', -1, 1, 0.05)}
-                      {number('Contrast', 'contrast', -100, 100)}
-                      {number('Saturation (%)', 'saturation', -2, 2, 0.1)}
-                      {number('Blur', 'blur', 0, 30)}
-                      {number('Temperature', 'warmth', -100, 100)}
-                      {number('Tint', 'tint', -100, 100)}
+                  )}
+                  {selected.some((entry) => Number(read(entry, 'silhouette.width') || 0) > 0) && (
+                    <Button size="sm" onClick={() => set('silhouette.width', 0)}>
+                      Remove sticker edge
+                    </Button>
+                  )}
+                  {allText && Number(read(item, 'stroke.width') || 0) > 0 && (
+                    <Button size="sm" onClick={() => set('stroke.width', 0)}>
+                      Remove text outline
+                    </Button>
+                  )}
+                  <Sec title="Opacity" open>
+                    <div className="object-inspector-range">
+                      <Slider
+                        aria-label="Opacity"
+                        aria-valuetext={
+                          mixed('opacity')
+                            ? 'Mixed'
+                            : `${Math.round(Number(read(item, 'opacity') ?? 1) * 100)}%`
+                        }
+                        min={0}
+                        max={100}
+                        value={Math.round(Number(read(item, 'opacity') ?? 1) * 100)}
+                        onPointerDown={() => adapter.beginGesture()}
+                        onPointerUp={() => adapter.endGesture()}
+                        onPointerCancel={() => adapter.endGesture()}
+                        onKeyDown={(event) => {
+                          if (
+                            [
+                              'ArrowLeft',
+                              'ArrowRight',
+                              'ArrowUp',
+                              'ArrowDown',
+                              'Home',
+                              'End',
+                            ].includes(event.key) &&
+                            !adapter.history.gestureActive
+                          )
+                            adapter.beginGesture();
+                        }}
+                        onKeyUp={() => adapter.endGesture()}
+                        onBlur={() => adapter.endGesture()}
+                        onChange={(event) => set('opacity', Number(event.target.value) / 100)}
+                      />
+                      {number('Opacity (%)', 'opacity', 0, 1)}
                     </div>
-                    <ImageFilterPresets
-                      image={adapter.images.get(
-                        item.rendition || (item.contentAsset || item.asset)?.assetUrl || '',
-                      )}
-                      value={item.filter}
-                      onChange={patch}
-                    />
                   </Sec>
-
-                  {item.asset?.editable.colors &&
-                    item.asset.assetUrl.startsWith('data:image/svg+xml,') && (
-                      <Sec title="Graphic colors" icon={<DropletIcon />}>
-                        {svgColors(item.asset.assetUrl).map((from) => (
-                          <div className="vs-field" key={from}>
-                            <span>
-                              Replace <code>{from}</code>
-                            </span>
-                            <ColorPicker
-                              label={`Replace color ${from}`}
-                              value={item.colorOverrides?.[from] || svgColorValue(from)}
-                              onChange={(value) =>
-                                void runMedia(() => adapter.recolorAsset(from, value))
-                              }
-                            />
-                          </div>
-                        ))}
-                      </Sec>
-                    )}
-
-                  {item.asset?.frameSlot && (
-                    <Sec title="Frame content" icon={<ImageIcon />}>
-                      <label className="vs-field">
-                        <span>Content</span>
-                        <select
-                          className="vs-select"
-                          aria-label="Frame content"
-                          value={item.contentAsset?.id || ''}
-                          onChange={(event) => {
-                            if (event.target.value)
-                              void adapter
-                                .attachFrameContent(event.target.value)
-                                .catch((error) => setError(errorMessage(error)));
-                          }}
-                        >
-                          <option value="">Choose image or graphic</option>
-                          {boardMedia
-                            .filter((asset) => !asset.frameSlot)
-                            .map((asset) => (
-                              <option value={asset.id} key={asset.id}>
-                                {asset.title}
-                              </option>
+                  {!allDrawings && !allText && (
+                    <Sec
+                      title={
+                        item.kind === 'shape' && item.appearance?.kind === 'open-shape'
+                          ? 'Stroke'
+                          : 'Border'
+                      }
+                    >
+                      {number(
+                        item.appearance?.kind === 'open-shape' ? 'Stroke width' : 'Border width',
+                        'stroke.width',
+                        0,
+                        30,
+                      )}
+                      {color(
+                        item.appearance?.kind === 'open-shape' ? 'Stroke color' : 'Border color',
+                        'stroke.color',
+                        '#33272b',
+                      )}
+                      {item.appearance?.kind === 'open-shape' && (
+                        <label className="vs-field">
+                          <span>Line style</span>
+                          <select
+                            className="vs-select"
+                            aria-label="Stroke style"
+                            value={String(read(item, 'stroke.style') || 'solid')}
+                            onChange={(event) => set('stroke.style', event.target.value)}
+                          >
+                            {['solid', 'dashed', 'dotted'].map((id) => (
+                              <option key={id}>{id}</option>
                             ))}
-                        </select>
-                      </label>
-                      <Button
-                        variant="secondary"
-                        style={{ justifyContent: 'center' }}
-                        disabled={!item.contentAsset}
-                        onClick={() => adapter.detachFrameContent()}
-                      >
-                        Detach content
-                      </Button>
+                          </select>
+                        </label>
+                      )}
                     </Sec>
                   )}
-                </Sec>
-              )}{' '}
-              {item.kind !== 'asset' && capabilities(item)?.fill && (
-                <Sec
-                  title={item.kind === 'text' ? 'Color' : 'Shape fill & gradient'}
-                  open
-                  icon={<DropletIcon />}
-                >
-                  {color(
-                    item.kind === 'text' ? 'Text color' : 'Shape fill color',
-                    'fill.color',
-                    '#b48ce3',
-                  )}
-                  {!read(item, 'fill.endColor') ? (
-                    <Button
-                      variant="secondary"
-                      style={{ justifyContent: 'center' }}
-                      disabled={item.locked}
-                      onClick={() => set('fill.endColor', '#fff3bd')}
-                    >
-                      Add gradient
-                    </Button>
-                  ) : (
-                    <>
-                      <div className="vs-row-2">
-                        <div className="vs-field">
-                          <span>Gradient</span>
-                          <ColorPicker
-                            label="Item gradient"
-                            value={String(read(item, 'fill.endColor'))}
-                            onChange={(value) => set('fill.endColor', value)}
-                          />
-                        </div>
-                        <label className="vs-field">
-                          <span>Gradient type</span>
-                          <select
-                            className="vs-select"
-                            aria-label="Item gradient type"
-                            disabled={item.locked}
-                            value={String(read(item, 'fill.kind') || 'linear')}
-                            onChange={(event) => set('fill.kind', event.target.value)}
-                          >
-                            <option>linear</option>
-                            <option>radial</option>
-                          </select>
-                        </label>
-                      </div>
-                      <Button
-                        variant="secondary"
-                        style={{ justifyContent: 'center' }}
-                        disabled={item.locked}
-                        onClick={() => set('fill.endColor', undefined)}
-                      >
-                        Remove gradient
-                      </Button>
-                    </>
-                  )}
-                  {item.kind === 'shape' && (
-                    <>
-                      <label className="vs-check">
-                        <input
-                          type="checkbox"
-                          checked={!!read(item, 'fill.disabled')}
-                          onChange={(event) => set('fill.disabled', event.target.checked)}
-                        />
-                        No fill (outline only)
-                      </label>
-                      {['rectangle', 'circle', 'triangle', 'heart', 'cloud', 'star'].includes(
-                        item.shape || '',
-                      ) && (
-                        <label className="vs-field">
-                          <span>Convert shape to frame</span>
-                          <select
-                            className="vs-select"
-                            aria-label="Convert shape to frame"
-                            value={''}
-                            onChange={(event) => {
-                              if (event.target.value)
-                                void runMedia(async () => {
-                                  await adapter.attachFrameContent(event.target.value);
-                                });
-                            }}
-                          >
-                            <option value={''}>Choose image or graphic</option>
-                            {boardMedia
-                              .filter((asset) => !asset.frameSlot)
-                              .map((asset) => (
-                                <option key={asset.id} value={asset.id}>
-                                  {asset.title}
-                                </option>
-                              ))}
-                          </select>
-                        </label>
-                      )}
-                    </>
-                  )}
-                </Sec>
+                </>
               )}
-              {item.kind === 'drawing' && (
-                <Sec title="Pen" icon={<PenIcon />}>
-                  {number('Pen width', 'stroke.width', 1, 50)}
-                </Sec>
-              )}
-              <Sec title="Appearance" open icon={<SlidersIcon />}>
-                <label className="vs-check">
-                  <input
-                    type="checkbox"
-                    aria-label="Sticker outline"
-                    checked={!!read(item, 'silhouette.width')}
-                    onChange={(event) => set('silhouette.width', event.target.checked ? 8 : 0)}
-                  />
-                  Sticker outline
-                </label>
-                {!!read(item, 'silhouette.width') && (
-                  <>
-                    {number('Outline thickness', 'silhouette.width', 1, 30)}
-                    {color('Outline color', 'silhouette.color', '#ffffff')}
-                  </>
-                )}
-                {item.kind === 'drawing' && color('Stroke color', 'stroke.color', '#573575')}
-                {number('Transparency (%)', 'opacity', 0, 1)}
-                <div className="vs-row-2">
-                  {(item.kind === 'asset' ||
-                    (item.kind === 'shape' && item.shape === 'rectangle') ||
-                    (item.kind === 'text' && !!read(item, 'background'))) &&
-                    number('Corner radius', 'radius', 0, 150)}
-                  {item.kind !== 'drawing' &&
-                    number(
-                      item.kind === 'text'
-                        ? 'Text outline width'
-                        : item.kind === 'shape' && item.appearance.kind === 'open-shape'
-                          ? 'Stroke width'
-                          : 'Border width',
-                      'stroke.width',
-                      0,
-                      30,
-                    )}
-                </div>
-                {item.kind !== 'drawing' &&
-                  color(
-                    item.kind === 'text'
-                      ? 'Text outline color'
-                      : item.kind === 'shape' && item.appearance.kind === 'open-shape'
-                        ? 'Stroke color'
-                        : 'Border color',
-                    'stroke.color',
-                    '#33272b',
-                  )}
-                <div className="vs-row-2">
-                  <label className="vs-field">
-                    <span>Shadow preset</span>
-                    <select
-                      className="vs-select"
-                      aria-label="Shadow preset"
-                      disabled={item.kind !== 'asset' && !capabilities(item)?.shadow}
-                      value={String(read(item, 'shadow.preset') || 'none')}
-                      onChange={(event) => set('shadow.preset', event.target.value)}
-                    >
-                      {['none', 'soft', 'medium', 'hard', 'custom'].map((id) => (
-                        <option key={id} disabled={id === 'custom'}>
-                          {id}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="vs-field">
-                    <span>Stroke style</span>
-                    <select
-                      className="vs-select"
-                      aria-label="Stroke style"
-                      value={String(read(item, 'stroke.style') || 'solid')}
-                      onChange={(event) => set('stroke.style', event.target.value)}
-                    >
-                      {['solid', 'dashed', 'dotted'].map((id) => (
-                        <option key={id}>{id}</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                {(item.kind === 'asset' || capabilities(item)?.shadow) && (
-                  <Sec title="Shadow details" open={false}>
-                    <div className="vs-row-2">
-                      {color('Shadow color', 'shadow.color', '#000000')}
-                      {number('Shadow transparency (%)', 'shadow.opacity', 0, 1, 0.05)}
-                    </div>
-                    <div className="vs-row-3">
-                      {number('Shadow blur', 'shadow.blur', 0, 100)}
-                      {number('Shadow X', 'shadow.offsetX', -100, 100)}
-                      {number('Shadow Y', 'shadow.offsetY', -100, 100)}
-                    </div>
-                  </Sec>
-                )}
-                <label className="vs-field">
-                  <span>Effect</span>
-                  <select
-                    className="vs-select"
-                    aria-label="Effect"
-                    value={String(read(item, 'effect') || 'none')}
-                    onChange={(event) => set('effect', event.target.value)}
-                  >
-                    {(item.kind !== 'asset'
-                      ? capabilities(item)!.effects
-                      : ['none', 'glow', 'glitch']
-                    ).map((id) => (
-                      <option key={id}>{id}</option>
-                    ))}
-                  </select>
-                </label>
-              </Sec>
-              {item.connector && (
+              {inspectorPage === 'layout' && item.connector && (
                 <Sec title="Connector" open={false} icon={<SlidersIcon />}>
                   <p
                     style={{
@@ -1085,7 +991,7 @@ export function EditorFeatures({
                   </Button>
                 </Sec>
               )}
-            </>
+            </fieldset>
           ))}
       </div>
     </div>

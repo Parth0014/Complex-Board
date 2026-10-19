@@ -2,11 +2,13 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { VisionPoint } from '../contracts';
 import { CANVAS_DRAG_END, canvasDragPreview } from '../../studio/canvasDrag';
 import { centeredDropPosition, type DropSize } from './dropPlacement';
+type DropTarget = DropSize & VisionPoint & { id: string };
 
 export function useCanvasDropPreview(
   win: Window & typeof globalThis,
   board: DropSize,
   geometry: () => { rect: DOMRect; left: number; top: number; scale: number } | null,
+  resolveTarget?: (point: VisionPoint) => DropTarget | undefined,
 ) {
   const ref = useRef<HTMLDivElement>(null);
   const frame = useRef<number | null>(null);
@@ -14,6 +16,7 @@ export function useCanvasDropPreview(
   const dimensions = useRef<DropSize | null>(null);
   const pending = useRef(false);
   const pendingPoint = useRef<VisionPoint | null>(null);
+  const target = useRef<DropTarget | undefined>(undefined);
   const current = useRef({ board, geometry });
   useEffect(() => {
     current.current = { board, geometry };
@@ -26,6 +29,7 @@ export function useCanvasDropPreview(
     dimensions.current = null;
     pending.current = false;
     pendingPoint.current = null;
+    target.current = undefined;
     if (ref.current) ref.current.hidden = true;
   }, [win]);
 
@@ -46,20 +50,40 @@ export function useCanvasDropPreview(
       world.y <= current.current.board.height;
     node.hidden = !valid;
     if (!valid) return;
-    const size = dimensions.current || { width: 96 / view.scale, height: 96 / view.scale };
-    const position = centeredDropPosition(world, size, current.current.board);
-    node.style.transform = `translate3d(${view.rect.left + view.left + position.x * view.scale}px, ${view.rect.top + view.top + position.y * view.scale}px, 0)`;
+    const size = target.current ||
+      dimensions.current || { width: 96 / view.scale, height: 96 / view.scale };
+    const position = target.current || centeredDropPosition(world, size, current.current.board);
+    const left = view.rect.left + view.left + position.x * view.scale;
+    const top = view.rect.top + view.top + position.y * view.scale;
+    node.style.transform = `translate3d(${left}px, ${top}px, 0)`;
     node.style.width = `${size.width * view.scale}px`;
     node.style.height = `${size.height * view.scale}px`;
+    // Native drag images paint above all DOM layers. Position the hint outside
+    // that image as well as the placement outline, rather than raising z-index.
+    const ghostHeight = canvasDragPreview(win)?.ghost?.height || 96;
+    const above = Math.min(top - 8, point.y - ghostHeight / 2 - 8);
+    const below = above < 32;
+    const labelY = below ? point.y + ghostHeight / 2 + 8 : above;
+    node.style.setProperty(
+      '--drop-label-x',
+      `${Math.max(64, Math.min(win.innerWidth - 64, point.x)) - left}px`,
+    );
+    node.style.setProperty('--drop-label-y', `${labelY - top}px`);
+    node.style.setProperty('--drop-label-shift', below ? '0%' : '-100%');
     node.dataset.pending = String(pending.current);
-    node.dataset.label = pending.current ? 'Adding…' : 'Release to add';
-  }, []);
+    node.dataset.replacing = String(!!target.current);
+    node.dataset.label = pending.current
+      ? 'Adding…'
+      : target.current
+        ? 'Replace photo · Alt to add separately'
+        : 'Release to add';
+  }, [win]);
 
   const schedule = useCallback(() => {
     if (frame.current === null) frame.current = win.requestAnimationFrame(render);
   }, [win, render]);
 
-  const move = (clientX: number, clientY: number) => {
+  const move = (clientX: number, clientY: number, replace = false) => {
     if (pending.current) return false;
     const view = geometry();
     if (!view) return false;
@@ -71,6 +95,7 @@ export function useCanvasDropPreview(
       return false;
     }
     if (!dimensions.current) dimensions.current = canvasDragPreview(win)?.size(board) || null;
+    target.current = replace ? resolveTarget?.({ x, y }) : undefined;
     pointer.current = { x: clientX, y: clientY };
     schedule();
     return true;
@@ -101,6 +126,7 @@ export function useCanvasDropPreview(
     move,
     clear,
     pending,
+    target,
     leave: () => {
       if (!pending.current) clear();
     },

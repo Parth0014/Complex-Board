@@ -1,4 +1,6 @@
+import { ScrapbookPhotoContent } from './ScrapbookPhotoContent';
 import { fitPhotoScale } from '../imageFit';
+import { photoRotationTransform } from '../crop';
 import { ITEM_FILL_DEFAULT, ITEM_INK_DEFAULT, ITEM_WHITE, ITEM_BLACK } from './colors';
 import { appearanceToKonva } from './appearance';
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -10,6 +12,38 @@ import { fontFamily } from '../fonts';
 import { framePaths } from '../frames';
 import { shapeGeometry } from '../shapeGeometry';
 import { RichText } from './RichText';
+function PaperGrain({
+  item,
+  ownerWindow,
+}: {
+  item: BoardItem;
+  ownerWindow: Window & typeof globalThis;
+}) {
+  const [pattern] = useState(() => {
+    const canvas = ownerWindow.document.createElement('canvas');
+    canvas.width = canvas.height = 7;
+    const context = canvas.getContext('2d')!;
+    context.fillStyle = '#0000000d';
+    context.beginPath();
+    context.arc(3.5, 3.5, 1, 0, Math.PI * 2);
+    context.fill();
+    return canvas;
+  });
+  const path = new ownerWindow.Path2D(item.vectorPath!);
+  return (
+    <Group clipFunc={() => [path]}>
+      <Rect
+        width={100}
+        height={100}
+        fillPriority="pattern"
+        fillPatternImage={pattern as unknown as HTMLImageElement}
+        fillPatternScaleX={100 / item.scrapbookPaper!.width}
+        fillPatternScaleY={100 / item.scrapbookPaper!.height}
+        listening={false}
+      />
+    </Group>
+  );
+}
 const glitchFilter = (data: ImageData) => {
   const original = new Uint8ClampedArray(data.data);
   for (let y = 0; y < data.height; y++)
@@ -58,7 +92,11 @@ function Content({
           effect: 'none' as const,
         }
       : adapter.cropDraft?.id === input.id
-        ? { ...input, crop: adapter.cropDraft.crop }
+        ? {
+            ...input,
+            crop: adapter.cropDraft.crop,
+            imageRotation: adapter.cropDraft.imageRotation ?? input.imageRotation,
+          }
         : input;
   const imageRef = useRef<Konva.Image>(null);
   const image = adapter.images.get(
@@ -208,6 +246,21 @@ function Content({
       fillAfterStrokeEnabled: true,
       lineJoin: 'round' as const,
     };
+    if (item.scrapbookEmoji) {
+      const context = adapter.ownerWindow.document.createElement('canvas').getContext('2d')!;
+      context.font = `${item.fontSize}px ${fontFamily(item.fontFamily)}`;
+      const glyphWidth = context.measureText(item.text || '').width;
+      return (
+        <Text
+          {...textProps}
+          x={(item.width - glyphWidth) / 2}
+          width={glyphWidth + 1}
+          height={item.height}
+          verticalAlign="top"
+          lineHeight={1}
+        />
+      );
+    }
     return (
       <Group
         clipWidth={item.curve ? undefined : item.width}
@@ -301,12 +354,16 @@ function Content({
         <Path
           {...common}
           data={item.vectorPath}
+          shadowBlur={((common.shadowBlur || 0) * box.width) / item.width}
+          shadowOffsetX={((common.shadowOffsetX || 0) * box.width) / item.width}
+          shadowOffsetY={((common.shadowOffsetY || 0) * box.height) / item.height}
           fillLinearGradientStartPoint={{ x: box.x, y: box.y }}
           fillLinearGradientEndPoint={{ x: box.x + box.width, y: box.y + box.height }}
           fillRadialGradientStartPoint={{ x: box.x + box.width / 2, y: box.y + box.height / 2 }}
           fillRadialGradientEndPoint={{ x: box.x + box.width / 2, y: box.y + box.height / 2 }}
           fillRadialGradientEndRadius={Math.max(box.width, box.height) / 2}
         />
+        {item.scrapbookPaper && <PaperGrain item={item} ownerWindow={adapter.ownerWindow} />}
       </Group>
     );
   }
@@ -438,10 +495,15 @@ function Content({
       width: crop.width * (image?.naturalWidth || source?.width || 1),
       height: crop.height * (image?.naturalHeight || source?.height || 1),
     },
-    x: (item.width - displayWidth) / 2 + (item.flipX ? displayWidth : 0),
-    y: (item.height - displayHeight) / 2 + (item.flipY ? displayHeight : 0),
-    scaleX: item.flipX ? -1 : 1,
-    scaleY: item.flipY ? -1 : 1,
+    ...photoRotationTransform(
+      item.width,
+      item.height,
+      item.imageRotation,
+      item.flipX,
+      item.flipY,
+      displayWidth,
+      displayHeight,
+    ),
     filters: filtered
       ? [
           Konva.Filters.Brighten,
@@ -460,6 +522,15 @@ function Content({
     warmth: item.warmth || 0,
     tint: item.tint || 0,
   };
+  if (item.scrapbookPhoto)
+    return (
+      <ScrapbookPhotoContent
+        item={item}
+        image={image}
+        imageProps={imageProps}
+        imageRef={imageRef}
+      />
+    );
   const frame = item.asset?.frameSlot && item.asset.slotPath && item.contentAsset;
   const mask = item.frameShape && framePaths[item.frameShape];
   const path = frame
@@ -485,21 +556,11 @@ function Content({
           scaleY={item.height / clipHeight}
           clipFunc={() => [path]}
         >
-          <Image
-            {...imageProps}
-            width={(displayWidth / item.width) * clipWidth}
-            height={(displayHeight / item.height) * clipHeight}
-            x={
-              ((item.width - displayWidth) / 2 / item.width) * clipWidth +
-              (item.flipX ? (displayWidth / item.width) * clipWidth : 0)
-            }
-            y={
-              ((item.height - displayHeight) / 2 / item.height) * clipHeight +
-              (item.flipY ? (displayHeight / item.height) * clipHeight : 0)
-            }
-          />
+          <Group scaleX={clipWidth / item.width} scaleY={clipHeight / item.height}>
+            <Image {...imageProps} />
+          </Group>
         </Group>
-      ) : item.radius ? (
+      ) : item.radius || item.imageRotation ? (
         <Group
           clipFunc={(ctx) => {
             ctx.beginPath();

@@ -3,3 +3,6 @@
 @import './foundations.css';
 @import './primitives.css';
 @import './components.css';
+@import './photo-tools.css';
+@import './sliders.css';
+@import './inspector.css';
