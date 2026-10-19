@@ -27,10 +27,12 @@ export function CanvasIntroduction({
       const bounds = viewport.getBoundingClientRect();
       const parent = host.getBoundingClientRect();
       const scale = Number(viewport.dataset.scale);
+      const canvas =
+        host.querySelector<HTMLElement>('.konvajs-content')?.getBoundingClientRect() || bounds;
       const centerX =
-        bounds.left - parent.left + Number(viewport.dataset.pageLeft) + (width * scale) / 2;
+        canvas.left - parent.left + Number(viewport.dataset.pageLeft) + (width * scale) / 2;
       const centerY =
-        bounds.top - parent.top + Number(viewport.dataset.pageTop) + (height * scale) / 2;
+        canvas.top - parent.top + Number(viewport.dataset.pageTop) + (height * scale) / 2;
       const clamp = (point: number, start: number, end: number, half: number) =>
         Math.max(start + half, Math.min(end - half, point));
       node.style.left = `${clamp(centerX, 12, host.clientWidth - 12, node.offsetWidth / 2)}px`;
@@ -45,8 +47,10 @@ export function CanvasIntroduction({
       attributes: true,
       attributeFilter: ['data-page-left', 'data-page-top', 'data-scale'],
     });
+    viewport.addEventListener('scroll', position, { passive: true });
     position();
     return () => {
+      viewport.removeEventListener('scroll', position);
       resize.disconnect();
       camera.disconnect();
     };

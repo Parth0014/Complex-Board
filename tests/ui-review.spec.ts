@@ -254,7 +254,7 @@ test('canvas introduction follows the board center and stays dismissed after rel
   const centerError = () =>
     prompt.evaluate((node) => {
       const viewport = document.querySelector<HTMLElement>('.gs-artboard')!;
-      const bounds = viewport.getBoundingClientRect();
+      const bounds = document.querySelector('.konvajs-content')!.getBoundingClientRect();
       const box = node.getBoundingClientRect();
       const scale = Number(viewport.dataset.scale);
       return Math.max(
