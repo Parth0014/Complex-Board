@@ -269,7 +269,7 @@
   .gs-quick-popover .gs-tweakpane {
     margin-inline: calc(-1 * var(--gs-space-2));
   }
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
     .gs-appearance-sheet :is(button, select, input) {
       min-height: var(--gs-touch-target);
     }

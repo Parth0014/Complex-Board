@@ -1,5 +1,6 @@
-import { CollageDividerOverlay } from './CollageDividerOverlay';
+﻿import { CollageDividerOverlay } from './CollageDividerOverlay';
 import { Toast } from '../../studio/ui/Toast';
+import { compactScreen } from '../../studio/ui/breakpoints';
 import { requestAI } from '../aiClient';
 import { CropOverlay } from './CropOverlay';
 import { canvasColors } from './colors';
@@ -14,7 +15,7 @@ import type { BoardItem } from '../document';
 import { boundsOf, unionBounds, snapMovement, snapResize, type Bounds } from './geometry';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../../assets/contracts';
 import { curatedPackProvider } from '../../assets/curatedPack';
-import { assetDropSize, centeredDropPosition } from './dropPlacement';
+import { elementDropSize, centeredDropPosition } from './dropPlacement';
 import { useCanvasDropPreview } from './useCanvasDropPreview';
 import {
   CANVAS_CREATION_DRAG_TYPE,
@@ -47,6 +48,7 @@ export function KonvaStage({
   onZoomChange,
   onScaleChange,
   drawMode = 'select',
+  brush,
   snappingContainer,
   onObjectContextMenu,
 }: {
@@ -55,6 +57,7 @@ export function KonvaStage({
   onZoomChange: (zoom: number | null) => void;
   onScaleChange: (percent: number) => void;
   drawMode?: string;
+  brush?: { color: string; width: number; opacity: number };
   snappingContainer?: HTMLDivElement | null;
   onObjectContextMenu?: (x: number, y: number) => void;
 }) {
@@ -97,6 +100,28 @@ export function KonvaStage({
   }, [editing?.id]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [size, setSize] = useState({ width: 800, height: 700 });
+  useLayoutEffect(() => {
+    const layer = stageRef.current?.getLayers()[0];
+    if (!layer) return;
+    // Supersample only the visible artwork surface, never the zoomed board.
+    // Keep existing HiDPI quality while bounding the extra cost on 1x displays.
+    const nativeRatio = adapter.ownerWindow.devicePixelRatio || 1;
+    const ratio = Math.max(
+      nativeRatio,
+      Math.min(2, Math.sqrt(4_000_000 / (size.width * size.height))),
+    );
+    const canvas = layer.getCanvas();
+    if (Math.abs(canvas.getPixelRatio() - ratio) > 0.001) canvas.setPixelRatio(ratio);
+    // Bind Konva's camel-case event directly; React-Konva lowercases prop events.
+    const sharpen = () => canvas.getContext().setAttr('imageSmoothingQuality', 'high');
+    layer.on('beforeDraw.svg-quality', sharpen);
+    sharpen();
+    layer.draw();
+    return () => {
+      layer.off('beforeDraw.svg-quality', sharpen);
+    };
+  }, [adapter, size.width, size.height]);
+  const [cameraScroll, setCameraScroll] = useState({ x: 0, y: 0 });
   const [fitRevision, setFitRevision] = useState(0);
   const drag = useRef<{
     items: BoardItem[];
@@ -120,7 +145,52 @@ export function KonvaStage({
   const altHeld = useRef(false);
   const [keepRatio, setKeepRatio] = useState(true);
   const zoomAnchor = useRef<{ x: number; y: number; viewX: number; viewY: number } | null>(null);
-  const wheelZoom = useRef({ delta: 0, clientX: 0, clientY: 0, frame: 0 });
+  useEffect(() => {
+    let frame = 0;
+    adapter.animateInsertion = (id) => {
+      if (adapter.ownerWindow.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      adapter.ownerWindow.cancelAnimationFrame(frame);
+      frame = adapter.ownerWindow.requestAnimationFrame(() => {
+        const node = stageRef.current?.findOne((candidate: Konva.Node) => candidate.id() === id);
+        if (!node) return;
+        const opacity = node.opacity();
+        const position = node.position();
+        const scale = node.scale();
+        const box = node.getClientRect({ relativeTo: node });
+        const angle = (node.rotation() * Math.PI) / 180;
+        const dx = box.width * scale.x * 0.02,
+          dy = box.height * scale.y * 0.02;
+        node.position({
+          x: position.x + dx * Math.cos(angle) - dy * Math.sin(angle),
+          y: position.y + dx * Math.sin(angle) + dy * Math.cos(angle),
+        });
+        node.scale({ x: scale.x * 0.96, y: scale.y * 0.96 });
+        node.opacity(0);
+        node.to({
+          opacity,
+          x: position.x,
+          y: position.y,
+          scaleX: scale.x,
+          scaleY: scale.y,
+          duration: 0.15,
+        });
+        const outline = stageRef.current?.findOne('Transformer');
+        if (outline) {
+          outline.opacity(0.5);
+          outline.to({ opacity: 1, duration: 0.3 });
+        }
+      });
+    };
+    return () => {
+      adapter.ownerWindow.cancelAnimationFrame(frame);
+      adapter.animateInsertion = undefined;
+    };
+  }, [adapter]);
+  const zoomMode = useRef(zoom);
+  useLayoutEffect(() => {
+    zoomMode.current = zoom;
+  }, [zoom]);
+  const wheelZoom = useRef({ delta: 0, frame: 0 });
   useEffect(
     () => () => {
       if (wheelZoom.current.frame)
@@ -204,24 +274,39 @@ export function KonvaStage({
     zoom ??
     Math.max(
       0.05,
-      Math.min((size.width - 64) / document.width, (size.height - 200) / document.height, 1),
+      Math.min((size.width - 48) / document.width, (size.height - 96) / document.height, 1),
     );
-  // Object movement must never resize the scroll surface or move the board origin.
-  // Grow backing buffers in small buckets instead of reallocating both scene
-  // and hit canvases at every fractional zoom step.
-  // Reserve camera travel on both sides, as we do vertically. Without it, a
-  // fitted board can sit at scrollLeft=0 and pointer zoom asks for a negative
-  // scroll offset, so the browser clamps it and the photo jumps sideways.
-  const stageWidth =
-    Math.ceil((Math.max(size.width, document.width * scale + 96) + 256) / 128) * 128;
+  // Horizontal travel exists only when the board itself exceeds the viewport.
+  const horizontalOverflow = document.width * scale > size.width;
+  const stageWidth = horizontalOverflow ? Math.ceil(document.width * scale + 96) : size.width;
   // Keep room to scroll edge artwork clear of the floating toolbar and footer,
   // even when the whole board already fits in the viewport.
   const verticalScrollSpace = 240;
   const stageHeight =
     Math.ceil((Math.max(size.height, document.height * scale) + verticalScrollSpace * 2) / 128) *
     128;
-  const left = (stageWidth - document.width * scale) / 2;
-  const top = (stageHeight - document.height * scale) / 2;
+  const worldLeft = (stageWidth - document.width * scale) / 2;
+  const worldTop = (stageHeight - document.height * scale) / 2;
+  const left = worldLeft - cameraScroll.x;
+  const top = worldTop - cameraScroll.y;
+  useLayoutEffect(() => {
+    adapter.insertionCenter = () => {
+      let visibleHeight = size.height;
+      const bounds = container.current?.getBoundingClientRect();
+      const sheet = adapter.ownerWindow.matchMedia(compactScreen).matches
+        ? adapter.ownerWindow.document.querySelector('.vs-lib__panel:not(.is-exiting)')
+        : null;
+      if (bounds && sheet) {
+        const sheetTop = sheet.getBoundingClientRect().top;
+        if (sheetTop > bounds.top && sheetTop < bounds.bottom)
+          visibleHeight = sheetTop - bounds.top;
+      }
+      return { x: (size.width / 2 - left) / scale, y: (visibleHeight / 2 - top) / scale };
+    };
+    return () => {
+      adapter.insertionCenter = undefined;
+    };
+  }, [adapter, left, top, scale, size.width, size.height]);
   const dropPreview = useCanvasDropPreview(
     adapter.ownerWindow,
     document,
@@ -244,21 +329,43 @@ export function KonvaStage({
     centeredView.current = viewKey;
     if (anchor && container.current) {
       container.current.scrollTo(
-        left + anchor.x * scale - anchor.viewX,
-        top + anchor.y * scale - anchor.viewY,
+        worldLeft + anchor.x * scale - anchor.viewX,
+        worldTop + anchor.y * scale - anchor.viewY,
       );
       zoomAnchor.current = null;
     } else if (container.current && viewChanged) {
       // Toolbar zoom and workspace resizing keep the board in the viewport center.
       container.current.scrollTo(
-        left + (document.width * scale) / 2 - size.width / 2,
-        top + (document.height * scale) / 2 - size.height / 2,
+        worldLeft + (document.width * scale) / 2 - size.width / 2,
+        worldTop + (document.height * scale) / 2 - size.height / 2,
       );
     }
-  }, [left, top, scale, document.width, document.height, size.width, size.height, fitRevision]);
+    const node = container.current;
+    if (node)
+      setCameraScroll((current) =>
+        current.x === node.scrollLeft && current.y === node.scrollTop
+          ? current
+          : { x: node.scrollLeft, y: node.scrollTop },
+      );
+  }, [
+    worldLeft,
+    worldTop,
+    scale,
+    document.width,
+    document.height,
+    size.width,
+    size.height,
+    fitRevision,
+  ]);
   useLayoutEffect(() => {
-    lastView.current = { left, top, scale, width: size.width, height: size.height };
-  }, [left, top, scale, size.width, size.height]);
+    lastView.current = {
+      left: worldLeft,
+      top: worldTop,
+      scale,
+      width: size.width,
+      height: size.height,
+    };
+  }, [worldLeft, worldTop, scale, size.width, size.height]);
   const zoomSnapshot = useRef<Konva.Group | null>(null);
   const zoomIdle = useRef(0);
   const releaseZoomSnapshot = useCallback(() => {
@@ -297,37 +404,24 @@ export function KonvaStage({
     adapter.ownerWindow.clearTimeout(zoomIdle.current);
     zoomIdle.current = adapter.ownerWindow.setTimeout(releaseZoomSnapshot, 160);
   }, [adapter, releaseZoomSnapshot]);
-  const zoomAt = useCallback(
-    (clientX: number, clientY: number, nextScale: number) => {
-      const node = container.current;
-      if (!node) return;
-      const rect = node.getBoundingClientRect(),
-        viewX = clientX - rect.left,
-        viewY = clientY - rect.top;
-      const clamped = Math.max(0.1, Math.min(1.5, nextScale));
+  const zoomCentered = useCallback(
+    (nextScale: number) => {
+      const clamped = Math.max(0.1, Math.min(4, nextScale));
       if (Math.abs(clamped - scale) < 0.000001) return;
       prepareZoomSnapshot();
-      zoomAnchor.current = {
-        x: (node.scrollLeft + viewX - left) / scale,
-        y: (node.scrollTop + viewY - top) / scale,
-        viewX,
-        viewY,
-      };
+      zoomAnchor.current = null;
       onZoomChange(clamped);
     },
-    [left, top, scale, onZoomChange, prepareZoomSnapshot],
+    [scale, onZoomChange, prepareZoomSnapshot],
   );
   useLayoutEffect(() => {
     adapter.zoomView = (next) => {
-      const node = container.current;
-      if (!node) return;
-      const bounds = node.getBoundingClientRect();
-      zoomAt(bounds.left + node.clientWidth / 2, bounds.top + node.clientHeight / 2, next);
+      zoomCentered(next);
     };
     return () => {
       adapter.zoomView = undefined;
     };
-  }, [adapter, zoomAt]);
+  }, [adapter, zoomCentered]);
 
   useEffect(() => {
     if (zoom === null) onScaleChange(Math.round(scale * 100));
@@ -391,8 +485,8 @@ export function KonvaStage({
       if (!width || !height) return;
       const previous = lastView.current;
       if (width === previous.width && height === previous.height) return;
-      if (measured.current) {
-        // A dock changes viewport geometry, not the user's camera.
+      if (measured.current && zoomMode.current !== null) {
+        // Preserve a manually chosen camera; automatic fit follows the available workspace.
         zoomAnchor.current = {
           x: (node.scrollLeft + previous.width / 2 - previous.left) / previous.scale,
           y: (node.scrollTop + previous.height / 2 - previous.top) / previous.scale,
@@ -646,9 +740,7 @@ export function KonvaStage({
     if ('touches' in event.evt && event.evt.touches.length === 2 && pinch.current) {
       event.evt.preventDefault();
       const [a, b] = event.evt.touches;
-      zoomAt(
-        (a.clientX + b.clientX) / 2,
-        (a.clientY + b.clientY) / 2,
+      zoomCentered(
         (pinch.current.scale * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)) /
           pinch.current.distance,
       );
@@ -736,9 +828,9 @@ export function KonvaStage({
       setStrokePreview([]);
       adapter.createDrawing(
         points,
-        drawMode === 'highlighter' ? colors.highlighter : colors.pen,
-        drawMode === 'pen' ? 4 : drawMode === 'marker' ? 12 : 28,
-        drawMode === 'highlighter' ? 0.4 : 1,
+        brush?.color ?? (drawMode === 'highlighter' ? colors.highlighter : colors.pen),
+        brush?.width ?? (drawMode === 'pen' ? 4 : drawMode === 'marker' ? 12 : 28),
+        brush?.opacity ?? (drawMode === 'highlighter' ? 0.4 : 1),
       );
       return;
     }
@@ -955,6 +1047,7 @@ export function KonvaStage({
     <div
       ref={container}
       className="gs-artboard"
+      style={{ overflowX: horizontalOverflow ? 'auto' : 'hidden' }}
       aria-label="Editable vision board"
       role="group"
       tabIndex={0}
@@ -972,6 +1065,18 @@ export function KonvaStage({
         }
       }}
       onMouseLeave={() => setHoveredId(null)}
+      onScroll={(event) => {
+        const node = event.currentTarget;
+        prepareZoomSnapshot();
+        flushSync(() =>
+          setCameraScroll((current) =>
+            current.x === node.scrollLeft && current.y === node.scrollTop
+              ? current
+              : { x: node.scrollLeft, y: node.scrollTop },
+          ),
+        );
+      }}
+      data-camera-space="viewport"
       data-page-left={left}
       data-page-top={top}
       data-scale={scale}
@@ -1054,7 +1159,7 @@ export function KonvaStage({
             });
             await adapter.insertAsset(
               asset,
-              centeredDropPosition(point, assetDropSize(asset.width, asset.height), document),
+              centeredDropPosition(point, elementDropSize(asset, document), document),
             );
             return;
           }
@@ -1080,7 +1185,7 @@ export function KonvaStage({
               : await curatedPackProvider.resolve(payload.id, adapter.ownerWindow);
           await adapter.insertAsset(
             asset,
-            centeredDropPosition(point, assetDropSize(asset.width, asset.height), document),
+            centeredDropPosition(point, elementDropSize(asset, document), document),
             asset.type === 'photo' ? replaceId : undefined,
           );
         } catch (error) {
@@ -1117,7 +1222,7 @@ export function KonvaStage({
       {dropError && <Toast message={dropError} error onDismiss={() => setDropError('')} />}
       {snappingContainer &&
         createPortal(
-          <div className="canvas-tools" role="group" aria-label="Canvas snapping options">
+          <div className="canvas-tools" role="group" aria-label="Canvas options">
             <label className="snap-toggle">
               <input
                 type="checkbox"
@@ -1126,15 +1231,6 @@ export function KonvaStage({
               />
               <span className="vs-switch__track" aria-hidden="true" />
               Alignment guides
-            </label>
-            <label className="snap-toggle">
-              <input
-                type="checkbox"
-                checked={adapter.snapToEdges}
-                onChange={(event) => adapter.setSnapToEdges(event.target.checked)}
-              />
-              <span className="vs-switch__track" aria-hidden="true" />
-              Snap to edges
             </label>
             <label className="snap-toggle">
               <input
@@ -1148,486 +1244,496 @@ export function KonvaStage({
           </div>,
           snappingContainer,
         )}
-      <Stage
-        ref={stageRef}
-        width={stageWidth}
-        height={stageHeight}
-        onWheel={(event) => {
-          const wheel = event.evt;
-          // Trackpad pinch is a Ctrl-wheel gesture; plain wheel/two-finger motion scrolls.
-          if (!wheel.ctrlKey) {
-            const node = container.current;
-            if (node && (wheel.deltaX || wheel.shiftKey)) {
-              wheel.preventDefault();
-              const unit =
-                wheel.deltaMode === 1 ? 16 : wheel.deltaMode === 2 ? node.clientWidth : 1;
-              node.scrollLeft += (wheel.deltaX || wheel.deltaY) * unit;
-              if (!wheel.shiftKey) node.scrollTop += wheel.deltaY * unit;
-            }
-            return;
-          }
-          wheel.preventDefault();
-          const pending = wheelZoom.current;
-          // Normalize mouse notches and trackpad pixels, then batch canvas updates.
-          const pixels =
-            wheel.deltaY * (wheel.deltaMode === 1 ? 16 : wheel.deltaMode === 2 ? size.height : 1);
-          pending.delta += Math.max(-80, Math.min(80, pixels));
-          pending.clientX = wheel.clientX;
-          pending.clientY = wheel.clientY;
-          if (pending.frame || !pixels) return;
-          pending.frame = adapter.ownerWindow.requestAnimationFrame(() => {
-            const delta = Math.max(-80, Math.min(80, pending.delta));
-            pending.delta = 0;
-            pending.frame = 0;
-            if (delta)
-              flushSync(() =>
-                zoomAt(pending.clientX, pending.clientY, scale * Math.exp(-delta * 0.0035)),
-              );
-          });
-        }}
-        onMouseDown={startMarquee}
-        onTouchStart={startMarquee}
-        onMouseMove={(event) => {
-          moveMarquee(event);
-          const pointer = stageRef.current?.getPointerPosition();
-          if (!pointer || drawMode !== 'select' || adapter.cropDraft || marquee.current) {
-            setHoveredId(null);
-            return;
-          }
-          const x = (pointer.x - left) / scale;
-          const y = (pointer.y - top) / scale;
-          // Hover follows the full selection boundary, including transparent
-          // pixels and gaps between group members, in front-to-back order.
-          const units = new Set<string>();
-          let hit: string | null = null;
-          for (const item of [...document.items].reverse()) {
-            if (item.hidden || !adapter.inScope(item)) continue;
-            const key = adapter.unitKey(item);
-            if (units.has(key)) continue;
-            units.add(key);
-            const box =
-              key === item.id
-                ? item
-                : {
-                    ...unionBounds(
-                      document.items
-                        .filter(
-                          (member) =>
-                            !member.hidden &&
-                            adapter.inScope(member) &&
-                            adapter.unitKey(member) === key,
-                        )
-                        .map(boundsOf),
-                    ),
-                    rotation: 0,
-                  };
-            const angle = (box.rotation * Math.PI) / 180;
-            const dx = x - box.x,
-              dy = y - box.y;
-            const localX = dx * Math.cos(angle) + dy * Math.sin(angle);
-            const localY = -dx * Math.sin(angle) + dy * Math.cos(angle);
-            if (localX >= 0 && localY >= 0 && localX <= box.width && localY <= box.height) {
-              hit = item.id;
-              break;
-            }
-          }
-          setHoveredId(hit);
-        }}
-        onTouchMove={moveMarquee}
-        onMouseUp={finishMarquee}
-        onTouchEnd={finishMarquee}
-      >
-        <Layer>
-          <Rect
-            x={left}
-            y={top}
-            width={document.width * scale}
-            height={document.height * scale}
-            fill="white"
-            stroke={colors.artboardStroke}
-            strokeWidth={1}
-            shadowColor={colors.artboardShadow}
-            shadowBlur={32}
-            shadowOpacity={1}
-            shadowOffsetY={12}
-            listening={false}
-          />
-          <Group id="artboard" x={left} y={top} scaleX={scale} scaleY={scale}>
-            <Rect
-              id="page-background"
-              width={document.width}
-              height={document.height}
-              fill={document.color}
-              fillPriority={
-                document.gradient
-                  ? document.gradientType === 'radial'
-                    ? 'radial-gradient'
-                    : 'linear-gradient'
-                  : 'color'
+      <div className="canvas-scroll-space" style={{ width: stageWidth, height: stageHeight }}>
+        <div className="canvas-viewport-surface" style={{ width: size.width, height: size.height }}>
+          <Stage
+            ref={stageRef}
+            width={size.width}
+            height={size.height}
+            onWheel={(event) => {
+              const wheel = event.evt;
+              // Plain trackpad/Shift-wheel pans only overflowing horizontal content.
+              if (!wheel.ctrlKey) {
+                const node = container.current;
+                if (node && (wheel.deltaX || wheel.shiftKey)) {
+                  wheel.preventDefault();
+                  const unit =
+                    wheel.deltaMode === 1 ? 16 : wheel.deltaMode === 2 ? node.clientWidth : 1;
+                  if (horizontalOverflow)
+                    node.scrollLeft +=
+                      (wheel.shiftKey ? wheel.deltaX || wheel.deltaY : wheel.deltaX) * unit;
+                  if (!wheel.shiftKey) node.scrollTop += wheel.deltaY * unit;
+                }
+                return;
               }
-              fillLinearGradientStartPoint={gradientStart}
-              fillLinearGradientEndPoint={gradientEnd}
-              fillLinearGradientColorStops={gradientStops}
-              fillRadialGradientStartPoint={gradientCenter}
-              fillRadialGradientEndPoint={gradientCenter}
-              fillRadialGradientStartRadius={0}
-              fillRadialGradientEndRadius={Math.max(document.width, document.height) / 2}
-              fillRadialGradientColorStops={gradientStops}
-            />
-            {document.background && (
-              <Image
-                id="page-texture"
-                image={adapter.images.get(document.background.assetUrl)}
-                width={document.width}
-                height={document.height}
+              wheel.preventDefault();
+              const pending = wheelZoom.current;
+              // Normalize mouse notches and trackpad pixels, then batch canvas updates.
+              const pixels =
+                wheel.deltaY *
+                (wheel.deltaMode === 1 ? 16 : wheel.deltaMode === 2 ? size.height : 1);
+              pending.delta += Math.max(-80, Math.min(80, pixels));
+              if (pending.frame || !pixels) return;
+              pending.frame = adapter.ownerWindow.requestAnimationFrame(() => {
+                const delta = Math.max(-80, Math.min(80, pending.delta));
+                pending.delta = 0;
+                pending.frame = 0;
+                if (delta) flushSync(() => zoomCentered(scale * Math.exp(-delta * 0.005075)));
+              });
+            }}
+            onMouseDown={startMarquee}
+            onTouchStart={startMarquee}
+            onMouseMove={(event) => {
+              moveMarquee(event);
+              const pointer = stageRef.current?.getPointerPosition();
+              if (!pointer || drawMode !== 'select' || adapter.cropDraft || marquee.current) {
+                setHoveredId(null);
+                return;
+              }
+              const x = (pointer.x - left) / scale;
+              const y = (pointer.y - top) / scale;
+              // Hover follows the full selection boundary, including transparent
+              // pixels and gaps between group members, in front-to-back order.
+              const units = new Set<string>();
+              let hit: string | null = null;
+              for (const item of [...document.items].reverse()) {
+                if (item.hidden || !adapter.inScope(item)) continue;
+                const key = adapter.unitKey(item);
+                if (units.has(key)) continue;
+                units.add(key);
+                const box =
+                  key === item.id
+                    ? item
+                    : {
+                        ...unionBounds(
+                          document.items
+                            .filter(
+                              (member) =>
+                                !member.hidden &&
+                                adapter.inScope(member) &&
+                                adapter.unitKey(member) === key,
+                            )
+                            .map(boundsOf),
+                        ),
+                        rotation: 0,
+                      };
+                const angle = (box.rotation * Math.PI) / 180;
+                const dx = x - box.x,
+                  dy = y - box.y;
+                const localX = dx * Math.cos(angle) + dy * Math.sin(angle);
+                const localY = -dx * Math.sin(angle) + dy * Math.cos(angle);
+                if (localX >= 0 && localY >= 0 && localX <= box.width && localY <= box.height) {
+                  hit = item.id;
+                  break;
+                }
+              }
+              setHoveredId(hit);
+            }}
+            onTouchMove={moveMarquee}
+            onMouseUp={finishMarquee}
+            onTouchEnd={finishMarquee}
+          >
+            <Layer>
+              <Rect
+                x={left}
+                y={top}
+                width={document.width * scale}
+                height={document.height * scale}
+                fill="white"
+                stroke={colors.artboardStroke}
+                strokeWidth={1}
+                shadowColor={colors.artboardShadow}
+                shadowBlur={32}
+                shadowOpacity={1}
+                shadowOffsetY={12}
                 listening={false}
               />
-            )}
-            {document.items
-              .filter((item) => !item.hidden)
-              .map((item) => (
-                <Group key={item.id} {...props(item)} visible={editing?.id !== item.id}>
-                  {!item.connector && (
-                    <Rect
-                      width={item.width}
-                      height={item.height}
-                      fill="rgba(0,0,0,0.001)"
-                      hitFunc={itemHitRegion}
-                      photoClip={item.scrapbookPhoto?.clip}
-                      listening={true}
-                    />
-                  )}
-                  <ItemContent
-                    item={item}
-                    adapter={adapter}
-                    imageToken={adapter.images.get(
-                      (!adapter.originalPreview && item.rendition) ||
-                        (item.contentAsset || item.asset)?.assetUrl ||
-                        '',
-                    )}
-                    previewToken={
-                      adapter.originalPreview ||
-                      (adapter.cropDraft?.id === item.id ? adapter.cropDraft : false)
-                    }
-                  />
-                </Group>
-              ))}
-            {strokePreview.length > 1 && (
-              <Line
-                points={strokePreview}
-                stroke={drawMode === 'highlighter' ? colors.highlighter : colors.pen}
-                strokeWidth={drawMode === 'pen' ? 4 : drawMode === 'marker' ? 12 : 28}
-                opacity={drawMode === 'highlighter' ? 0.4 : 1}
-                lineCap="round"
-                lineJoin="round"
-                listening={false}
-              />
-            )}
-          </Group>
-        </Layer>
-        <Layer>
-          {adapter.cropDraft &&
-            document.items
-              .filter((item) => item.id === adapter.cropDraft?.id)
-              .map((item) => (
-                <CropOverlay
-                  key={item.id}
-                  adapter={adapter}
-                  item={item}
-                  scale={scale}
-                  left={left}
-                  top={top}
+              <Group id="artboard" x={left} y={top} scaleX={scale} scaleY={scale}>
+                <Rect
+                  id="page-background"
+                  width={document.width}
+                  height={document.height}
+                  fill={document.color}
+                  fillPriority={
+                    document.gradient
+                      ? document.gradientType === 'radial'
+                        ? 'radial-gradient'
+                        : 'linear-gradient'
+                      : 'color'
+                  }
+                  fillLinearGradientStartPoint={gradientStart}
+                  fillLinearGradientEndPoint={gradientEnd}
+                  fillLinearGradientColorStops={gradientStops}
+                  fillRadialGradientStartPoint={gradientCenter}
+                  fillRadialGradientEndPoint={gradientCenter}
+                  fillRadialGradientStartRadius={0}
+                  fillRadialGradientEndRadius={Math.max(document.width, document.height) / 2}
+                  fillRadialGradientColorStops={gradientStops}
                 />
-              ))}
-          {hoverBounds && (
-            <Rect
-              x={left + hoverBounds.x * scale}
-              y={top + hoverBounds.y * scale}
-              width={hoverBounds.width * scale}
-              height={hoverBounds.height * scale}
-              rotation={hoverBounds.rotation}
-              stroke={colors.selection}
-              strokeWidth={1}
-              opacity={0.65}
-              listening={false}
-            />
-          )}
-          {guides.vertical !== undefined && (
-            <Line
-              points={[
-                left + guides.vertical * scale,
-                top,
-                left + guides.vertical * scale,
-                top + document.height * scale,
-              ]}
-              stroke={colors.guide}
-              strokeWidth={1}
-              dash={[5, 4]}
-              listening={false}
-            />
-          )}
-          {guides.horizontal !== undefined && (
-            <Line
-              points={[
-                left,
-                top + guides.horizontal * scale,
-                left + document.width * scale,
-                top + guides.horizontal * scale,
-              ]}
-              stroke={colors.guide}
-              strokeWidth={1}
-              dash={[5, 4]}
-              listening={false}
-            />
-          )}
-          {selectionRect && (
-            <Rect
-              {...selectionRect}
-              fill={colors.marqueeFill}
-              stroke={colors.marqueeStroke}
-              strokeWidth={1}
-              listening={false}
-            />
-          )}
-          {marqueePreview.map((item) => (
-            <Rect
-              key={`marquee-preview-${item.id}`}
-              x={left + item.x * scale}
-              y={top + item.y * scale}
-              width={item.width * scale}
-              height={item.height * scale}
-              rotation={item.rotation}
-              stroke={colors.selection}
-              strokeWidth={2}
-              fill={colors.marqueeFill}
-              listening={false}
-            />
-          ))}
-          {!adapter.cropDraft &&
-            document.items
-              .filter(
-                (item) => adapter.selectedIds.includes(item.id) && adapter.isCollageFrame(item.id),
-              )
-              .map((item) => (
-                <Line
-                  key={`collage-selection-${item.id}`}
-                  name="collage-selection-outline"
-                  points={(item.scrapbookPhoto?.clip || [0, 0, 100, 0, 100, 100, 0, 100]).map(
-                    (v, i) =>
-                      i % 2
-                        ? top + (item.y + (v * item.height) / 100) * scale
-                        : left + (item.x + (v * item.width) / 100) * scale,
-                  )}
-                  closed
+                {document.background && (
+                  <Image
+                    id="page-texture"
+                    image={adapter.images.get(document.background.assetUrl)}
+                    width={document.width}
+                    height={document.height}
+                    listening={false}
+                  />
+                )}
+                {document.items
+                  .filter((item) => !item.hidden)
+                  .map((item) => (
+                    <Group key={item.id} {...props(item)} visible={editing?.id !== item.id}>
+                      {!item.connector && (
+                        <Rect
+                          width={item.width}
+                          height={item.height}
+                          fill="rgba(0,0,0,0.001)"
+                          hitFunc={itemHitRegion}
+                          photoClip={item.scrapbookPhoto?.clip}
+                          listening={true}
+                        />
+                      )}
+                      <ItemContent
+                        item={item}
+                        adapter={adapter}
+                        imageToken={adapter.images.get(
+                          (!adapter.originalPreview && item.rendition) ||
+                            (item.contentAsset || item.asset)?.assetUrl ||
+                            '',
+                        )}
+                        previewToken={
+                          adapter.originalPreview ||
+                          (adapter.cropDraft?.id === item.id ? adapter.cropDraft : false)
+                        }
+                      />
+                    </Group>
+                  ))}
+                {strokePreview.length > 1 && (
+                  <Line
+                    points={strokePreview}
+                    stroke={
+                      brush?.color ?? (drawMode === 'highlighter' ? colors.highlighter : colors.pen)
+                    }
+                    strokeWidth={
+                      brush?.width ?? (drawMode === 'pen' ? 4 : drawMode === 'marker' ? 12 : 28)
+                    }
+                    opacity={brush?.opacity ?? (drawMode === 'highlighter' ? 0.4 : 1)}
+                    lineCap="round"
+                    lineJoin="round"
+                    listening={false}
+                  />
+                )}
+              </Group>
+            </Layer>
+            <Layer>
+              {adapter.cropDraft &&
+                document.items
+                  .filter((item) => item.id === adapter.cropDraft?.id)
+                  .map((item) => (
+                    <CropOverlay
+                      key={item.id}
+                      adapter={adapter}
+                      item={item}
+                      scale={scale}
+                      left={left}
+                      top={top}
+                    />
+                  ))}
+              {hoverBounds && (
+                <Rect
+                  x={left + hoverBounds.x * scale}
+                  y={top + hoverBounds.y * scale}
+                  width={hoverBounds.width * scale}
+                  height={hoverBounds.height * scale}
+                  rotation={hoverBounds.rotation}
                   stroke={colors.selection}
-                  strokeWidth={2}
+                  strokeWidth={1}
+                  opacity={0.65}
                   listening={false}
                 />
-              ))}
-          {!adapter.cropDraft &&
-            (() => {
-              const items = document.items.filter((item) => adapter.selectedIds.includes(item.id));
-              if (items.length < 2 || !items.every((item) => adapter.isCollageFrame(item.id)))
-                return null;
-              const box = unionBounds(items.map(boundsOf));
-              return (
-                <Rect
-                  name="collage-group-selection-outline"
-                  x={left + box.x * scale}
-                  y={top + box.y * scale}
-                  width={box.width * scale}
-                  height={box.height * scale}
-                  stroke={colors.selection}
+              )}
+              {guides.vertical !== undefined && (
+                <Line
+                  points={[
+                    left + guides.vertical * scale,
+                    top,
+                    left + guides.vertical * scale,
+                    top + document.height * scale,
+                  ]}
+                  stroke={colors.guide}
                   strokeWidth={1}
                   dash={[5, 4]}
                   listening={false}
                 />
-              );
-            })()}
-          {(() => {
-            const selectedItems = document.items.filter((item) =>
-              adapter.selectedIds.includes(item.id),
-            );
-            const onlyLineOrArrow =
-              selectedItems.length > 0 &&
-              selectedItems.every((item) => item.shape === 'line' || item.shape === 'arrow');
+              )}
+              {guides.horizontal !== undefined && (
+                <Line
+                  points={[
+                    left,
+                    top + guides.horizontal * scale,
+                    left + document.width * scale,
+                    top + guides.horizontal * scale,
+                  ]}
+                  stroke={colors.guide}
+                  strokeWidth={1}
+                  dash={[5, 4]}
+                  listening={false}
+                />
+              )}
+              {selectionRect && (
+                <Rect
+                  {...selectionRect}
+                  fill={colors.marqueeFill}
+                  stroke={colors.marqueeStroke}
+                  strokeWidth={1}
+                  listening={false}
+                />
+              )}
+              {marqueePreview.map((item) => (
+                <Rect
+                  key={`marquee-preview-${item.id}`}
+                  x={left + item.x * scale}
+                  y={top + item.y * scale}
+                  width={item.width * scale}
+                  height={item.height * scale}
+                  rotation={item.rotation}
+                  stroke={colors.selection}
+                  strokeWidth={2}
+                  fill={colors.marqueeFill}
+                  listening={false}
+                />
+              ))}
+              {!adapter.cropDraft &&
+                document.items
+                  .filter(
+                    (item) =>
+                      adapter.selectedIds.includes(item.id) && adapter.isCollageFrame(item.id),
+                  )
+                  .map((item) => (
+                    <Line
+                      key={`collage-selection-${item.id}`}
+                      name="collage-selection-outline"
+                      points={(item.scrapbookPhoto?.clip || [0, 0, 100, 0, 100, 100, 0, 100]).map(
+                        (v, i) =>
+                          i % 2
+                            ? top + (item.y + (v * item.height) / 100) * scale
+                            : left + (item.x + (v * item.width) / 100) * scale,
+                      )}
+                      closed
+                      stroke={colors.selection}
+                      strokeWidth={2}
+                      listening={false}
+                    />
+                  ))}
+              {!adapter.cropDraft &&
+                (() => {
+                  const items = document.items.filter((item) =>
+                    adapter.selectedIds.includes(item.id),
+                  );
+                  if (items.length < 2 || !items.every((item) => adapter.isCollageFrame(item.id)))
+                    return null;
+                  const box = unionBounds(items.map(boundsOf));
+                  return (
+                    <Rect
+                      name="collage-group-selection-outline"
+                      x={left + box.x * scale}
+                      y={top + box.y * scale}
+                      width={box.width * scale}
+                      height={box.height * scale}
+                      stroke={colors.selection}
+                      strokeWidth={1}
+                      dash={[5, 4]}
+                      listening={false}
+                    />
+                  );
+                })()}
+              {(() => {
+                const selectedItems = document.items.filter((item) =>
+                  adapter.selectedIds.includes(item.id),
+                );
+                const onlyLineOrArrow =
+                  selectedItems.length > 0 &&
+                  selectedItems.every((item) => item.shape === 'line' || item.shape === 'arrow');
 
-            const enabledAnchors = onlyLineOrArrow
-              ? [
-                  'middle-left',
-                  'middle-right',
-                  'top-left',
-                  'top-right',
-                  'bottom-left',
-                  'bottom-right',
-                ]
-              : keepRatio
-                ? ['top-left', 'top-right', 'bottom-left', 'bottom-right']
-                : [
-                    'top-left',
-                    'top-center',
-                    'top-right',
-                    'middle-left',
-                    'middle-right',
-                    'bottom-left',
-                    'bottom-center',
-                    'bottom-right',
-                  ];
+                const enabledAnchors = onlyLineOrArrow
+                  ? [
+                      'middle-left',
+                      'middle-right',
+                      'top-left',
+                      'top-right',
+                      'bottom-left',
+                      'bottom-right',
+                    ]
+                  : keepRatio
+                    ? ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+                    : [
+                        'top-left',
+                        'top-center',
+                        'top-right',
+                        'middle-left',
+                        'middle-right',
+                        'bottom-left',
+                        'bottom-center',
+                        'bottom-right',
+                      ];
 
-            return (
-              <Transformer
-                ref={transformer}
-                visible={!adapter.cropDraft && !adapter.adjustingCollage}
-                listening={!adapter.cropDraft && !adapter.adjustingCollage}
-                rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
-                rotationSnapTolerance={5}
-                borderStroke={colors.selection}
-                anchorStroke={colors.selection}
-                anchorFill="white"
-                anchorSize={10}
-                anchorCornerRadius={4}
-                rotateAnchorOffset={25}
-                rotateAnchorCursor="grab"
-                flipEnabled={false}
-                keepRatio={onlyLineOrArrow ? false : keepRatio}
-                enabledAnchors={enabledAnchors}
-                boundBoxFunc={(previous, next) => {
-                  if (snapping && !altHeld.current && Math.abs(next.rotation) < 0.001) {
-                    const local = {
-                      x: (next.x - left) / scale,
-                      y: (next.y - top) / scale,
-                      width: next.width / scale,
-                      height: next.height / scale,
-                    };
-                    const others = document.items
-                      .filter((item) => !item.hidden && !adapter.selectedIds.includes(item.id))
-                      .map(boundsOf);
-                    const snap = snapResize(
-                      local,
-                      transformer.current?.getActiveAnchor() || '',
-                      others,
-                      document,
-                      6 / scale,
-                      keepRatio,
-                    );
-                    next = {
-                      ...next,
-                      x: left + snap.box.x * scale,
-                      y: top + snap.box.y * scale,
-                      width: snap.box.width * scale,
-                      height: snap.box.height * scale,
-                    };
-                    setGuides((current) =>
-                      current.vertical === snap.vertical && current.horizontal === snap.horizontal
-                        ? current
-                        : { vertical: snap.vertical, horizontal: snap.horizontal },
-                    );
-                  }
-                  const box = boundsOf({ ...next, rotation: (next.rotation * 180) / Math.PI });
-                  return Math.abs(next.width) < 10 ||
-                    Math.abs(next.height) < 10 ||
-                    (adapter.snapToEdges &&
-                      (box.x < left - 0.01 ||
-                        box.y < top - 0.01 ||
-                        box.x + box.width > left + document.width * scale + 0.01 ||
-                        box.y + box.height > top + document.height * scale + 0.01))
-                    ? previous
-                    : next;
-                }}
-                onTransformEnd={() => {
-                  if (adapter.cropDraft) return;
-                  setGuides({});
-                  const patches = (transformer.current?.nodes() || []).map((node) => {
-                    const item = document.items.find((item) => item.id === node.id());
-                    const patch = {
-                      x: node.x(),
-                      y: node.y(),
-                      width: Math.max(10, node.width() * node.scaleX()),
-                      height: Math.max(10, node.height() * node.scaleY()),
-                      rotation: node.rotation(),
-                      ...(item?.contentSize
-                        ? {
-                            contentSize: {
-                              width: item.contentSize.width * node.scaleX(),
-                              height: item.contentSize.height * node.scaleY(),
-                            },
-                          }
-                        : {}),
-                      ...(item?.kind === 'text'
-                        ? { fontSize: Math.max(8, (item.fontSize || 40) * node.scaleY()) }
-                        : {}),
-                    };
-                    node.scale({ x: 1, y: 1 });
-                    return { id: node.id(), patch };
-                  });
-                  if (patches.length) adapter.patchItems(patches);
-                }}
-              />
-            );
-          })()}
-        </Layer>
-      </Stage>
-      {adapter.adjustingCollage && (
-        <CollageDividerOverlay
-          adapter={adapter}
-          left={left}
-          top={top}
-          scale={scale}
-          width={stageWidth}
-          height={stageHeight}
-        />
-      )}
-      {editing && editingItem && (
-        <textarea
-          ref={textEditor}
-          aria-label="Edit text on canvas"
-          value={editing.text}
-          onChange={(event) => setEditing({ ...editing, text: event.target.value })}
-          onBlur={() => finishTextEditing(true)}
-          onKeyDown={(event) => {
-            event.stopPropagation();
-            if (event.key === 'Escape') {
-              event.preventDefault();
-              finishTextEditing(false);
-            } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-              event.preventDefault();
-              finishTextEditing(true);
-            }
-          }}
-          style={{
-            position: 'absolute',
-            zIndex: 10,
-            left: left + editingItem.x * scale,
-            top: top + editingItem.y * scale,
-            width: editingItem.width,
-            minHeight: editingItem.height,
-            height: Math.max(editingItem.height, textEditor.current?.scrollHeight || 0),
-            transform: `rotate(${editingItem.rotation || 0}deg) scale(${scale})`,
-            transformOrigin: 'top left',
-            boxSizing: 'border-box',
-            padding: editingItem.textPadding || 0,
-            border: 'none',
-            outline: `2px solid ${colors.selection}`,
-            borderRadius: 0,
-            margin: 0,
-            resize: 'none',
-            overflow: 'hidden',
-            background: 'transparent',
-            color:
-              editingItem.kind === 'asset'
-                ? editingItem.color
-                : primaryColor(editingItem.appearance),
-            fontFamily: fontFamily(editingItem.fontFamily),
-            fontSize: editingItem.fontSize,
-            fontWeight: editingItem.bold ? 'bold' : editingItem.fontWeight || 'normal',
-            fontStyle: editingItem.italic ? 'italic' : 'normal',
-            lineHeight: editingItem.lineHeight || 1,
-            letterSpacing: editingItem.letterSpacing || 0,
-            textAlign: editingItem.align || 'left',
-            opacity: itemOpacity(editingItem),
-          }}
-        />
-      )}
+                return (
+                  <Transformer
+                    ref={transformer}
+                    visible={!adapter.cropDraft && !adapter.adjustingCollage}
+                    listening={!adapter.cropDraft && !adapter.adjustingCollage}
+                    rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
+                    rotationSnapTolerance={5}
+                    borderStroke={colors.selection}
+                    anchorStroke={colors.selection}
+                    anchorFill="white"
+                    anchorSize={10}
+                    anchorCornerRadius={4}
+                    rotateAnchorOffset={25}
+                    rotateAnchorCursor="grab"
+                    flipEnabled={false}
+                    keepRatio={onlyLineOrArrow ? false : keepRatio}
+                    enabledAnchors={enabledAnchors}
+                    boundBoxFunc={(previous, next) => {
+                      if (snapping && !altHeld.current && Math.abs(next.rotation) < 0.001) {
+                        const local = {
+                          x: (next.x - left) / scale,
+                          y: (next.y - top) / scale,
+                          width: next.width / scale,
+                          height: next.height / scale,
+                        };
+                        const others = document.items
+                          .filter((item) => !item.hidden && !adapter.selectedIds.includes(item.id))
+                          .map(boundsOf);
+                        const snap = snapResize(
+                          local,
+                          transformer.current?.getActiveAnchor() || '',
+                          others,
+                          document,
+                          6 / scale,
+                          keepRatio,
+                        );
+                        next = {
+                          ...next,
+                          x: left + snap.box.x * scale,
+                          y: top + snap.box.y * scale,
+                          width: snap.box.width * scale,
+                          height: snap.box.height * scale,
+                        };
+                        setGuides((current) =>
+                          current.vertical === snap.vertical &&
+                          current.horizontal === snap.horizontal
+                            ? current
+                            : { vertical: snap.vertical, horizontal: snap.horizontal },
+                        );
+                      }
+                      const box = boundsOf({ ...next, rotation: (next.rotation * 180) / Math.PI });
+                      return Math.abs(next.width) < 10 ||
+                        Math.abs(next.height) < 10 ||
+                        (adapter.snapToEdges &&
+                          (box.x < left - 0.01 ||
+                            box.y < top - 0.01 ||
+                            box.x + box.width > left + document.width * scale + 0.01 ||
+                            box.y + box.height > top + document.height * scale + 0.01))
+                        ? previous
+                        : next;
+                    }}
+                    onTransformEnd={() => {
+                      if (adapter.cropDraft) return;
+                      setGuides({});
+                      const patches = (transformer.current?.nodes() || []).map((node) => {
+                        const item = document.items.find((item) => item.id === node.id());
+                        const patch = {
+                          x: node.x(),
+                          y: node.y(),
+                          width: Math.max(10, node.width() * node.scaleX()),
+                          height: Math.max(10, node.height() * node.scaleY()),
+                          rotation: node.rotation(),
+                          ...(item?.contentSize
+                            ? {
+                                contentSize: {
+                                  width: item.contentSize.width * node.scaleX(),
+                                  height: item.contentSize.height * node.scaleY(),
+                                },
+                              }
+                            : {}),
+                          ...(item?.kind === 'text'
+                            ? { fontSize: Math.max(8, (item.fontSize || 40) * node.scaleY()) }
+                            : {}),
+                        };
+                        node.scale({ x: 1, y: 1 });
+                        return { id: node.id(), patch };
+                      });
+                      if (patches.length) adapter.patchItems(patches);
+                    }}
+                  />
+                );
+              })()}
+            </Layer>
+          </Stage>
+          {adapter.adjustingCollage && (
+            <CollageDividerOverlay
+              adapter={adapter}
+              left={left}
+              top={top}
+              scale={scale}
+              width={size.width}
+              height={size.height}
+            />
+          )}
+          {editing && editingItem && (
+            <textarea
+              ref={textEditor}
+              aria-label="Edit text on canvas"
+              value={editing.text}
+              onChange={(event) => setEditing({ ...editing, text: event.target.value })}
+              onBlur={() => finishTextEditing(true)}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  finishTextEditing(false);
+                } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                  event.preventDefault();
+                  finishTextEditing(true);
+                }
+              }}
+              style={{
+                position: 'absolute',
+                zIndex: 10,
+                left: left + editingItem.x * scale,
+                top: top + editingItem.y * scale,
+                width: editingItem.width,
+                minHeight: editingItem.height,
+                height: Math.max(editingItem.height, textEditor.current?.scrollHeight || 0),
+                transform: `rotate(${editingItem.rotation || 0}deg) scale(${scale})`,
+                transformOrigin: 'top left',
+                boxSizing: 'border-box',
+                padding: editingItem.textPadding || 0,
+                border: 'none',
+                outline: `2px solid ${colors.selection}`,
+                borderRadius: 0,
+                margin: 0,
+                resize: 'none',
+                overflow: 'hidden',
+                background: 'transparent',
+                color:
+                  editingItem.kind === 'asset'
+                    ? editingItem.color
+                    : primaryColor(editingItem.appearance),
+                fontFamily: fontFamily(editingItem.fontFamily),
+                fontSize: editingItem.fontSize,
+                fontWeight: editingItem.bold ? 'bold' : editingItem.fontWeight || 'normal',
+                fontStyle: editingItem.italic ? 'italic' : 'normal',
+                lineHeight: editingItem.lineHeight || 1,
+                letterSpacing: editingItem.letterSpacing || 0,
+                textAlign: editingItem.align || 'left',
+                opacity: itemOpacity(editingItem),
+              }}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

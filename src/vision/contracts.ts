@@ -169,7 +169,7 @@ export const EMPTY_VISION_SELECTION: VisionSelection = {
 export interface StudioAdapter extends CanvasAdapter {
   cachedScrapbookTemplatePreviews?(): Record<string, string>;
   previewScrapbookTemplate(preset: string): Promise<string>;
-  applyScrapbookTemplate(preset: string): Promise<void>;
+  applyScrapbookTemplate(preset: string, mode?: 'add' | 'replace'): Promise<void>;
   storePhotos(files: File[]): Promise<string[]>;
   arrangePhotos(
     ids: string[],
@@ -182,6 +182,7 @@ export interface StudioAdapter extends CanvasAdapter {
     theme?: import('./photoLayout').PhotoTheme,
   ): Promise<string>;
   saveStatus: string;
+  savedAt?: number;
   backup(): Promise<void>;
   uploadPhotos(files: File[], position?: VisionPoint): Promise<void>;
   replaceImageFile(id: string, file: File): Promise<void>;
@@ -194,7 +195,7 @@ export interface StudioAdapter extends CanvasAdapter {
   selectedIds: string[];
   subscribe(listener: () => void): () => void;
   getSnapshot(): number;
-  commit(document: BoardDocument): void;
+  commit(document: BoardDocument, options?: { preservePositions?: boolean }): void;
   beginGesture(): void;
   endGesture(): void;
   cancelGesture(): void;

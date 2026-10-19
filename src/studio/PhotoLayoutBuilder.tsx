@@ -89,6 +89,19 @@ export function PhotoLayoutBuilder({
   const [step, setStep] = useState<'photos' | 'presets'>(
     !initialIds && selected.length >= COLLAGE_MIN_PHOTOS ? 'presets' : 'photos',
   );
+  const knownPhotos = useRef(new Set(photos.map(({ record }) => record.id)));
+  useEffect(() => {
+    const available = new Set(photos.map(({ record }) => record.id));
+    const added = [...available].filter((id) => !knownPhotos.current.has(id));
+    knownPhotos.current = available;
+    if (added.length)
+      setSelected((current) =>
+        [...new Set([...current.filter((id) => available.has(id)), ...added])].slice(
+          0,
+          COLLAGE_MAX_PHOTOS,
+        ),
+      );
+  }, [photos]);
   const availablePresets = useMemo(
     () => collageLayoutsForBoard(resolution.width, resolution.height),
     [resolution],
@@ -293,7 +306,7 @@ export function PhotoLayoutBuilder({
     <div className="vs vs-veil photo-layout-veil">
       <Dialog
         className={`vs-dialog photo-layout-dialog scrapbook-dialog${hasPresets ? '' : ' scrapbook-dialog--empty'}`}
-        aria-label="Arrange photos"
+        aria-label="Create photo collage"
         dismissible={!busy}
         onClose={() => {
           if (!applying.current) onClose();
@@ -310,7 +323,7 @@ export function PhotoLayoutBuilder({
             </p>
             <h2>
               {!hasPresets
-                ? 'Arrange photos'
+                ? 'Create photo collage'
                 : step === 'photos'
                   ? 'Select your photos'
                   : 'Choose a collage'}
@@ -382,7 +395,9 @@ export function PhotoLayoutBuilder({
                               decoding="async"
                             />
                           ) : (
-                            <span className="scrapbook-preview-placeholder">
+                            <span
+                              className={`scrapbook-preview-placeholder${failedPreviews[option.id] ? '' : ' gs-skeleton'}`}
+                            >
                               {failedPreviews[option.id]
                                 ? 'Preview unavailable'
                                 : 'Preparing preview…'}
@@ -439,7 +454,16 @@ export function PhotoLayoutBuilder({
                       : `${current?.label} · All photos stay editable`}
                   </p>
                 )}
-                {step === 'photos' && <span>Choose 5 to 10 photos.</span>}
+                {step === 'photos' && (
+                  <span role="status">
+                    {selected.length < COLLAGE_MIN_PHOTOS
+                      ? `Choose ${COLLAGE_MIN_PHOTOS - selected.length} more to preview. `
+                      : selected.length > COLLAGE_MAX_PHOTOS
+                        ? `Remove ${selected.length - COLLAGE_MAX_PHOTOS} to preview. `
+                        : ''}
+                    These layouts are designed for 5–10 photos to keep every frame balanced.
+                  </span>
+                )}
               </div>
               <div className="scrapbook-footer-actions">
                 {step === 'presets' && (

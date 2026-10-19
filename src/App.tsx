@@ -6,6 +6,8 @@ import { HomePage } from './studio/HomePage';
 import { Editor } from './editor/Editor';
 import type { StudioTab } from './studio/studioTypes';
 import { AppUpdateNotice } from './studio/AppUpdateNotice';
+import { Skeleton } from './studio/ui/Skeleton';
+import { Toast } from './studio/ui/Toast';
 
 export default function App() {
   const [adapter, setAdapter] = useState<KonvaCanvasAdapter>();
@@ -50,7 +52,9 @@ export default function App() {
     <div className="vs-root">
       <AppUpdateNotice save={() => (adapter ? adapter.flushSave() : Promise.resolve())} />
       {opening ? (
-        <p role="status">Opening your board…</p>
+        <div className="app-opening">
+          <Skeleton label="Opening your board…" />
+        </div>
       ) : adapter ? (
         <Editor
           adapter={adapter}
@@ -69,7 +73,7 @@ export default function App() {
         />
       ) : (
         <HomePage
-          onOpen={async (id, isNew) => {
+          onOpen={async (id, isNew, startTab) => {
             const nextAdapter = new KonvaCanvasAdapter(window, id);
             await nextAdapter.initialize();
             if (nextAdapter.saveStatus.startsWith('Save failed'))
@@ -77,12 +81,12 @@ export default function App() {
             const url = new URL(window.location.href);
             url.searchParams.set('board', nextAdapter.boardId);
             window.history.replaceState(null, '', url);
-            setInitialTab(isNew ? 'elements' : null);
+            setInitialTab(isNew ? (startTab ?? null) : null);
             setAdapter(nextAdapter);
           }}
         />
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && <Toast error message={error} onDismiss={() => setError('')} />}
     </div>
   );
 }

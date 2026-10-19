@@ -1,4 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { Dialog } from './ui/Dialog';
+import { BoardSizeControl } from './BoardSizeControl';
+import { createPortal } from 'react-dom';
 import { Button } from './ui/Button';
 import React, { useState } from 'react';
 
@@ -110,7 +113,7 @@ const TemplatePreview = ({ template }: { template: VisionTemplate }) =>
  * Guided board structures. Applying a template re-themes the board and adds
  * new slots while preserving existing pieces.
  */
-export const TemplatesPanel = ({ adapter, onApplyTemplate, onClose }: TemplatesPanelProps) => {
+export const TemplatesPanel = ({ adapter, onApplyTemplate }: TemplatesPanelProps) => {
   const { width, height } = adapter.history.document;
   const scrapbookTemplates = presetsForResolution(SCRAPBOOK_PRESETS, { width, height });
   const [previews, setPreviews] = useState<Record<string, string>>(
@@ -118,10 +121,27 @@ export const TemplatesPanel = ({ adapter, onApplyTemplate, onClose }: TemplatesP
   );
   const [applied, setApplied] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<string | null>(null);
+  const [resizeOpen, setResizeOpen] = useState(false);
+  const appliedRevision = useRef(-1);
+  const applyScrapbook = async (id: string, mode: 'add' | 'replace') => {
+    setBusy(true);
+    setPending(null);
+    setError('');
+    try {
+      await adapter.applyScrapbookTemplate(id, mode);
+      appliedRevision.current = adapter.history.revision;
+      setApplied(id);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to apply template.');
+    } finally {
+      setBusy(false);
+    }
+  };
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     if (!applied) return;
-    const timer = setTimeout(() => setApplied(null), 3000);
+    const timer = setTimeout(() => setApplied(null), 8000);
     return () => clearTimeout(timer);
   }, [applied]);
   const [error, setError] = useState('');
@@ -168,9 +188,52 @@ export const TemplatesPanel = ({ adapter, onApplyTemplate, onClose }: TemplatesP
   }, [adapter, width, height, retry]);
   return (
     <div className="templates-panel">
+      {resizeOpen && (
+        <BoardSizeControl
+          adapter={adapter}
+          initialSize="1080x1920"
+          onClose={() => setResizeOpen(false)}
+        />
+      )}
+      {pending &&
+        createPortal(
+          <div className="vs vs-veil">
+            <Dialog
+              className="vs-dialog board-size-dialog"
+              aria-label="Apply template"
+              onClose={() => setPending(null)}
+            >
+              <h2>Use this template?</h2>
+              <p>
+                Replace the current page’s objects, or add the template alongside them. Both can be
+                undone.
+              </p>
+              <div className="review-dialog-actions">
+                <Button onClick={() => setPending(null)}>Cancel</Button>
+                <Button variant="secondary" onClick={() => void applyScrapbook(pending, 'add')}>
+                  Add to board
+                </Button>
+                <Button variant="primary" onClick={() => void applyScrapbook(pending, 'replace')}>
+                  Replace page
+                </Button>
+              </div>
+            </Dialog>
+          </div>,
+          adapter.ownerWindow.document.body,
+        )}
       {applied && (
         <p className="panel-inline-status" role="status">
           Template added.
+          {adapter.history.revision === appliedRevision.current && (
+            <Button
+              onClick={() => {
+                adapter.undo();
+                setApplied(null);
+              }}
+            >
+              Undo
+            </Button>
+          )}
         </p>
       )}
       {error && (
@@ -189,11 +252,9 @@ export const TemplatesPanel = ({ adapter, onApplyTemplate, onClose }: TemplatesP
           <p className="gs-empty__body">
             Scrapbook templates are available for 1080 × 1920 boards.
           </p>
-          {onClose && (
-            <Button type="button" className="gs-button--primary gs-button--sm" onClick={onClose}>
-              Start from a blank board
-            </Button>
-          )}
+          <Button variant="primary" size="sm" onClick={() => setResizeOpen(true)}>
+            Switch to portrait
+          </Button>
         </div>
       )}
       <ul className="templates-panel__list">
@@ -221,16 +282,8 @@ export const TemplatesPanel = ({ adapter, onApplyTemplate, onClose }: TemplatesP
                 className="templates-panel__apply"
                 disabled={busy || !previews[template.id]}
                 onClick={async () => {
-                  setBusy(true);
-                  setError('');
-                  try {
-                    await adapter.applyScrapbookTemplate(template.id);
-                    setApplied(template.id);
-                  } catch (error) {
-                    setError(error instanceof Error ? error.message : 'Unable to apply template.');
-                  } finally {
-                    setBusy(false);
-                  }
+                  if (adapter.history.document.items.length) setPending(template.id);
+                  else await applyScrapbook(template.id, 'add');
                 }}
               >
                 Use template <ArrowRightIcon />

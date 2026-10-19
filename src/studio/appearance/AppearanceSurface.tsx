@@ -1,3 +1,4 @@
+import { tabletScreen } from '../ui/breakpoints';
 import {
   useLayoutEffect,
   useRef,
@@ -31,7 +32,7 @@ export function AppearanceSurface({
   onUndo(redo: boolean): void;
   onCancel(): void;
 }) {
-  const query = useRef(ownerWindow.matchMedia('(max-width: 768px)')).current;
+  const query = useRef(ownerWindow.matchMedia(tabletScreen)).current;
   const dialogRef = useRef<DialogHandle>(null);
   const mobile = useSyncExternalStore(
     (notify) => {

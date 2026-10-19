@@ -8,7 +8,7 @@ export function ZoomControls({
   onChange,
   onFit,
   min = 10,
-  max = 150,
+  max = 400,
   step = 10,
 }: {
   value: number;
@@ -22,6 +22,10 @@ export function ZoomControls({
   const pending = useRef<number | null>(null);
   const frame = useRef(0);
   const dragging = useRef(false);
+  const currentScale = useRef(value / 100);
+  useLayoutEffect(() => {
+    currentScale.current = value / 100;
+  }, [value]);
   const latest = useRef(onChange);
   useLayoutEffect(() => {
     latest.current = onChange;
@@ -37,17 +41,34 @@ export function ZoomControls({
     const ownerWindow = input.ownerDocument.defaultView!;
     owner.current = ownerWindow;
     if (frame.current) return;
-    frame.current = ownerWindow.requestAnimationFrame(() => {
-      frame.current = 0;
-      const value = pending.current;
-      pending.current = null;
-      if (value !== null) flushSync(() => latest.current(value));
-    });
+    let previousTime = ownerWindow.performance.now();
+    const tick = (time: number) => {
+      const target = pending.current;
+      if (target === null) {
+        frame.current = 0;
+        return;
+      }
+      const elapsed = Math.min(64, Math.max(1, time - previousTime));
+      previousTime = time;
+      const distance = target - currentScale.current;
+      const next =
+        Math.abs(distance) < 0.0001
+          ? target
+          : currentScale.current + distance * (1 - Math.exp(-elapsed / 35));
+      currentScale.current = next;
+      flushSync(() => latest.current(next));
+      if (next === target) {
+        pending.current = null;
+        frame.current = 0;
+      } else frame.current = ownerWindow.requestAnimationFrame(tick);
+    };
+    frame.current = ownerWindow.requestAnimationFrame(tick);
   };
   const immediate = (next: number) => {
     if (frame.current) owner.current?.cancelAnimationFrame(frame.current);
     frame.current = 0;
     pending.current = null;
+    currentScale.current = next;
     onChange(next);
   };
   return (
@@ -67,11 +88,28 @@ export function ZoomControls({
           aria-valuetext={`${Math.round(value)}%`}
           min={min}
           max={max}
-          value={Math.round(value)}
+          step="any"
+          value={value}
           onPointerDown={() => (dragging.current = true)}
           onPointerUp={() => (dragging.current = false)}
           onPointerCancel={() => (dragging.current = false)}
-          onKeyDown={() => (dragging.current = false)}
+          onKeyDown={(event) => {
+            dragging.current = false;
+            const keys: Record<string, number> = {
+              ArrowRight: value + 1,
+              ArrowUp: value + 1,
+              ArrowLeft: value - 1,
+              ArrowDown: value - 1,
+              PageUp: value + 10,
+              PageDown: value - 10,
+              Home: min,
+              End: max,
+            };
+            if (event.key in keys) {
+              event.preventDefault();
+              immediate(Math.max(min, Math.min(max, keys[event.key])) / 100);
+            }
+          }}
           onChange={(event) => {
             const next = Number(event.target.value);
             const snapped = dragging.current && Math.abs(next - 100) <= 3 ? 100 : next;
@@ -105,7 +143,12 @@ export function ZoomControls({
         className="vs-icon-btn"
         data-tip="Fit board to view"
         aria-label="Fit board to view"
-        onClick={onFit}
+        onClick={() => {
+          if (frame.current) owner.current?.cancelAnimationFrame(frame.current);
+          frame.current = 0;
+          pending.current = null;
+          onFit();
+        }}
       >
         <FitIcon />
       </IconButton>

@@ -116,7 +116,7 @@ export function BoardPreview({
           >
             {fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           </Button>
-          <Button variant="secondary" aria-label="Close preview" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             Back to editor
           </Button>
         </header>

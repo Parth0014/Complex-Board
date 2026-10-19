@@ -1,0 +1,81 @@
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+@layer components {
+  @media (min-width: 601px) {
+    .vs .vs-rail-wrap {
+      align-self: stretch;
+      background: var(--gs-surface-muted);
+    }
+    .vs .vs-rail {
+      min-height: 100%;
+      overflow-y: auto;
+    }
+    .vs .vs-sheet-handle {
+      display: none;
+    }
+  }
+  @media (min-width: 1201px) {
+    .vs .vs-lib__panel {
+      width: 340px;
+    }
+  }
+  .vs-header-file-menu .vs-menu__item {
+    display: flex;
+    gap: 10px;
+    padding-left: 12px;
+  }
+  .vs-header-file-menu .vs-menu__item > svg {
+    display: none;
+  }
+  .vs-header-file-menu .vs-menu__kicker {
+    padding-left: 12px;
+  }
+  .vs-header-file-menu .vs-menu__item kbd {
+    font-family: var(--gs-font);
+    font-size: var(--gs-text-11);
+    border: 1px solid var(--gs-line);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .vs .vs-drawing-options {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-control);
+    z-index: var(--gs-z-popover);
+  }
+  .vs .vs-drawing-options input[type='range'] {
+    width: 100px;
+  }
+  .vs .vs-drawing-options input[type='color'] {
+    width: 32px;
+    padding: 2px;
+  }
+}
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0s;
+      animation-iteration-count: 1;
+      transition-duration: 0s;
+      scroll-behavior: auto;
+    }
+  }
+}

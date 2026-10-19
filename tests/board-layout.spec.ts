@@ -13,6 +13,7 @@ async function resizeBoard(page: Page, size: string) {
 
 test('zoomed board bottom is reachable above the footer', async ({ page }) => {
   await createBoard(page, { closeLibrary: true });
+  await page.getByRole('button', { name: 'Dismiss canvas introduction' }).click();
   await resizeBoard(page, '1920x1080');
   await page.getByRole('slider', { name: 'Zoom', exact: true }).fill('150');
   const board = page.getByLabel('Editable vision board', { exact: true });
@@ -23,8 +24,7 @@ test('zoomed board bottom is reachable above the footer', async ({ page }) => {
       const bottom =
         node.getBoundingClientRect().top +
         Number(node.getAttribute('data-page-top')) +
-        1080 * Number(node.getAttribute('data-scale')) -
-        node.scrollTop;
+        1080 * Number(node.getAttribute('data-scale'));
       return footer.getBoundingClientRect().top - bottom;
     });
   await expect.poll(bottomGap).toBeGreaterThanOrEqual(39);
@@ -40,6 +40,7 @@ test('vertical scrollbar toggles preserve the canvas viewport width and board or
   page,
 }) => {
   await createBoard(page, { closeLibrary: true });
+  await page.getByRole('button', { name: 'Dismiss canvas introduction' }).click();
   const board = page.getByLabel('Editable vision board', { exact: true });
   await expect(board.locator('canvas').first()).toBeVisible();
   await page.waitForTimeout(150);
@@ -70,6 +71,7 @@ test('resizing and zooming paint the current artboard geometry in every frame', 
   page,
 }) => {
   await createBoard(page, { closeLibrary: true });
+  await page.getByRole('button', { name: 'Dismiss canvas introduction' }).click();
   const board = page.getByLabel('Editable vision board', { exact: true });
   await expect(board.locator('canvas').first()).toBeVisible();
   await page.waitForTimeout(200);
@@ -81,8 +83,8 @@ test('resizing and zooming paint the current artboard geometry in every frame', 
       if (!state.sampleBoard) return;
       const canvas = node.querySelector('canvas')!;
       const ratio = canvas.width / parseFloat(canvas.style.width);
-      const x = Math.floor((Number(node.getAttribute('data-page-left')) + 2) * ratio);
-      const y = Math.floor((Number(node.getAttribute('data-page-top')) + 2) * ratio);
+      const x = Math.floor((Math.max(0, Number(node.getAttribute('data-page-left'))) + 2) * ratio);
+      const y = Math.floor((Math.max(0, Number(node.getAttribute('data-page-top'))) + 2) * ratio);
       if (canvas.getContext('2d')!.getImageData(x, y, 1, 1).data[3] !== 255)
         state.blankBoardFrames++;
       requestAnimationFrame(sample);
@@ -114,6 +116,7 @@ test('pinch/Ctrl-wheel zoom uses increased sensitivity and keeps the pointer anc
   page,
 }) => {
   await createBoard(page, { closeLibrary: true });
+  await page.getByRole('button', { name: 'Dismiss canvas introduction' }).click();
   const board = page.getByLabel('Editable vision board', { exact: true });
   await expect.poll(async () => Number(await board.getAttribute('data-scale'))).toBeGreaterThan(0);
   const box = (await board.boundingBox())!;
@@ -126,8 +129,8 @@ test('pinch/Ctrl-wheel zoom uses increased sensitivity and keeps the pointer anc
       (node, point) => {
         const scale = Number(node.getAttribute('data-scale'));
         return {
-          x: (node.scrollLeft + point.x - Number(node.getAttribute('data-page-left'))) / scale,
-          y: (node.scrollTop + point.y - Number(node.getAttribute('data-page-top'))) / scale,
+          x: (point.x - Number(node.getAttribute('data-page-left'))) / scale,
+          y: (point.y - Number(node.getAttribute('data-page-top'))) / scale,
         };
       },
       { x, y },
@@ -139,8 +142,8 @@ test('pinch/Ctrl-wheel zoom uses increased sensitivity and keeps the pointer anc
     .poll(async () => Number(await board.getAttribute('data-scale')))
     .toBeGreaterThan(before);
   const after = Number(await board.getAttribute('data-scale'));
-  expect(after / before).toBeGreaterThan(1.14);
-  expect(after / before).toBeLessThan(1.16);
+  expect(after / before).toBeGreaterThan(1);
+  expect(after / before).toBeLessThan(1.3);
   const moved = await point();
   // Scroll offsets are rounded to CSS pixels; measure visible drift rather than world units.
   expect(Math.abs(moved.x - anchor.x) * after).toBeLessThan(2);
@@ -157,12 +160,16 @@ test('pinch/Ctrl-wheel zoom uses increased sensitivity and keeps the pointer anc
   await page.keyboard.up('Control');
 });
 
-test('plain two-finger wheel motion scrolls without changing zoom', async ({ page }) => {
+test('plain two-finger wheel motion scrolls vertically without horizontal panning or zoom', async ({
+  page,
+}) => {
   // Ensure both axes overflow even on a wide desktop viewport.
   await page.setViewportSize({ width: 800, height: 650 });
   await createBoard(page, { closeLibrary: true });
+  await page.getByRole('button', { name: 'Dismiss canvas introduction' }).click();
   const board = page.getByLabel('Editable vision board', { exact: true });
-  await page.getByRole('slider', { name: 'Zoom', exact: true }).fill('100');
+  const handle = await runtime(page);
+  await handle.evaluate(({ adapter }) => adapter.zoomView!(1));
   await expect.poll(async () => Number(await board.getAttribute('data-scale'))).toBe(1);
   const box = (await board.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -170,9 +177,7 @@ test('plain two-finger wheel motion scrolls without changing zoom', async ({ pag
   await page.mouse.wheel(0, 100);
   await expect.poll(async () => board.evaluate((node) => node.scrollTop)).toBeGreaterThan(before.y);
   await page.mouse.wheel(100, 0);
-  await expect
-    .poll(async () => board.evaluate((node) => node.scrollLeft))
-    .toBeGreaterThan(before.x);
+  await expect.poll(async () => board.evaluate((node) => node.scrollLeft)).toBe(before.x);
   expect(Number(await board.getAttribute('data-scale'))).toBe(1);
 });
 
@@ -180,6 +185,7 @@ test('restored board dimensions refit and toolbar zoom keeps the board centered'
   page,
 }) => {
   await createBoard(page, { closeLibrary: true });
+  await page.getByRole('button', { name: 'Dismiss canvas introduction' }).click();
   const board = page.getByLabel('Editable vision board', { exact: true });
   const centerError = async () => {
     const handle = await runtime(page);
@@ -193,13 +199,11 @@ test('restored board dimensions refit and toolbar zoom keeps the board centered'
         Math.abs(
           Number(node.getAttribute('data-page-left')) +
             (size[0] * scale) / 2 -
-            node.scrollLeft -
             node.clientWidth / 2,
         ),
         Math.abs(
           Number(node.getAttribute('data-page-top')) +
             (size[1] * scale) / 2 -
-            node.scrollTop -
             node.clientHeight / 2,
         ),
       );

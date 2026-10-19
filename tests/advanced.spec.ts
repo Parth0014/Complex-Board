@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { createBoard } from './helpers/board';
 import { openProperties, openSection } from './helpers/editor';
 async function backup(page: Page) {
-  if (!(await page.getByRole('button', { name: 'Save .visbo file', exact: true }).isVisible()))
+  if (!(await page.getByRole('menuitem', { name: 'Download board file', exact: true }).isVisible()))
     await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   const result = JSON.parse(readFileSync((await (await pending).path())!, 'utf8'));
   await page.getByText('File', { exact: true }).click();
   return result;
@@ -40,7 +40,7 @@ test('rich text, custom shadows and multi-page PDF survive reload without changi
   expect(saved.items[0].shadowOffsetX).toBe(12);
   await page.screenshot({ path: 'test-results/advanced-editor.png' });
   await page.getByRole('button', { name: 'Add page', exact: true }).click();
-  await page.getByRole('button', { name: /Share/ }).click();
+  await page.getByRole('button', { name: /Export/ }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download PDF-ALL', exact: true }).click();
   const pdf = readFileSync((await (await pending).path())!, 'latin1');
@@ -192,9 +192,9 @@ test('shape-frame export clips pixels and layer extraction remains editable and 
   await page.getByRole('button', { name: 'Add to board', exact: true }).click();
   await openProperties(page);
   await page.getByLabel('Shape frame', { exact: true }).selectOption('circle');
-  await page.getByRole('button', { name: /Share/ }).click();
+  await page.getByRole('button', { name: /Export/ }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
+  await page.getByRole('button', { name: /High-resolution PNG/ }).click();
   const png = readFileSync((await (await pending).path())!);
   const pixels = await page.evaluate(
     async (source) => {

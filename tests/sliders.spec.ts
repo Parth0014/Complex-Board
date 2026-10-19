@@ -26,9 +26,13 @@ test('color hue and transparency share the slider while keeping their own units'
   await expect(hue).toHaveValue('0');
   await expect(hue).toHaveAttribute('aria-valuetext', '0 degrees');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Object transparency', exact: true }).click();
+  await page.getByRole('button', { name: 'Formatting', exact: true }).click();
+  await page
+    .locator('.object-inspector summary')
+    .filter({ hasText: /^Opacity$/ })
+    .click();
   const opacity = page.getByRole('slider', {
-    name: 'Set transparency for all selected objects',
+    name: 'Opacity',
     exact: true,
   });
   await expect(opacity).toHaveClass(/gs-slider/);

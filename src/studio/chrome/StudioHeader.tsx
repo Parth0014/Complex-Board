@@ -1,5 +1,9 @@
 import { errorMessage } from '../errors';
-import { useEffect, useRef } from 'react';
+import { BoardSizeControl } from '../BoardSizeControl';
+import { useEffect, useRef, useState } from 'react';
+import { Menu } from '../ui/Menu';
+import { Popover } from '../ui/Popover';
+import { compactScreen } from '../ui/breakpoints';
 import { Button, IconButton } from '../ui/Button';
 import {
   VisionMark,
@@ -24,40 +28,59 @@ const MAX_BACKUP_BYTES = 180 * 1024 * 1024;
 export function StudioHeader({
   adapter,
   onHome,
-  onShare,
+  onExport,
   onPreview,
   onError,
-  shareDisabled = false,
+  onShortcuts,
+  exportDisabled = false,
 }: {
   adapter: EditorAdapter;
   onHome: () => void;
-  onShare: () => void;
+  onExport: () => void;
   onPreview: () => void;
   onError: (message: string) => void;
-  shareDisabled?: boolean;
+  onShortcuts: () => void;
+  exportDisabled?: boolean;
 }) {
-  const fileMenu = useRef<HTMLDetailsElement>(null);
+  const fileMenu = useRef<HTMLButtonElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [resizeOpen, setResizeOpen] = useState(false);
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [compact, setCompact] = useState(
+    () => adapter.ownerWindow.matchMedia(compactScreen).matches,
+  );
   useEffect(() => {
-    const menu = fileMenu.current;
-    if (!menu) return;
-    const ownerDocument = menu.ownerDocument;
-    const closeOutside = (event: PointerEvent) => {
-      if (menu.open && !event.composedPath().includes(menu)) menu.open = false;
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (menu.open && event.key === 'Escape') {
-        menu.open = false;
-        menu.querySelector('summary')?.focus();
-      }
-    };
-    ownerDocument.addEventListener('pointerdown', closeOutside, true);
-    ownerDocument.addEventListener('keydown', closeOnEscape);
-    return () => {
-      ownerDocument.removeEventListener('pointerdown', closeOutside, true);
-      ownerDocument.removeEventListener('keydown', closeOnEscape);
-    };
-  }, []);
+    const media = adapter.ownerWindow.matchMedia(compactScreen);
+    const update = () => setCompact(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [adapter]);
+  const backup = async () => {
+    setBackupBusy(true);
+    try {
+      await adapter.backup();
+    } catch (error) {
+      onError(errorMessage(error));
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+  const commandKey = /Mac|iPhone|iPad/.test(adapter.ownerWindow.navigator.platform) ? '⌘' : 'Ctrl';
   const document = adapter.history.document;
+  const [name, setName] = useState(document.title);
+  const cancelled = useRef(false);
+  useEffect(() => setName(document.title), [document.title]);
+  const commitName = () => {
+    if (cancelled.current) {
+      cancelled.current = false;
+      setName(document.title);
+      return;
+    }
+    const next = name.trim() || document.title;
+    if (next !== document.title) adapter.commit({ ...document, title: next });
+    setName(next);
+  };
   return (
     <header className="vs-header">
       <div className="vs-header__start">
@@ -74,11 +97,30 @@ export function StudioHeader({
             aria-label="Board name"
             data-tip={document.title}
             data-tip-pos="below"
-            value={document.title}
+            value={name}
             maxLength={80}
-            onChange={(event) => adapter.commit({ ...document, title: event.target.value })}
+            onChange={(event) => setName(event.target.value)}
+            onBlur={commitName}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.currentTarget.blur();
+              if (event.key === 'Escape') {
+                event.stopPropagation();
+                cancelled.current = true;
+                setName(document.title);
+                event.currentTarget.blur();
+              }
+            }}
           />
-          <span className="vs-save" role="status" aria-live="polite">
+          <span
+            className="vs-save"
+            role="status"
+            aria-live="polite"
+            data-tip={
+              adapter.savedAt
+                ? `Last saved ${new Date(adapter.savedAt).toLocaleString()}`
+                : 'Saved in this browser'
+            }
+          >
             <span className="vs-save__dot" aria-hidden="true" />
             <span>{adapter.saveStatus}</span>
           </span>
@@ -88,7 +130,7 @@ export function StudioHeader({
       <div className="vs-header__center gs-segmented" role="group" aria-label="History">
         <IconButton
           className="gs-segmented__item"
-          data-tip="Undo (Ctrl+Z)"
+          data-tip={`Undo (${commandKey}+Z)`}
           data-tip-pos="below"
           aria-label="Undo"
           disabled={!adapter.history.canUndo}
@@ -98,7 +140,7 @@ export function StudioHeader({
         </IconButton>
         <IconButton
           className="gs-segmented__item"
-          data-tip="Redo (Ctrl+Y)"
+          data-tip={`Redo (${commandKey}+${commandKey === '⌘' ? 'Shift+Z' : 'Y'})`}
           data-tip-pos="below"
           aria-label="Redo"
           disabled={!adapter.history.canRedo}
@@ -109,77 +151,166 @@ export function StudioHeader({
       </div>
 
       <div className="vs-header__end">
-        <Button aria-label="Preview board" onClick={onPreview}>
+        <Button
+          variant="secondary"
+          className="vs-preview-trigger"
+          aria-label="Preview board"
+          onClick={onPreview}
+        >
           Preview
         </Button>
         <Button
           variant="primary"
-          aria-label="Share"
-          data-tip={
-            shareDisabled ? 'Add something to your board to share' : 'Export or share your board'
-          }
+          className="vs-export-trigger"
+          aria-label="Export"
+          data-tip={exportDisabled ? 'Add something to your board to export' : 'Export your board'}
           data-tip-pos="below"
-          onClick={onShare}
-          disabledReason={shareDisabled ? 'Add something to your board to share' : undefined}
+          onClick={onExport}
+          disabledReason={exportDisabled ? 'Add something to your board to export' : undefined}
         >
           <ExportIcon />
-          <span>Share</span>
+          <span>Export</span>
         </Button>
 
-        <details ref={fileMenu} className="vs-menu">
-          <summary
+        <div className="vs-menu">
+          <Button
+            ref={fileMenu}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(!menuOpen)}
             className="vs-file-btn"
-            data-tip="New board and backups"
+            data-tip="Board actions"
             data-tip-pos="below"
             aria-label="File menu"
           >
-            <span>File</span>
-          </summary>
-          <div className="vs-menu__pop vs-menu__pop--below-right">
-            <Button className="vs-menu__item" aria-label="New board" onClick={onHome}>
-              <PlusIcon />
-              <span>New board</span>
-            </Button>
-            <div className="vs-menu__divider" />
-            <p className="vs-menu__kicker">Editable board</p>
-            <Button
-              className="vs-menu__item"
-              onClick={() => {
-                void adapter.backup().catch((error) => onError(errorMessage(error)));
-              }}
+            <span className="vs-file-label">File</span>
+            <span aria-hidden="true" className="vs-file-mobile-icon">
+              ⋯
+            </span>
+          </Button>
+          {menuOpen && (
+            <Popover
+              focusOnOpen
+              anchor={fileMenu}
+              onDismiss={() => setMenuOpen(false)}
+              className="vs vs-header-file-menu"
             >
-              <SaveIcon />
-              <span>Save .visbo file</span>
-            </Button>
-            <label className="vs-menu__item">
-              <RestoreIcon />
-              <span>Open board file</span>
-              <input
-                aria-label="Open board file"
-                type="file"
-                accept=".visbo,.json,application/vnd.visbo.project+json,application/json"
-                className="sr-only"
-                onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (file)
-                    try {
-                      if (file.size > MAX_BACKUP_BYTES)
-                        throw new Error(
-                          'Backup is too large (maximum 180 MB). Choose a smaller backup file.',
-                        );
-                      await adapter.restore(await file.text());
-                      onError('');
-                    } catch (error) {
-                      onError(errorMessage(error));
-                    }
-                  event.target.value = '';
-                }}
-              />
-            </label>
-            <p className="vs-menu__note">Your board is saved locally as you work.</p>
-          </div>
-        </details>
+              <Menu aria-label="File actions">
+                <p className="vs-menu__kicker">Board</p>
+                <Button
+                  className="vs-menu__item"
+                  role="menuitem"
+                  aria-label="New board"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onHome();
+                  }}
+                >
+                  <PlusIcon />
+                  <span>New board</span>
+                </Button>
+                <Button
+                  className="vs-menu__item"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setResizeOpen(true);
+                  }}
+                >
+                  Resize board
+                </Button>
+                <div className="vs-menu__divider" />
+                <p className="vs-menu__kicker">Editable files</p>
+                <Button
+                  className="vs-menu__item"
+                  role="menuitem"
+                  onClick={() => fileInput.current?.click()}
+                >
+                  <RestoreIcon />
+                  <span>Open board file</span>
+                </Button>
+                <Button
+                  className="vs-menu__item"
+                  role="menuitem"
+                  disabled={backupBusy}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void backup();
+                  }}
+                >
+                  <SaveIcon />
+                  <span>Download board file</span>
+                </Button>
+                <input
+                  ref={fileInput}
+                  aria-label="Open board file"
+                  type="file"
+                  accept=".visbo,.json,application/vnd.visbo.project+json,application/json"
+                  className="sr-only"
+                  onChange={async (event) => {
+                    const file = event.target.files?.[0];
+                    if (file)
+                      try {
+                        if (file.size > MAX_BACKUP_BYTES)
+                          throw new Error(
+                            'Backup is too large (maximum 180 MB). Choose a smaller backup file.',
+                          );
+                        await adapter.restore(await file.text());
+                        onError('');
+                      } catch (error) {
+                        onError(errorMessage(error));
+                      }
+                    event.target.value = '';
+                  }}
+                />
+                {compact && (
+                  <>
+                    <div className="vs-menu__divider" />
+                    <p className="vs-menu__kicker">View & export</p>
+                    <Button
+                      role="menuitem"
+                      className="vs-menu__item"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onPreview();
+                      }}
+                    >
+                      Preview board
+                    </Button>
+                    <Button
+                      role="menuitem"
+                      className="vs-menu__item"
+                      disabled={exportDisabled}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onExport();
+                      }}
+                    >
+                      Export board
+                    </Button>
+                  </>
+                )}
+                <div className="vs-menu__divider" />
+                <p className="vs-menu__kicker">Help</p>
+                <Button
+                  role="menuitem"
+                  className="vs-menu__item"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onShortcuts();
+                  }}
+                >
+                  Keyboard shortcuts <kbd>?</kbd>
+                </Button>
+                <p className="vs-menu__note">
+                  Keep a board file as a backup before clearing browser data.
+                </p>
+              </Menu>
+            </Popover>
+          )}
+        </div>
       </div>
+      {resizeOpen && <BoardSizeControl adapter={adapter} onClose={() => setResizeOpen(false)} />}
     </header>
   );
 }

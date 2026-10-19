@@ -13,7 +13,7 @@ test('dialog focus trap, exit animation, focus return', async ({ page }) => {
   await h.evaluate(async ({ adapter }) => {
     adapter.createShape('rectangle');
   });
-  const shareBtn = page.getByRole('button', { name: 'Share' });
+  const shareBtn = page.getByRole('button', { name: 'Export' });
   await expect(shareBtn).toBeEnabled();
   await shareBtn.focus();
   await shareBtn.click();

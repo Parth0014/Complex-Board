@@ -1,0 +1,316 @@
+@layer components {
+  .vs .vs-brand__name {
+    color: var(--gs-text);
+    font-size: var(--gs-text-13);
+  }
+  .vs .vs-title input {
+    color: var(--gs-text);
+    font-size: var(--gs-text-13);
+  }
+  .vs :is(.gs-button, .panel-action, .panel-secondary-action, .vs-compose-action) {
+    border-radius: var(--gs-radius-control);
+    min-height: 32px;
+    padding: 6px var(--gs-space-3);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-regular);
+    box-shadow: none;
+  }
+  .vs :is(.gs-button--primary, .vs-share-btn) {
+    background: var(--gs-accent);
+    color: var(--gs-on-accent);
+    box-shadow: none;
+  }
+  .vs button:active:not(:disabled) {
+    transform: none;
+  }
+  .vs .vs-lib {
+    border-radius: 0;
+    box-shadow: none;
+    border-color: var(--gs-line);
+  }
+  .vs .vs-lib:not(.is-collapsed) {
+    width: calc(var(--gs-rail-width) + var(--gs-panel-width));
+  }
+  .vs .vs-rail__tab svg {
+    width: 18px;
+    height: 18px;
+  }
+  .vs .vs-rail__tab::before {
+    display: none;
+  }
+  .vs .vs-lib__panel {
+    width: var(--gs-panel-width);
+  }
+  .vs .vs-lib__head h2 {
+    font-size: var(--gs-text-15);
+    font-family: var(--gs-font);
+    font-weight: var(--gs-weight-medium);
+    letter-spacing: var(--gs-tracking-tight);
+  }
+  .vs .vs-lib__body {
+    padding: var(--gs-space-4);
+  }
+  .vs .vs-lib__body :is(h3, .panel-section-heading h3) {
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+  }
+  .vs .shape-grid {
+    gap: var(--gs-space-1);
+  }
+  .vs .shape-grid button {
+    min-height: 48px;
+    padding: var(--gs-space-2) var(--gs-space-1);
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    box-shadow: none;
+    background: transparent;
+    font-size: var(--gs-text-11);
+    gap: var(--gs-space-1);
+  }
+  .vs .shape-grid button svg {
+    width: 20px;
+    height: 20px;
+  }
+  .vs :is(.vs-input, .vs-select, .vs-textarea) {
+    border-radius: var(--gs-radius-control);
+    border-width: 1px;
+    font-size: var(--gs-text-13);
+    box-shadow: none;
+    transition:
+      background-color var(--gs-duration-feedback) var(--gs-ease),
+      color var(--gs-duration-feedback) var(--gs-ease),
+      border-color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .vs .vs-canvas-settings {
+    order: 1;
+    margin-left: auto;
+  }
+  .vs .vs-zoom {
+    order: 2;
+  }
+  .vs .vs-canvas-settings .vs-menu__pop {
+    width: 240px;
+    padding: var(--gs-space-2);
+  }
+  .vs .vs-canvas-settings .canvas-tools {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--gs-space-1);
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+  }
+  .vs .vs-canvas-settings .snap-toggle {
+    width: 100%;
+    justify-content: space-between;
+    padding: var(--gs-space-2);
+    font-size: var(--gs-text-11);
+    background: transparent;
+  }
+  .vs .vs-zoom .vs-range {
+    width: 72px;
+  }
+  .vs :focus-visible {
+    border-radius: var(--gs-radius-control);
+    outline: 2px solid var(--gs-accent);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vs-lib__panel.is-exiting .vs-lib__body {
+      transition: none;
+    }
+    .vs-export-option {
+      transition: none;
+    }
+    .vs-lib {
+      transition: none;
+      animation: none;
+    }
+    .gs-object-dock {
+      transition: none;
+      animation: none;
+    }
+    .vs *::before {
+      transition: none;
+      animation: none;
+    }
+    .vs *::after {
+      transition: none;
+      animation: none;
+    }
+    .vs select {
+      transition: none;
+      animation: none;
+    }
+    .vs .snap-toggle .vs-switch__track {
+      transition: none;
+      animation: none;
+    }
+    .vs .snap-toggle .vs-switch__track::after {
+      transition: none;
+      animation: none;
+    }
+    .vs .vs-menu__pop {
+      transition: none;
+      animation: none;
+    }
+    .vs * {
+      transition: none;
+      animation: none;
+    }
+  }
+  .vs .vs-header :is(.vs-brand__name strong, .vs-save, .vs-new-btn, .vs-file-btn) {
+    color: var(--gs-text-secondary);
+  }
+  .vs .vs-header button:not(.vs-share-btn):not(.gs-button--primary) {
+    color: var(--gs-text);
+  }
+  .vs .vs-save__dot {
+    box-shadow: none;
+  }
+  .vs .create-shape-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gs-space-1);
+  }
+  .vs .create-shape-grid button {
+    min-height: 52px;
+    height: 52px;
+    padding: var(--gs-space-2) var(--gs-space-1);
+    gap: var(--gs-space-1);
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    box-shadow: none;
+  }
+  .vs .create-shape-grid button svg {
+    width: 20px;
+    height: 20px;
+  }
+  .vs .create-shape-grid button span {
+    font-size: var(--gs-text-11);
+  }
+  .vs .vs-stage-fill {
+    background: transparent;
+  }
+  .vs .vs-lib.is-collapsed {
+    width: var(--gs-rail-width);
+    background: var(--gs-workspace);
+    border-color: transparent;
+  }
+  .vs .vs-rail {
+    box-shadow: none;
+    width: var(--gs-rail-width);
+    min-width: var(--gs-rail-width);
+    padding: var(--gs-space-3) var(--gs-space-1);
+    background: var(--gs-surface-muted);
+    border-right: 1px solid var(--gs-line);
+  }
+  .vs .vs-rail__tab.is-active {
+    color: var(--gs-accent);
+    background: var(--gs-accent-soft);
+  }
+  .vs .vs-bottom-dock :is(.vs-page-select, .vs-select, .vs-menu > summary) {
+    background: transparent;
+    border-color: var(--gs-line);
+    box-shadow: none;
+  }
+  .vs .vs-bottom-dock :is(button, summary, label) {
+    color: var(--gs-text-secondary);
+  }
+  .vs .vs-header {
+    color: var(--gs-text);
+    border-bottom: 1px solid var(--gs-line);
+    box-shadow: none;
+    background: var(--gs-material);
+    backdrop-filter: blur(20px);
+    padding: 0 var(--gs-space-5);
+  }
+  .vs .vs-title__input:not(:focus) {
+    background: transparent;
+    border-color: transparent;
+  }
+  .vs {
+    color: var(--gs-text);
+    background: var(--gs-workspace);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-family: var(--gs-font);
+    font-size: var(--gs-text-13);
+    line-height: var(--gs-line-height-body);
+    --v2-rail: var(--gs-rail-width);
+    --v2-panel: var(--gs-panel-width);
+    --v2-dock: var(--gs-dock-width);
+    --v2-radius: var(--gs-radius-card);
+    --v2-float-shadow: var(--gs-shadow-float);
+    --v2-kicker: var(--gs-text-11);
+  }
+  /* Only the editor shell fills the page; portaled menus also use .vs. */
+  .vs-root > .vs {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .vs
+    :is(
+      .gs-button,
+      .panel-action,
+      .panel-secondary-action,
+      .vs-compose-action,
+      input,
+      select,
+      textarea
+    ) {
+    border-radius: var(--gs-radius-control);
+  }
+  .vs :is(input, select, textarea) {
+    border-color: var(--gs-control-line);
+    background: var(--gs-surface);
+    color: var(--gs-text);
+  }
+  .vs :is(.gs-button--primary, .vs-share-btn):active:not(:disabled) {
+    background: var(--gs-accent-pressed);
+  }
+  .studio-color-popover {
+    position: fixed;
+    z-index: var(--gs-z-picker);
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    box-shadow: var(--gs-shadow-popup);
+    display: flex;
+    flex-direction: column;
+    animation: gs-pop var(--gs-duration-pop) var(--gs-ease-out);
+    font-family: var(--gs-font);
+    box-sizing: border-box;
+    width: 300px;
+    max-width: calc(100vw - 16px);
+    overflow-x: hidden;
+    padding: var(--gs-space-4);
+    gap: var(--gs-space-4);
+    border-radius: var(--gs-radius-menu);
+    color: var(--gs-text);
+  }
+  .vs :is([role='menuitem'], .vs-context-action, .vs-inspector summary) {
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-regular);
+    border-radius: var(--gs-radius-control);
+  }
+  .vs :is(button, summary, input, select, textarea):focus-visible {
+    outline: 2px solid var(--gs-focus-color);
+    outline-offset: 2px;
+  }
+  .studio-color-popover :is(button, input):focus-visible {
+    outline: 2px solid var(--gs-focus-color);
+    outline-offset: 2px;
+  }
+  .studio-color-popover input {
+    font-family: var(--gs-font);
+    border-radius: var(--gs-radius-control);
+  }
+}

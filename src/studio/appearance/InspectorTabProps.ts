@@ -1,0 +1,23 @@
+import type { ReactNode } from 'react';
+import type { EditorAdapter } from '../../vision/contracts';
+import type { BoardItem } from '../../vision/document';
+import type { AppearanceField } from '../../vision/appearance/controls';
+export type Field = keyof BoardItem | AppearanceField;
+export type InspectorTabProps = {
+  adapter: EditorAdapter;
+  item: BoardItem;
+  selected: BoardItem[];
+  locked: boolean;
+  sharedLayout: boolean;
+  allText: boolean;
+  allAssets: boolean;
+  allDrawings: boolean;
+  sharedFill: boolean;
+  read(entry: BoardItem | undefined, key: Field): unknown;
+  set(key: Field, value: unknown): void;
+  mixed(key: Field): boolean;
+  number(label: string, key: Field, min: number, max: number, step?: number): ReactNode;
+  color(label: string, key: Field, fallback: string): ReactNode;
+  patch(value: Partial<BoardItem>): void;
+  runMedia(action: () => Promise<void>): Promise<void>;
+};

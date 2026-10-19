@@ -2,15 +2,8 @@ import { ReplaceImageDialog } from '../studio/ReplaceImageDialog';
 import { selectableIds } from '../studio/selection';
 import { ZoomControls } from '../studio/chrome/ZoomControls';
 import { Button } from '../studio/ui/Button';
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from 'react';
+import { Slider } from '../studio/ui/Slider';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
 import { KonvaStage } from '../vision/canvas/KonvaStage';
@@ -20,12 +13,6 @@ import { ContextActions } from '../studio/ContextActions';
 import { ObjectDock } from '../studio/appearance/ObjectDock';
 import { useMenuPlacement } from '../studio/useMenuPlacement';
 import { EditorFeatures, type EditorPanel } from '../studio/EditorFeatures';
-import {
-  selectedAppearance,
-  selectedQuickShape,
-  tweakpaneD1Enabled,
-  tweakpaneD2Enabled,
-} from '../studio/appearance/feature';
 import type { StudioTab } from '../studio/studioTypes';
 import {
   ChevronDownIcon,
@@ -34,23 +21,20 @@ import {
   MarkerIcon,
   PenIcon,
   SelectIcon,
+  MagnetIcon,
 } from '../studio/icons';
 
 const DRAW_MODES = [
-  { id: 'pen', label: 'pen', tip: 'Pen — freehand strokes', Icon: PenIcon },
-  { id: 'marker', label: 'marker', tip: 'Marker — bold strokes', Icon: MarkerIcon },
+  { id: 'pen', label: 'Pen', tip: 'Pen — freehand strokes', Icon: PenIcon },
+  { id: 'marker', label: 'Marker', tip: 'Marker — bold strokes', Icon: MarkerIcon },
   {
     id: 'highlighter',
-    label: 'highlighter',
+    label: 'Highlighter',
     tip: 'Highlighter — translucent marks',
     Icon: HighlighterIcon,
   },
-  { id: 'eraser', label: 'eraser', tip: 'Eraser — remove drawings', Icon: EraserIcon },
+  { id: 'eraser', label: 'Eraser', tip: 'Eraser — remove drawings', Icon: EraserIcon },
 ] as const;
-
-const QuickShapeInspector = lazy(() => import('../studio/appearance/QuickShapeInspector'));
-const UnifiedInspector = lazy(() => import('../studio/appearance/UnifiedInspector'));
-const HybridQuickBar = lazy(() => import('../studio/appearance/HybridQuickBar'));
 
 export function Editor({
   adapter,
@@ -62,6 +46,7 @@ export function Editor({
   initialTab: StudioTab | null;
 }) {
   const canvasSettings = useRef<HTMLDetailsElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   useEffect(() => {
     const doc = adapter.ownerWindow.document;
     const close = (event: PointerEvent) => {
@@ -86,6 +71,7 @@ export function Editor({
   useSyncExternalStore(adapter.subscribe, adapter.getSnapshot);
   const [drawMode, setDrawMode] = useState('select');
   const [drawingMenuOpen, setDrawingMenuOpen] = useState(false);
+  const [brush, setBrush] = useState({ color: '#33272b', width: 4, opacity: 1 });
   const [drawButton, setDrawButton] = useState<HTMLElement | null>(null);
   const [drawPalettePosition, setDrawPalettePosition] = useState({ top: 100, left: 80 });
   useLayoutEffect(() => {
@@ -107,11 +93,17 @@ export function Editor({
     observer.observe(drawButton);
     const palette = adapter.ownerWindow.document.querySelector('.vs-draw-pop');
     if (palette) observer.observe(palette);
+    const outside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!drawButton.contains(target) && !palette?.contains(target)) setDrawingMenuOpen(false);
+    };
+    adapter.ownerWindow.document.addEventListener('pointerdown', outside, true);
     adapter.ownerWindow.addEventListener('resize', update);
     adapter.ownerWindow.document.addEventListener('scroll', update, true);
     update();
     return () => {
       observer.disconnect();
+      adapter.ownerWindow.document.removeEventListener('pointerdown', outside, true);
       adapter.ownerWindow.removeEventListener('resize', update);
       adapter.ownerWindow.document.removeEventListener('scroll', update, true);
     };
@@ -189,6 +181,13 @@ export function Editor({
     };
   }, [contextMenu, adapter]);
   const [editorPanel, setEditorPanel] = useState<EditorPanel>(null);
+  const previousObjectIds = useRef(new Set(adapter.history.document.items.map((item) => item.id)));
+  const objectItems = adapter.history.document.items;
+  useEffect(() => {
+    const next = new Set(objectItems.map((item) => item.id));
+    if (objectItems.some((item) => !previousObjectIds.current.has(item.id))) setEditorPanel(null);
+    previousObjectIds.current = next;
+  }, [objectItems]);
   const formattingTrigger = useRef<HTMLButtonElement>(null);
   const closeMenu = () => setContextMenu(null);
   const [studioTab, setStudioTab] = useState<StudioTab | null>(initialTab);
@@ -218,9 +217,6 @@ export function Editor({
     };
   }, [workspaceNode, adapter]);
   const selection = adapter.getSelection();
-  const editable = tweakpaneD2Enabled ? selectedAppearance(adapter) : undefined;
-  const quickShape =
-    !tweakpaneD2Enabled && tweakpaneD1Enabled ? selectedQuickShape(adapter) : undefined;
   useEffect(() => {
     const isEditorInput = (target: EventTarget | null) => {
       const node = target as HTMLElement;
@@ -270,7 +266,8 @@ export function Editor({
       // Text editing owns its clipboard and undo. Inspector numeric/range edits
       // belong to document history; commit their gesture before undo/redo.
       if (textEntry) return;
-      const editorCommand = command && ['z', 'y', 'd', 'g'].includes(event.key.toLowerCase());
+      const editorCommand =
+        command && ['z', 'y', 'd', 'g', '0', '1'].includes(event.key.toLowerCase());
       if (nativeField && !editorCommand) return;
       if (nativeField && editorCommand) {
         target.blur();
@@ -284,6 +281,25 @@ export function Editor({
       )
         return;
       if (!event.key.startsWith('Arrow')) finishNudge();
+      if (
+        (['+', '=', '-', '_', '0'].includes(event.key) || (command && event.key === '1')) &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+        if (event.key === '0') adapter.fitBoard();
+        else if (event.key === '1') adapter.zoomView?.(1);
+        else
+          adapter.zoomView?.(
+            Math.max(
+              0.1,
+              Math.min(
+                4,
+                (zoom ?? displayZoom / 100) * (['+', '='].includes(event.key) ? 1.2 : 1 / 1.2),
+              ),
+            ),
+          );
+        return;
+      }
       if (command && event.key.toLowerCase() === 'a') {
         event.preventDefault();
         adapter.select(selectableIds(adapter.history.document.items));
@@ -384,24 +400,30 @@ export function Editor({
       adapter.ownerWindow.document.removeEventListener('focusout', focusOut);
       adapter.ownerWindow.document.removeEventListener('pointerup', release);
     };
-  }, [adapter]);
+  }, [adapter, zoom, displayZoom]);
 
   return (
     <StudioShell
       adapter={adapter}
       onHome={onHome}
       tab={studioTab}
-      setTab={setStudioTab}
+      setTab={(tab) => {
+        setStudioTab(tab);
+        setDrawingMenuOpen(false);
+        setDrawMode('select');
+      }}
       drawingTools={
         <div className="vs-menu vs-drawing-menu">
           <Button
             ref={setDrawButton}
-            className="vs-rail__tab"
+            className={`vs-rail__tab${drawMode !== 'select' || drawingMenuOpen ? ' is-active' : ''}`}
             aria-label="Drawing tools"
+            aria-pressed={drawMode !== 'select' || drawingMenuOpen}
             aria-expanded={drawingMenuOpen}
             aria-controls="drawing-palette"
             onClick={(event) => {
               event.preventDefault();
+              setStudioTab(null);
               setDrawingMenuOpen((open) => !open);
             }}
           >
@@ -431,7 +453,7 @@ export function Editor({
                     setDrawingMenuOpen(false);
                   }}
                 >
-                  <SelectIcon /> Arrange
+                  <SelectIcon /> Select
                 </Button>
                 {DRAW_MODES.map(({ id, label, tip, Icon }) => (
                   <Button
@@ -442,6 +464,13 @@ export function Editor({
                     data-tip={tip}
                     onClick={() => {
                       setDrawMode(id);
+                      setBrush((current) => ({
+                        ...current,
+                        width: id === 'pen' ? 4 : id === 'marker' ? 12 : 28,
+                        opacity: id === 'highlighter' ? 0.4 : 1,
+                      }));
+                      setDrawingMenuOpen(false);
+                      setStudioTab(null);
                       adapter.select([]);
                     }}
                   >
@@ -456,6 +485,42 @@ export function Editor({
       }
     >
       <div className="vs-stage-fill" ref={setWorkspaceNode}>
+        {drawMode !== 'select' && drawMode !== 'eraser' && (
+          <div className="vs-drawing-options" role="toolbar" aria-label="Brush options">
+            <label>
+              Color{' '}
+              <input
+                aria-label="Brush color"
+                type="color"
+                value={brush.color}
+                onChange={(event) => setBrush({ ...brush, color: event.target.value })}
+              />
+            </label>
+            <label>
+              Size{' '}
+              <Slider
+                aria-label="Brush size"
+                min="1"
+                max="80"
+                value={brush.width}
+                onChange={(event) => setBrush({ ...brush, width: Number(event.target.value) })}
+              />
+            </label>
+            <output>{brush.width}</output>
+            <label>
+              Opacity{' '}
+              <Slider
+                aria-label="Brush opacity"
+                min="10"
+                max="100"
+                value={Math.round(brush.opacity * 100)}
+                onChange={(event) =>
+                  setBrush({ ...brush, opacity: Number(event.target.value) / 100 })
+                }
+              />
+            </label>
+          </div>
+        )}
         {replacementId && (
           <ReplaceImageDialog
             adapter={adapter}
@@ -476,71 +541,37 @@ export function Editor({
             }}
           >
             <div className="vs-top-editing-bar__row">
-              {editable ? (
-                <Suspense fallback={<p role="status">Loading formatting tools…</p>}>
-                  <HybridQuickBar
-                    key={editable.id}
-                    adapter={adapter}
-                    trigger={formattingTrigger}
-                    open={editorPanel === 'style'}
-                    onAppearance={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
-                  />
-                </Suspense>
-              ) : (
-                <SelectionToolbar
-                  adapter={adapter}
-                  formattingTrigger={formattingTrigger}
-                  formattingOpen={editorPanel === 'style'}
-                  appearanceInspector={!!quickShape}
-                  replacingImage={false}
-                  onReplaceImage={() => {
-                    const selected = adapter.history.document.items.find((entry) =>
-                      adapter.selectedIds.includes(entry.id),
-                    );
-                    if (!selected) return;
-                    setReplacementId(selected.id);
-                  }}
-                  onEditStyle={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
-                />
-              )}
+              <SelectionToolbar
+                adapter={adapter}
+                formattingTrigger={formattingTrigger}
+                formattingOpen={editorPanel === 'style'}
+                replacingImage={false}
+                onReplaceImage={() => {
+                  const selected = adapter.history.document.items.find((entry) =>
+                    adapter.selectedIds.includes(entry.id),
+                  );
+                  if (!selected) return;
+                  setReplacementId(selected.id);
+                }}
+                onEditStyle={() => setEditorPanel(editorPanel === 'style' ? null : 'style')}
+              />
             </div>
-            {editorPanel && !editable && !(tweakpaneD2Enabled && selection.count > 1) && (
+            {editorPanel && (
               <ObjectDock
                 ownerWindow={adapter.ownerWindow}
                 trigger={formattingTrigger}
                 onClose={() => setEditorPanel(null)}
-                label={
-                  quickShape && editorPanel === 'style' ? 'Shape appearance' : 'Object formatting'
-                }
+                label="Object formatting"
               >
-                {quickShape && editorPanel === 'style' ? (
-                  <Suspense fallback={<p role="status">Loading appearance controls…</p>}>
-                    <QuickShapeInspector
-                      adapter={adapter}
-                      id={quickShape.id}
-                      onClose={() => setEditorPanel(null)}
-                    />
-                  </Suspense>
-                ) : (
-                  <EditorFeatures
-                    adapter={adapter}
-                    panel={editorPanel}
-                    setPanel={setEditorPanel}
-                    inline
-                  />
-                )}
+                <EditorFeatures
+                  adapter={adapter}
+                  panel={editorPanel}
+                  setPanel={setEditorPanel}
+                  inline
+                />
               </ObjectDock>
             )}
           </div>
-        )}
-        {editable && editorPanel === 'style' && (
-          <Suspense fallback={<p role="status">Loading appearance controls…</p>}>
-            <UnifiedInspector
-              adapter={adapter}
-              trigger={formattingTrigger}
-              onClose={() => setEditorPanel(null)}
-            />
-          </Suspense>
         )}
         <KonvaStage
           key="vision-canvas"
@@ -549,15 +580,42 @@ export function Editor({
           }}
           snappingContainer={snappingContainer}
           drawMode={drawMode}
+          brush={brush}
           adapter={adapter}
           zoom={zoom}
           onZoomChange={setZoom}
           onScaleChange={setDisplayZoom}
         />
         <div className="vs-bottom-dock" role="group" aria-label="Board controls">
-          <details className="vs-menu vs-canvas-settings" ref={canvasSettings}>
-            <summary className="vs-page-select" aria-label="Canvas settings">
-              Canvas settings <ChevronDownIcon />
+          <Button
+            className="vs-snap-quick"
+            aria-label="Snap to edges"
+            aria-pressed={adapter.snapToEdges}
+            data-tip={`Snap to edges: ${adapter.snapToEdges ? 'On' : 'Off'}`}
+            onClick={() => adapter.setSnapToEdges(!adapter.snapToEdges)}
+          >
+            <MagnetIcon />
+          </Button>
+          <details
+            className="vs-menu vs-canvas-settings"
+            ref={canvasSettings}
+            open={settingsOpen}
+            onToggle={(event) => setSettingsOpen(event.currentTarget.open)}
+          >
+            <summary role="presentation">
+              <Button
+                className="vs-page-select"
+                aria-label="Canvas options"
+                aria-expanded={settingsOpen}
+                aria-haspopup="true"
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (canvasSettings.current)
+                    canvasSettings.current.open = !canvasSettings.current.open;
+                }}
+              >
+                <span>Canvas options</span> <ChevronDownIcon />
+              </Button>
             </summary>
             <div className="vs-menu__pop">
               <div className="vs-snap-slot" ref={setSnappingContainer} />
@@ -565,7 +623,7 @@ export function Editor({
           </details>
           <span className="vs-bottom-dock__sep" aria-hidden="true" />
           <ZoomControls
-            value={zoom === null ? displayZoom : Math.round(zoom * 100)}
+            value={zoom === null ? displayZoom : zoom * 100}
             onChange={(next) => (adapter.zoomView ? adapter.zoomView(next) : setZoom(next))}
             onFit={() => adapter.fitBoard()}
           />

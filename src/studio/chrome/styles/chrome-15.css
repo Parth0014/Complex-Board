@@ -1,0 +1,318 @@
+@layer components {
+  @media (hover: hover) and (pointer: fine) {
+    .vs-brand:hover {
+      background: var(--gs-hover);
+    }
+    .vs ::-webkit-scrollbar-thumb:hover {
+      background: var(--gs-line);
+    }
+    .vs-icon-btn:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+      color: var(--gs-text);
+    }
+    .vs-icon-btn.is-danger:hover:not(:disabled) {
+      background: var(--gs-danger-soft);
+      color: var(--gs-danger);
+    }
+    .vs-header .vs-file-btn:hover {
+      background: var(--gs-hover);
+      transform: none;
+      filter: none;
+      box-shadow: none;
+    }
+    .vs-header .gs-button--primary:hover:not(:disabled) {
+      background: var(--gs-accent-hover);
+    }
+    .vs-input:hover {
+      border-color: var(--gs-text-secondary);
+    }
+    .vs-select:hover {
+      border-color: var(--gs-text-secondary);
+    }
+    .vs-textarea:hover {
+      border-color: var(--gs-text-secondary);
+    }
+    .vs-menu__item:hover {
+      background: var(--gs-hover);
+    }
+    input[type='color'].vs-color:hover {
+      border-color: var(--gs-text-secondary);
+    }
+    .vs-segmented button:hover:not(:disabled):not(.is-active) {
+      color: var(--gs-text);
+      background: var(--gs-line);
+    }
+    .vs-menu__item:hover:not(:disabled) {
+      background: var(--gs-accent-soft);
+      color: var(--gs-accent-hover);
+    }
+    .vs-menu__item:hover:not(:disabled) svg {
+      color: var(--gs-accent);
+    }
+    .create-shape-grid > button:hover {
+      background: var(--gs-accent-soft);
+      border-color: var(--gs-accent);
+      color: var(--gs-accent);
+    }
+    .vs-bottom-dock .vs-icon-btn:hover:not(:disabled) {
+      background: var(--gs-hover);
+      color: var(--gs-text);
+    }
+    .vs-bottom-dock .vs-page-select:hover {
+      background: var(--gs-hover);
+      color: var(--gs-text);
+    }
+    .vs-alert button:hover {
+      opacity: 1;
+    }
+    .gs-hybrid-quickbar > button:hover:not(:disabled) {
+      background: var(--gs-hover);
+    }
+    .vs-file-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--gs-shadow-popup);
+      filter: brightness(1.1);
+    }
+    .vs-rail__tab:hover {
+      background: var(--gs-hover);
+      color: var(--gs-text);
+    }
+    .gs-object-dock .vs-sec > summary:hover {
+      background: var(--gs-hover);
+      border-radius: var(--gs-radius-control);
+    }
+    .vs-export-option:hover:not(:disabled) {
+      background: var(--gs-hover);
+      border-color: var(--gs-accent);
+    }
+    .vs-export-option[data-format='png']:hover:not(:disabled) {
+      background: var(--gs-accent-soft);
+    }
+    .vs-sec > summary:hover {
+      background: var(--gs-line);
+    }
+    .vs-action-grid .vs-icon-btn:hover:not(:disabled) {
+      background: var(--gs-line);
+      border-color: var(--gs-line);
+      transform: translateY(-1px);
+    }
+    .vs-inspector__empty:hover .vs-empty__icon {
+      transform: scale(1.05) rotate(2deg);
+      border-color: var(--gs-line);
+      background: var(--gs-line);
+    }
+    .vs-layer:hover {
+      background: var(--gs-line);
+    }
+    .vs-layer-group > summary:hover {
+      background: var(--gs-line);
+    }
+    .vs-zoom .vs-icon-btn:hover {
+      background: var(--gs-line);
+    }
+    .home-board-card:hover {
+      background: var(--gs-hover);
+    }
+    .text-preset-card:hover {
+      background: var(--gs-hover);
+    }
+    .vs-page-select:hover {
+      background: var(--gs-line);
+    }
+    .panel-action:hover:not(:disabled) {
+      background: var(--gs-accent-hover);
+      transform: translateY(-1px);
+      box-shadow: none;
+    }
+    .panel-secondary-action:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+      border-color: var(--gs-line);
+    }
+    .shape-grid button:hover:not(:disabled) {
+      border-color: var(--gs-control-line);
+      color: var(--gs-text);
+      background: var(--gs-surface-muted);
+      transform: translateY(-1px);
+      box-shadow: none;
+    }
+    .templates-panel__card:hover {
+      border-color: var(--gs-accent);
+      box-shadow: none;
+      transform: translateY(-2px);
+      background: var(--gs-hover);
+    }
+    .templates-panel__apply:hover {
+      background: var(--gs-accent);
+      border-color: var(--gs-accent);
+      color: var(--gs-on-accent);
+    }
+    .upload-picker:hover {
+      border-color: var(--gs-accent);
+      background: var(--gs-accent-soft);
+    }
+    .upload-picker:hover .upload-picker__icon {
+      transform: scale(1.05);
+    }
+    .upload-picker:hover .upload-picker__button {
+      border-color: var(--gs-accent);
+    }
+    .text-panel__item:hover {
+      border-color: var(--gs-accent);
+      box-shadow: none;
+      transform: translateY(-1px);
+      background: var(--gs-accent-soft);
+    }
+    .create-shape-grid button:hover {
+      border-color: var(--gs-control-line);
+      background: var(--gs-hover);
+      box-shadow: none;
+    }
+    .ai-panel .panel-action:hover:not(:disabled) {
+      box-shadow: none;
+    }
+    .vs-compose-action:hover:not(.is-active) {
+      background: var(--gs-surface-muted);
+      color: var(--gs-text);
+    }
+    .vs-board-size select:hover {
+      background: var(--gs-surface-muted, var(--gs-surface-muted));
+    }
+    .vs-title__input:hover {
+      background: var(--gs-surface-muted);
+      border-color: var(--gs-line);
+    }
+    .vs-tools .vs-icon-btn:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+      color: var(--gs-text);
+    }
+    .vs-zoom .vs-icon-btn:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+      color: var(--gs-text);
+    }
+    .snap-toggle:hover {
+      background: var(--gs-surface-muted);
+      color: var(--gs-text);
+    }
+    .vs .vs-bottom-dock .vs-icon-btn:hover {
+      background: var(--gs-surface-muted);
+      transform: translateY(-1px);
+    }
+    .background-color-grid > .background-preset:hover:not(:disabled) {
+      border-color: var(--gs-control-line);
+    }
+    .vs select:hover:not(:disabled) {
+      border-color: var(--gs-control-line);
+      background-color: var(--gs-surface-muted);
+    }
+    .vs .vs-menu__item:hover:not(:disabled) {
+      background: var(--gs-accent-soft);
+      color: var(--gs-accent-hover);
+    }
+    .vs .vs-menu__item:hover:not(:disabled) svg {
+      color: inherit;
+    }
+    .vs .snap-toggle:hover {
+      background: var(--gs-surface-muted);
+    }
+    .studio-color-trigger:hover {
+      border-color: var(--gs-accent);
+      box-shadow: none;
+    }
+    .studio-color-swatches button:hover {
+      transform: scale(1.15);
+      border-color: var(--gs-accent);
+    }
+    .vs-context-actions button:hover {
+      background: var(--gs-surface-muted);
+      border-radius: var(--gs-radius-menu);
+    }
+    .vs-context-danger button:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+    }
+    .vs .shape-grid button:hover:not(:disabled) {
+      background: var(--gs-hover);
+      transform: none;
+    }
+    .vs .create-shape-grid button:hover {
+      background: var(--gs-hover);
+      transform: none;
+    }
+    .vs .vs-rail__tab:hover:not(:disabled) {
+      background: var(--gs-hover);
+      color: var(--gs-text);
+    }
+    .vs :is(input, select, textarea):hover:not(:disabled) {
+      border-color: var(--gs-control-line-hover);
+    }
+    .vs :is(.gs-button--primary, .vs-share-btn):hover:not(:disabled) {
+      background: var(--gs-accent-hover);
+    }
+    .vs :is([role='menuitem'], .vs-context-action, .vs-inspector summary):hover:not(:disabled) {
+      background: var(--gs-hover);
+    }
+    .vs-actionbar__button:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+    }
+    .vs-actionbar__grid button:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+    }
+    .vs-actionbar__full:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+    }
+    .vs-actionbar__button--primary:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+    }
+    .vs-actionbar__button--danger:hover:not(:disabled) {
+      background: var(--gs-surface-muted);
+    }
+    .elements-card:hover:not(:disabled) {
+      background: var(--gs-hover);
+      border-color: var(--gs-control-line);
+    }
+  }
+  .elements-card img {
+    width: 100%;
+    height: 100px;
+    object-fit: contain;
+  }
+  .elements-card span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  /* Empty state (item 30, §4): Fraunces italic headline, secondary body,
+     one primary action. */
+  .gs-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gs-space-3);
+    padding: var(--gs-space-7) var(--gs-space-4);
+    text-align: center;
+  }
+  .gs-empty__title {
+    margin: 0;
+    font-family: var(--gs-font-display);
+    font-style: italic;
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-strong);
+    color: var(--gs-text);
+  }
+  /* Panel title spec (item 37): Fraunces 18, 400. */
+  .gs-panel-title {
+    margin: 0;
+    font-family: var(--gs-font-display);
+    font-size: var(--gs-text-18);
+    font-weight: var(--gs-weight-regular);
+    color: var(--gs-text);
+  }
+  .gs-empty__body {
+    margin: 0;
+    font-size: var(--gs-text-13);
+    color: var(--gs-text-secondary);
+  }
+  .gs-formatting-popover input[type='checkbox'] {
+    width: 16px;
+  }
+}

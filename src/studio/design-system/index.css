@@ -6,3 +6,8 @@
 @import './photo-tools.css';
 @import './sliders.css';
 @import './inspector.css';
+
+@import '../ui/NumberField.css';
+
+@import '../chrome/StudioChrome.css';
+@import '../chrome/DesktopReview.css';

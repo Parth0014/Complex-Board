@@ -1,0 +1,325 @@
+@layer components {
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    font-family: var(--gs-font);
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+  body {
+    font-family: var(--gs-font);
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+  #root {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .vs-root {
+    font-family: var(--gs-font);
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .vs input {
+    font: inherit;
+    color: inherit;
+  }
+  .vs textarea {
+    font: inherit;
+    color: inherit;
+  }
+  .vs-header__start {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: var(--gs-space-4);
+  }
+  .vs button {
+    font: inherit;
+    cursor: pointer;
+  }
+  .vs-header__end {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: var(--gs-space-2);
+  }
+  .vs button:disabled {
+    cursor: default;
+    opacity: 0.38;
+  }
+  .vs img {
+    display: block;
+    max-width: 100%;
+  }
+  .vs ::selection {
+    background: var(--gs-accent-soft);
+  }
+  .vs ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .vs ::-webkit-scrollbar-thumb {
+    background: var(--gs-line);
+    border-radius: var(--gs-radius-control);
+  }
+  .vs ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  /* history: a quiet segmented pair, centered */
+  .vs-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid transparent;
+    border-radius: var(--gs-radius-menu);
+    background: transparent;
+    color: var(--gs-text-secondary);
+    transition:
+      background-color var(--gs-duration-overlay) var(--gs-ease),
+      color var(--gs-duration-overlay) var(--gs-ease);
+    flex-shrink: 0;
+  }
+  .vs-icon-btn:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+  /* header buttons share one height and radius */
+  .vs-header .gs-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    height: var(--gs-control-height);
+    padding: 0 var(--gs-space-3);
+    border-radius: var(--gs-radius-control);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-strong);
+    transform: none;
+    filter: none;
+    box-shadow: none;
+    list-style: none;
+    cursor: pointer;
+  }
+  .vs-icon-btn.is-active {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+  /* header buttons share one height and radius */
+  .vs-header .vs-file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    height: var(--gs-control-height);
+    padding: 0 var(--gs-space-3);
+    border-radius: var(--gs-radius-control);
+    font-size: var(--gs-text-13);
+    transform: none;
+    filter: none;
+    box-shadow: none;
+    list-style: none;
+    cursor: pointer;
+    color: var(--gs-text);
+    background: transparent;
+    border: 0;
+    font-weight: var(--gs-weight-medium);
+  }
+  .vs-header .vs-file-btn::-webkit-details-marker {
+    display: none;
+  }
+  .vs-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .vs-header .vs-menu[open] .vs-file-btn {
+    background: var(--gs-hover);
+    transform: none;
+    filter: none;
+    box-shadow: none;
+  }
+  .vs-field > span:first-child {
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-strong);
+    letter-spacing: 0.02em;
+    color: var(--gs-text-secondary);
+  }
+  .vs-input {
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-menu);
+    background: var(--gs-surface);
+    padding: var(--gs-space-3) var(--gs-space-3);
+    font-size: var(--gs-text-13);
+    width: 100%;
+    box-shadow: none;
+    transition:
+      background-color var(--gs-duration-overlay) var(--gs-ease),
+      box-shadow var(--gs-duration-overlay) var(--gs-ease);
+  }
+  .vs-select {
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-menu);
+    background: var(--gs-surface);
+    padding: var(--gs-space-3) var(--gs-space-3);
+    font-size: var(--gs-text-13);
+    width: 100%;
+    box-shadow: none;
+    transition:
+      background-color var(--gs-duration-overlay) var(--gs-ease),
+      box-shadow var(--gs-duration-overlay) var(--gs-ease);
+  }
+  /* menus (File) */
+  .vs-header .vs-menu {
+    position: relative;
+  }
+  .vs-input:focus {
+    border-color: var(--gs-accent);
+    box-shadow: var(--gs-focus);
+  }
+  .vs-select:focus {
+    border-color: var(--gs-accent);
+    box-shadow: var(--gs-focus);
+  }
+  .vs-textarea:focus {
+    border-color: var(--gs-accent);
+    box-shadow: var(--gs-focus);
+  }
+  .vs-header .vs-menu__pop {
+    position: absolute;
+    right: 0;
+    left: auto;
+    top: calc(100% + var(--gs-space-2));
+    min-width: 248px;
+    padding: var(--gs-space-2);
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--v2-radius);
+    box-shadow: var(--v2-float-shadow);
+    z-index: var(--gs-z-popover);
+  }
+  .vs-textarea {
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-menu);
+    background: var(--gs-surface);
+    padding: var(--gs-space-3) var(--gs-space-3);
+    font-size: var(--gs-text-13);
+    width: 100%;
+    box-shadow: none;
+    transition:
+      background-color var(--gs-duration-overlay) var(--gs-ease),
+      box-shadow var(--gs-duration-overlay) var(--gs-ease);
+    resize: vertical;
+    min-height: 64px;
+  }
+  input[type='color'].vs-color {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-menu);
+    background: var(--gs-surface);
+    padding: 3px;
+    cursor: pointer;
+    box-shadow: none;
+    transition:
+      background-color var(--gs-duration-overlay) var(--gs-ease),
+      box-shadow var(--gs-duration-overlay) var(--gs-ease);
+  }
+  .vs-lib:not(.is-collapsed) .vs-rail {
+    background: var(--gs-surface-muted);
+  }
+  input[type='color'].vs-color::-webkit-color-swatch-wrapper {
+    padding: 1px;
+  }
+  .vs-rail .vs-menu > .vs-rail__tab {
+    position: relative;
+    width: 100%;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: var(--gs-space-2) 0;
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    letter-spacing: 0;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  input[type='color'].vs-color::-webkit-color-swatch {
+    border: none;
+    border-radius: var(--gs-radius-control);
+  }
+  .vs-rail__tab > span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  input[type='color'].vs-color::-moz-color-swatch {
+    border: none;
+    border-radius: var(--gs-radius-control);
+  }
+  .vs-rail__tab svg {
+    width: 20px;
+    height: 20px;
+  }
+  .vs-segmented {
+    display: inline-flex;
+    background: var(--gs-surface-muted);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-pill);
+    padding: var(--gs-space-1);
+    gap: 2px;
+    box-shadow: none;
+  }
+  .vs-segmented button {
+    border: 0;
+    background: transparent;
+    border-radius: var(--gs-radius-pill);
+    padding: var(--gs-space-2) var(--gs-space-4);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-strong);
+    color: var(--gs-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition:
+      background-color var(--gs-duration-overlay) var(--gs-ease),
+      color var(--gs-duration-overlay) var(--gs-ease);
+  }
+  .vs-rail__tab[aria-pressed='true'] {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+  .vs-rail__tab[aria-expanded='true'] {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+}

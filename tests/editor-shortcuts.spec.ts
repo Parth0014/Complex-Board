@@ -86,6 +86,7 @@ test('font picker allows document commands and keeps arrow navigation local', as
   );
   await page.getByRole('button', { name: 'Font family', exact: true }).click();
   await expect(page.getByRole('listbox', { name: 'Fonts', exact: true })).toBeVisible();
+  await page.getByRole('option', { name: 'Georgia', exact: true }).focus();
   await page.keyboard.press('Control+d');
   await expect
     .poll(() => handle.evaluate(({ adapter }) => adapter.history.document.items.length))

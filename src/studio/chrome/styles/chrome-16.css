@@ -1,0 +1,252 @@
+@layer components {
+  @media (max-width: 600px) {
+    .vs-inspector.is-collapsed {
+      transform: translateY(calc(100% + 16px));
+      opacity: 0;
+      pointer-events: none;
+    }
+    .vs-header {
+      gap: var(--gs-space-2);
+      padding: 0 var(--gs-space-3);
+    }
+    .vs-brand__name {
+      display: none;
+    }
+    .vs-title {
+      padding-left: var(--gs-space-2);
+    }
+    .vs-save span:last-child {
+      display: none;
+    }
+    .vs-header .gs-button span {
+      display: none;
+    }
+    .vs-header .gs-button {
+      padding: var(--gs-space-3) var(--gs-space-3);
+    }
+    .vs-lib {
+      left: 12px;
+      right: 12px;
+      top: auto;
+      bottom: 12px;
+      width: auto;
+      max-height: 55vh;
+      flex-direction: column;
+      border-radius: var(--gs-radius-dialog);
+    }
+    .vs-rail__tab {
+      width: auto;
+      padding: var(--gs-space-2) var(--gs-space-4);
+      flex-direction: row;
+      font-size: var(--gs-text-11);
+    }
+    .vs-rail__tab::before {
+      display: none;
+    }
+    .vs-rail__tab.is-active {
+      background: var(--gs-accent-soft);
+    }
+    .vs-rail__divider {
+      width: 1px;
+      height: 24px;
+      margin: 0 var(--gs-space-2);
+    }
+    .vs-rail__badge {
+      top: 6px;
+      right: 8px;
+    }
+    .vs-inspector {
+      left: 12px;
+      right: 12px;
+      top: auto;
+      bottom: 12px;
+      width: auto;
+      max-height: 65vh;
+      border-radius: var(--gs-radius-dialog);
+    }
+    .vs-zoom {
+      right: 12px;
+      bottom: 160px;
+    }
+    .vs-zoom .vs-range {
+      display: none;
+    }
+    .canvas-tools {
+      display: none;
+    }
+    .vs-rail {
+      flex-direction: row;
+      border-right: 0;
+      border-bottom: 1px solid var(--gs-line);
+      padding: var(--gs-space-3) var(--gs-space-3);
+      overflow-x: auto;
+      overflow-y: hidden;
+      width: 100%;
+    }
+    .vs-lib.is-collapsed {
+      transform: none;
+      width: auto;
+    }
+    .vs-stage-fill {
+      padding-bottom: 80px;
+      gap: var(--gs-space-2);
+    }
+    .vs-bottom-dock .canvas-tools {
+      display: none;
+    }
+    .vs-lib__panel {
+      min-height: 0;
+    }
+    .vs-title__input {
+      width: 120px;
+      font-size: var(--gs-text-13);
+    }
+    .vs-lib__head {
+      padding: 20px var(--gs-space-4) var(--gs-space-3);
+    }
+    .vs-lib__head h3 {
+      font-size: var(--gs-text-18);
+    }
+    .vs-rail__tab.is-active::before {
+      top: auto;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      width: auto;
+      height: 3px;
+      border-radius: var(--gs-radius-control) var(--gs-radius-control) 0 0;
+    }
+    .vs .vs-zoom .vs-range {
+      display: none;
+    }
+    .vs .vs-canvas-settings summary {
+      font-size: var(--gs-text-11);
+    }
+    .vs .vs-header {
+      gap: var(--gs-space-1);
+      padding: 0 var(--gs-space-2);
+    }
+    .vs .vs-brand {
+      width: 32px;
+      min-width: 32px;
+      padding: 0;
+    }
+    .vs .vs-title {
+      flex: 1;
+      min-width: 0;
+      gap: var(--gs-space-1);
+      padding-left: var(--gs-space-2);
+    }
+    .vs .vs-title__input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: var(--gs-space-1);
+      text-overflow: ellipsis;
+    }
+    .vs .vs-header__spacer {
+      display: none;
+    }
+    .vs .vs-header .gs-button {
+      flex-shrink: 0;
+      min-width: 32px;
+      padding: var(--gs-space-2) var(--gs-space-2);
+    }
+    .vs .vs-file-btn {
+      padding: var(--gs-space-2);
+    }
+    .vs .vs-lib:not(.is-collapsed) {
+      width: 100%;
+      position: absolute;
+      inset: auto 0 0;
+      height: 56px;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      overflow: visible;
+      background: var(--gs-workspace);
+      transform: none;
+    }
+    .vs .vs-lib {
+      position: absolute;
+      inset: auto 0 0;
+      width: 100%;
+      height: 56px;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      overflow: visible;
+      background: var(--gs-workspace);
+      transform: none;
+    }
+    .vs .vs-lib.is-collapsed {
+      position: absolute;
+      inset: auto 0 0;
+      width: 100%;
+      height: 56px;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      overflow: visible;
+      background: var(--gs-workspace);
+      transform: none;
+    }
+    .vs .vs-rail {
+      width: 100%;
+      min-width: 0;
+      height: 56px;
+      padding: var(--gs-space-1);
+      gap: var(--gs-space-1);
+      flex-direction: row;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .vs .vs-rail__tab {
+      width: auto;
+      padding-inline: var(--gs-space-3);
+      min-width: 52px;
+      height: 48px;
+      min-height: 48px;
+      flex: 0 0 auto;
+      flex-direction: column;
+      padding: var(--gs-space-1);
+      font-size: var(--gs-text-11);
+    }
+    .vs .vs-rail__divider {
+      width: 1px;
+      height: 24px;
+      flex-shrink: 0;
+      margin: var(--gs-space-1);
+    }
+    .vs .vs-lib__panel {
+      position: absolute;
+      inset: auto 0 96px;
+      width: 100%;
+      max-height: min(55dvh, calc(100dvh - 160px));
+      min-height: 0;
+      background: var(--gs-surface);
+      border: 1px solid var(--gs-line);
+      border-radius: var(--gs-radius-menu);
+      overflow: hidden;
+    }
+    .vs .vs-lib__body {
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .vs .vs-bottom-dock {
+      flex-wrap: wrap;
+      left: 0;
+      right: 0;
+      padding: var(--gs-space-1) var(--gs-space-2);
+      gap: var(--gs-space-1);
+    }
+    .vs .vs-stage-fill > .gs-artboard {
+      bottom: 96px;
+    }
+  }
+  /* v2 override (was @layer v2): on small screens the dock floats above the
+     scrollbar track instead of spanning the bottom edge. Must come after the
+     (max-width: 719px) components rule above. */
+}

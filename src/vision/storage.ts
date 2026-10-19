@@ -107,7 +107,10 @@ export async function listBoards(
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor) return;
-        if (String(cursor.key).startsWith(LEGACY_RECOVERY_PREFIX)) {
+        if (
+          String(cursor.key).startsWith(LEGACY_RECOVERY_PREFIX) ||
+          String(cursor.key).startsWith('trash:')
+        ) {
           cursor.continue();
           return;
         }
@@ -155,6 +158,42 @@ export async function listBoards(
         resolve(result.sort((a, b) => (b.document.updatedAt || 0) - (a.document.updatedAt || 0)));
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+}
+
+/** Atomic, recoverable deletion; shared photo records stay untouched. */
+export async function trashBoard(owner: Window & typeof globalThis, id: string, restore = false) {
+  const db = await openBoardStore(owner);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('boards', 'readwrite'),
+        store = tx.objectStore('boards');
+      const from = restore ? 'trash:' + id : id,
+        to = restore ? id : 'trash:' + id;
+      const request = store.get(from);
+      request.onsuccess = () => {
+        if (!request.result) {
+          reject(new Error('This board is no longer available.'));
+          tx.abort();
+          return;
+        }
+        const target = store.get(to);
+        target.onsuccess = () => {
+          if (target.result) {
+            reject(new Error('A board with this ID already exists. Refresh your boards.'));
+            tx.abort();
+            return;
+          }
+          store.put(request.result, to);
+          store.delete(from);
+        };
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('The board could not be moved.'));
     });
   } finally {
     db.close();

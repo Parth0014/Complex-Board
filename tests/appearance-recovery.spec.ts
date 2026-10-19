@@ -71,12 +71,12 @@ test('explicit storage rollback preserves media, snapshots v3 data and produces 
   });
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(canonical.title);
   const saved = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   expect(JSON.parse(readFileSync((await (await saved).path())!, 'utf8')).version).toBe(2);
   await page.getByLabel('File menu', { exact: true }).click();
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
   const png = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
+  await page.getByRole('button', { name: /High-resolution PNG/ }).click();
   expect(
     readFileSync((await (await png).path())!).equals(
       readFileSync('exports/appearance-legacy/phase-c.png'),

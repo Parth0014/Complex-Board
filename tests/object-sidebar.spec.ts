@@ -37,6 +37,10 @@ test('object sidebar separates editing from geometry and shows only shared tools
   await handle.evaluate(({ adapter }, ids) => adapter.select(ids), ids);
   await dock.getByRole('tab', { name: 'Edit', exact: true }).click();
   await expect(dock.getByLabel('Styled text', { exact: true })).toHaveCount(0);
+  await dock
+    .locator('summary')
+    .filter({ hasText: /^Opacity$/ })
+    .click();
   await expect(dock.getByLabel('Opacity (%)', { exact: true })).toBeVisible();
   await page.screenshot({ path: '.godmode/screenshots/sidebar-mixed.png' });
 });
@@ -61,7 +65,8 @@ test('photo, shape, drawing and locked selections keep a focused sidebar on desk
   });
   await page.getByRole('button', { name: 'Image effects', exact: true }).click();
   const dock = page.getByRole('complementary', { name: 'Object formatting', exact: true });
-  await expect(dock.locator('summary').filter({ hasText: /^Filters$/ })).toBeVisible();
+  await expect(dock.locator('summary').filter({ hasText: /^(Fit|Filters)$/ })).toHaveCount(0);
+  await expect(dock.getByRole('button', { name: /^(Fit|Fill) image$/ })).toHaveCount(0);
   await expect(dock.getByLabel('Brightness (%)', { exact: true })).toBeHidden();
   await expect(dock.getByRole('button', { name: 'Compare original image' })).toHaveCount(0);
   await expect(dock.getByLabel('Temperature', { exact: true })).toHaveCount(0);
@@ -69,6 +74,7 @@ test('photo, shape, drawing and locked selections keep a focused sidebar on desk
   await dock.getByRole('tab', { name: 'Layout', exact: true }).click();
   await expect(dock.getByLabel('Bounds width', { exact: true })).toBeVisible();
   await expect(dock.getByLabel('Position X', { exact: true })).toHaveCount(0);
+  await expect(dock.getByRole('button', { name: 'Fit to content' })).toHaveCount(0);
   await handle.evaluate(({ adapter }, id) => adapter.select([id]), ids.shape);
   await dock.getByRole('tab', { name: 'Edit', exact: true }).click();
   await expect(dock.getByRole('button', { name: 'Shape fill color', exact: true })).toBeVisible();
@@ -112,6 +118,7 @@ test('layers keep long names within the panel and actions reachable', async ({ p
   const dock = page.getByRole('complementary', { name: 'Object formatting', exact: true });
   await dock.getByRole('tab', { name: 'Layers', exact: true }).click();
   const body = dock.locator('.object-inspector-body');
+
   expect(await body.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   await expect(dock.getByRole('button', { name: 'Lock layer', exact: true })).toBeInViewport();
   await dock.getByRole('button', { name: 'Lock layer', exact: true }).click();
@@ -134,24 +141,26 @@ test('sidebar crop controls stay contained through apply and cancel', async ({ p
   await page.getByRole('button', { name: 'Image effects', exact: true }).click();
   const dock = page.getByRole('complementary', { name: 'Object formatting', exact: true });
   for (const action of ['Cancel crop', 'Apply crop']) {
-    await dock.getByRole('button', { name: 'Edit crop', exact: true }).click();
-    await expect(dock.getByRole('slider', { name: 'Photo zoom', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Adjust photo', exact: true }).click();
+    await expect(page.getByRole('slider', { name: 'Photo zoom', exact: true })).toBeVisible();
+    await expect(dock.getByRole('slider', { name: 'Photo zoom', exact: true })).toHaveCount(0);
     expect(
       await dock
         .locator('.object-inspector-body')
         .evaluate((el) => el.scrollWidth <= el.clientWidth),
     ).toBe(true);
-    const button = dock.getByRole('button', { name: action, exact: true });
+    const button = page.getByRole('button', { name: action, exact: true });
     await button.scrollIntoViewIfNeeded();
     const contained = await button.evaluate((el) => {
-      const panel = el.closest('.object-inspector-body')!.getBoundingClientRect(),
+      const panel = el.closest('.vs-top-editing-bar')!.getBoundingClientRect(),
         box = el.getBoundingClientRect();
       return box.left >= panel.left && box.right <= panel.right;
     });
+
     expect(contained).toBe(true);
     await page.screenshot({ path: '.godmode/screenshots/sidebar-crop.png' });
     await button.click();
-    await expect(dock.getByRole('button', { name: 'Edit crop', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Adjust photo', exact: true })).toBeVisible();
     expect(await handle.evaluate(({ adapter }) => !!adapter.cropDraft)).toBe(false);
   }
 });

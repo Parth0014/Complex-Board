@@ -60,7 +60,8 @@
     /* ── Typography ─────────────────────────────── */
     --gs-font: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --gs-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-    --gs-text-11: 11px;
+    --gs-text-11: 12px;
+    --gs-control-height: 32px;
     --gs-text-13: 13px;
     --gs-text-15: 15px;
     --gs-text-18: 18px;

@@ -1,0 +1,320 @@
+@layer components {
+  .vs-title__input:focus {
+    background: var(--gs-surface);
+    border-color: var(--gs-accent);
+    outline: none;
+    box-shadow: var(--gs-focus);
+  }
+  .gs-hybrid-quickbar > button[aria-pressed='true'] {
+    background: var(--gs-accent-soft);
+    color: var(--gs-accent);
+  }
+  .vs-save {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-1);
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-regular);
+    color: var(--gs-text-secondary);
+    white-space: nowrap;
+  }
+  .gs-hybrid-quickbar select {
+    border: 1px solid var(--gs-line);
+    background: var(--gs-surface);
+    padding: 0 var(--gs-space-2);
+    max-width: 128px;
+  }
+  .vs-save__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gs-success);
+    flex-shrink: 0;
+    box-shadow: none;
+  }
+  .gs-quick-divider {
+    height: 20px;
+    margin-inline: var(--gs-space-1);
+  }
+  .vs-header__spacer {
+    flex: 1;
+    min-width: 8px;
+  }
+  /* ───────────────── Right: appearance inspector (docked) ───────────────── */
+  .gs-appearance-dock {
+    position: relative;
+    inset: auto;
+    flex: 0 0 var(--v2-dock);
+    width: var(--v2-dock);
+    max-height: none;
+    height: 100%;
+    background: var(--gs-surface);
+    border: 0;
+    border-left: 1px solid var(--gs-line);
+    border-radius: 0;
+    box-shadow: none;
+    z-index: var(--gs-z-panel);
+  }
+  .gs-appearance-dock .gs-appearance-header {
+    height: var(--gs-header-height);
+    padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
+  }
+  .gs-appearance-header p {
+    display: none;
+  }
+  .gs-appearance-header h2 {
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-strong);
+    text-transform: capitalize;
+  }
+  .gs-appearance-fields h3 {
+    margin: var(--gs-space-5) 0 var(--gs-space-2);
+    font-size: var(--v2-kicker);
+    font-weight: var(--gs-weight-strong);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gs-text-secondary);
+  }
+  .gs-appearance-fields h3:first-child {
+    margin-top: 0;
+  }
+  .vs-menu[open] .vs-file-btn {
+    transform: translateY(-1px);
+    box-shadow: var(--gs-shadow-popup);
+    filter: brightness(1.1);
+  }
+  /* ── Object formatting dock (legacy EditorFeatures / QuickShape panel) ── */
+  .gs-object-dock.gs-formatting-popover {
+    position: relative;
+    inset: auto;
+    flex: 0 0 var(--v2-dock);
+    width: var(--v2-dock);
+    max-width: none;
+    max-height: none;
+    height: 100%;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--gs-surface);
+    border: 0;
+    border-left: 1px solid var(--gs-line);
+    border-radius: 0;
+    box-shadow: none;
+    z-index: var(--gs-z-panel);
+    animation: gs-dock-in var(--gs-duration-overlay) var(--gs-ease-out);
+    min-height: 0;
+  }
+  .vs-file-btn .vs-menu__pop {
+    color: var(--gs-text);
+  }
+  .gs-object-dock .vs-inspector__body {
+    padding: 0 var(--gs-space-4) var(--gs-space-5);
+  }
+  .gs-object-dock .gs-shape-inspector__body {
+    padding: 0 var(--gs-space-4) var(--gs-space-5);
+  }
+  .gs-object-dock .vs-insp-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--gs-header-height);
+    margin: 0 0 var(--gs-space-2);
+    padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
+    background: var(--gs-surface);
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .gs-object-dock .gs-shape-inspector > header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--gs-header-height);
+    margin: 0 0 var(--gs-space-2);
+    padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
+    background: var(--gs-surface);
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .vs-lib.is-collapsed .vs-lib__panel {
+    display: none;
+  }
+  /* Keep the column stable for the 120ms content exit, then release its space. */
+  .vs-lib__panel.is-exiting .vs-lib__body {
+    animation: none;
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--gs-space-1)));
+    transition:
+      opacity var(--gs-duration-pop) var(--gs-ease-out),
+      transform var(--gs-duration-pop) var(--gs-ease-out);
+  }
+  .gs-object-dock .vs-insp-head h3 {
+    margin: 0;
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-strong);
+  }
+  .gs-object-dock .gs-shape-inspector > header h3 {
+    margin: 0;
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-strong);
+  }
+  .gs-object-dock .gs-shape-inspector > header p {
+    display: none;
+  }
+  /* sections: flat rows divided by hairlines instead of nested bordered cards */
+  .gs-object-dock .vs-sec {
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--gs-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .vs-rail__tab span:last-child {
+    white-space: nowrap;
+  }
+  .gs-object-dock .vs-sec > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    min-height: 44px;
+    padding: 0 var(--gs-space-1);
+    background: transparent;
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-strong);
+    cursor: pointer;
+  }
+  .gs-object-dock .vs-sec__title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--gs-text);
+  }
+  /* Number input with unit suffix (item 33f): 32px, px suffix. */
+  .vs-input-unit {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+  }
+  .vs-input-unit .vs-input {
+    height: 32px;
+    padding-right: var(--gs-space-6);
+  }
+  .vs-input-unit__suffix {
+    position: absolute;
+    right: var(--gs-space-3);
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+    pointer-events: none;
+  }
+  .gs-object-dock .vs-sec__body {
+    display: grid;
+    gap: var(--gs-space-3);
+    padding: var(--gs-space-1) var(--gs-space-1) var(--gs-space-4);
+  }
+  .vs-rail__tab::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%) scaleY(0);
+    width: 3px;
+    height: 24px;
+    background: var(--gs-accent);
+    border-radius: 0 var(--gs-radius-control) var(--gs-radius-control) 0;
+    transition: transform var(--gs-duration-overlay) var(--gs-ease);
+    display: none;
+  }
+  .gs-object-dock label {
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    color: var(--gs-text-secondary);
+  }
+  .vs-properties-section {
+    padding: var(--gs-space-4) 0;
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .vs-properties-section:last-child {
+    border-bottom: 0;
+  }
+  .vs-properties-section > h3 {
+    margin: 0 0 var(--gs-space-3);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    color: var(--gs-text);
+  }
+  .vs-properties-section__body {
+    display: grid;
+    gap: var(--gs-space-3);
+  }
+  .vs-properties-section__body .vs-field {
+    margin: 0;
+  }
+  .vs-properties-section__body > p {
+    margin: 0;
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
+  .vs-properties-section__body textarea {
+    min-height: 64px;
+  }
+  .vs-properties-section .vs-properties-section {
+    padding: var(--gs-space-3) 0 0;
+    border: 0;
+  }
+  .gs-object-dock .vs-field > span {
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    color: var(--gs-text-secondary);
+  }
+  .gs-object-dock
+    :is(input:not([type='checkbox'], [type='range'], [type='color']), select, textarea) {
+    min-height: var(--gs-control-height);
+    padding: 0 var(--gs-space-2);
+    background: var(--gs-surface);
+  }
+  .vs-rail__tab--ai.is-active {
+    color: var(--gs-accent);
+  }
+  .gs-object-dock textarea {
+    padding: var(--gs-space-2);
+  }
+  .vs-rail__tab--ai.is-active::before {
+    background: var(--gs-accent);
+  }
+  /* Not enough room for three columns: the inspector floats over the canvas again. */
+  /* Not enough room for three columns: the inspector floats over the canvas again. */
+  .vs-rail__divider {
+    width: auto;
+    height: 1px;
+    background: var(--gs-line);
+    margin: var(--gs-space-2) var(--gs-space-2);
+  }
+  .vs-rail__badge {
+    position: absolute;
+    top: 8px;
+    right: 18px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gs-accent);
+    border: 2px solid var(--gs-surface-muted);
+    box-shadow: none;
+  }
+  .vs-lib__panel {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    width: var(--v2-panel);
+    background: var(--gs-surface);
+  }
+}

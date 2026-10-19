@@ -18,7 +18,7 @@ test('removed card generators leave saved card objects and exports unchanged', a
   const fixture = JSON.parse(readFileSync('tests/fixtures/legacy-cards.json', 'utf8'));
   await expect(page.getByLabel('Board name', { exact: true })).toHaveValue(fixture.title);
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   const restored = JSON.parse(readFileSync((await (await pending).path())!, 'utf8'));
   expect(restored.version).toBe(3);
   expect(restored.items).toEqual(migrateDocument(fixture).items);

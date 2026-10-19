@@ -12,7 +12,7 @@ test('editable .visbo downloads restore the complete document and remain undoabl
   const before = await handle.evaluate(({ adapter }) => adapter.history.document);
   await page.getByLabel('File menu', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   const download = await pending;
   expect(download.suggestedFilename()).toMatch(/\.visbo$/);
   const bytes = readFileSync((await download.path())!);

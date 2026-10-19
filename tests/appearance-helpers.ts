@@ -56,7 +56,7 @@ export async function runtime(page: Page) {
 export async function downloadBackup(page: Page): Promise<BoardDocument> {
   await page.getByLabel('File menu', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   const document = JSON.parse(readFileSync((await (await pending).path())!, 'utf8'));
   await page.getByLabel('File menu', { exact: true }).click();
   return document;

@@ -75,9 +75,9 @@ test('curated insertion, text, history and export', async ({ page }) => {
   const railBounds = await page.getByRole('navigation', { name: 'Studio tools' }).boundingBox();
   expect(railBounds!.width).toBeLessThanOrEqual(90);
   await page.screenshot({ path: 'test-results/editor.png' });
-  await page.getByRole('button', { name: /Share/ }).click();
+  await page.getByRole('button', { name: /Export/ }).click();
   const downloadEvent = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
+  await page.getByRole('button', { name: /High-resolution PNG/ }).click();
   const download = await downloadEvent;
   const path = await download.path();
   expect(path).toBeTruthy();
@@ -85,7 +85,7 @@ test('curated insertion, text, history and export', async ({ page }) => {
   expect(png.readUInt32BE(16)).toBe(1080);
   expect(png.readUInt32BE(20)).toBe(1080);
   const highDownloadEvent = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download 2× PNG', exact: true }).click();
+  await page.getByRole('button', { name: 'Download 2Ã— PNG', exact: true }).click();
   const highDownload = await highDownloadEvent;
   const highPng = readFileSync((await highDownload.path())!);
   expect(highPng.readUInt32BE(16)).toBe(2160);

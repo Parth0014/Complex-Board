@@ -17,10 +17,10 @@ async function photo(page: Page) {
   );
 }
 async function backup(page: Page) {
-  if (!(await page.getByRole('button', { name: 'Save .visbo file', exact: true }).isVisible()))
+  if (!(await page.getByRole('menuitem', { name: 'Download board file', exact: true }).isVisible()))
     await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   const saved = await pending;
   return readFileSync((await saved.path())!, 'utf8');
 }
@@ -80,9 +80,9 @@ test('photos retain originals, edits, undo and portable backups in a fresh brows
     await expect(restored.getByText('Board items (1)', { exact: true })).toBeVisible();
     await restored.reload();
     await expect(restored.getByText('Board items (1)', { exact: true })).toBeVisible();
-    await restored.getByRole('button', { name: /Share/ }).click();
+    await restored.getByRole('button', { name: /Export/ }).click();
     const pending = restored.waitForEvent('download');
-    await restored.getByRole('button', { name: 'Download PNG', exact: true }).click();
+    await restored.getByRole('button', { name: /High-resolution PNG/ }).click();
     const exported = await pending;
     const png = readFileSync((await exported.path())!);
     expect(png.readUInt32BE(16)).toBe(1080);
@@ -138,7 +138,7 @@ test('rejects invalid uploads and prevents delayed photo insertion over newer ed
   await page
     .getByLabel('Upload photos', { exact: true })
     .setInputFiles({ name: 'home.png', mimeType: 'image/png', buffer: original });
-  await expect(page.getByText('Preparing your photos…', { exact: true })).toBeVisible();
+  await expect(page.getByText('Preparing your photosâ€¦', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'circle', exact: true }).click();
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
@@ -214,9 +214,9 @@ test('photo drops stay contained and duplicate uploads share storage through fra
   await expect(page.getByText('Board items (4)', { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByText('Board items (4)', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /Share/ }).click();
+  await page.getByRole('button', { name: /Export/ }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download PDF', exact: true }).click();
+  await page.getByRole('button', { name: /PDF/ }).click();
   const exported = await pending;
   expect(
     readFileSync((await exported.path())!)

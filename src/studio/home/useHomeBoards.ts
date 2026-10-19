@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { ELEMENT_THEMES } from '../../assets/elementThemes';
+import type { StudioTab } from '../studioTypes';
 import { newBoard, type BoardDocument } from '../../vision/document';
-import { deleteBoard, listBoards, saveBoard } from '../../vision/storage';
+import { trashBoard, listBoards, saveBoard } from '../../vision/storage';
 
-export type OpenBoard = (id: string, isNew: boolean) => Promise<void>;
+export type OpenBoard = (id: string, isNew: boolean, startTab?: StudioTab | null) => Promise<void>;
 export function useHomeBoards(onOpen: OpenBoard) {
   const [boards, setBoards] = useState<{ id: string; document: BoardDocument }[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
-  const [kind, setKind] = useState('yearly');
-  const [theme, setTheme] = useState('growth');
-  const [orientation, setOrientation] = useState('1920x1080');
+  const [startMode, setStartMode] = useState<'blank' | 'templates' | 'photos'>('blank');
+  const [removed, setRemoved] = useState<Array<{ id: string; document: BoardDocument }>>([]);
+  const [orientation, setOrientation] = useState('1080x1920');
   const [title, setTitle] = useState('');
   const year = new Date().getFullYear();
   useEffect(() => {
@@ -56,18 +56,18 @@ export function useHomeBoards(onOpen: OpenBoard) {
         window,
         {
           ...newBoard(),
-          title:
-            title.trim() ||
-            (kind === 'yearly'
-              ? 'My ' + year + ' vision'
-              : ELEMENT_THEMES.find((item) => item.id === theme)!.label),
+          title: title.trim() || 'My ' + year + ' vision',
           width,
           height,
-          boardTheme: kind === 'yearly' ? 'planning' : theme,
+          boardTheme: 'planning',
         },
         id,
       );
-      await open(id, true);
+      await onOpen(
+        id,
+        true,
+        startMode === 'templates' ? 'templates' : startMode === 'photos' ? 'uploads' : null,
+      );
     } catch {
       setError('Unable to save your new board. Please try again.');
       setBusy(false);
@@ -75,16 +75,12 @@ export function useHomeBoards(onOpen: OpenBoard) {
   };
   const remove = async (id: string) => {
     const board = boards.find((board) => board.id === id);
-    if (
-      !board ||
-      busy ||
-      !window.confirm(`Delete “${board.document.title}”? This cannot be undone.`)
-    )
-      return;
+    if (!board || busy) return;
     setBusy(true);
     setError('');
     try {
-      await deleteBoard(window, id);
+      await trashBoard(window, id);
+      setRemoved((current) => [...current, board]);
       setBoards((current) => current.filter((board) => board.id !== id));
     } catch {
       setError('Unable to delete this board. Please try again.');
@@ -92,17 +88,37 @@ export function useHomeBoards(onOpen: OpenBoard) {
       setBusy(false);
     }
   };
+  const undoRemove = async () => {
+    const board = removed.at(-1);
+    if (!board || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await trashBoard(window, board.id, true);
+      setBoards((current) =>
+        [board, ...current].sort(
+          (a, b) => (b.document.updatedAt || 0) - (a.document.updatedAt || 0),
+        ),
+      );
+      setRemoved((current) => current.slice(0, -1));
+    } catch {
+      setError('Unable to restore the board. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
   return {
+    startMode,
+    setStartMode,
+    removed,
+    undoRemove,
+    dismissRemoved: () => setRemoved([]),
     boards,
     loading,
     busy,
     error,
     creating,
     setCreating,
-    kind,
-    setKind,
-    theme,
-    setTheme,
     orientation,
     setOrientation,
     title,

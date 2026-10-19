@@ -1,0 +1,857 @@
+﻿@layer components {
+  .vs-header-file-menu {
+    display: block;
+    min-height: 0;
+    height: auto;
+    width: 250px;
+    max-width: calc(100vw - 24px);
+    padding: 8px;
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-control);
+    box-shadow: var(--gs-shadow-popup);
+  }
+  .vs-header-file-menu .vs-menu__item {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    text-align: left;
+    justify-content: flex-start;
+  }
+  .vs-rail__group-label {
+    display: block;
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-strong);
+    color: var(--gs-text-secondary);
+    text-align: center;
+    padding-block: 8px 2px;
+  }
+  .vs-actionbar > .gs-number-field {
+    width: 108px;
+    flex: 0 0 108px;
+  }
+  .vs-canvas-onboarding {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(440px, calc(100% - 24px));
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 24px;
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-control);
+    z-index: 3;
+  }
+  .vs-canvas-onboarding h2 {
+    margin: 0 0 8px;
+    font-size: var(--gs-text-18);
+  }
+  .vs-canvas-onboarding .vs-canvas-onboarding__close {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+  }
+  .vs-canvas-onboarding p {
+    margin: 0 0 16px;
+    color: var(--gs-text-secondary);
+  }
+  .vs-canvas-onboarding > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .inspector-text-style {
+    display: flex;
+    gap: 8px;
+  }
+  .inspector-color-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .inspector-color-value code,
+  .inspector-help {
+    font-size: var(--gs-text-13);
+    color: var(--gs-text-secondary);
+  }
+  .inspector-help {
+    margin: 0;
+  }
+  .inspector-centered {
+    justify-content: center;
+  }
+  .inspector-background-row {
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-strong);
+    color: var(--gs-text-secondary);
+    padding: 8px 10px;
+    background: var(--gs-surface-muted);
+    border-radius: var(--gs-radius-control);
+  }
+  .inspector-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .object-inspector .vs-layer {
+    grid-template-columns: 24px minmax(0, 1fr) repeat(2, 24px);
+    gap: 2px;
+  }
+  .object-inspector .vs-layer > .vs-icon-btn,
+  .object-inspector .vs-layer > .vs-layer__move {
+    width: 24px;
+    min-width: 24px;
+    height: 28px;
+    padding: 0;
+  }
+  .object-inspector .vs-layer__thumb {
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+  }
+  @media (max-width: 600px) {
+    .vs-canvas-onboarding {
+      padding: 16px;
+    }
+  }
+}
+
+@layer components {
+  .canvas-scroll-space {
+    position: relative;
+  }
+  .canvas-viewport-surface {
+    position: sticky;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+  }
+}
+@layer components {
+  .inspector-group-moves {
+    display: inline-flex;
+    margin-left: auto;
+    gap: 2px;
+  }
+  .inspector-group-moves .gs-button {
+    width: 24px;
+    min-width: 24px;
+    height: 28px;
+    padding: 0;
+  }
+}
+@layer components {
+  @media (pointer: coarse) {
+    .object-inspector .vs-layer {
+      grid-template-columns: 24px minmax(0, 1fr) repeat(2, 40px);
+    }
+    .object-inspector .vs-layer > .vs-icon-btn,
+    .object-inspector .vs-layer > .vs-layer__move {
+      width: 40px;
+      min-width: 40px;
+      height: 44px;
+    }
+  }
+}
+@layer components {
+  @media (min-width: 601px) and (max-width: 900px) {
+    .vs .vs-lib {
+      flex-direction: row;
+      height: 100%;
+      border-top: 0;
+    }
+    .vs .vs-rail {
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .vs .vs-rail__tab {
+      min-width: 0;
+      flex-shrink: 0;
+    }
+  }
+  @media (max-width: 600px) {
+    .vs .vs-body > .gs-object-dock.gs-formatting-popover {
+      height: 45dvh;
+      max-height: 45dvh;
+      min-height: 0;
+    }
+    .vs .gs-formatting-popover .object-inspector.vs-inspector--inline {
+      height: 100%;
+    }
+    .vs .vs-body:has(> .gs-object-dock) .vs-canvas {
+      height: calc(55dvh - var(--gs-header-height));
+      max-height: calc(55dvh - var(--gs-header-height));
+      position: absolute;
+      inset: 0 0 auto;
+      width: 100%;
+    }
+  }
+}
+
+@layer components {
+  .board-size-dialog,
+  .shortcuts-dialog {
+    width: min(520px, calc(100vw - 32px));
+    padding: 24px;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+  .vs.vs-veil {
+    background: color-mix(in srgb, var(--gs-text) 18%, transparent);
+  }
+  .board-size-dialog .vs-field {
+    margin-block: 20px;
+  }
+  .review-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .app-opening {
+    max-width: 640px;
+    margin: 12vh auto;
+    padding: 24px;
+  }
+  .shortcut-list {
+    margin: 20px 0 0;
+  }
+  .shortcut-list > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .shortcut-list dd {
+    margin: 0;
+    text-align: right;
+  }
+  .shortcut-list kbd {
+    font-size: var(--gs-text-13);
+  }
+  .vs-font-search {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--gs-surface);
+  }
+  .vs .vs-bottom-dock .vs-snap-quick {
+    color: var(--gs-text-secondary);
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-control-line);
+  }
+  .vs .vs-bottom-dock .vs-snap-quick[aria-pressed='true'] {
+    color: var(--gs-on-accent);
+    background: var(--gs-accent);
+    border-color: var(--gs-accent);
+  }
+  @media (hover: hover) {
+    .vs .vs-bottom-dock .vs-snap-quick[aria-pressed='true']:hover {
+      background: var(--gs-accent-hover);
+      border-color: var(--gs-accent-hover);
+    }
+  }
+  .studio-color-popover > .vs-field {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) 36px;
+    gap: 8px;
+    align-items: center;
+    font-size: var(--gs-text-13);
+  }
+  .studio-color-popover > .vs-field .gs-slider {
+    min-width: 0;
+  }
+  .studio-color-popover {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+  .studio-color-popover > [class] {
+    order: 0;
+  }
+  .studio-color-popover .studio-color-heading {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--gs-surface);
+  }
+  .studio-color-popover .studio-color-plane {
+    height: 144px;
+  }
+  .studio-color-popover .studio-color-spectrum .gs-slider {
+    width: 100%;
+  }
+}
+
+@layer components {
+  .vs-file-mobile-icon,
+  .vs-mobile-menu-item,
+  .vs-tools-scroll,
+  .vs-sheet-handle {
+    display: none;
+  }
+  .vs-header-file-menu .vs-mobile-menu-item {
+    display: none;
+  }
+  .vs-settings-compact {
+    display: none;
+  }
+  .vs .vs-save {
+    font-size: var(--gs-text-13);
+  }
+  .vs-rail-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+  .vs-rail-wrap > .vs-rail {
+    height: 100%;
+  }
+  .home-setup-dialog {
+    width: min(620px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .home-setup-dialog .home-setup {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .home-example-boards {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px 4px;
+  }
+  .home-example-boards img {
+    width: 30%;
+    height: auto;
+    min-width: 0;
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+    border: 4px solid var(--gs-surface);
+    border-radius: 4px;
+    box-shadow: var(--gs-shadow-float);
+  }
+  .home-example-boards img:first-child {
+    transform: rotate(-6deg) translateY(12px);
+  }
+  .home-example-boards img:last-child {
+    transform: rotate(6deg) translateY(12px);
+  }
+  @media (max-width: 600px) {
+    .vs {
+      --gs-header-height: 80px;
+    }
+    .vs .vs-bottom-dock {
+      flex-wrap: nowrap;
+      gap: 4px;
+      padding: 8px;
+    }
+    .vs .vs-bottom-dock .gs-button {
+      min-width: 32px;
+      width: 32px;
+      height: 40px;
+      padding: 4px;
+    }
+    .vs .vs-bottom-dock .vs-zoom {
+      gap: 2px;
+    }
+    .vs .vs-bottom-dock__sep {
+      margin: 0;
+    }
+    .vs .vs-canvas-settings summary {
+      padding: 4px;
+      gap: 4px;
+      font-size: var(--gs-text-13);
+    }
+    .vs .vs-settings-full {
+      display: none;
+    }
+    .vs .vs-settings-compact {
+      display: inline;
+    }
+    .vs .vs-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      height: 80px;
+      padding: 8px 12px;
+      gap: 8px;
+    }
+    .vs .vs-header__start {
+      min-width: 0;
+      display: flex;
+      gap: 8px;
+    }
+    .vs .vs-header .vs-brand {
+      padding: 0;
+      min-width: 28px;
+      flex: 0 0 28px;
+    }
+    .vs .vs-header .vs-brand svg {
+      width: 28px;
+      height: 28px;
+    }
+    .vs .vs-header .vs-brand__name {
+      display: none;
+    }
+    .vs .vs-header .vs-title {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 24px;
+      align-items: center;
+      gap: 2px 4px;
+      min-width: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    .vs .vs-title__input {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-width: 0;
+      font-size: var(--gs-text-13);
+      height: 28px;
+      padding: 0;
+    }
+    .vs .vs-header .vs-save {
+      display: inline-flex;
+      font-size: var(--gs-text-13);
+      gap: 4px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    .vs .vs-header .vs-header__center {
+      display: flex;
+      position: static;
+      transform: none;
+      width: auto;
+      margin: 0;
+      padding: 2px;
+      gap: 0;
+      background: var(--gs-surface-muted);
+    }
+    .vs .vs-header__center .gs-button {
+      width: 32px;
+      min-width: 32px;
+      height: 36px;
+      padding: 4px;
+    }
+    .vs .vs-header__end {
+      display: flex;
+      gap: 0;
+    }
+    .vs .vs-header .vs-header__end > .gs-button {
+      display: none;
+    }
+    .vs .vs-header__end > .vs-menu {
+      display: block;
+    }
+    .vs .vs-header .vs-file-btn {
+      width: 36px;
+      min-width: 36px;
+      height: 40px;
+      padding: 0;
+    }
+    .vs .vs-header .vs-file-label {
+      display: none;
+    }
+    .vs .vs-header .vs-file-mobile-icon {
+      display: inline;
+      font-size: var(--gs-text-24);
+      line-height: 1;
+    }
+    .vs .vs-mobile-menu-item {
+      display: flex;
+    }
+    .vs .vs-rail-wrap {
+      width: 100%;
+      height: calc(64px + env(safe-area-inset-bottom));
+    }
+    .vs .vs-rail-wrap > .vs-rail {
+      flex-direction: row;
+      justify-content: flex-start;
+      width: 100%;
+      height: calc(64px + env(safe-area-inset-bottom));
+      padding: 4px 32px calc(4px + env(safe-area-inset-bottom));
+      gap: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-padding-inline: 32px;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+    }
+    .vs .vs-rail__group-label {
+      display: none;
+    }
+    .vs .vs-rail .vs-rail__tab {
+      flex: 0 0 calc((100vw - 64px) / 4);
+      width: calc((100vw - 64px) / 4);
+      min-width: 0;
+      padding: 4px 0;
+      min-height: 52px;
+    }
+    .vs .vs-tools-scroll {
+      display: flex;
+      position: absolute;
+      top: 8px;
+      width: 32px;
+      min-width: 32px;
+      height: 48px;
+      padding: 4px;
+      z-index: 2;
+      color: var(--gs-accent);
+      background: var(--gs-surface);
+      border: 1px solid var(--gs-line);
+      border-radius: var(--gs-radius-control);
+      box-shadow: var(--gs-shadow-float);
+    }
+    .vs .vs-tools-scroll:disabled {
+      visibility: hidden;
+    }
+    .vs .vs-tools-scroll--back {
+      left: 0;
+    }
+    .vs .vs-tools-scroll--back svg {
+      transform: rotate(180deg);
+    }
+    .vs .vs-tools-scroll--next {
+      right: 0;
+    }
+    .vs .vs-lib__panel {
+      inset: auto 0 calc(64px + env(safe-area-inset-bottom));
+      height: 40dvh;
+      max-height: 40dvh;
+      min-height: 0;
+    }
+    .vs .vs-lib__head {
+      height: 48px;
+      min-height: 48px;
+    }
+    .vs .templates-panel__card {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+    }
+    .vs .templates-panel__visual {
+      width: 96px;
+      height: 170px;
+      padding: 0;
+    }
+    .vs .templates-panel__visual .templates-panel__preview {
+      width: 100%;
+      height: 100%;
+      max-height: 170px;
+      object-fit: contain;
+    }
+    .vs .templates-panel__visual .templates-panel__placeholder {
+      height: 100%;
+      min-height: 0;
+    }
+    .vs .templates-panel__meta {
+      padding: 0;
+    }
+    .vs .templates-panel__meta h3 {
+      margin: 0 0 12px;
+      font-size: var(--gs-text-13);
+    }
+    .vs .vs-header .vs-save > span {
+      display: inline;
+    }
+    .vs .vs-header .vs-save__dot {
+      display: inline-block;
+      flex: 0 0 6px;
+    }
+    .vs .vs-sheet-handle {
+      display: flex;
+      flex: 0 0 20px;
+      min-height: 20px;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      background: transparent;
+      touch-action: none;
+      cursor: grab;
+    }
+    .vs-sheet-handle span {
+      width: 32px;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--gs-control-line);
+    }
+    .vs .vs-body:has(.vs-lib__panel) :is(.vs-bottom-dock, .vs-top-editing-bar) {
+      display: none;
+    }
+    .home-example-boards {
+      max-width: 360px;
+      margin-inline: auto;
+    }
+  }
+}
+@layer components {
+  .vs .vs-header .vs-preview-trigger {
+    border: 1px solid var(--gs-line);
+    background: var(--gs-surface);
+    border-radius: var(--gs-radius-control);
+  }
+  .vs .vs-header .vs-export-trigger[aria-disabled='true'] {
+    background: var(--gs-line);
+    color: var(--gs-text);
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .vs .elements-theme-chips {
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+    padding-block: 4px 10px;
+  }
+  .vs .elements-theme-chips .gs-button {
+    flex-shrink: 0;
+    border: 1px solid var(--gs-line);
+    border-radius: 999px;
+  }
+  .vs .elements-theme-chips [aria-pressed='true'] {
+    background: var(--gs-accent);
+    color: white;
+    border-color: var(--gs-accent);
+  }
+  .vs .elements-card span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    line-height: 1.4;
+    min-height: 2.8em;
+    text-overflow: clip;
+  }
+  .vs .elements-placement-hint {
+    font-size: var(--gs-text-13);
+    color: var(--gs-text-secondary);
+  }
+  .vs .vs-rail__group-label {
+    color: var(--gs-text);
+  }
+}
+
+@layer components {
+  .object-inspector .vs-layer {
+    border-radius: var(--gs-radius-control);
+  }
+  .object-inspector .vs-layer > .vs-icon-btn {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .object-inspector .vs-layer:not(:hover):not(:focus-within) > .vs-icon-btn:not(.is-active) {
+      opacity: 0;
+    }
+  }
+}
+
+@layer components {
+  .studio-color-popover {
+    width: 300px;
+    padding: 16px;
+    gap: 12px;
+  }
+  .studio-color-popover .studio-color-heading {
+    font-weight: var(--gs-weight-strong);
+    font-size: var(--gs-text-13);
+    padding-bottom: 4px;
+  }
+  .studio-color-popover .studio-color-heading button {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+    border: 0;
+    background: transparent;
+  }
+  .studio-color-popover .studio-color-plane {
+    height: 152px;
+    border-radius: var(--gs-radius-control);
+  }
+  .studio-color-popover > .vs-field {
+    margin: 0;
+    min-height: 28px;
+  }
+  .studio-color-popover > .vs-field > span {
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+  }
+  .studio-color-popover > .vs-field output {
+    text-align: right;
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  .studio-color-popover .studio-color-spectrum {
+    display: grid;
+  }
+  .studio-color-popover .studio-color-hex {
+    border-radius: var(--gs-radius-control);
+    padding: 6px 8px;
+  }
+  .studio-color-popover .studio-color-current {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+  }
+  .studio-color-palette {
+    border-top: 1px solid var(--gs-line);
+    padding-top: 12px;
+  }
+  .studio-color-palette h4 {
+    margin: 0 0 8px;
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    color: var(--gs-text-secondary);
+  }
+  .studio-color-popover .studio-color-swatches {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .studio-color-popover .studio-color-swatches button {
+    height: 28px;
+    border-radius: 5px;
+  }
+}
+
+@layer components {
+  .studio-color-popover > .vs-field > span {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: var(--gs-weight-regular);
+  }
+}
+
+@layer components {
+  .studio-color-popover.studio-color-compact {
+    width: 280px;
+    padding: 10px;
+    gap: 8px;
+  }
+  .studio-color-compact .studio-color-heading {
+    padding: 0 2px;
+    font-size: var(--gs-text-11);
+  }
+  .studio-color-popover.studio-color-compact .studio-color-plane {
+    height: 228px;
+    border-radius: 5px;
+  }
+  .studio-color-tracks {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+  }
+  .studio-color-track-pair {
+    display: grid;
+    gap: 0;
+  }
+  .studio-color-compact .studio-color-track-pair > label {
+    display: block;
+    margin: 0;
+    min-width: 0;
+  }
+  .studio-color-track-pair > label > span,
+  .studio-color-track-pair output {
+    display: none;
+  }
+  .studio-color-compact .studio-color-track-pair .gs-slider {
+    width: 100%;
+    --gs-range-track-size: 10px;
+    --gs-range-thumb-size: 14px;
+  }
+  .studio-color-eyedropper.gs-button {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: 5px;
+  }
+  .studio-color-values {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, 1fr);
+    gap: 7px;
+  }
+  .studio-color-compact .studio-color-hex,
+  .studio-color-rgb {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    min-width: 0;
+  }
+  .studio-color-compact .studio-color-current {
+    display: none;
+  }
+  .studio-color-values label > span {
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+    text-transform: uppercase;
+  }
+  .studio-color-popover.studio-color-compact .studio-color-values input {
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    min-height: 32px;
+    border: 1px solid var(--gs-line);
+    border-radius: 5px;
+    padding: 4px 6px;
+    background: var(--gs-surface);
+    font-size: var(--gs-text-11);
+    font-variant-numeric: tabular-nums;
+    appearance: textfield;
+  }
+  .studio-color-values input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+  .studio-color-compact .studio-color-hex:focus-within {
+    box-shadow: none;
+  }
+  .studio-color-compact
+    .studio-color-alpha
+    input[type='range'].gs-slider::-webkit-slider-runnable-track {
+    background:
+      linear-gradient(to right, transparent, var(--picker-color)),
+      repeating-conic-gradient(var(--gs-line) 0% 25%, var(--gs-surface) 0% 50%) 0 / 8px 8px;
+  }
+  .studio-color-compact .studio-color-alpha input[type='range'].gs-slider::-moz-range-track {
+    background:
+      linear-gradient(to right, transparent, var(--picker-color)),
+      repeating-conic-gradient(var(--gs-line) 0% 25%, var(--gs-surface) 0% 50%) 0 / 8px 8px;
+  }
+}
+
+@layer components {
+  .studio-color-compact .studio-color-values > label {
+    order: 0;
+  }
+  .studio-color-compact .studio-color-track-pair > .studio-color-spectrum {
+    order: 0;
+  }
+  .studio-color-compact .studio-color-track-pair > .studio-color-alpha {
+    order: 1;
+  }
+}

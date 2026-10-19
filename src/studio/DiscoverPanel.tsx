@@ -3,7 +3,6 @@ import type { EditorAdapter } from '../vision/contracts';
 import { requestAI } from '../vision/aiClient';
 import { AIPanel } from './AIPanel';
 import { Button } from './ui/Button';
-import { errorMessage } from './errors';
 import { startCanvasDrag } from './canvasDrag';
 import type { GratitudeAsset } from '../assets/contracts';
 type Photo = {
@@ -35,6 +34,7 @@ export function DiscoverPanel({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [status, setStatus] = useState<Record<string, boolean> | null>(null);
+  const [statusRevision, setStatusRevision] = useState(0);
   const controller = useRef<AbortController | null>(null);
   useEffect(() => {
     let live = true;
@@ -42,12 +42,14 @@ export function DiscoverPanel({
       .then((value) => {
         if (live) setStatus(value);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (live) setStatus({ unsplash: false });
+      });
     return () => {
       live = false;
       controller.current?.abort();
     };
-  }, [adapter]);
+  }, [adapter, statusRevision]);
   async function search(next = 1, term = query) {
     controller.current?.abort();
     const request = new adapter.ownerWindow.AbortController();
@@ -66,7 +68,9 @@ export function DiscoverPanel({
         (id) => status?.[id] !== false && (next === 1 || cursors.current[id]?.more),
       );
       if (!providers.length)
-        throw new Error('Photo search is not connected yet. Add the image API keys on the server.');
+        throw new Error(
+          'Photo search is unavailable right now. You can still upload your own photos.',
+        );
       if (next === 1) cursors.current = {};
       const results = await Promise.allSettled(
         providers.map(async (provider) => {
@@ -95,7 +99,7 @@ export function DiscoverPanel({
       }
       if (failures === providers.length)
         throw new Error(
-          'Photo search is unavailable. Check the image API connection and try again.',
+          'Photo search is unavailable right now. Please try again later or upload your own photos.',
         );
       const combined: Photo[] = [];
       for (let i = 0; i < Math.max(0, ...batches.map((batch) => batch.length)); i++)
@@ -116,8 +120,8 @@ export function DiscoverPanel({
       setPage(next);
       setMore(Object.values(cursors.current).some((cursor) => cursor.more));
       if (failures) setNotice('Some photos could not be loaded. Load more to try again.');
-    } catch (e) {
-      if (!request.signal.aborted) setError(errorMessage(e));
+    } catch {
+      if (!request.signal.aborted) setError('Photos could not be loaded. Please try again.');
     } finally {
       if (!request.signal.aborted) setBusy(false);
     }
@@ -139,8 +143,8 @@ export function DiscoverPanel({
           ? 'Photo selected. Review it before replacing.'
           : 'Image added to your board.',
       );
-    } catch (e) {
-      setError(errorMessage(e));
+    } catch {
+      setError('This photo could not be added. Please try another photo.');
     } finally {
       setAdding('');
     }
@@ -160,6 +164,20 @@ export function DiscoverPanel({
         <AIPanel adapter={adapter} />
       ) : (
         <>
+          {status?.unsplash === false && (
+            <div className="gs-empty">
+              <h3 className="gs-empty__title">Photo search is unavailable</h3>
+              <p className="gs-empty__body">You can still add photos from Uploads.</p>
+              <Button
+                onClick={() => {
+                  setStatus(null);
+                  setStatusRevision((n) => n + 1);
+                }}
+              >
+                Check again
+              </Button>
+            </div>
+          )}
           <form
             className="discover-search"
             onSubmit={(e) => {
@@ -175,7 +193,11 @@ export function DiscoverPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <Button type="submit" disabled={!query.trim() || busy}>
+            <Button
+              type="submit"
+              disabled={busy || !status?.unsplash}
+              disabledReason={!query.trim() ? 'Enter a search term' : undefined}
+            >
               Search
             </Button>
           </form>
@@ -186,15 +208,19 @@ export function DiscoverPanel({
           )}
           <p className="ai-tool-help" role="status">
             {busy
-              ? 'Searching photos...'
+              ? 'Searching photos…'
               : adding
-                ? 'Adding image...'
+                ? 'Adding image…'
                 : notice ||
                   (page && !items.length
                     ? 'No photos found. Try another search.'
                     : searched
                       ? `Results for ${searched}`
-                      : 'Search to explore photos.')}
+                      : status === null
+                        ? 'Checking photo search…'
+                        : status.unsplash
+                          ? 'Search to explore photos.'
+                          : '')}
           </p>
           <a
             className="discover-source"

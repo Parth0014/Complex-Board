@@ -38,4 +38,10 @@ export const BACKGROUND_PALETTE: readonly PaletteSwatch[] = [
   { hex: '#e7efff', name: 'Sky' },
   { hex: '#fff3cd', name: 'Butter' },
   { hex: '#25263a', name: 'Midnight' },
+  { hex: '#eddcc8', name: 'Sand' },
+  { hex: '#d7e8e5', name: 'Sea glass' },
+  { hex: '#e4d5d4', name: 'Dusty rose' },
+  { hex: '#dce4d2', name: 'Olive mist' },
+  { hex: '#d5ddea', name: 'Blue gray' },
+  { hex: '#403747', name: 'Plum ink' },
 ];

@@ -42,7 +42,7 @@ test('marquee previews partial overlaps before release and clears when dragged a
 async function backup(page: Page): Promise<BoardDocument> {
   await page.getByLabel('File menu', { exact: true }).click();
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   const file = await (await download).path();
   const document = JSON.parse(readFileSync(file!, 'utf8')) as BoardDocument;
   await page.getByLabel('File menu', { exact: true }).click();
@@ -171,13 +171,13 @@ test('right-click submenus open on hover, flip at the edge, and support keyboard
 test('export dialog traps focus and returns it to Share', async ({ page }) => {
   await createBoard(page);
   await addText(page);
-  const share = page.getByRole('button', { name: 'Share', exact: true });
+  const share = page.getByRole('button', { name: 'Export', exact: true });
   await share.click();
   const dialog = page.getByRole('dialog', { name: 'Export board', exact: true });
   const close = dialog.getByRole('button', { name: 'Close export', exact: true });
   await expect(close).toBeFocused();
   await page.keyboard.press('Shift+Tab');
-  await expect(dialog.getByRole('button', { name: 'Download PDF', exact: true })).toBeFocused();
+  await expect(dialog.getByRole('button', { name: /PDF/ })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(close).toBeFocused();
   await page.keyboard.press('Escape');
@@ -216,7 +216,7 @@ test('the contextual toolbar and popovers stay inside a narrow viewport', async 
   const history = (await page.getByRole('group', { name: 'History', exact: true }).boundingBox())!;
   expect(title.x + title.width).toBeLessThanOrEqual(history.x);
   expect((await page.locator('.vs-rail').boundingBox())!.width).toBe(390);
-  await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Export', exact: true })).toBeVisible();
   const toolbar = page.getByRole('toolbar', { name: 'Selected object actions', exact: true });
   const box = (await toolbar.boundingBox())!;
   expect(box.x).toBeGreaterThanOrEqual(0);

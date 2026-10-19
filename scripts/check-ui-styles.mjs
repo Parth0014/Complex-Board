@@ -10,6 +10,10 @@ const walk = (folder) =>
 const foundation = readFileSync(resolve(root, 'design-system/foundations.css'), 'utf8');
 const tokens = new Set([...foundation.matchAll(/(--gs-[\w-]+)\s*:/g)].map((match) => match[1]));
 const errors = [];
+const breakpointValues = Object.values(
+  JSON.parse(readFileSync(resolve(root, 'design-system/breakpoints.json'), 'utf8')),
+);
+
 for (const file of walk(root).filter((file) => file.endsWith('.css'))) {
   const css = readFileSync(file, 'utf8');
   const name = relative(root, file);
@@ -19,6 +23,12 @@ for (const file of walk(root).filter((file) => file.endsWith('.css'))) {
   if (/transition\s*:\s*[^;{}]*\ball\b/.test(css))
     report('Forbid transition: all; list properties explicitly.');
   checkHoverGating(css, report);
+  for (const [, params] of css.matchAll(/@media\s+([^{}]+)/g)) {
+    for (const [, kind, value] of params.matchAll(/(max|min)-width:\s*(\d+)px/g)) {
+      if (!breakpointValues.includes(Number(value) - (kind === 'min' ? 1 : 0)))
+        report('Use a shared compact, tablet or desktop breakpoint: ' + value + 'px');
+    }
+  }
   for (const [, token] of css.matchAll(/var\((--gs-[\w-]+)/g)) {
     if (!tokens.has(token)) report('Undefined token ' + token);
   }

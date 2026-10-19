@@ -1,0 +1,17 @@
+@layer components {
+  .vs-crop-apply svg {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vs .gs-button.vs-crop-cancel:hover {
+      color: var(--gs-danger);
+      background: var(--gs-danger-soft);
+    }
+    .vs .gs-button.vs-crop-apply:hover {
+      background: var(--gs-accent-hover);
+      border-color: var(--gs-accent-hover);
+    }
+  }
+}

@@ -4,7 +4,7 @@ import type { GratitudeAsset } from '../assets/contracts';
 import type { EditorAdapter } from '../vision/contracts';
 import { assertPhoto, listMedia, mediaAsset } from '../vision/media';
 import { Skeleton } from './ui/Skeleton';
-import { CloseIcon, UploadIcon } from './icons';
+import { CloseIcon, UploadIcon, CheckIcon } from './icons';
 import { Button } from './ui/Button';
 import { Dialog } from './ui/Dialog';
 import { errorMessage } from './errors';
@@ -120,7 +120,7 @@ export function ReplaceImageDialog({
         <header className="replace-image-header">
           <div>
             <h2>Replace image</h2>
-            <p>Choose a new photo. Your frame and layout stay in place.</p>
+            <p>Choose a photo. Keep your frame and layout.</p>
           </div>
           <Button
             className="gs-icon-button"
@@ -149,9 +149,14 @@ export function ReplaceImageDialog({
               ))}
             </div>
             <div className="replace-image-source" hidden={source !== 'uploads'}>
-              <Button variant="secondary" disabled={busy} onClick={() => input.current?.click()}>
-                <UploadIcon /> Upload a new photo
-              </Button>
+              <div className="replace-image-library-heading">
+                <h3>
+                  Your photos <span>{uploads.length || ''}</span>
+                </h3>
+                <Button variant="secondary" disabled={busy} onClick={() => input.current?.click()}>
+                  <UploadIcon /> Upload photo
+                </Button>
+              </div>
               <input
                 ref={input}
                 hidden
@@ -193,6 +198,15 @@ export function ReplaceImageDialog({
                       onClick={() => chooseAsset(asset, url)}
                     >
                       <img src={url} alt={asset.title} loading="lazy" draggable={false} />
+                      {choice?.kind === 'asset' && choice.asset.id === asset.id ? (
+                        <span className="replace-image-selected" aria-hidden="true">
+                          <CheckIcon />
+                        </span>
+                      ) : (
+                        asset.id === original?.id && (
+                          <span className="replace-image-current">Current</span>
+                        )
+                      )}
                     </Button>
                   ))}
                 </div>
@@ -237,7 +251,7 @@ export function ReplaceImageDialog({
             </div>
           </section>
           <aside className="replace-image-preview" aria-label="Replacement preview">
-            <h3>{choice ? 'New image' : 'Current image'}</h3>
+            <h3>{choice ? 'Replacement preview' : 'Current image'}</h3>
             <div className="replace-image-preview-art">
               {(choice?.url || currentUrl) && (
                 <img
@@ -246,10 +260,8 @@ export function ReplaceImageDialog({
                 />
               )}
             </div>
-            <p>{choice ? choice.title : 'Select a photo to preview it here.'}</p>
-            <small>
-              Size, position and frame are preserved. You can adjust the crop after replacing.
-            </small>
+            <p>{choice ? choice.title : original?.title || 'Current photo'}</p>
+            <small>Your frame stays in place. Adjust the crop after replacing.</small>
           </aside>
         </div>
         <footer className="replace-image-footer">
@@ -259,19 +271,18 @@ export function ReplaceImageDialog({
                 ? 'Replacing image…'
                 : choice
                   ? 'Ready to replace'
-                  : 'Your board stays unchanged until you replace.')}
+                  : 'Choose a photo to continue.')}
           </div>
-          <Button disabled={busy} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            disabled={!choice || !target || !!target.locked}
-            loading={busy}
-            onClick={() => void apply()}
-          >
-            Replace image
-          </Button>
+          <div className="replace-image-actions">
+            <Button
+              variant="primary"
+              disabled={!choice || !target || !!target.locked}
+              loading={busy}
+              onClick={() => void apply()}
+            >
+              Replace image
+            </Button>
+          </div>
         </footer>
       </Dialog>
     </div>,

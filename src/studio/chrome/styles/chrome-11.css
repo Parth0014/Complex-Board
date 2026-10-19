@@ -1,0 +1,319 @@
+@layer components {
+  .studio-color-swatches {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+  }
+  .studio-color-swatches button {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--gs-radius-control);
+    border: 2px solid var(--gs-line);
+    cursor: pointer;
+    transition:
+      transform var(--gs-duration-overlay) var(--gs-ease),
+      border-color var(--gs-duration-overlay) var(--gs-ease);
+    padding: 0;
+  }
+  .vs-context-actions {
+    padding: var(--gs-space-2);
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .vs-context-actions svg {
+    width: 18px;
+    height: 18px;
+  }
+  .vs-context-actions button {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-3);
+    width: 100%;
+    padding: var(--gs-space-3) var(--gs-space-3);
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    font-size: var(--gs-text-13);
+    border-radius: var(--gs-radius-control);
+  }
+  .vs-context-actions button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  @media (min-width: 601px) {
+    .vs .vs-lib {
+      transition: none;
+    }
+    .vs-body {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0;
+      padding: 0;
+      grid-template-rows: minmax(0, 1fr);
+    }
+    .vs-lib {
+      position: relative;
+      inset: auto;
+      width: 360px;
+      min-height: 0;
+    }
+    .vs-canvas {
+      display: grid;
+      gap: 0;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vs-inspector {
+      position: relative;
+      inset: auto;
+      width: auto;
+      min-height: 0;
+    }
+    .vs-stage-fill {
+      padding: 0;
+    }
+    .vs-header {
+      padding-right: var(--gs-space-4);
+    }
+    .vs-canvas:has(> .vs-inspector[hidden]) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .vs .vs-rail__tab:hover {
+        background: var(--gs-surface-muted);
+        transform: none;
+      }
+    }
+    .vs .vs-lib.is-collapsed {
+      width: 60px;
+    }
+    .vs .vs-rail {
+      padding-block: var(--gs-space-3);
+      gap: var(--gs-space-1);
+      width: 60px;
+    }
+    .vs .vs-rail__tab {
+      padding-block: var(--gs-space-2);
+      border-radius: var(--gs-radius-menu, 8px);
+      transition:
+        background-color var(--gs-duration-overlay) var(--gs-ease),
+        border-color var(--gs-duration-overlay) var(--gs-ease),
+        box-shadow var(--gs-duration-overlay) var(--gs-ease);
+      width: 50px;
+      gap: var(--gs-space-1);
+      padding: var(--gs-space-2) 2px;
+      font-size: var(--gs-text-11);
+      font-weight: var(--gs-weight-strong);
+    }
+    .vs .vs-rail__tab svg {
+      width: 20px;
+      height: 20px;
+    }
+    .vs-object-context {
+      overflow: visible;
+    }
+    .vs-body > :is(.gs-object-dock, .gs-appearance-dock) {
+      grid-column: 3;
+      grid-row: 1;
+      min-height: 0;
+    }
+    /* Adapted from Muse e0a1a3a. Preserve grid docking throughout the desktop
+       range, overriding both the old <=1100px float and <=768px sheet. */
+    .vs-body > .gs-object-dock.gs-formatting-popover {
+      position: relative;
+      inset: auto;
+      width: var(--v2-dock);
+      max-width: none;
+      height: 100%;
+      max-height: none;
+      border: 0;
+      border-left: 1px solid var(--gs-line);
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .vs-lib__panel:not(.is-exiting) .vs-lib__body {
+      animation: gs-content-in var(--gs-duration-overlay) var(--gs-ease-out);
+    }
+    .vs-header__center {
+      border: 0;
+      background: var(--gs-surface-muted);
+      padding: var(--gs-space-1);
+      border-radius: var(--gs-radius-card);
+    }
+  }
+  .vs-object-context .vs-context-actions button {
+    padding-block: var(--gs-space-2);
+    min-height: 34px;
+  }
+  .vs-object-context .vs-context-actions:last-child {
+    border-bottom: none;
+  }
+  .vs-object-context {
+    position: fixed;
+    z-index: var(--gs-z-popover);
+    overflow: auto;
+    background: var(--gs-surface);
+    border: 1px solid var(--gs-line);
+    box-shadow: var(--gs-shadow-popup);
+    width: min(280px, calc(100vw - 16px));
+    border-radius: var(--gs-radius-dialog);
+    padding: var(--gs-space-2) 0;
+    height: auto;
+    min-height: 0;
+    color: var(--gs-text);
+  }
+  .vs-context-actions kbd {
+    margin-left: auto;
+    font: var(--gs-text-13) var(--gs-font);
+    background: var(--gs-surface-muted);
+    padding: var(--gs-space-1) var(--gs-space-2);
+    border-radius: var(--gs-radius-control);
+    color: var(--gs-text);
+    font-size: var(--gs-text-11);
+    white-space: nowrap;
+  }
+  .vs-object-context .vs-context-actions {
+    padding: var(--gs-space-1) var(--gs-space-2);
+    border-top: 1px solid var(--gs-line);
+  }
+  .vs-object-context > .vs-context-actions:first-child {
+    border-top: none;
+  }
+  .vs-context-danger button {
+    color: var(--gs-danger);
+  }
+  .vs-context-danger button svg {
+    color: var(--gs-danger);
+  }
+  .vs .studio-color-picker .studio-color-trigger {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0;
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-control);
+    box-shadow: none;
+  }
+  .studio-color-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+  }
+  .studio-color-heading button {
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: var(--gs-surface-muted);
+    font-size: var(--gs-text-18);
+    cursor: pointer;
+  }
+  .studio-color-popover .vs-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+  }
+  .studio-color-popover .vs-input {
+    width: 100%;
+    height: 34px;
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu);
+    font: var(--gs-text-13) var(--gs-font);
+    padding: var(--gs-space-2) 9px;
+  }
+  .studio-color-popover .vs-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gs-space-3);
+  }
+  .studio-color-popover .panel-secondary-action {
+    margin-top: 2px;
+    padding: var(--gs-space-2) var(--gs-space-3);
+    min-height: 32px;
+    font-size: var(--gs-text-13);
+    border-radius: var(--gs-radius-menu);
+  }
+  .studio-color-popover .studio-color-plane {
+    height: 168px;
+    flex-shrink: 0;
+    border-radius: var(--gs-radius-menu);
+    order: 1;
+  }
+  .studio-color-popover .studio-color-plane span {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--gs-on-accent);
+    box-shadow: var(--gs-picker-pointer-shadow);
+  }
+  .studio-color-popover .studio-color-swatches {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--gs-space-3);
+    order: 3;
+  }
+  .studio-color-popover .studio-color-swatches button {
+    min-width: 0;
+    width: 100%;
+    height: 30px;
+    padding: 0;
+    border-radius: 6px;
+    border: 1px solid var(--gs-line);
+  }
+  .studio-color-spectrum {
+    order: 2;
+    display: block;
+  }
+  .studio-color-hex {
+    order: 4;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-3);
+    padding: 7px 9px;
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu);
+  }
+  .studio-color-current {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--gs-line);
+    flex-shrink: 0;
+  }
+  .studio-color-hex-label {
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+  }
+  .studio-color-popover .studio-color-hex .vs-input {
+    min-width: 0;
+    text-transform: uppercase;
+    border: 0;
+    padding: 0;
+    height: 28px;
+    background: transparent;
+    font: var(--gs-text-13) var(--gs-font);
+  }
+  .studio-color-hex:focus-within {
+    border-color: var(--gs-accent);
+    box-shadow: none;
+  }
+  .studio-color-hex-error {
+    order: 5;
+    margin: var(--gs-space-1) 0 0;
+    font-size: var(--gs-text-11);
+    color: var(--gs-danger);
+  }
+  .vs :is(button, input, select, textarea, summary) {
+    corner-shape: round;
+  }
+  .vs .vs-header :is(.vs-icon-btn, .vs-file-btn, .vs-compose-action) {
+    color: var(--gs-text-secondary);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+}

@@ -10,16 +10,20 @@ export function Toast({
   onDismiss,
   error = false,
   warning = false,
+  action,
+  duration = INFO_MS,
 }: {
   message: string;
   onDismiss(): void;
   error?: boolean;
   warning?: boolean;
+  action?: { label: string; onClick(): void };
+  duration?: number;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const exitTimer = useRef<number | null>(null);
   const [exiting, setExiting] = useState(false);
-  const remaining = useRef(INFO_MS);
+  const remaining = useRef(duration);
   const deadline = useRef(0);
   const timer = useRef(0);
 
@@ -47,7 +51,7 @@ export function Toast({
   // Reset the clock when the message changes (a new toast replaces the old).
   useEffect(() => {
     const ownerWindow = root.current?.ownerDocument.defaultView;
-    remaining.current = INFO_MS;
+    remaining.current = duration;
     setExiting(false);
     start();
     return () => {
@@ -55,7 +59,7 @@ export function Toast({
       if (exitTimer.current !== null) ownerWindow?.clearTimeout(exitTimer.current);
       exitTimer.current = null;
     };
-  }, [message, error, start]);
+  }, [message, error, start, duration]);
 
   // Pause while the tab is hidden.
   useEffect(() => {
@@ -82,6 +86,11 @@ export function Toast({
     >
       <Icon />
       <span>{message}</span>
+      {action && (
+        <Button variant="primary" onClick={action.onClick}>
+          {action.label}
+        </Button>
+      )}
       <Button variant="secondary" onClick={dismiss}>
         Dismiss
       </Button>

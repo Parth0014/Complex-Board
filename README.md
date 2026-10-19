@@ -1,6 +1,6 @@
 # VisBo
 
-A local-first vision board editor built with React, TypeScript and Konva. Elements is empty; its bundled asset library has been removed. Boards save locally in IndexedDB.
+A local-first vision board editor built with React, TypeScript and Konva. Elements includes a bundled SVG artwork library. Boards save locally in IndexedDB.
 
 Add your own PNG/JPEG/WebP photos through Uploads or by dropping files onto the board. Originals stay separate from canvas edits; portable JSON backups include referenced photos.
 

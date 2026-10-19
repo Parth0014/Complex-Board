@@ -39,7 +39,7 @@ async function openArranger(page: Page, mode: 'failure' | 'pending' | 'ready', s
       );
     }, saved);
   await page.getByRole('button', { name: 'Uploads', exact: true }).click();
-  await page.getByRole('button', { name: 'Arrange photos', exact: true }).click();
+  await page.getByRole('button', { name: 'Create photo collage', exact: true }).click();
   await page.getByRole('button', { name: 'Select all', exact: true }).click();
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   return handle;
@@ -70,7 +70,7 @@ test('busy dialog cannot disappear on Escape and background cannot take focus', 
   page,
 }) => {
   const handle = await openArranger(page, 'ready');
-  const dialog = page.getByRole('dialog', { name: 'Arrange photos', exact: true });
+  const dialog = page.getByRole('dialog', { name: 'Create photo collage', exact: true });
   await expect(page.locator('.scrapbook-preset-art img')).toHaveCount(18);
   await handle.evaluate(({ adapter }) => {
     adapter.arrangePhotos = () => new Promise<void>(() => {});
@@ -101,7 +101,7 @@ test('replacement opens uploads without starting remote providers', async ({ pag
   );
   await page.getByRole('button', { name: 'Uploads', exact: true }).click();
   await page
-    .getByRole('button', { name: 'Upload photos', exact: true })
+    .locator('input[type="file"][aria-label="Upload photos"]')
     .setInputFiles({ name: 'replace.png', mimeType: 'image/png', buffer: file });
   await page
     .getByRole('button', { name: 'Add uploaded photo replace.png to board', exact: true })
@@ -113,4 +113,20 @@ test('replacement opens uploads without starting remote providers', async ({ pag
   await expect.poll(() => requests.some((url) => url.includes('/api/images/status'))).toBe(true);
   await page.getByRole('button', { name: 'Your uploads', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Choose replace.png', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Choose replace.png', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Replace image', exact: true });
+  await expect(dialog.getByRole('heading', { name: 'Replacement preview' })).toBeVisible();
+  const preview = dialog.locator('.replace-image-preview');
+  if (await preview.isVisible()) {
+    const bounds = (await dialog.boundingBox())!;
+    const panel = (await preview.boundingBox())!;
+    expect(panel.x + panel.width).toBeLessThanOrEqual(bounds.x + bounds.width);
+    const art = (await preview.locator('.replace-image-preview-art').boundingBox())!;
+    const caption = (await preview.locator('p').boundingBox())!;
+    expect(art.y + art.height).toBeLessThanOrEqual(caption.y);
+  }
+  await page.screenshot({ path: '.godmode/screenshots/replace-redesigned.png' });
+  await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toHaveCount(0);
+  await dialog.getByRole('button', { name: 'Close image picker', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
 });

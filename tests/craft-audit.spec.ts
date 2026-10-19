@@ -17,7 +17,7 @@ test('real-photo collage chooser supports families, shuffle, cached reopening an
     .map((name) => resolve(folder, name));
   await page.getByRole('button', { name: 'Upload photos', exact: true }).setInputFiles(files);
   await expect(page.locator('.discover-photo')).toHaveCount(5);
-  await page.getByRole('button', { name: 'Arrange photos', exact: true }).click();
+  await page.getByRole('button', { name: 'Create photo collage', exact: true }).click();
   await page.getByRole('button', { name: 'Select all', exact: true }).click();
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await expect(page.locator('.scrapbook-preset-art img')).toHaveCount(18, { timeout: 30000 });
@@ -52,10 +52,10 @@ test('real-photo collage chooser supports families, shuffle, cached reopening an
       throw new Error('Cache was not reused');
     };
   });
-  await page.getByRole('button', { name: 'Arrange photos', exact: true }).click();
+  await page.getByRole('button', { name: 'Create photo collage', exact: true }).click();
   await expect(page.locator('.scrapbook-preset-art img')).toHaveCount(18);
   await page.getByRole('button', { name: 'Add to canvas', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Arrange photos', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Create photo collage', exact: true })).toHaveCount(0);
   expect(await handle.evaluate(({ adapter }) => adapter.history.document.items.length)).toBe(5);
   expect(await handle.evaluate(({ adapter }) => adapter.selectedIds.length)).toBe(0);
 });

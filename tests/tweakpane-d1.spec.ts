@@ -286,9 +286,9 @@ test('save/reload and PNG export preserve the exact canvas artwork after inspect
       artwork.destroy();
     }
   });
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
+  await page.getByRole('button', { name: /High-resolution PNG/ }).click();
   const { readFileSync } = await import('node:fs');
   const exported = readFileSync((await (await pending).path())!);
   expect(await pixelDifference(page, Buffer.from(live.split(',')[1], 'base64'), exported)).toEqual({

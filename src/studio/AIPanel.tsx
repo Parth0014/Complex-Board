@@ -69,12 +69,7 @@ export function AIPanel({
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError')
         setError('Generation cancelled. Your board is unchanged.');
-      else
-        setError(
-          error instanceof Error
-            ? error.message
-            : 'Generation failed. Try again with a simpler description.',
-        );
+      else setError('Generation is unavailable right now. Please try again later.');
     } finally {
       setBusy(false);
     }
@@ -102,15 +97,13 @@ export function AIPanel({
   return (
     <div className="ai-panel">
       {aiChecking && <Skeleton label="Checking AI availability" />}
-      {!aiChecking && aiStatus && !aiStatus.configured && (
+      {!aiChecking && !aiStatus?.configured && (
         <div className="gs-empty">
-          <h3 className="gs-empty__title">AI not configured</h3>
-          <p className="gs-empty__body">
-            Connect an AI provider to generate images and affirmations.
-          </p>
+          <h3 className="gs-empty__title">Image generation is unavailable</h3>
+          <p className="gs-empty__body">You can still use your uploaded photos and templates.</p>
         </div>
       )}
-      {(!aiStatus || aiStatus.configured) && (
+      {!aiChecking && aiStatus?.configured && (
         <>
           {!onChooseImage && (
             <label>

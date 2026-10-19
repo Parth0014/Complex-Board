@@ -129,6 +129,23 @@ export const FlipHIcon = ic('flip-h', 15);
 export const FlipVIcon = ic('flip-v', 15);
 export const RotateIcon = ic('rotate', 15);
 export const MoveIcon = ic('move', 15);
+/** Horizontal adjustment, distinct from moving an object in two dimensions. */
+export const NumericAdjustIcon = ({ size = 14 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M4 12h16M8 8l-4 4 4 4m8-8 4 4-4 4" />
+  </svg>
+);
 export const SunIcon = ic('sun', 15);
 export const ContrastIcon = ic('contrast', 15);
 export const DropletIcon = ic('droplet', 15);

@@ -1,11 +1,16 @@
+import { CanvasIntroduction } from './CanvasIntroduction';
+import { ShortcutsDialog } from './ShortcutsDialog';
 import { BoardPreview } from './BoardPreview';
 import { StudioHeader } from './chrome/StudioHeader';
 import { ExportDialog } from './export/ExportDialog';
 import { Toast } from './ui/Toast';
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import type { StudioTab } from './studioTypes';
 import type { EditorAdapter } from '../vision/contracts';
 import { StudioSidebar } from './chrome/StudioSidebar';
+import { compactScreen } from './ui/breakpoints';
+
+const INTRO_DISMISSED_KEY = 'visbo:canvas-introduction-dismissed';
 
 export function StudioShell({
   adapter,
@@ -23,7 +28,47 @@ export function StudioShell({
   onHome: () => void;
 }) {
   const [preview, setPreview] = useState(false);
-  const [share, setShare] = useState(false);
+  const restoreMobileActionFocus = () => {
+    if (adapter.ownerWindow.matchMedia(compactScreen).matches)
+      adapter.ownerWindow.requestAnimationFrame(() =>
+        adapter.ownerWindow.document
+          .querySelector<HTMLButtonElement>('button[aria-label="File menu"]')
+          ?.focus(),
+      );
+  };
+  const [shortcuts, setShortcuts] = useState(false);
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        !(event.key === '?' || ((event.ctrlKey || event.metaKey) && event.key === '/')) ||
+        event.altKey ||
+        target.isContentEditable ||
+        target.closest('input,textarea,select,[role="dialog"]')
+      )
+        return;
+      event.preventDefault();
+      setShortcuts(true);
+    };
+    adapter.ownerWindow.document.addEventListener('keydown', key);
+    return () => adapter.ownerWindow.document.removeEventListener('keydown', key);
+  }, [adapter]);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
+    try {
+      return adapter.ownerWindow.localStorage.getItem(INTRO_DISMISSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const dismissIntroduction = () => {
+    setOnboardingDismissed(true);
+    try {
+      adapter.ownerWindow.localStorage.setItem(INTRO_DISMISSED_KEY, '1');
+    } catch {
+      /* A blocked preference store must not prevent dismissal. */
+    }
+  };
+  const [exportOpen, setExportOpen] = useState(false);
   const [error, setError] = useState('');
   const dismissError = useCallback(() => setError(''), []);
   const [elementCategory] = useState(adapter.history.document.boardTheme || 'all');
@@ -38,16 +83,17 @@ export function StudioShell({
       <StudioHeader
         adapter={adapter}
         onHome={onHome}
+        onShortcuts={() => setShortcuts(true)}
         onError={setError}
-        shareDisabled={!hasContent}
+        exportDisabled={!hasContent}
         onPreview={() => setPreview(true)}
-        onShare={() => {
+        onExport={() => {
           setError('');
-          setShare(true);
+          setExportOpen(true);
         }}
       />
 
-      {error && !share && <Toast message={error} error onDismiss={dismissError} />}
+      {error && !exportOpen && <Toast message={error} error onDismiss={dismissError} />}
       <div className="vs-body">
         <StudioSidebar
           adapter={adapter}
@@ -61,6 +107,21 @@ export function StudioShell({
 
         <main className="vs-canvas" aria-label="Vision board canvas">
           {children}
+          {!hasContent && !onboardingDismissed && (
+            <CanvasIntroduction
+              width={document.width}
+              height={document.height}
+              onDismiss={dismissIntroduction}
+              onPhotos={() => {
+                dismissIntroduction();
+                setTab('uploads');
+              }}
+              onTemplates={() => {
+                dismissIntroduction();
+                setTab('templates');
+              }}
+            />
+          )}
           <div className="discover-credits" aria-label="Photo credits">
             {document.items
               .filter(
@@ -93,13 +154,27 @@ export function StudioShell({
           </div>
         </main>
       </div>
-      {preview && <BoardPreview adapter={adapter} onClose={() => setPreview(false)} />}
-      {share && (
+      {preview && (
+        <BoardPreview
+          adapter={adapter}
+          onClose={() => {
+            setPreview(false);
+            restoreMobileActionFocus();
+          }}
+        />
+      )}
+      {shortcuts && (
+        <ShortcutsDialog ownerWindow={adapter.ownerWindow} onClose={() => setShortcuts(false)} />
+      )}
+      {exportOpen && (
         <ExportDialog
           adapter={adapter}
           error={error}
           onError={setError}
-          onClose={() => setShare(false)}
+          onClose={() => {
+            setExportOpen(false);
+            restoreMobileActionFocus();
+          }}
         />
       )}
     </div>

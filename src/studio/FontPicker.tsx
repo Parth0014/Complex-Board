@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
-import { editorFonts, canonicalFontId } from '../vision/fonts';
+import { editorFonts, canonicalFontId, fontFamily } from '../vision/fonts';
 import { Button } from './ui/Button';
 import { Popover } from './ui/Popover';
 import { ChevronDownIcon, CheckIcon } from './icons';
@@ -21,8 +21,8 @@ export function FontPicker({
   useLayoutEffect(() => {
     if (open)
       trigger.current?.ownerDocument
-        .getElementById(id)
-        ?.querySelector<HTMLElement>('[aria-selected="true"]')
+        .getElementById(id + '-popover')
+        ?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]')
         ?.focus();
   }, [open, id]);
   const close = () => {
@@ -39,7 +39,9 @@ export function FontPicker({
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         disabled={disabled}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          setOpen(!open);
+        }}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault();
@@ -52,12 +54,13 @@ export function FontPicker({
       </Button>
       {open && (
         <Popover
+          align="start"
           anchor={trigger}
           onDismiss={() => setOpen(false)}
           className="vs vs-font-picker"
-          id={id}
-          role="listbox"
-          aria-label="Fonts"
+          id={id + '-popover'}
+          role="group"
+          aria-label="Choose font"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => {
@@ -89,22 +92,27 @@ export function FontPicker({
             e.stopPropagation();
           }}
         >
-          {Object.entries(editorFonts).map(([font, label]) => (
-            <Button
-              key={font}
-              role="option"
-              aria-selected={current === font}
-              tabIndex={current === font ? 0 : -1}
-              className="vs-font-option"
-              onClick={() => {
-                onChange(font as keyof typeof editorFonts);
-                close();
-              }}
-            >
-              <span>{label}</span>
-              {current === font && <CheckIcon size={16} />}
-            </Button>
-          ))}
+          <div id={id} role="listbox" aria-label="Fonts">
+            {Object.entries(editorFonts)
+              .sort(([, a], [, b]) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
+              .map(([font, label]) => (
+                <Button
+                  key={font}
+                  role="option"
+                  aria-selected={current === font}
+                  tabIndex={current === font ? 0 : -1}
+                  className="vs-font-option"
+                  style={{ fontFamily: fontFamily(font) }}
+                  onClick={() => {
+                    onChange(font as keyof typeof editorFonts);
+                    close();
+                  }}
+                >
+                  <span>{label}</span>
+                  {current === font && <CheckIcon size={16} />}
+                </Button>
+              ))}
+          </div>
         </Popover>
       )}
     </>

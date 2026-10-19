@@ -4,6 +4,7 @@ import { PhotoLayoutBuilder } from './PhotoLayoutBuilder';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
 import {
   listMedia,
+  loadMedia,
   mediaAsset,
   setMediaLibraryVisibility,
   type MediaRecord,
@@ -31,7 +32,18 @@ export function UploadsPanel({
   const [failedFiles, setFailedFiles] = useState<File[] | null>(null);
   const [library, setLibrary] = useState<Array<{ record: MediaRecord; url: string }>>([]);
   const [loadingLibrary, setLoadingLibrary] = useState(true);
+  useEffect(() => {
+    if (!message || busy) return;
+    const timer = adapter.ownerWindow.setTimeout(() => setMessage(''), 5000);
+    const dismiss = () => setMessage('');
+    adapter.ownerWindow.document.addEventListener('pointerdown', dismiss, { once: true });
+    return () => {
+      adapter.ownerWindow.clearTimeout(timer);
+      adapter.ownerWindow.document.removeEventListener('pointerdown', dismiss);
+    };
+  }, [message, busy, adapter]);
   const [inserting, setInserting] = useState('');
+  const [justUploaded, setJustUploaded] = useState<string[]>([]);
   const [deleting, setDeleting] = useState('');
   const [pendingDelete, setPendingDelete] = useState<{ record: MediaRecord; url: string } | null>(
     null,
@@ -117,7 +129,7 @@ export function UploadsPanel({
     try {
       if (files.length === 1 && selected?.asset?.provider === 'template-photo')
         await adapter.uploadPhotos(files);
-      else await adapter.storePhotos(files);
+      else setJustUploaded(await adapter.storePhotos(files));
       setMessage(
         `${files.length} photo${files.length === 1 ? '' : 's'} saved. Select photos to arrange them.`,
       );
@@ -173,9 +185,32 @@ export function UploadsPanel({
       </label>
 
       {message && (
-        <p className="panel-inline-status" role="status">
+        <p className="panel-inline-status" aria-live="polite" aria-atomic="true">
           {message}
         </p>
+      )}
+      {justUploaded.length > 0 && !adapter.history.document.items.length && (
+        <Button
+          variant="primary"
+          disabled={busy || !!inserting}
+          onClick={async () => {
+            setInserting('batch');
+            setError('');
+            try {
+              for (const id of justUploaded) {
+                const record = await loadMedia(adapter.ownerWindow, id);
+                await adapter.insertAsset(mediaAsset(record));
+              }
+              setJustUploaded([]);
+            } catch (error) {
+              setError(errorMessage(error));
+            } finally {
+              setInserting('');
+            }
+          }}
+        >
+          Add uploaded photos to board
+        </Button>
       )}
 
       {error && (
@@ -195,12 +230,12 @@ export function UploadsPanel({
 
       <Button
         variant="secondary"
-        disabled={busy || loadingLibrary || Boolean(deleting)}
+        disabled={busy || loadingLibrary || Boolean(deleting) || !library.length}
         onClick={() => {
           setArranging(true);
         }}
       >
-        Arrange photos
+        Create photo collage
       </Button>
       {arranging && (
         <PhotoLayoutBuilder
@@ -213,7 +248,7 @@ export function UploadsPanel({
         <h3>Your photos</h3>
         <p className="ai-tool-help">Saved in this browser. Reuse on any board.</p>
         {loadingLibrary ? (
-          <p role="status">Loading photos...</p>
+          <p role="status">Loading photos…</p>
         ) : !library.length ? (
           <p className="ai-tool-help">Your uploaded photos will appear here.</p>
         ) : (

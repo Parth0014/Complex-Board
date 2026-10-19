@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 import { createBoard } from './helpers/board';
 import { runtime } from './appearance-helpers';
 
@@ -25,13 +25,13 @@ test('preview fits, zooms for inspection and returns to editing without changing
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(
-    preview.getByRole('button', { name: 'Close preview', exact: true }),
+    preview.getByRole('button', { name: 'Back to editor', exact: true }),
   ).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.godmode/screenshots/board-preview-mobile.png' });
   await page.keyboard.press('Escape');
   await expect(preview).toHaveCount(0);
-  await expect(trigger).toBeFocused();
+  await expect(page.getByRole('button', { name: 'File menu', exact: true })).toBeFocused();
   expect(await handle.evaluate(({ adapter }) => JSON.stringify(adapter.history.document))).toBe(
     before,
   );
@@ -81,7 +81,7 @@ test('preview supports detail panning and toggles browser fullscreen', async ({ 
   // Chromium's native fullscreen window resize settles after fullscreenchange.
   // Restore the emulated viewport before reusing this worker for another page.
   await page.setViewportSize({ width: 1280, height: 720 });
-  await preview.getByRole('button', { name: 'Close preview', exact: true }).click();
+  await preview.getByRole('button', { name: 'Back to editor', exact: true }).click();
   await expect(preview).toHaveCount(0);
   const board = await page.getByLabel('Editable vision board', { exact: true }).boundingBox();
   expect(board!.height).toBeLessThan(720);

@@ -66,7 +66,12 @@ import { VISION_TEMPLATES, LEGACY_VISION_TEMPLATES } from '../templates';
 import { TEMPLATE_PHOTOS, fitCollageElements } from '../collageTemplates';
 import { PINTEREST_TEMPLATE_PHOTOS, photosForScrapbookTemplate } from '../templatePinterestPhotos';
 import { boundsOf, unionBounds, constrainItems } from './geometry';
-import { centeredDropPosition, shapeDropSize, textDropSize } from './dropPlacement';
+import {
+  centeredDropPosition,
+  elementDropSize,
+  shapeDropSize,
+  textDropSize,
+} from './dropPlacement';
 import { loadBoard, saveBoard, validateBoard } from '../storage';
 import { imagePdf, imagesPdf } from '../pdf';
 import { renderPage } from './renderPage';
@@ -187,6 +192,24 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
 
   groupScope: string[] = [];
   zoomView?: (scale: number) => void;
+  insertionCenter?: () => VisionPoint;
+  animateInsertion?: (id: string) => void;
+  private insertionSequence = 0;
+  private insertionPoint(): VisionPoint {
+    const board = this.history.document;
+    const center = this.insertionCenter?.() || { x: board.width / 2, y: board.height / 2 };
+    const recent = board.items.filter((item) => !item.locked).at(-1);
+    const offset = board.width * 0.035;
+    const close =
+      recent &&
+      Math.abs(recent.x + recent.width / 2 - center.x) < offset * 4 &&
+      Math.abs(recent.y + recent.height / 2 - center.y) < offset * 4;
+    this.insertionSequence = close ? (this.insertionSequence % 4) + 1 : 0;
+    return {
+      x: center.x + this.insertionSequence * offset,
+      y: center.y + this.insertionSequence * offset,
+    };
+  }
   cropDraft?: {
     id: string;
     imageRotation?: number;
@@ -239,6 +262,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.changed();
   }
   saveStatus = 'Loading';
+  savedAt?: number;
   storageReady = false;
   private saveQueue: Promise<void> = Promise.resolve();
   private saveSerial = 0;
@@ -253,6 +277,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       }
       this.storageReady = true;
       this.saveStatus = appearancePersistenceEnabled() ? 'Saved' : 'Preview (not saved)';
+      this.savedAt = this.history.document.updatedAt;
       this.changed();
       if (this.history.revision !== revision) this.persist();
     } catch (error) {
@@ -269,7 +294,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     }
     const document = structuredClone(this.history.document),
       serial = ++this.saveSerial;
-    this.saveStatus = 'Saving';
+    this.saveStatus = 'Saving…';
     this.saveQueue = this.saveQueue
       .catch(() => {})
       .then(() => saveBoard(this.ownerWindow, document, this.boardId))
@@ -277,6 +302,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         () => {
           if (serial === this.saveSerial) {
             this.saveStatus = 'Saved';
+            this.savedAt = Date.now();
             this.changed();
           }
         },
@@ -825,7 +851,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     this.persist();
     this.changed();
   }
-  commit(document: typeof this.history.document) {
+  commit(document: typeof this.history.document, options?: { preservePositions?: boolean }) {
     const previous = this.history.document;
     if (
       document.activePageId === previous.activePageId &&
@@ -965,7 +991,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         .map((item) => item.groupId || item.id),
     );
     const constrainChanged = (items: BoardItem[]) => {
-      if (!this.snapToEdges) return items;
+      if (!this.snapToEdges || options?.preservePositions) return items;
       const constrained = new Map(
         constrainItems(
           items.filter((item) => changedGroups.has(item.groupId || item.id)),
@@ -1597,7 +1623,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     cache.set(cacheKey, entry);
     return entry.promise;
   }
-  async applyScrapbookTemplate(presetId: string) {
+  async applyScrapbookTemplate(presetId: string, mode: 'add' | 'replace' = 'add') {
     const revision = this.history.revision;
     const items = (await this.finishedScrapbookItems(presetId)).map((item) => ({
       ...structuredClone(item),
@@ -1605,7 +1631,10 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     }));
     if (revision !== this.history.revision)
       throw new Error('The board changed. Try adding the template again.');
-    this.commit({ ...this.history.document, items: [...this.history.document.items, ...items] });
+    this.commit({
+      ...this.history.document,
+      items: [...(mode === 'replace' ? [] : this.history.document.items), ...items],
+    });
     this.select(items.map((item) => item.id));
   }
   async previewPhotoArrangement(
@@ -1715,7 +1744,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       await Promise.all(items.filter((item) => item.asset).map((item) => this.decode(item.asset!)));
       if (revision !== this.history.revision)
         throw new Error('The board changed. Preview the layout again.');
-      this.commit({ ...board, items: [...board.items, ...items] });
+      this.commit({ ...board, items: [...items, ...board.items] });
       this.select([]);
       return;
     }
@@ -1754,7 +1783,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     if (revision !== this.history.revision)
       throw new Error('The board changed. Preview the layout again.');
     const items = compositionItems(composition, records.map(mediaAsset), () => this.id());
-    this.commit({ ...board, items: [...board.items, ...items] });
+    this.commit({ ...board, items: [...items, ...board.items] });
     this.select([]);
   }
   previewBoard() {
@@ -1843,8 +1872,17 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       this.commit({ ...this.history.document, background: asset });
       return asset.id;
     }
-    const width = Math.min(320, asset.width || 240);
+    const board = this.history.document;
+    const sourceWidth = asset.width || 240,
+      sourceHeight = asset.height || 240;
+    const width =
+      asset.provider === 'curated-v1'
+        ? elementDropSize(asset, board).width
+        : position
+          ? Math.min(320, sourceWidth)
+          : Math.min(board.width * 0.28, (board.height * 0.28 * sourceWidth) / sourceHeight);
     const height = (width * (asset.height || 240)) / (asset.width || 240);
+    const center = position || this.insertionPoint();
     const id = this.id();
     this.items((items) => [
       ...items,
@@ -1852,8 +1890,8 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         id,
         kind: 'asset',
         asset,
-        x: position?.x ?? 100,
-        y: position?.y ?? 160,
+        x: position?.x ?? Math.max(0, Math.min(board.width - width, center.x - width / 2)),
+        y: position?.y ?? Math.max(0, Math.min(board.height - height, center.y - height / 2)),
         width,
         height,
         rotation: 0,
@@ -1863,6 +1901,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       },
     ]);
     this.select([id]);
+    if (!position) this.animateInsertion?.(id);
     return id;
   }
   async insertGeneratedImage(
@@ -2377,18 +2416,19 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   createShape(shape: NonNullable<BoardItem['shape']>, position?: VisionPoint) {
     const id = this.id();
     const document = this.history.document;
-    const { width, height } = shapeDropSize(shape, document);
+    const dropped = shapeDropSize(shape, document);
+    const factor = position
+      ? 1
+      : Math.min((document.width * 0.24) / dropped.width, (document.height * 0.4) / dropped.height);
+    const width = dropped.width * factor,
+      height = dropped.height * factor;
     this.items((items) => [
       ...items,
       {
         id,
         kind: 'shape',
         shape,
-        ...centeredDropPosition(
-          position || { x: document.width / 2, y: document.height / 2 },
-          { width, height },
-          document,
-        ),
+        ...centeredDropPosition(position || this.insertionPoint(), { width, height }, document),
         width,
         height,
         appearance:
@@ -2410,6 +2450,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       },
     ]);
     this.select([id]);
+    if (!position) this.animateInsertion?.(id);
   }
   connectSelection() {
     const selected = this.history.document.items.filter(
@@ -2752,6 +2793,11 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   createTextPreset(preset: VisionTextPreset, position?: VisionPoint) {
     const id = this.id();
     const document = this.history.document;
+    if (!position) {
+      const heading = ['vision-title', 'editorial'].includes(preset.id);
+      const size = Math.min(document.width, document.height) * (heading ? 0.12 : 0.05);
+      preset = { ...preset, fontSize: Math.round(Math.max(preset.fontSize, size)) };
+    }
     const { width, height } = textDropSize(preset, document);
     this.items((items) => [
       ...items,
@@ -2768,11 +2814,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         align: preset.align || 'center',
         textPadding: 8,
         lineHeight: 1.2,
-        ...centeredDropPosition(
-          position || { x: document.width / 2, y: document.height / 2 },
-          { width, height },
-          document,
-        ),
+        ...centeredDropPosition(position || this.insertionPoint(), { width, height }, document),
         width,
         height,
         rotation: 0,
@@ -2781,6 +2823,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
       },
     ]);
     this.select([id]);
+    if (!position) this.animateInsertion?.(id);
   }
   applyLayout(layout: VisionLayout) {
     const document = this.history.document;

@@ -1,5 +1,6 @@
 import { BACKGROUND_PALETTE } from './palette';
 import type { CSSProperties } from 'react';
+import { useState } from 'react';
 import { CheckIcon } from './icons';
 import { Button } from './ui/Button';
 import { ColorPicker } from './ColorPicker';
@@ -9,7 +10,13 @@ const BACKGROUND_GRADIENT_DEFAULT = '#f2d7c4';
 
 export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
   const document = adapter.history.document;
-  const setColor = (color: string) => adapter.commit({ ...document, color, background: undefined });
+  const [recentColors, setRecentColors] = useState<string[]>([]);
+  const setColor = (color: string) => {
+    setRecentColors((current) =>
+      [color, ...current.filter((entry) => entry !== color)].slice(0, 6),
+    );
+    adapter.commit({ ...document, color, background: undefined });
+  };
   return (
     <div className="background-panel">
       <div
@@ -67,10 +74,34 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
           </Button>
         ))}
       </div>
+      {recentColors.length > 0 && (
+        <div
+          role="group"
+          aria-label="Recent background colors"
+          className="background-recent-colors"
+        >
+          {recentColors.map((color) => (
+            <Button
+              key={color}
+              aria-label={`Use recent color ${color}`}
+              data-tip={color}
+              onClick={() => setColor(color)}
+              style={{
+                background: color,
+                width: 28,
+                height: 28,
+                border: '1px solid var(--gs-control-line)',
+                borderRadius: '50%',
+              }}
+            />
+          ))}
+        </div>
+      )}
       <label className="background-color-label">
         <span>Custom color</span>
         <span className="background-color-value">
           <ColorPicker
+            allowAlpha={false}
             label="Board color"
             value={document.color}
             onChange={setColor}
@@ -84,6 +115,7 @@ export function BackgroundPanel({ adapter }: { adapter: EditorAdapter }) {
           <label>
             <span>End color</span>
             <ColorPicker
+              allowAlpha={false}
               label="Gradient end color"
               palette={BACKGROUND_PALETTE}
               value={document.gradient}

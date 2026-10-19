@@ -1,0 +1,319 @@
+@layer components {
+  .vs-bottom-dock .vs-zoom {
+    position: relative;
+    inset: auto;
+    transform: none;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .vs-bottom-dock .canvas-tools {
+    position: relative;
+    inset: auto;
+    transform: none;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .vs-snap-slot {
+    min-width: 0;
+    max-width: 100%;
+  }
+  @media (min-width: 601px) and (max-width: 1200px) {
+    .vs-lib {
+      width: 320px;
+    }
+    .vs-canvas {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+    .vs-bottom-dock .vs-zoom .vs-range {
+      width: 60px;
+    }
+  }
+  /* The scrollable workspace is a keyboard target, not a bordered control. */
+  .vs .gs-artboard:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+  .vs-inspector[hidden] {
+    display: none;
+  }
+  .vs-tooltip {
+    position: fixed;
+    z-index: var(--gs-z-tooltip);
+    width: max-content;
+    max-width: min(240px, calc(100vw - 32px));
+    padding: var(--gs-space-2) var(--gs-space-3);
+    border-radius: var(--gs-radius-menu);
+    background: var(--gs-text);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--gs-on-accent);
+    font: var(--gs-text-13) var(--gs-font);
+    text-align: center;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+    box-shadow: none;
+    transition:
+      opacity var(--gs-duration-overlay) var(--gs-ease),
+      transform var(--gs-duration-overlay) var(--gs-ease);
+  }
+  /* Warm-up (item 10): instant, no animation when the previous tooltip was
+     visible within the last 400ms. */
+  .vs-tooltip--instant {
+    transition: none;
+  }
+  .vs-drawing-menu .vs-menu__pop {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 200px;
+  }
+  .vs-drawing-menu .vs-menu__kicker {
+    width: 100%;
+  }
+  .vs-canvas {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 1px 1px, var(--gs-canvas-dots) 1px, transparent 0) 0 0 / 22px 22px,
+      var(--gs-workspace);
+  }
+  .vs-board-size {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px var(--gs-space-3);
+    min-width: 0;
+    font-size: var(--gs-text-13);
+    color: var(--gs-text-secondary);
+  }
+  .vs-board-size select {
+    max-width: 170px;
+    min-width: 0;
+    border: 0;
+    background: var(--gs-surface-muted);
+    padding: var(--gs-space-2) var(--gs-space-2);
+    border-radius: var(--gs-radius-control);
+    cursor: pointer;
+    color: var(--gs-text);
+    transition: background var(--gs-duration-overlay) var(--gs-ease);
+  }
+  .vs-title__input {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--gs-text);
+    width: 200px;
+    max-width: 28vw;
+    letter-spacing: -0.015em;
+    padding: 0 var(--gs-space-2);
+    margin-left: -8px;
+    border-radius: var(--gs-radius-control);
+    height: var(--gs-control-height);
+    text-overflow: ellipsis;
+    font-family: var(--gs-font);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    transition:
+      background-color var(--gs-duration-feedback) var(--gs-ease),
+      color var(--gs-duration-feedback) var(--gs-ease),
+      border-color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .vs-brand__name {
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-medium);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    color: var(--gs-text-secondary);
+  }
+  .vs-brand__name strong {
+    color: var(--gs-on-accent);
+    font-weight: var(--gs-weight-strong);
+  }
+  .vs-header .gs-button--primary {
+    padding: var(--gs-space-2) var(--gs-space-4);
+    font-weight: var(--gs-weight-medium);
+    background: var(--gs-accent);
+    color: var(--gs-on-accent);
+    border: 1px solid transparent;
+  }
+  .vs-file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    border: none;
+    border-radius: var(--gs-radius-menu);
+    color: var(--gs-on-accent);
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-strong);
+    padding: var(--gs-space-2) var(--gs-space-4);
+    box-shadow: none;
+    transition:
+      background-color var(--gs-duration-overlay) var(--gs-ease),
+      border-color var(--gs-duration-overlay) var(--gs-ease),
+      color var(--gs-duration-overlay) var(--gs-ease),
+      box-shadow var(--gs-duration-overlay) var(--gs-ease);
+    background: transparent;
+    border-color: transparent;
+  }
+  .vs-lib {
+    position: relative;
+    z-index: var(--gs-z-panel);
+    left: 16px;
+    top: 16px;
+    bottom: 16px;
+    width: auto;
+    display: flex;
+    background: var(--gs-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: blur(20px);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+    transition: none;
+    inset: auto;
+    flex: 0 0 auto;
+    height: 100%;
+    border-right: 1px solid var(--gs-line);
+  }
+  .vs-inspector {
+    position: absolute;
+    z-index: var(--gs-z-panel);
+    right: 16px;
+    top: 16px;
+    bottom: 84px;
+    width: 310px;
+    display: flex;
+    flex-direction: column;
+    background: var(--gs-surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-dialog);
+    box-shadow: var(--gs-shadow-utility);
+    overflow: hidden;
+    transition:
+      transform var(--gs-duration-overlay) var(--gs-ease),
+      opacity var(--gs-duration-overlay) var(--gs-ease);
+  }
+  .vs-lib__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gs-space-3);
+    border-bottom: 1px solid var(--gs-line);
+    flex-shrink: 0;
+    padding: 0 var(--gs-space-3) 0 var(--gs-space-4);
+    flex: 0 0 auto;
+    height: var(--gs-header-height);
+  }
+  .vs-lib__head .vs-sec-head {
+    margin-bottom: 0;
+    gap: var(--gs-space-2);
+  }
+  .vs-lib__head h3 {
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-strong);
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    color: var(--gs-text);
+    margin: 0;
+  }
+  .vs-lib__head p {
+    line-height: 1.5;
+    color: var(--gs-text-secondary);
+    margin-top: var(--gs-space-2);
+    font-size: var(--gs-text-13);
+  }
+  .vs-lib__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--gs-space-4);
+    padding-top: var(--gs-space-4);
+    transition:
+      opacity var(--gs-duration-exit) var(--gs-ease),
+      transform var(--gs-duration-exit) var(--gs-ease);
+  }
+  .vs-lib__foot {
+    padding: var(--gs-space-4) 20px;
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    flex-shrink: 0;
+    background: var(--gs-surface-muted);
+    border-top: 1px solid var(--gs-line);
+  }
+  .vs-rail__tab {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--gs-space-2) 0;
+    border: 0;
+    border-radius: var(--gs-radius-control);
+    background: transparent;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-11);
+    font-weight: var(--gs-weight-medium);
+    letter-spacing: 0;
+    transition:
+      color var(--gs-duration-overlay) var(--gs-ease),
+      background var(--gs-duration-overlay) var(--gs-ease);
+    position: relative;
+    min-height: 56px;
+    justify-content: center;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  .vs-rail__tab.is-active {
+    background: var(--gs-accent-soft);
+    font-weight: var(--gs-weight-strong);
+    color: var(--gs-accent);
+  }
+  .vs-rail__tab.is-active::before {
+    transform: translateY(-50%) scaleY(1);
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
+    border-radius: var(--gs-radius-control);
+    background: var(--gs-accent);
+    transition: transform var(--gs-duration-overlay) cubic-bezier(0.1, 0, 0.2, 1);
+    display: block;
+    inset: var(--gs-space-2) 0 var(--gs-space-2) auto;
+  }
+  .vs-inspector__tabs {
+    flex-shrink: 0;
+    padding: var(--gs-space-1) 20px var(--gs-space-4);
+    border-bottom: 1px solid var(--gs-line);
+  }
+  .vs-inspector__tabs .vs-segmented button.is-active {
+    color: var(--gs-accent);
+    font-weight: var(--gs-weight-strong);
+  }
+  .vs-inspector__tabs .vs-segmented {
+    width: 100%;
+    background: var(--gs-surface-muted);
+    padding: var(--gs-space-1);
+    border-radius: var(--gs-radius-menu);
+  }
+  .vs-sec {
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-dialog);
+    background: var(--gs-surface);
+    overflow: hidden;
+    box-shadow: none;
+    border-color: var(--gs-line);
+  }
+}

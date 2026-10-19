@@ -1,0 +1,226 @@
+@layer components {
+  .vs-top-editing-bar {
+    flex-shrink: 0;
+    width: 100%;
+    background: var(--gs-surface);
+    border-bottom: 1px solid var(--gs-line);
+    z-index: var(--gs-z-float);
+    padding: var(--gs-space-1);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--v2-radius);
+    box-shadow: var(--v2-float-shadow);
+  }
+  .vs-top-editing-bar__row {
+    display: flex;
+    align-items: center;
+    gap: var(--gs-space-2);
+    padding: var(--gs-space-2) var(--gs-space-3);
+    min-height: 44px;
+    overflow-x: auto;
+  }
+  .vs-top-editing-bar__row > .vs-actionbar {
+    flex: 1;
+    min-width: max-content;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .vs-top-editing-bar__row > button {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .vs .vs-contextual-editing-bar {
+    width: max-content;
+    transform: translateX(-50%);
+    border: 1px solid var(--gs-line);
+    z-index: var(--gs-z-popover);
+    border-radius: var(--gs-radius-card);
+    background: var(--gs-material);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--gs-shadow-float);
+  }
+  .vs-contextual-editing-bar .vs-top-editing-bar__row {
+    padding: var(--gs-space-2) var(--gs-space-2);
+    min-height: 46px;
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+  .vs-contextual-editing-bar .vs-actionbar {
+    min-width: 0;
+    flex-wrap: wrap;
+    padding: 0;
+    gap: 3px;
+  }
+  .vs-contextual-editing-bar .vs-actionbar__identity {
+    display: none;
+  }
+  .vs-actionbar__font {
+    max-width: 145px;
+    height: 34px;
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu);
+    padding: 0 var(--gs-space-2);
+    background: var(--gs-surface);
+    font: inherit;
+    color: var(--gs-text);
+  }
+  .vs .vs-contextual-editing-bar .vs-actionbar__button {
+    min-height: 32px;
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    padding: var(--gs-space-1) var(--gs-space-2);
+  }
+  .vs .vs-contextual-editing-bar .gs-icon-button {
+    width: var(--gs-control-height);
+    min-width: var(--gs-control-height);
+    padding: 0;
+  }
+  .vs .vs-contextual-editing-bar .vs-actionbar__font {
+    height: 32px;
+    min-height: 32px;
+    font-size: var(--gs-text-13);
+    width: 148px;
+    max-width: 148px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: var(--gs-radius-control);
+  }
+  .vs .vs-contextual-editing-bar select[aria-label='Text alignment'] {
+    width: 104px;
+    max-width: 104px;
+  }
+  .vs .vs-actionbar select {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .vs .vs-actionbar select option {
+    white-space: nowrap;
+  }
+  .vs-properties-section__body :is(.vs-row-2, .vs-row-3) > * {
+    min-width: 0;
+  }
+  .vs-properties-section__body .vs-field > span {
+    overflow-wrap: anywhere;
+  }
+  .vs .vs-contextual-editing-bar .vs-actionbar__size input {
+    width: 54px;
+  }
+  .vs-contextual-editing-bar :is(.vs-actionbar__size, .vs-actionbar__color) {
+    padding: 0;
+  }
+  .vs-contextual-editing-bar .vs-actionbar__identity + .vs-actionbar__separator {
+    display: none;
+  }
+  .vs .vs-contextual-editing-bar .vs-top-editing-bar__row {
+    min-height: 44px;
+    padding: var(--gs-space-1) var(--gs-space-2);
+  }
+  .gs-formatting-popover {
+    width: 340px;
+    padding: 0;
+    max-height: min(520px, calc(100dvh - 24px));
+  }
+  .gs-formatting-popover .vs-inspector--inline {
+    display: block;
+    position: static;
+    inset: auto;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--gs-surface);
+    backdrop-filter: none;
+    transform: none;
+    opacity: 1;
+    overflow: visible;
+  }
+  .gs-formatting-popover .vs-inspector__tabs {
+    display: none;
+  }
+  .gs-formatting-popover .vs-inspector__body {
+    display: block;
+    height: auto;
+    padding: var(--gs-space-3);
+    overflow: visible;
+  }
+  .gs-formatting-popover .vs-insp-head {
+    margin-bottom: var(--gs-space-3);
+  }
+  .gs-formatting-popover .vs-insp-head :is(.vs-eyebrow, p) {
+    display: none;
+  }
+  .gs-formatting-popover .vs-style-tip {
+    display: none;
+  }
+  .gs-formatting-popover .vs-insp-head h3 {
+    font-size: var(--gs-text-15);
+    margin: 0;
+  }
+  .gs-formatting-popover .vs-sec {
+    width: auto;
+    margin-bottom: var(--gs-space-2);
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--gs-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .gs-formatting-popover .vs-sec > summary {
+    letter-spacing: 0;
+    text-transform: none;
+    min-height: 44px;
+    padding: var(--gs-space-2) 0;
+    font-size: var(--gs-text-13);
+    font-weight: var(--gs-weight-medium);
+    background: transparent;
+  }
+  .gs-formatting-popover .vs-sec__body {
+    padding: var(--gs-space-1) 0 var(--gs-space-4);
+  }
+  .gs-formatting-popover :is(input, select, textarea) {
+    width: 100%;
+    min-width: 0;
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    border: 1px solid var(--gs-control-line);
+    font-family: var(--gs-font);
+    border-radius: var(--gs-radius-control);
+    transition:
+      background-color var(--gs-duration-feedback) var(--gs-ease),
+      color var(--gs-duration-feedback) var(--gs-ease),
+      border-color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .gs-formatting-popover .vs-icon-btn {
+    flex-shrink: 0;
+  }
+  .vs .vs-brand {
+    border-color: var(--gs-line);
+    border: 0;
+    background: transparent;
+  }
+  .elements-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gs-space-2);
+  }
+  .elements-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gs-space-2);
+    padding: var(--gs-space-2);
+    background: var(--gs-surface);
+    color: var(--gs-text);
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-menu);
+    font-size: var(--gs-text-13);
+    line-height: 1.5;
+  }
+}

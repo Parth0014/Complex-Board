@@ -49,7 +49,7 @@ test('curated frame clipping, crop and PDF/JPG export retain content after reloa
   await page.getByLabel('Crop width', { exact: true }).fill('70');
   await page.getByRole('button', { name: 'Apply crop', exact: true }).click();
   await page.getByLabel('Contrast', { exact: true }).fill('20');
-  await page.getByRole('button', { name: 'Share', exact: false }).click();
+  await page.getByRole('button', { name: 'Export', exact: false }).click();
   for (const format of ['PDF', 'JPEG', 'TRANSPARENT']) {
     const pending = page.waitForEvent('download');
     await page.getByRole('button', { name: `Download ${format}`, exact: true }).click();
@@ -128,7 +128,7 @@ test('page switching, graphic recolor and backups preserve independent content',
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.getByText('File', { exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Save .visbo file', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Download board file', exact: true }).click();
   const backup = await pending;
   const document = JSON.parse(readFileSync((await backup.path())!, 'utf8'));
   expect(document.pages).toHaveLength(2);
@@ -164,9 +164,9 @@ test('generated image insertion persists and monochrome edits appear in exported
   await expect(page.getByText('Board items (1)', { exact: true })).toBeVisible();
   await openProperties(page);
   await page.getByRole('button', { name: 'Mono', exact: true }).click();
-  await page.getByRole('button', { name: /Share/ }).click();
+  await page.getByRole('button', { name: /Export/ }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
+  await page.getByRole('button', { name: /High-resolution PNG/ }).click();
   const download = await pending,
     png = readFileSync((await download.path())!);
   const pixel = await page.evaluate(

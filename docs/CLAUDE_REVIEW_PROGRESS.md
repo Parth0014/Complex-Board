@@ -28,6 +28,6 @@ Reviewed both supplied Claude replies against the current desktop canvas code. T
 - Focused follow-up: Share, selection, color-error IDs, and dialog focus all passed. The final four-test correctness run also passed, including error persistence beyond 10 seconds and dismissal.
 - This does not claim the entire browser suite is green. The earlier full-suite baseline still needs triage.
 
-## Remaining
+## Current follow-up
 
-Shared notification infrastructure, anchored-position/menu/number-field primitives, keyboard color-plane interaction, interaction preferences, inspector architecture decisions, component CSS separation, dependency cleanup, and remaining browser-suite triage. Desktop canvas remains the implementation focus.
+See [the first implementation](ui-ux-review.md) and [the second review follow-up](review-followup.md) for the current changes and validation boundaries. The earlier results above are historical; they do not describe the current working tree.

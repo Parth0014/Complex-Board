@@ -3,13 +3,13 @@ import { expect, test } from '@playwright/test';
 import { createBoard } from './helpers/board';
 import { runtime } from './appearance-helpers';
 
-test('unavailable Share explains itself and cannot activate', async ({ page }) => {
+test('unavailable Export explains itself and cannot activate', async ({ page }) => {
   await createBoard(page);
-  const share = page.getByRole('button', { name: 'Share', exact: true });
+  const share = page.getByRole('button', { name: 'Export', exact: true });
   await expect(share).toHaveAttribute('aria-disabled', 'true');
   expect(await share.evaluate((node: HTMLButtonElement) => node.disabled)).toBe(false);
   await share.focus();
-  await expect(page.getByRole('tooltip')).toContainText('Add something to your board to share');
+  await expect(page.getByRole('tooltip')).toContainText('Add something to your board to export');
   await share.press('Enter');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
@@ -60,13 +60,13 @@ test('color errors have resolvable IDs and the inspector has one landmark', asyn
   const hex = page
     .getByRole('group', { name: 'Text color picker', exact: true })
     .getByLabel('Text color hex', { exact: true });
-  await hex.fill('#bad');
+  await hex.fill('#xyz');
   await expect(hex).toHaveAttribute('aria-invalid', 'true');
   const id = await hex.getAttribute('aria-describedby');
   expect(id).toBeTruthy();
   expect(id).not.toMatch(/\s/);
   expect(await page.evaluate((id) => document.getElementById(id!)?.textContent, id)).toContain(
-    'Use a 6-digit hex',
+    'Use 3, 6 or 8 hex digits',
   );
 });
 
@@ -88,7 +88,7 @@ test('error notifications remain visible until dismissed', async ({ page }) => {
   await expect(toast).toHaveCount(0);
 });
 
-test('Formatting numeric controls update live and preserve cancel and undo', async ({ page }) => {
+test('Formatting numeric controls commit drafts and preserve cancel and undo', async ({ page }) => {
   await createBoard(page);
   const handle = await runtime(page);
   await handle.evaluate(({ adapter }) =>
@@ -116,17 +116,20 @@ test('Formatting numeric controls update live and preserve cancel and undo', asy
     await dock
       .getByRole('tab', { name: label.startsWith('Bounds') ? 'Layout' : 'Edit', exact: true })
       .click();
-    const sections = label.startsWith('Text outline')
-      ? ['Text outline']
-      : label.startsWith('Shadow')
-        ? ['Shadow', 'Shadow details']
-        : [];
+    const sections = label.startsWith('Opacity')
+      ? ['Opacity']
+      : label.startsWith('Text outline')
+        ? ['Text outline']
+        : label.startsWith('Shadow')
+          ? ['Shadow', 'Shadow details']
+          : [];
     for (const title of sections) {
       const summary = dock.locator('summary').filter({ hasText: new RegExp(`^${title}$`) });
       if ((await summary.locator('..').getAttribute('open')) === null) await summary.click();
     }
     const field = dock.getByLabel(label, { exact: true });
     await field.fill(value);
+    await field.press('Enter');
     await expect
       .poll(() =>
         handle.evaluate(
@@ -141,7 +144,6 @@ test('Formatting numeric controls update live and preserve cancel and undo', asy
         ),
       )
       .toBe(expected);
-    await expect(field).toBeFocused();
     await field.press('Tab');
   }
   await dock.getByRole('tab', { name: 'Edit', exact: true }).click();

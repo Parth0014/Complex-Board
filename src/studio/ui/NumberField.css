@@ -1,0 +1,103 @@
+﻿@layer components {
+  .vs .gs-number-field {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: 0;
+    width: 100%;
+    height: 36px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--gs-control-line);
+    border-radius: var(--gs-radius-control);
+    background: var(--gs-surface);
+    transition:
+      border-color var(--gs-duration-feedback) var(--gs-ease),
+      box-shadow var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .vs .gs-number-field:focus-within {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 0 2px var(--gs-accent-soft);
+  }
+  .vs .gs-number-field > input,
+  .vs .gs-number-field > input:focus {
+    min-width: 0;
+    width: 100%;
+    flex: 1;
+    height: 34px;
+    min-height: 0;
+    margin: 0;
+    padding: 6px 2px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    outline: 0;
+    box-shadow: none;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--gs-text);
+    appearance: textfield;
+  }
+  .gs-number-field > input::-webkit-inner-spin-button,
+  .gs-number-field > input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .vs .gs-number-field > .gs-number-field__step.gs-icon-button {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    min-width: 24px;
+    height: 34px;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+    touch-action: none;
+    color: var(--gs-text-secondary);
+  }
+  .gs-number-field__step svg {
+    width: 14px;
+    height: 14px;
+  }
+  .vs .gs-number-field__unit {
+    flex-shrink: 0;
+    padding-right: 0;
+    font-size: var(--gs-text-11);
+    color: var(--gs-text-secondary);
+    user-select: none;
+  }
+  .vs .gs-number-field[data-disabled] {
+    opacity: 0.55;
+    background: var(--gs-surface-muted);
+  }
+  .vs .gs-number-field[data-disabled] .gs-number-field__step {
+    cursor: not-allowed;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vs .gs-number-field:not([data-disabled]):hover {
+      border-color: var(--gs-control-line-hover);
+    }
+    .vs .gs-number-field > .gs-number-field__step.gs-icon-button:hover:not(:disabled) {
+      background: var(--gs-accent-soft);
+      color: var(--gs-accent);
+    }
+  }
+  .object-inspector-chevron {
+    flex-shrink: 0;
+    color: var(--gs-text-secondary);
+    transition: transform var(--gs-duration-feedback);
+  }
+  .vs-properties-section[open] > summary > .object-inspector-chevron {
+    transform: rotate(180deg);
+  }
+  .object-inspector .vs-properties-section > summary::after {
+    content: none;
+    display: none;
+  }
+}

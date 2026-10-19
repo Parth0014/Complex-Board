@@ -18,9 +18,9 @@ test('expanded legacy appearance preserves exact PNG export parity in the redesi
     body: await page.screenshot(),
     contentType: 'image/png',
   });
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
   const pending = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download PNG', exact: true }).click();
+  await page.getByRole('button', { name: /High-resolution PNG/ }).click();
   const png = readFileSync((await (await pending).path())!);
   await info.attach('canonical-expanded.png', { body: png, contentType: 'image/png' });
   expect(png.equals(readFileSync('exports/appearance-legacy/phase-c.png'))).toBe(true);

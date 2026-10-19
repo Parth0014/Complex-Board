@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 type Props = ComponentProps<'div'> & {
   anchor: RefObject<HTMLElement | null>;
   side?: 'bottom' | 'right';
+  align?: 'start' | 'end';
   onDismiss: () => void;
   focusOnOpen?: boolean;
   ownedSurfaceSelector?: string;
@@ -12,6 +13,7 @@ type Props = ComponentProps<'div'> & {
 export function Popover({
   anchor,
   side = 'bottom',
+  align = 'end',
   onDismiss,
   focusOnOpen = false,
   ownedSurfaceSelector,
@@ -33,8 +35,8 @@ export function Popover({
     const position = () => {
       const a = trigger.getBoundingClientRect(),
         b = node.getBoundingClientRect();
-      let left = side === 'right' ? a.right : a.right - b.width;
-      let top = side === 'right' ? a.top : a.bottom + 6;
+      let left = side === 'right' ? a.right : align === 'start' ? a.left : a.right - b.width;
+      let top = side === 'right' ? a.top : a.bottom + 8;
       let flippedX = false,
         flippedY = false;
       if (side === 'right' && left + b.width > win.innerWidth - 8) {
@@ -74,7 +76,9 @@ export function Popover({
     observer.observe(trigger);
     position();
     if (focusOnOpen)
-      node.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]')?.focus();
+      [...node.querySelectorAll<HTMLElement>('button:not(:disabled), input, [tabindex="0"]')]
+        .find((candidate) => candidate.getClientRects().length > 0)
+        ?.focus();
     doc.addEventListener('pointerdown', outside);
     node.addEventListener('keydown', key);
     win.addEventListener('resize', position);
@@ -86,7 +90,7 @@ export function Popover({
       win.removeEventListener('resize', position);
       doc.removeEventListener('scroll', position, true);
     };
-  }, [anchor, side, focusOnOpen, ownedSurfaceSelector]);
+  }, [anchor, side, align, focusOnOpen, ownedSurfaceSelector]);
   const doc = anchor.current?.ownerDocument;
   return doc
     ? createPortal(

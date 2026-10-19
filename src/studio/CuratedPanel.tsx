@@ -7,14 +7,16 @@ import { curatedAssets } from '../assets/curatedPack';
 import { ELEMENT_THEMES } from '../assets/elementThemes';
 import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
 import { startCanvasDrag } from './canvasDrag';
-import { assetDropSize } from '../vision/dropPlacement';
+import { elementDropSize } from '../vision/dropPlacement';
 import type { EditorAdapter } from '../vision/contracts';
 export function CuratedPanel({
   adapter,
   initialTheme = 'all',
+  onUploads,
 }: {
   adapter: EditorAdapter;
   initialTheme?: string;
+  onUploads?(): void;
 }) {
   const [search, setSearch] = useState(''),
     [category, setCategory] = useState(initialTheme),
@@ -25,6 +27,18 @@ export function CuratedPanel({
       (category === 'all' || asset.topics?.includes(category)) &&
       matchesElementSearch(asset, search),
   );
+  if (!curatedAssets.length)
+    return (
+      <div className="gs-empty">
+        <h3>No artwork available yet</h3>
+        <p>Add your own photos to start creating.</p>
+        {onUploads && (
+          <Button variant="primary" onClick={onUploads}>
+            Upload photos
+          </Button>
+        )}
+      </div>
+    );
   return (
     <div className="elements-panel">
       <p>Find artwork for what you want to feel, celebrate, or grow toward.</p>
@@ -51,23 +65,18 @@ export function CuratedPanel({
           </Button>
         )}
       </div>
-      <label className="elements-theme-label" htmlFor="elements-theme">
-        Browse by theme
-      </label>
-      <select
-        className="vs-input"
-        id="elements-theme"
-        aria-label="Element theme"
-        value={category}
-        onChange={(event) => setCategory(event.target.value)}
-      >
-        <option value="all">Explore all artwork</option>
-        {ELEMENT_THEMES.map((theme) => (
-          <option key={theme.id} value={theme.id}>
+      <div className="elements-theme-chips" role="group" aria-label="Browse by theme">
+        {[{ id: 'all', label: 'All artwork' }, ...ELEMENT_THEMES].map((theme) => (
+          <Button
+            key={theme.id}
+            aria-pressed={category === theme.id}
+            onClick={() => setCategory(theme.id)}
+          >
             {theme.label}
-          </option>
+          </Button>
         ))}
-      </select>
+      </div>
+      <p className="elements-placement-hint">Click to add or drag onto your board.</p>
       <p className="elements-search-count" role="status" aria-live="polite">
         {assets.length} {search.trim() ? 'results' : 'elements'}
       </p>
@@ -115,7 +124,7 @@ export function CuratedPanel({
                       event,
                       GRATITUDE_ASSET_DRAG_TYPE,
                       JSON.stringify({ id: asset.id }),
-                      { size: () => assetDropSize(asset.width, asset.height) },
+                      { size: (board) => elementDropSize(asset, board) },
                     )
                   }
                   onClick={() => {
