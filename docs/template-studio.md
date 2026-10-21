@@ -24,8 +24,6 @@ In the local template studio, open **Elements**. **Digital cutouts** contains th
 
 New cutouts stay out of the main app's Elements library until you choose **Add to main app** on an individual piece. **Remove from main app** reverses that selection. These controls update `src/assets/approvedCutouts.json`; commit that file and the artwork and deploy to update the live library. Previously saved boards and published templates still resolve their cutouts even if those pieces are removed from the browse library.
 
-
-
 Digital cutouts keep their white sticker silhouette. Select a piece and use Edge style to switch between None and Smooth white sticker.
 
 ## Ready-made paper cutouts
@@ -35,3 +33,7 @@ Choose **Paper cutouts** in the Elements collection selector. There are 24 torn-
 Click or drag a piece onto the canvas. Resize and rotate it with the usual canvas handles, then send it behind photos or text. Change a new piece's face color under **Graphic colors**; the grain and fibrous edges remain part of the artwork. No outline editing is needed. Add favorites to the main app using the existing per-piece approval button.
 
 The torn-paper editing controls have been removed. Previously saved photo and shape paper effects still render, save and export. Their Edge style shows Saved paper edge; choose None to remove one.
+
+## Updating a template
+
+Under **Published templates**, choose **Edit template**. The maker restores the complete project, including uploaded photos, into a separate draft. If a linked draft already exists in this browser, it resumes your unsent edits. Choose **Publish update** to replace the same library entry without creating a duplicate. Existing user boards retain their content. Updates reach the live app on the next deployment.

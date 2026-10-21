@@ -127,8 +127,10 @@
     gap: var(--gs-space-3);
   }
   .vs-export-option {
+    min-width: 0;
+    white-space: normal;
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--gs-space-4);
     width: 100%;
     padding: var(--gs-space-4);
@@ -143,6 +145,7 @@
   }
   .vs-export-option[data-format='png'] {
     grid-column: 1 / -1;
+    grid-row: 1;
     display: flex;
     align-items: center;
     padding: var(--gs-space-5);
@@ -207,6 +210,9 @@
       0 / 12px 12px;
   }
   .vs-export-copy {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
     grid-column: 1 / -1;
     grid-row: 2;
     min-width: 0;

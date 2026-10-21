@@ -17,29 +17,34 @@ export function ExportDialog({
 }) {
   const document = adapter.history.document;
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [customScale, setCustomScale] = useState(1.5);
   const dialogRef = useRef<DialogHandle>(null);
+  const pngSize = (longEdge: number) => {
+    const scale = longEdge / Math.max(document.width, document.height);
+    return {
+      scale,
+      description:
+        Math.round(document.width * scale) +
+        ' \u00d7 ' +
+        Math.round(document.height * scale) +
+        ' px',
+    };
+  };
+  const twoK = pngSize(2048);
+  const fourK = pngSize(4096);
   const options = [
     {
       id: 'original',
       extension: '.png',
-      title: 'PNG (1×)',
-      description: `${document.width}×${document.height} px · Original board size`,
-      run: () => adapter.downloadHighResolution(adapter.ownerWindow.document, 1),
+      title: '4K PNG',
+      description: fourK.description,
+      run: () => adapter.downloadHighResolution(adapter.ownerWindow.document, fourK.scale),
     },
     {
       id: 'png',
       extension: '.png',
-      title: 'High-resolution PNG (2×)',
-      description: `${Math.round(document.width * 2)}\u00d7${Math.round(document.height * 2)} px \u00b7 For larger prints`,
-      run: () => adapter.downloadHighResolution(adapter.ownerWindow.document),
-    },
-    {
-      id: 'custom',
-      extension: '.png',
-      title: `Custom PNG (${customScale}×)`,
-      description: `${Math.round(document.width * customScale)}×${Math.round(document.height * customScale)} px`,
-      run: () => adapter.downloadHighResolution(adapter.ownerWindow.document, customScale),
+      title: 'Original PNG',
+      description: twoK.description,
+      run: () => adapter.downloadHighResolution(adapter.ownerWindow.document, twoK.scale),
     },
     {
       id: 'transparent',
@@ -90,27 +95,13 @@ export function ExportDialog({
           </p>
         )}
         <div className="vs-export-options">
-          <label>
-            Custom scale{' '}
-            <input
-              aria-label="Custom export scale"
-              type="number"
-              min="0.5"
-              max="4"
-              step="0.5"
-              value={customScale}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                if (Number.isFinite(value)) setCustomScale(Math.max(0.5, Math.min(4, value)));
-              }}
-            />
-          </label>
           {options.map((option) => (
             <Button
               className="vs-export-option"
               data-format={option.id}
               key={option.id}
               loading={busyId === option.id}
+              disabled={busyId !== null}
               onClick={() => {
                 setBusyId(option.id);
                 void Promise.resolve()

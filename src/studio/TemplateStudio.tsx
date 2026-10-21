@@ -4,6 +4,7 @@ import type { KonvaCanvasAdapter } from '../vision/canvas/KonvaCanvasAdapter';
 import { newBoard, type BoardDocument } from '../vision/document';
 import { listBoards, loadBoard, saveBoard, validateBoard } from '../vision/storage';
 import { portableMedia } from '../vision/media';
+import { publishedTemplates, type PublishedTemplate } from '../vision/publishedTemplates';
 import { Editor } from '../editor/Editor';
 import { BoardPreview } from './boards/BoardPreview';
 import { Button } from './ui/Button';
@@ -71,6 +72,34 @@ export function TemplateStudio({
     setEditingDraft(entry);
     setAdapter(next);
     changeUrl(id);
+  };
+  const editPublished = async (template: PublishedTemplate) => {
+    setBusy(true);
+    setError('');
+    try {
+      const existing = readTemplateDraftMeta(window).find(
+        (entry) => entry.publishedId === template.id,
+      );
+      if (existing && (await loadBoard(window, existing.id))) {
+        await open(existing.id);
+        return;
+      }
+      const id = TEMPLATE_DRAFT_PREFIX + window.crypto.randomUUID();
+      await saveBoard(window, { ...newBoard(), title: template.title }, id);
+      const next = createAdapter(id);
+      await next.initialize();
+      await next.restore(JSON.stringify(template.project));
+      next.commit({ ...next.history.document, title: template.title });
+      await next.flushSave();
+      const entry = register({ id, description: template.description, publishedId: template.id });
+      setEditingDraft(entry);
+      setAdapter(next);
+      changeUrl(id);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to edit this template.');
+    } finally {
+      setBusy(false);
+    }
   };
   useEffect(() => {
     let active = true;
@@ -181,6 +210,7 @@ export function TemplateStudio({
                 <PlusIcon /> New template
               </Button>
             </div>
+            <h2 className="tm-section-title">Your drafts</h2>
             {loading ? (
               <p role="status">Opening your template workspace...</p>
             ) : drafts.length ? (
@@ -243,6 +273,38 @@ export function TemplateStudio({
                 >
                   Create a template
                 </Button>
+              </section>
+            )}
+            {publishedTemplates.length > 0 && (
+              <section className="tm-published-library" aria-label="Published templates">
+                <h2 className="tm-section-title">Published templates</h2>
+                <p className="tm-storage-note">
+                  Edit a published design, then publish an update to its existing app library entry.
+                  If you already have a draft, editing continues where you left off.
+                </p>
+                <div className="tm-draft-grid">
+                  {publishedTemplates.map((template) => (
+                    <article className="tm-draft-card" key={template.id}>
+                      <div className="tm-draft-image">
+                        <img src={template.preview} alt={template.title + ' template'} />
+                      </div>
+                      <div className="tm-draft-info">
+                        <h3>{template.title}</h3>
+                        {template.description && <p>{template.description}</p>}
+                      </div>
+                      <div className="tm-published-actions">
+                        <Button
+                          variant="secondary"
+                          disabled={loading || busy}
+                          aria-label={'Edit template: ' + template.title}
+                          onClick={() => void editPublished(template)}
+                        >
+                          Edit template
+                        </Button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </section>
             )}
             <p className="tm-storage-note">
@@ -387,7 +449,13 @@ export function TemplateStudio({
                         result.error || 'Publishing needs the local development server.',
                       );
                     }
-                    setEditingDraft(register({ ...entry, publishedAt: Date.now() }));
+                    setEditingDraft(
+                      register({
+                        ...entry,
+                        publishedId: entry.publishedId || publishedIdFor(adapter.boardId),
+                        publishedAt: Date.now(),
+                      }),
+                    );
                     setReview(false);
                     setMessage(
                       'Published to the app library. It will reach your live site with the next deployment.',
@@ -402,8 +470,14 @@ export function TemplateStudio({
                 }}
               >
                 <p className="tm-eyebrow">READY TO SHARE</p>
-                <h2>Publish template</h2>
-                <p>Add this design to Templates in the main app. Your draft stays editable.</p>
+                <h2>
+                  {editingDraft?.publishedId ? 'Publish template update' : 'Publish template'}
+                </h2>
+                <p>
+                  {editingDraft?.publishedId
+                    ? 'Replace this template in the app library. Boards already created from it stay unchanged.'
+                    : 'Add this design to Templates in the main app. Your draft stays editable.'}
+                </p>
                 <div className="tm-review-content">
                   <div className="tm-review-image">
                     {preview ? (
@@ -456,7 +530,7 @@ export function TemplateStudio({
                     loading={publishing}
                     disabled={!preview || !import.meta.env.DEV}
                   >
-                    Publish to app
+                    {editingDraft?.publishedId ? 'Publish update' : 'Publish to app'}
                   </Button>
                 </div>
               </form>

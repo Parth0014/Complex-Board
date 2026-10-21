@@ -315,3 +315,22 @@
     display: inline-flex;
   }
 }
+
+.tm-section-title {
+  font-size: var(--gs-text-18);
+  margin: 0 0 20px;
+}
+.tm-published-library {
+  margin-top: 40px;
+}
+.tm-published-library > .tm-storage-note {
+  margin: -8px 0 24px;
+}
+.tm-draft-image img {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+.tm-published-actions {
+  padding: 12px 18px 18px;
+}
