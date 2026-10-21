@@ -33,6 +33,7 @@ export function StudioSidebar({
   showAI = true,
   initialTheme = 'all',
   onError,
+  templateMode = false,
 }: {
   adapter: EditorAdapter;
   tab: StudioTab | null;
@@ -41,6 +42,7 @@ export function StudioSidebar({
   showAI?: boolean;
   initialTheme?: string;
   onError: (message: string) => void;
+  templateMode?: boolean;
 }) {
   const panelRef = useRef<HTMLElement>(null);
   const rail = useRef<HTMLElement>(null);
@@ -102,7 +104,7 @@ export function StudioSidebar({
       <div className="vs-rail-wrap">
         <nav ref={rail} onScroll={updateRail} className="vs-rail" aria-label="Studio tools">
           <span className="vs-rail__group-label">Add</span>
-          {ADD_TABS.map((id) => (
+          {ADD_TABS.filter((id) => !templateMode || id !== 'templates').map((id) => (
             <Button
               key={id}
               className={`vs-rail__tab${tab === id ? ' is-active' : ''}`}

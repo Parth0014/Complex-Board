@@ -193,6 +193,9 @@ export interface StudioAdapter extends CanvasAdapter {
   history: DocumentHistory;
   ownerWindow: Window & typeof globalThis;
   selectedIds: string[];
+  editingTornOutlineId?: string;
+  startTornOutline(): void;
+  finishTornOutline(): void;
   subscribe(listener: () => void): () => void;
   getSnapshot(): number;
   commit(document: BoardDocument, options?: { preservePositions?: boolean }): void;

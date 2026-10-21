@@ -19,6 +19,7 @@ export function StudioShell({
   setTab,
   drawingTools,
   onHome,
+  templateTools,
 }: {
   adapter: EditorAdapter;
   children: ReactNode;
@@ -26,6 +27,7 @@ export function StudioShell({
   setTab: (tab: StudioTab | null) => void;
   drawingTools?: ReactNode;
   onHome: () => void;
+  templateTools?: { onPublish(): void; publishing: boolean };
 }) {
   const [preview, setPreview] = useState(false);
   const restoreMobileActionFocus = () => {
@@ -79,8 +81,9 @@ export function StudioShell({
     document.pages?.some((page) => page.items.length || page.background),
   );
   return (
-    <div className="vs">
+    <div className={`vs${templateTools ? ' vs--template-maker' : ''}`}>
       <StudioHeader
+        templateTools={templateTools}
         adapter={adapter}
         onHome={onHome}
         onShortcuts={() => setShortcuts(true)}
@@ -96,6 +99,7 @@ export function StudioShell({
       {error && !exportOpen && <Toast message={error} error onDismiss={dismissError} />}
       <div className="vs-body">
         <StudioSidebar
+          templateMode={!!templateTools}
           adapter={adapter}
           tab={tab}
           setTab={setTab}
@@ -107,7 +111,7 @@ export function StudioShell({
 
         <main className="vs-canvas" aria-label="Vision board canvas">
           {children}
-          {!hasContent && !onboardingDismissed && (
+          {!templateTools && !hasContent && !onboardingDismissed && (
             <CanvasIntroduction
               width={document.width}
               height={document.height}

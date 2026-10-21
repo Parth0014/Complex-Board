@@ -22,6 +22,11 @@ export function elementDropSize(asset: GratitudeAsset, board: DropSize): DropSiz
   const folder = asset.id.split(':')[1]?.split('/')[0] || '';
   const ratio = (asset.width || 240) / (asset.height || 240);
   const shortSide = Math.min(board.width, board.height);
+  // A torn divider separates page sections and should span the board on insertion.
+  if (asset.id.startsWith('studio-cutout:paper-divider-')) {
+    const width = board.width;
+    return { width, height: width / ratio };
+  }
   const widthRatio = folder.startsWith('letters-')
     ? 0.12
     : folder === 'titles'

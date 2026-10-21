@@ -1,6 +1,7 @@
 import { matchesElementSearch } from './elementSearch';
 import { describeElement, ELEMENT_THEMES } from './elementThemes';
 import type { AssetProvider, GratitudeAsset } from './contracts';
+import { studioCutouts, retiredStudioCutouts, approvedCutoutIds } from './studioCutouts';
 export const bundledSvgSources = import.meta.glob<string>(
   '../../public/vision-board-assets/svg/**/*.svg',
   { eager: true, query: '?raw', import: 'default' },
@@ -74,7 +75,10 @@ export const curatedPackProvider: AssetProvider = {
   id: 'curated-v1',
   capabilities: { search: true, categories: true, pagination: true },
   async search(query) {
-    const matches = curatedAssets.filter(
+    const matches = [
+      ...curatedAssets,
+      ...studioCutouts.filter((asset) => approvedCutoutIds.includes(asset.id)),
+    ].filter(
       (asset) =>
         (!query.type || asset.type === query.type) &&
         (!query.search || matchesElementSearch(asset, query.search)),
@@ -87,12 +91,19 @@ export const curatedPackProvider: AssetProvider = {
     };
   },
   async resolve(id) {
-    const asset = curatedAssets.find((asset) => asset.id === id);
+    const asset = [...curatedAssets, ...studioCutouts, ...retiredStudioCutouts].find(
+      (asset) => asset.id === id,
+    );
     if (!asset) throw new Error('Unknown vector asset: ' + id);
     return asset;
   },
   async fetchAsset(asset, ownerWindow) {
     const canonical = await this.resolve(asset.id, ownerWindow);
+    if (canonical.mimeType !== 'image/svg+xml') {
+      const response = await ownerWindow.fetch(canonical.assetUrl);
+      if (!response.ok) throw new Error('Unable to load cutout.');
+      return response.blob();
+    }
     return new Blob([decodeURIComponent(canonical.assetUrl.split(',').slice(1).join(','))], {
       type: 'image/svg+xml',
     });

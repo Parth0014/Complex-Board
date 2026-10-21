@@ -12,6 +12,8 @@ import { fontFamily } from '../fonts';
 import { framePaths } from '../frames';
 import { shapeGeometry } from '../shapeGeometry';
 import { RichText } from './RichText';
+import { renderPaperEdge } from '../paperEdge';
+import { tornOutlinePoints } from '../tornOutline';
 function PaperGrain({
   item,
   ownerWindow,
@@ -613,12 +615,13 @@ function Content({
 function StickerContent(props: Parameters<typeof Content>[0]) {
   const { item, adapter, imageToken, previewToken } = props;
   const artwork = useRef<Konva.Group>(null);
-  const [outline, setOutline] = useState<HTMLCanvasElement>();
+  const [outline, setOutline] = useState<{ canvas: HTMLCanvasElement; padding: number }>();
   const radius = Math.max(
     0,
     Math.min(
       30,
-      (item.kind === 'asset' ? item.stickerWidth : item.appearance.silhouette.width) || 0,
+      item.paperEdge?.width ??
+        ((item.kind === 'asset' ? item.stickerWidth : item.appearance.silhouette.width) || 0),
     ),
   );
   useLayoutEffect(() => {
@@ -632,13 +635,26 @@ function StickerContent(props: Parameters<typeof Content>[0]) {
       // Borders and shadows must not turn a transparent silhouette into a box.
       clone.find('.item-border').forEach((node) => node.destroy());
       clone.find('Shape').forEach((node) => node.setAttr('shadowEnabled', false));
+      const rasterScale = item.paperEdge
+        ? Math.min(1, 1536 / Math.max(item.width, item.height))
+        : 1;
       const source = clone.toCanvas({
         x: 0,
         y: 0,
         width: item.width,
         height: item.height,
-        pixelRatio: 1,
+        pixelRatio: rasterScale,
       });
+      if (item.paperEdge) {
+        const paper = renderPaperEdge(
+          source,
+          adapter.ownerWindow.document,
+          { ...item.paperEdge, width: radius * rasterScale },
+          item.id,
+        );
+        setOutline({ canvas: paper.canvas, padding: paper.padding / rasterScale });
+        return;
+      }
       const canvas = adapter.ownerWindow.document.createElement('canvas');
       canvas.width = Math.ceil(item.width + radius * 2);
       canvas.height = Math.ceil(item.height + radius * 2);
@@ -658,16 +674,36 @@ function StickerContent(props: Parameters<typeof Content>[0]) {
       context.fillStyle =
         (item.kind === 'asset' ? item.stickerColor : item.appearance.silhouette.color) || '#ffffff';
       context.fillRect(0, 0, canvas.width, canvas.height);
-      setOutline(canvas);
+      setOutline({ canvas, padding: radius });
     } finally {
       clone.destroy();
     }
   }, [item, adapter, radius, imageToken, previewToken]);
   return (
     <>
-      {radius > 0 && outline && <Image image={outline} x={-radius} y={-radius} listening={false} />}
+      {radius > 0 && outline && (
+        <Image
+          image={outline.canvas}
+          x={-outline.padding}
+          y={-outline.padding}
+          width={item.width + outline.padding * 2}
+          height={item.height + outline.padding * 2}
+          listening={false}
+        />
+      )}
       <Group
         ref={artwork}
+        clipFunc={
+          item.paperEdge?.outline
+            ? (context) => {
+                const points = tornOutlinePoints(item.paperEdge!.outline!, item.width, item.height);
+                context.beginPath();
+                context.moveTo(points[0], points[1]);
+                for (let i = 2; i < points.length; i += 2) context.lineTo(points[i], points[i + 1]);
+                context.closePath();
+              }
+            : undefined
+        }
         clipWidth={item.contentSize ? item.width : undefined}
         clipHeight={item.contentSize ? item.height : undefined}
       >

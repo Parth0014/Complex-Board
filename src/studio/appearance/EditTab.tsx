@@ -10,6 +10,10 @@ import { FontPicker } from '../FontPicker';
 import { capabilities } from '../../vision/appearance/capabilities';
 import { svgColors, svgColorValue } from '../../vision/svgColors';
 import {
+  DIGITAL_CUTOUT_EDGE_WIDTH,
+  DIGITAL_CUTOUT_EDGE_COLOR,
+} from '../../vision/digitalCutoutEdge';
+import {
   BoldIcon,
   ItalicIcon,
   UnderlineIcon,
@@ -36,6 +40,17 @@ export function EditTab({
   patch,
   runMedia,
 }: InspectorTabProps) {
+  const edgeCapable = selected.every(
+    (entry) => entry.kind === 'asset' || (entry.kind === 'shape' && !!capabilities(entry)?.fill),
+  );
+  const edgeStyles = selected.map((entry) =>
+    entry.paperEdge
+      ? 'paper'
+      : Number(read(entry, 'silhouette.width') || 0) > 0
+        ? 'sticker'
+        : 'none',
+  );
+  const edgeStyle = edgeStyles.every((style) => style === edgeStyles[0]) ? edgeStyles[0] : 'mixed';
   return (
     <>
       {' '}
@@ -187,16 +202,58 @@ export function EditTab({
       )}
       {
         <>
+          {edgeCapable && (
+            <Sec title="Sticker edge" open>
+              <label className="vs-field">
+                <span>Edge style</span>
+                <select
+                  className="vs-select"
+                  aria-label="Edge style"
+                  value={edgeStyle}
+                  disabled={locked}
+                  onChange={(event) => {
+                    adapter.beginGesture();
+                    try {
+                      const style = event.target.value;
+                      adapter.finishTornOutline();
+                      patch({
+                        paperEdge: undefined,
+                      });
+                      set('silhouette.width', style === 'sticker' ? DIGITAL_CUTOUT_EDGE_WIDTH : 0);
+                      if (style === 'sticker') set('silhouette.color', DIGITAL_CUTOUT_EDGE_COLOR);
+                    } finally {
+                      adapter.endGesture();
+                    }
+                  }}
+                >
+                  {edgeStyle === 'mixed' && (
+                    <option value="mixed" disabled>
+                      Mixed
+                    </option>
+                  )}
+                  <option value="none">None</option>
+                  <option value="sticker">Smooth white sticker</option>
+                  {edgeStyle === 'paper' && (
+                    <option value="paper" disabled>
+                      Saved paper edge
+                    </option>
+                  )}
+                </select>
+              </label>
+              {edgeStyle === 'sticker' && number('Sticker edge width', 'silhouette.width', 0, 30)}
+            </Sec>
+          )}
           {selected.some((entry) => read(entry, 'effect') && read(entry, 'effect') !== 'none') && (
             <Button size="sm" onClick={() => set('effect', 'none')}>
               Clear saved effect
             </Button>
           )}
-          {selected.some((entry) => Number(read(entry, 'silhouette.width') || 0) > 0) && (
-            <Button size="sm" onClick={() => set('silhouette.width', 0)}>
-              Remove sticker edge
-            </Button>
-          )}
+          {!edgeCapable &&
+            selected.some((entry) => Number(read(entry, 'silhouette.width') || 0) > 0) && (
+              <Button size="sm" onClick={() => set('silhouette.width', 0)}>
+                Remove sticker edge
+              </Button>
+            )}
           {allText && Number(read(item, 'stroke.width') || 0) > 0 && (
             <Button size="sm" onClick={() => set('stroke.width', 0)}>
               Remove text outline

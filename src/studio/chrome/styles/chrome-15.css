@@ -135,17 +135,6 @@
       transform: translateY(-1px);
       box-shadow: none;
     }
-    .templates-panel__card:hover {
-      border-color: var(--gs-accent);
-      box-shadow: none;
-      transform: translateY(-2px);
-      background: var(--gs-hover);
-    }
-    .templates-panel__apply:hover {
-      background: var(--gs-accent);
-      border-color: var(--gs-accent);
-      color: var(--gs-on-accent);
-    }
     .upload-picker:hover {
       border-color: var(--gs-accent);
       background: var(--gs-accent-soft);

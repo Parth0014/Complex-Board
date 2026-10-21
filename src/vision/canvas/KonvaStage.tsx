@@ -3,6 +3,7 @@ import { Toast } from '../../studio/ui/Toast';
 import { compactScreen } from '../../studio/ui/breakpoints';
 import { requestAI } from '../aiClient';
 import { CropOverlay } from './CropOverlay';
+import { TornOutlineOverlay, TornOutlineGuide } from './TornOutlineOverlay';
 import { canvasColors } from './colors';
 import { itemOpacity } from '../appearance/capabilities';
 import { primaryColor } from '../appearance/capabilities';
@@ -88,6 +89,27 @@ export function KonvaStage({
     };
   }, [drawMode]);
   const stageRef = useRef<Konva.Stage>(null);
+  useEffect(() => {
+    if (
+      adapter.editingTornOutlineId &&
+      (drawMode !== 'select' ||
+        adapter.cropDraft ||
+        !adapter.history.document.items.some(
+          (item) =>
+            item.id === adapter.editingTornOutlineId &&
+            item.paperEdge?.outline &&
+            !item.hidden &&
+            !item.locked,
+        ))
+    )
+      adapter.finishTornOutline();
+  }, [
+    adapter,
+    adapter.editingTornOutlineId,
+    adapter.history.document,
+    adapter.cropDraft,
+    drawMode,
+  ]);
   const dragPointer = useRef<{ x: number; y: number } | null>(null);
   const transformer = useRef<Konva.Transformer>(null);
   const textEditor = useRef<HTMLTextAreaElement>(null);
@@ -535,7 +557,11 @@ export function KonvaStage({
         adapter.selectedIds.includes(item.id) && (item.locked || adapter.isCollageFrame(item.id)),
     );
     transformer.current.nodes(
-      locked || editing || adapter.cropDraft || adapter.adjustingCollage
+      locked ||
+        editing ||
+        adapter.cropDraft ||
+        adapter.adjustingCollage ||
+        adapter.editingTornOutlineId
         ? []
         : adapter.selectedIds
             .map((id) => stage.findOne(`#${id}`))
@@ -552,6 +578,7 @@ export function KonvaStage({
     editing,
     adapter.cropDraft,
     adapter.adjustingCollage,
+    adapter.editingTornOutlineId,
   ]);
 
   useLayoutEffect(() => {
@@ -898,6 +925,7 @@ export function KonvaStage({
     rotation: item.rotation,
     opacity: itemOpacity(item),
     draggable:
+      !adapter.editingTornOutlineId &&
       !adapter.isCollageFrame(item.id) &&
       !adapter.adjustingCollage &&
       !adapter.cropDraft &&
@@ -1580,8 +1608,16 @@ export function KonvaStage({
                 return (
                   <Transformer
                     ref={transformer}
-                    visible={!adapter.cropDraft && !adapter.adjustingCollage}
-                    listening={!adapter.cropDraft && !adapter.adjustingCollage}
+                    visible={
+                      !adapter.cropDraft &&
+                      !adapter.adjustingCollage &&
+                      !adapter.editingTornOutlineId
+                    }
+                    listening={
+                      !adapter.cropDraft &&
+                      !adapter.adjustingCollage &&
+                      !adapter.editingTornOutlineId
+                    }
                     rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
                     rotationSnapTolerance={5}
                     borderStroke={colors.selection}
@@ -1669,8 +1705,39 @@ export function KonvaStage({
                   />
                 );
               })()}
+              {adapter.editingTornOutlineId &&
+                !adapter.cropDraft &&
+                stageRef.current &&
+                document.items
+                  .filter((item) => item.id === adapter.editingTornOutlineId && !item.hidden)
+                  .map((item) => (
+                    <TornOutlineGuide
+                      key={item.id}
+                      adapter={adapter}
+                      item={item}
+                      left={left}
+                      top={top}
+                      scale={scale}
+                    />
+                  ))}
             </Layer>
           </Stage>
+          {adapter.editingTornOutlineId &&
+            !adapter.cropDraft &&
+            stageRef.current &&
+            document.items
+              .filter((item) => item.id === adapter.editingTornOutlineId && !item.hidden)
+              .map((item) => (
+                <TornOutlineOverlay
+                  key={item.id}
+                  adapter={adapter}
+                  item={item}
+                  stage={stageRef.current!}
+                  left={left}
+                  top={top}
+                  scale={scale}
+                />
+              ))}
           {adapter.adjustingCollage && (
             <CollageDividerOverlay
               adapter={adapter}

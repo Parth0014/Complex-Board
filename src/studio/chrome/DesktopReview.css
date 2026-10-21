@@ -45,7 +45,6 @@
     margin-left: auto;
     white-space: nowrap;
   }
-
 }
 @layer utilities {
   @media (prefers-reduced-motion: reduce) {

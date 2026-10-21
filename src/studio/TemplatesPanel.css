@@ -1,0 +1,99 @@
+@layer components {
+  .templates-panel__list {
+    list-style: none;
+    display: grid;
+    gap: var(--gs-space-4);
+    margin: 0;
+    padding: 0;
+  }
+  .templates-panel__card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--gs-line);
+    border-radius: var(--gs-radius-card);
+    background: var(--gs-surface);
+    transition: border-color var(--gs-duration-feedback) var(--gs-ease);
+  }
+  .templates-panel__visual {
+    display: grid;
+    place-items: center;
+    height: 308px;
+    padding: var(--gs-space-4);
+    background: var(--gs-surface-muted);
+  }
+  .templates-panel__preview {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 276px;
+    object-fit: contain;
+    border-radius: var(--gs-radius-xs);
+    box-shadow: 0 3px 12px color-mix(in srgb, var(--gs-text) 12%, transparent);
+  }
+  .templates-panel__meta {
+    display: grid;
+    min-width: 0;
+    gap: var(--gs-space-3);
+    padding: var(--gs-space-4);
+  }
+  .templates-panel__meta h3 {
+    margin: 0;
+    font-size: var(--gs-text-15);
+    font-weight: var(--gs-weight-strong);
+    line-height: var(--gs-line-height-tight);
+    overflow-wrap: anywhere;
+  }
+  .templates-panel__meta p {
+    margin: 0;
+    color: var(--gs-text-secondary);
+    font-size: var(--gs-text-13);
+  }
+  .templates-panel__details {
+    display: grid;
+    gap: var(--gs-space-1);
+  }
+  .vs .templates-panel__use.gs-button {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--gs-space-3);
+    width: 100%;
+    min-height: 44px;
+    padding: var(--gs-space-3);
+    border-radius: var(--gs-radius-control);
+    font-weight: var(--gs-weight-medium);
+  }
+  .templates-panel__use svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .templates-panel__card:focus-within {
+    border-color: var(--gs-control-line);
+  }
+  @media (hover: hover) {
+    .templates-panel__card:hover {
+      border-color: var(--gs-control-line);
+    }
+  }
+  @media (max-width: 600px) {
+    .templates-panel__card {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      align-items: center;
+      gap: var(--gs-space-3);
+      padding: var(--gs-space-3);
+    }
+    .templates-panel__visual {
+      height: 156px;
+      padding: var(--gs-space-2);
+      border-radius: var(--gs-radius-control);
+    }
+    .templates-panel__preview {
+      max-height: 140px;
+    }
+    .templates-panel__meta {
+      padding: 0;
+    }
+  }
+}

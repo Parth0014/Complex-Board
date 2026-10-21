@@ -1,4 +1,5 @@
 import type { BoardDocument } from './legacy';
+import { validatePaperEdge } from '../paperEdge';
 export function validateBoard(value: unknown): BoardDocument {
   const board = value as BoardDocument;
   if (
@@ -33,6 +34,7 @@ export function validateBoard(value: unknown): BoardDocument {
     }
   }
   for (const item of board.items) {
+    if (item?.paperEdge !== undefined) validatePaperEdge(item.paperEdge);
     if (
       !item ||
       typeof item.id !== 'string' ||

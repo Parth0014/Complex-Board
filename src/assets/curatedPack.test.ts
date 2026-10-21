@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { curatedAssets, curatedPackProvider } from './curatedPack';
 import { ELEMENT_THEMES } from './elementThemes';
 import elementTopics from './elementTopics.json';
+import { studioCutouts, approvedCutoutIds } from './studioCutouts';
 describe('user supplied SVG library', () => {
   it('includes every SVG and excludes raster media', () => {
     expect(curatedAssets).toHaveLength(330);
@@ -37,7 +38,13 @@ describe('user supplied SVG library', () => {
       { cursor: first.nextCursor, limit: 250 },
       {} as Window & typeof globalThis,
     );
-    expect([...first.items, ...next.items]).toHaveLength(330);
+    const expected = [
+      ...curatedAssets,
+      ...studioCutouts.filter((asset) => approvedCutoutIds.includes(asset.id)),
+    ];
+    const pagedIds = [...first.items, ...next.items].map((asset) => asset.id);
+    expect(pagedIds).toEqual(expected.map((asset) => asset.id));
+    expect(new Set(pagedIds).size).toBe(expected.length);
     expect(next.nextCursor).toBeUndefined();
   });
   it('organizes every asset into readable themes while preserving saved asset IDs', () => {

@@ -9,6 +9,9 @@ import { GRATITUDE_ASSET_DRAG_TYPE } from '../assets/contracts';
 import { startCanvasDrag } from './canvasDrag';
 import { elementDropSize } from '../vision/dropPlacement';
 import type { EditorAdapter } from '../vision/contracts';
+import { studioCutouts, approvedCutoutIds, isTemplateStudio } from '../assets/studioCutouts';
+import './CutoutWorkshop.css';
+import { isDigitalCutout } from '../vision/digitalCutoutEdge';
 export function CuratedPanel({
   adapter,
   initialTheme = 'all',
@@ -19,12 +22,23 @@ export function CuratedPanel({
   onUploads?(): void;
 }) {
   const [search, setSearch] = useState(''),
-    [category, setCategory] = useState(initialTheme),
+    [category, setCategory] = useState(isTemplateStudio() ? 'all' : initialTheme),
     [error, setError] = useState('');
   const [loaded, setLoaded] = useState<Set<string>>(() => new Set());
-  const assets = curatedAssets.filter(
+  const studio = isTemplateStudio();
+  const [collection, setCollection] = useState(studio ? 'paper' : 'all');
+  const [approved, setApproved] = useState(approvedCutoutIds);
+  const [promoting, setPromoting] = useState<string | null>(null);
+  const catalog = [
+    ...curatedAssets,
+    ...studioCutouts.filter((asset) => studio || approved.includes(asset.id)),
+  ];
+  const assets = catalog.filter(
     (asset) =>
-      (category === 'all' || asset.topics?.includes(category)) &&
+      (collection === 'all' || asset.styles?.includes(collection)) &&
+      (category === 'digital-cutouts'
+        ? asset.styles?.includes('digital')
+        : category === 'all' || asset.topics?.includes(category)) &&
       matchesElementSearch(asset, search),
   );
   if (!curatedAssets.length)
@@ -41,7 +55,56 @@ export function CuratedPanel({
     );
   return (
     <div className="elements-panel">
-      <p>Find artwork for what you want to feel, celebrate, or grow toward.</p>
+      <svg width="0" height="0" aria-hidden="true" focusable="false">
+        <defs>
+          <filter
+            id="visbo-digital-cutout-preview-edge"
+            x="-10%"
+            y="-10%"
+            width="120%"
+            height="120%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="expanded" />
+            <feFlood floodColor="#ffffff" result="white" />
+            <feComposite in="white" in2="expanded" operator="in" result="edge" />
+            <feMerge>
+              <feMergeNode in="edge" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
+      {studio && (
+        <>
+          <label className="vs-field">
+            <span>Artwork collection</span>
+            <select
+              className="vs-select"
+              aria-label="Artwork collection"
+              value={collection}
+              onChange={(event) => {
+                setCollection(event.target.value);
+                setCategory('all');
+                setSearch('');
+              }}
+            >
+              <option value="digital">Digital cutouts</option>
+              <option value="paper">Paper cutouts</option>
+              <option value="all">All artwork</option>
+            </select>
+          </label>
+          {collection === 'paper' && (
+            <p>
+              Ready-made torn notes, scraps and dividers. Add a piece, then resize, rotate or layer
+              it behind your photos and text.
+            </p>
+          )}
+        </>
+      )}
+      {(!studio || collection === 'all') && (
+        <p>Find artwork for what you want to feel, celebrate, or grow toward.</p>
+      )}
       <div className="elements-search" role="search">
         <Search size={18} aria-hidden="true" />
         <input
@@ -51,7 +114,8 @@ export function CuratedPanel({
           value={search}
           onChange={(event) => {
             setSearch(event.target.value);
-            if (!search.trim() && event.target.value.trim()) setCategory('all');
+            if (!search.trim() && event.target.value.trim() && category !== 'digital-cutouts')
+              setCategory('all');
           }}
         />
         {search && (
@@ -65,17 +129,23 @@ export function CuratedPanel({
           </Button>
         )}
       </div>
-      <div className="elements-theme-chips" role="group" aria-label="Browse by theme">
-        {[{ id: 'all', label: 'All artwork' }, ...ELEMENT_THEMES].map((theme) => (
-          <Button
-            key={theme.id}
-            aria-pressed={category === theme.id}
-            onClick={() => setCategory(theme.id)}
-          >
-            {theme.label}
-          </Button>
-        ))}
-      </div>
+      {(!studio || collection === 'all') && (
+        <div className="elements-theme-chips" role="group" aria-label="Browse by theme">
+          {[
+            { id: 'all', label: 'All artwork' },
+            ...(!studio ? [{ id: 'digital-cutouts', label: 'Digital cutouts' }] : []),
+            ...ELEMENT_THEMES,
+          ].map((theme) => (
+            <Button
+              key={theme.id}
+              aria-pressed={category === theme.id}
+              onClick={() => setCategory(theme.id)}
+            >
+              {theme.label}
+            </Button>
+          ))}
+        </div>
+      )}
       <p className="elements-placement-hint">Click to add or drag onto your board.</p>
       <p className="elements-search-count" role="status" aria-live="polite">
         {assets.length} {search.trim() ? 'results' : 'elements'}
@@ -99,10 +169,12 @@ export function CuratedPanel({
       )}
       {(search.trim()
         ? [{ id: 'search-results', label: 'Search results' }]
-        : ELEMENT_THEMES.filter((theme) => category === 'all' || theme.id === category)
+        : category === 'digital-cutouts'
+          ? [{ id: 'digital-cutouts', label: 'Digital cutouts' }]
+          : ELEMENT_THEMES.filter((theme) => category === 'all' || theme.id === category)
       ).map((theme) => {
         const themeAssets =
-          theme.id === 'search-results'
+          theme.id === 'search-results' || theme.id === 'digital-cutouts'
             ? assets
             : assets.filter((asset) =>
                 category === 'all' ? asset.category === theme.id : asset.topics?.includes(theme.id),
@@ -113,36 +185,77 @@ export function CuratedPanel({
             <h3>{theme.label}</h3>
             <div className="elements-grid">
               {themeAssets.map((asset) => (
-                <Button
-                  key={asset.id}
-                  type="button"
-                  className="elements-card"
-                  data-tip={asset.title}
-                  draggable
-                  onDragStart={(event) =>
-                    startCanvasDrag(
-                      event,
-                      GRATITUDE_ASSET_DRAG_TYPE,
-                      JSON.stringify({ id: asset.id }),
-                      { size: (board) => elementDropSize(asset, board) },
-                    )
-                  }
-                  onClick={() => {
-                    setError('');
-                    void adapter.insertAsset(asset).catch((error) => setError(errorMessage(error)));
-                  }}
-                >
-                  <img
-                    src={asset.previewUrl}
-                    alt={asset.title}
-                    loading="lazy"
-                    draggable={false}
-                    className={loaded.has(asset.id) ? undefined : 'gs-skeleton'}
-                    onLoad={() => setLoaded((current) => new Set(current).add(asset.id))}
-                    onError={() => setLoaded((current) => new Set(current).add(asset.id))}
-                  />
-                  <span>{asset.title}</span>
-                </Button>
+                <div key={asset.id} className="cutout-card">
+                  <Button
+                    key={asset.id}
+                    type="button"
+                    className="elements-card"
+                    data-tip={asset.title}
+                    draggable
+                    onDragStart={(event) =>
+                      startCanvasDrag(
+                        event,
+                        GRATITUDE_ASSET_DRAG_TYPE,
+                        JSON.stringify({ id: asset.id }),
+                        { size: (board) => elementDropSize(asset, board) },
+                      )
+                    }
+                    onClick={() => {
+                      setError('');
+                      void adapter
+                        .insertAsset(asset)
+                        .catch((error) => setError(errorMessage(error)));
+                    }}
+                  >
+                    <img
+                      src={asset.previewUrl}
+                      alt={asset.title}
+                      loading="lazy"
+                      draggable={false}
+                      style={
+                        isDigitalCutout(asset)
+                          ? { filter: 'url(#visbo-digital-cutout-preview-edge)' }
+                          : undefined
+                      }
+                      className={loaded.has(asset.id) ? undefined : 'gs-skeleton'}
+                      onLoad={() => setLoaded((current) => new Set(current).add(asset.id))}
+                      onError={() => setLoaded((current) => new Set(current).add(asset.id))}
+                    />
+                    <span>{asset.title}</span>
+                  </Button>
+                  {studio && import.meta.env.DEV && asset.id.startsWith('studio-cutout:') && (
+                    <Button
+                      size="sm"
+                      disabled={promoting !== null}
+                      aria-label={`${approved.includes(asset.id) ? 'Remove from' : 'Add to'} main app: ${asset.title}`}
+                      onClick={async () => {
+                        setPromoting(asset.id);
+                        setError('');
+                        try {
+                          const response = await fetch('/api/template-studio', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              action: 'approve-cutout',
+                              id: asset.id,
+                              approved: !approved.includes(asset.id),
+                            }),
+                          });
+                          const result = await response.json();
+                          if (!response.ok)
+                            throw new Error(result.error || 'Unable to update artwork.');
+                          setApproved(result.ids);
+                        } catch (error) {
+                          setError(errorMessage(error));
+                        } finally {
+                          setPromoting(null);
+                        }
+                      }}
+                    >
+                      {approved.includes(asset.id) ? 'Remove from main app' : 'Add to main app'}
+                    </Button>
+                  )}
+                </div>
               ))}
             </div>
           </section>

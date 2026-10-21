@@ -73,6 +73,8 @@ import {
   textDropSize,
 } from './dropPlacement';
 import { loadBoard, saveBoard, validateBoard } from '../storage';
+import { withDigitalCutoutEdge } from '../digitalCutoutEdge';
+import { tornOutlinePreset } from '../tornOutline';
 import { imagePdf, imagesPdf } from '../pdf';
 import { renderPage } from './renderPage';
 import { updateConnectors } from '../connectors';
@@ -115,6 +117,24 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
   readonly history = new DocumentHistory();
   readonly images = new Map<string, HTMLImageElement>();
   selectedIds: string[] = [];
+  editingTornOutlineId?: string;
+  startTornOutline() {
+    const item = this.history.document.items.find((entry) => entry.id === this.selectedIds[0]);
+    if (this.selectedIds.length !== 1 || !item?.paperEdge || item.locked || this.cropDraft) return;
+    if (!item.paperEdge.outline)
+      this.patchItems([
+        {
+          id: item.id,
+          patch: { paperEdge: { ...item.paperEdge, outline: tornOutlinePreset('gentle') } },
+        },
+      ]);
+    this.editingTornOutlineId = item.id;
+    this.changed();
+  }
+  finishTornOutline() {
+    this.editingTornOutlineId = undefined;
+    this.changed();
+  }
   adjustingCollage = false;
   get collageAdjustment() {
     return resolveCollage(this.history.document.items, this.selectedIds[0]);
@@ -367,13 +387,15 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         resolved.set(asset.id, canonical);
       }
     }
-    board.items = board.items.map((item) => ({
-      ...item,
-      asset: item.asset ? resolved.get(item.asset.id) : undefined,
-      contentAsset: item.contentAsset ? resolved.get(item.contentAsset.id) : undefined,
-      groupPath: item.groupPath || (item.groupId ? [item.groupId] : []),
-      groupId: (item.groupPath || (item.groupId ? [item.groupId] : []))[0],
-    }));
+    board.items = board.items.map((item) =>
+      withDigitalCutoutEdge({
+        ...item,
+        asset: item.asset ? resolved.get(item.asset.id) : undefined,
+        contentAsset: item.contentAsset ? resolved.get(item.contentAsset.id) : undefined,
+        groupPath: item.groupPath || (item.groupId ? [item.groupId] : []),
+        groupId: (item.groupPath || (item.groupId ? [item.groupId] : []))[0],
+      }),
+    );
     for (const item of board.items)
       if (item.rendition) {
         if (
@@ -1138,6 +1160,8 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     return this.groupScope.every((id, index) => this.path(item)[index] === id);
   }
   select(ids: string[]) {
+    if (ids.length !== 1 || ids[0] !== this.editingTornOutlineId)
+      this.editingTornOutlineId = undefined;
     if (this.adjustingCollage) {
       const members = this.collageAdjustment?.members;
       this.adjustingCollage =
@@ -1886,7 +1910,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
     const id = this.id();
     this.items((items) => [
       ...items,
-      {
+      withDigitalCutoutEdge({
         id,
         kind: 'asset',
         asset,
@@ -1898,7 +1922,7 @@ export class KonvaCanvasAdapter implements CanvasAdapter {
         opacity: 1,
         groupPath: [...this.groupScope],
         groupId: this.groupScope[0],
-      },
+      }),
     ]);
     this.select([id]);
     if (!position) this.animateInsertion?.(id);

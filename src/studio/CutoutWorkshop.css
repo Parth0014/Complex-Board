@@ -1,0 +1,17 @@
+.cutout-collections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gs-space-2);
+  margin-block: var(--gs-space-3);
+}
+.cutout-card {
+  min-width: 0;
+}
+.cutout-card > .elements-card {
+  width: 100%;
+  height: auto;
+}
+.cutout-card > .gs-button--sm {
+  width: 100%;
+  white-space: normal;
+}

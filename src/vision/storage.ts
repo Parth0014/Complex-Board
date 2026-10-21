@@ -93,6 +93,7 @@ export async function deleteBoard(
 
 export async function listBoards(
   ownerWindow: Window & typeof globalThis,
+  scope: 'boards' | 'template-drafts' = 'boards',
 ): Promise<{ id: string; document: BoardDocument }[]> {
   const db = await openBoardStore(ownerWindow);
   try {
@@ -108,6 +109,7 @@ export async function listBoards(
         const cursor = request.result;
         if (!cursor) return;
         if (
+          String(cursor.key).startsWith('template-draft:') !== (scope === 'template-drafts') ||
           String(cursor.key).startsWith(LEGACY_RECOVERY_PREFIX) ||
           String(cursor.key).startsWith('trash:')
         ) {

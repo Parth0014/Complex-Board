@@ -39,10 +39,12 @@ export function Editor({
   adapter,
   onHome,
   initialTab,
+  templateTools,
 }: {
   adapter: KonvaCanvasAdapter;
   onHome: () => void;
   initialTab: StudioTab | null;
+  templateTools?: { onPublish(): void; publishing: boolean };
 }) {
   const canvasSettings = useRef<HTMLDetailsElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -403,6 +405,7 @@ export function Editor({
 
   return (
     <StudioShell
+      templateTools={templateTools}
       adapter={adapter}
       onHome={onHome}
       tab={studioTab}

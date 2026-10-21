@@ -33,6 +33,7 @@ export function StudioHeader({
   onError,
   onShortcuts,
   exportDisabled = false,
+  templateTools,
 }: {
   adapter: EditorAdapter;
   onHome: () => void;
@@ -41,6 +42,7 @@ export function StudioHeader({
   onError: (message: string) => void;
   onShortcuts: () => void;
   exportDisabled?: boolean;
+  templateTools?: { onPublish(): void; publishing: boolean };
 }) {
   const fileMenu = useRef<HTMLButtonElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -84,17 +86,22 @@ export function StudioHeader({
   return (
     <header className="vs-header">
       <div className="vs-header__start">
-        <Button type="button" className="vs-brand" aria-label="Back to home" onClick={onHome}>
+        <Button
+          type="button"
+          className="vs-brand"
+          aria-label={templateTools ? 'Back to template library' : 'Back to home'}
+          onClick={onHome}
+        >
           <VisionMark />
           <span className="vs-brand__name">
-            <strong>VisBo</strong>
+            <strong>{templateTools ? 'Template maker' : 'VisBo'}</strong>
           </span>
         </Button>
 
         <div className="vs-title">
           <input
             className="vs-title__input"
-            aria-label="Board name"
+            aria-label={templateTools ? 'Template name' : 'Board name'}
             data-tip={document.title}
             data-tip-pos="below"
             value={name}
@@ -154,7 +161,7 @@ export function StudioHeader({
         <Button
           variant="secondary"
           className="vs-preview-trigger"
-          aria-label="Preview board"
+          aria-label={templateTools ? 'Preview template' : 'Preview board'}
           onClick={onPreview}
         >
           Preview
@@ -162,14 +169,27 @@ export function StudioHeader({
         <Button
           variant="primary"
           className="vs-export-trigger"
-          aria-label="Export"
-          data-tip={exportDisabled ? 'Add something to your board to export' : 'Export your board'}
+          aria-label={templateTools ? 'Publish template' : 'Export'}
+          data-tip={
+            templateTools
+              ? 'Review template details and publish'
+              : exportDisabled
+                ? 'Add something to your board to export'
+                : 'Export your board'
+          }
           data-tip-pos="below"
-          onClick={onExport}
-          disabledReason={exportDisabled ? 'Add something to your board to export' : undefined}
+          onClick={templateTools ? templateTools.onPublish : onExport}
+          loading={templateTools?.publishing}
+          disabledReason={
+            exportDisabled
+              ? templateTools
+                ? 'Add something to your template to publish'
+                : 'Add something to your board to export'
+              : undefined
+          }
         >
           <ExportIcon />
-          <span>Export</span>
+          <span>{templateTools ? 'Publish' : 'Export'}</span>
         </Button>
 
         <div className="vs-menu">
@@ -179,7 +199,7 @@ export function StudioHeader({
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(!menuOpen)}
             className="vs-file-btn"
-            data-tip="Board actions"
+            data-tip={templateTools ? 'Template actions' : 'Board actions'}
             data-tip-pos="below"
             aria-label="File menu"
           >
@@ -196,18 +216,18 @@ export function StudioHeader({
               className="vs vs-header-file-menu"
             >
               <Menu aria-label="File actions">
-                <p className="vs-menu__kicker">Board</p>
+                <p className="vs-menu__kicker">{templateTools ? 'Template' : 'Board'}</p>
                 <Button
                   className="vs-menu__item"
                   role="menuitem"
-                  aria-label="New board"
+                  aria-label={templateTools ? 'Template library' : 'New board'}
                   onClick={() => {
                     setMenuOpen(false);
                     onHome();
                   }}
                 >
                   <PlusIcon />
-                  <span>New board</span>
+                  <span>{templateTools ? 'Template library' : 'New board'}</span>
                 </Button>
                 <Button
                   className="vs-menu__item"
@@ -217,7 +237,7 @@ export function StudioHeader({
                     setResizeOpen(true);
                   }}
                 >
-                  Resize board
+                  {templateTools ? 'Resize template' : 'Resize board'}
                 </Button>
                 <div className="vs-menu__divider" />
                 <p className="vs-menu__kicker">Editable files</p>
@@ -227,7 +247,7 @@ export function StudioHeader({
                   onClick={() => fileInput.current?.click()}
                 >
                   <RestoreIcon />
-                  <span>Open board file</span>
+                  <span>{templateTools ? 'Open draft file' : 'Open board file'}</span>
                 </Button>
                 <Button
                   className="vs-menu__item"
@@ -239,11 +259,11 @@ export function StudioHeader({
                   }}
                 >
                   <SaveIcon />
-                  <span>Download board file</span>
+                  <span>{templateTools ? 'Download draft file' : 'Download board file'}</span>
                 </Button>
                 <input
                   ref={fileInput}
-                  aria-label="Open board file"
+                  aria-label={templateTools ? 'Open draft file' : 'Open board file'}
                   type="file"
                   accept=".visbo,.json,application/vnd.visbo.project+json,application/json"
                   className="sr-only"
@@ -263,7 +283,7 @@ export function StudioHeader({
                     event.target.value = '';
                   }}
                 />
-                {compact && (
+                {(compact || templateTools) && (
                   <>
                     <div className="vs-menu__divider" />
                     <p className="vs-menu__kicker">View & export</p>
@@ -275,7 +295,7 @@ export function StudioHeader({
                         onPreview();
                       }}
                     >
-                      Preview board
+                      {templateTools ? 'Preview template' : 'Preview board'}
                     </Button>
                     <Button
                       role="menuitem"
@@ -286,7 +306,7 @@ export function StudioHeader({
                         onExport();
                       }}
                     >
-                      Export board
+                      {templateTools ? 'Export image' : 'Export board'}
                     </Button>
                   </>
                 )}

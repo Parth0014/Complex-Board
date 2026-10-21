@@ -30,26 +30,6 @@
     object-fit: contain;
     border-radius: var(--gs-radius-control, var(--gs-radius-sm));
   }
-  .templates-panel__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gs-space-4);
-  }
-  .templates-panel__card {
-    border: 1px solid var(--gs-line);
-    border-radius: var(--gs-radius-card);
-    overflow: hidden;
-    background: var(--gs-surface);
-    transition:
-      background-color var(--gs-duration-overlay) var(--gs-ease),
-      border-color var(--gs-duration-overlay) var(--gs-ease),
-      box-shadow var(--gs-duration-overlay) var(--gs-ease);
-    box-shadow: none;
-    border-color: var(--gs-line);
-  }
   .uploads-panel {
     display: flex;
     flex-direction: column;

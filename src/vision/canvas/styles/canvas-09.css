@@ -45,13 +45,6 @@
     color: var(--gs-text-secondary);
     font-size: var(--gs-text-13);
   }
-  .templates-panel__meta h3 {
-    margin: 0 0 var(--gs-space-1);
-    color: var(--gs-text);
-    font-size: var(--gs-text-15);
-    font-weight: var(--gs-weight-strong);
-    line-height: 1.4;
-  }
   .panel-action {
     display: inline-flex;
     align-items: center;
@@ -154,43 +147,6 @@
       background-color var(--gs-duration-overlay) var(--gs-ease),
       border-color var(--gs-duration-overlay) var(--gs-ease),
       box-shadow var(--gs-duration-overlay) var(--gs-ease);
-  }
-  .templates-panel__visual {
-    position: relative;
-    background: var(--gs-surface-muted);
-    border-bottom: 1px solid var(--gs-line);
-    padding: var(--gs-space-3);
-  }
-  .templates-panel__preview {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: var(--gs-radius-control);
-    box-shadow: none;
-    max-height: 120px;
-    object-fit: cover;
-  }
-  .templates-panel__meta {
-    padding: var(--gs-space-4);
-  }
-  .templates-panel__apply {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--gs-space-2);
-    border: 1px solid var(--gs-control-line);
-    background: var(--gs-surface);
-    border-radius: var(--gs-radius-pill, 99px);
-    padding: var(--gs-space-3) var(--gs-space-4);
-    font-size: var(--gs-text-13);
-    font-weight: var(--gs-weight-strong);
-    color: var(--gs-text);
-    transition:
-      background-color var(--gs-duration-overlay) var(--gs-ease),
-      color var(--gs-duration-overlay) var(--gs-ease);
-    cursor: pointer;
-    width: 100%;
-    justify-content: center;
-    margin-top: var(--gs-space-3);
   }
   .create-shape-grid {
     display: grid;

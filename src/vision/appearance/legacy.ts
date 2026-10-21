@@ -34,6 +34,7 @@ export interface BoardItem {
   borderColor?: string;
   stickerWidth?: number;
   stickerColor?: string;
+  paperEdge?: import('../paperEdge').PaperEdge;
   shadow?: 'none' | 'soft' | 'medium' | 'hard';
   borderStyle?: 'solid' | 'dashed' | 'dotted';
   radius?: number;

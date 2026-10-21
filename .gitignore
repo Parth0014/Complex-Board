@@ -17,3 +17,7 @@ exports/*
 
 # Local Godmode verification reports and logs
 .godmode/
+
+# Local authoring previews and verification artifacts
+/output/
+.gravitas/

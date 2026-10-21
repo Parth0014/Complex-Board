@@ -189,21 +189,6 @@
     align-self: flex-end;
     margin: auto 10px 10px;
   }
-  .templates-panel__placeholder {
-    display: grid;
-    place-items: center;
-    gap: 12px;
-    padding: 24px;
-    color: var(--gs-text-secondary);
-    font-size: var(--gs-text-11);
-  }
-  .templates-panel__placeholder .gs-skeleton {
-    width: 120px;
-    height: 200px;
-  }
-  .templates-panel__error {
-    margin-bottom: 16px;
-  }
   .scrapbook-empty-message {
     padding: 40px;
     text-align: center;
@@ -498,10 +483,6 @@
     border-radius: 8px;
     background: var(--gs-surface);
     line-height: 1;
-  }
-  .templates-panel__visual .templates-panel__preview {
-    max-height: 320px;
-    object-fit: contain;
   }
   @media (hover: hover) and (pointer: fine) {
     .vs .discover-photo > .uploads-photo-delete {
